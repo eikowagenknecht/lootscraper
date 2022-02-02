@@ -1,22 +1,22 @@
+import sqlite3
+import sys
 from argparse import ArgumentParser
 from dataclasses import dataclass
 from datetime import datetime
+
+from typed_argparse import TypedArgs
+from feedgen.feed import FeedGenerator
 from pytz import timezone
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.webdriver import WebDriver
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from feedgen.feed import FeedGenerator
-import sqlite3
-
-# TODO:
-# - Annotate types
+from selenium.webdriver.support.ui import WebDriverWait
 
 INJECTION_FILE = "inject.js"
-DRIVER_PATH = "C:\Entwicklung\Chromedriver\chromedriver.exe"
+DRIVER_PATH = R"C:\Entwicklung\Chromedriver\chromedriver.exe"
 MAX_WAIT_SECONDS = 10
 AMAZON_PRIME_LOOT_URL = "https://gaming.amazon.com/home"
 
@@ -28,16 +28,21 @@ class LootOffer:
     title: str
     subtitle: str
     publisher: str
-    enddate: datetime
+    enddate: str
 
 
-def main():
+class Arguments(TypedArgs):
+    docker: bool
+
+
+def main() -> None:
     args = parse_commandline_arguments()
+
     amazon_offers = scrape_amazon(args.docker)
 
-    db = prepare_database(args.docker)
-    insert_offers(db, amazon_offers)
-    all_offers = read_offers(db)
+    database = prepare_database(args.docker)
+    insert_offers(database, amazon_offers)
+    all_offers = read_offers(database)
 
     for offer in all_offers:
         print(
@@ -55,7 +60,9 @@ def main():
     generate_feed(all_offers, args.docker)
 
 
-def parse_commandline_arguments():
+def parse_commandline_arguments() -> Arguments:
+    args = sys.argv[1:]
+
     parser = ArgumentParser(
         description="Parse loot from various files into an ATOM feed."
     )
@@ -67,10 +74,12 @@ def parse_commandline_arguments():
         default=False,
         help="use docker paths and options",
     )
-    return parser.parse_args()
+    arguments = Arguments(parser.parse_args(args))
+
+    return arguments
 
 
-def scrape_amazon(docker):
+def scrape_amazon(docker: bool) -> list[LootOffer]:
     driver = get_pagedriver(docker)
 
     try:
@@ -84,7 +93,7 @@ def scrape_amazon(docker):
     return amazon_offers
 
 
-def get_pagedriver(docker):
+def get_pagedriver(docker: bool) -> webdriver.chrome.webdriver.WebDriver:
     options = Options()
     options.add_argument("--headless")
     options.add_argument(
@@ -106,7 +115,7 @@ def get_pagedriver(docker):
         driver = webdriver.Chrome(options=options, service=serv)
 
     # Inject JS
-    with open(INJECTION_FILE, "r") as file:
+    with open(INJECTION_FILE, "r", encoding="utf-8") as file:
         js_to_inject = file.read()
 
     driver.execute_cdp_cmd(
@@ -116,7 +125,7 @@ def get_pagedriver(docker):
     return driver
 
 
-def read_amazon_offers(offer_type: str, driver: WebDriver):
+def read_amazon_offers(offer_type: str, driver: WebDriver) -> list[LootOffer]:
     WebDriverWait(driver, MAX_WAIT_SECONDS).until(
         EC.presence_of_element_located((By.CLASS_NAME, "offer"))
     )
@@ -163,7 +172,12 @@ def read_amazon_offers(offer_type: str, driver: WebDriver):
             guessed_end_date = guessed_end_date.replace(year = guessed_end_date.year + 1)
 
         loot_offer = LootOffer(
-            "Amazon Prime", offer_type, title, subtitle, publisher, guessed_end_date
+            "Amazon Prime",
+            offer_type,
+            title,
+            subtitle,
+            publisher,
+            guessed_end_date.strftime("%Y-%m-%d"),
         )
 
         normalized_offers.append(loot_offer)
@@ -171,11 +185,11 @@ def read_amazon_offers(offer_type: str, driver: WebDriver):
     return normalized_offers
 
 
-def prepare_database(docker):
+def prepare_database(docker: bool) -> sqlite3.Connection:
     dbfile = "/data/loot.db" if docker else "data/loot.db"
-    db = sqlite3.connect(dbfile)
+    db_connection = sqlite3.connect(dbfile)
 
-    cur = db.cursor()
+    cur = db_connection.cursor()
 
     # Initialize database
     # TODO: Only do this if it's empty
@@ -198,20 +212,17 @@ def prepare_database(docker):
             "schema_version" INTEGER
         );"""
     )
-    # cur.commit()
 
-    # TODO: Update database if its version is too old
-
-    return db
+    return db_connection
 
 
-def insert_offers(db, offers):
+def insert_offers(db_connection: sqlite3.Connection, offers: list[LootOffer]) -> None:
     # TODO: Check offers against those in the database
     # TODO: Only insert offers that are new (type+title+subtitle match)
-    cur = db.cursor()
+    cursor = db_connection.cursor()
 
     for offer in offers:
-        cur.execute(
+        cursor.execute(
             "INSERT INTO loot VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
             (
                 "1234-56-78",
@@ -221,17 +232,17 @@ def insert_offers(db, offers):
                 offer.title,
                 offer.subtitle,
                 offer.publisher,
-                offer.enddate.strftime("%Y-%m-%d"),
+                offer.enddate,
             ),
         )
 
 
-def read_offers(db):
-    cur = db.cursor()
-    cur.execute(
+def read_offers(db_connection: sqlite3.Connection) -> list[LootOffer]:
+    cursor = db_connection.cursor()
+    cursor.execute(
         "SELECT source, type, title, subtitle, publisher, valid_until FROM loot ORDER BY type"
     )
-    rows = cur.fetchall()
+    rows = cursor.fetchall()
 
     offers = []
     for row in rows:
@@ -240,24 +251,24 @@ def read_offers(db):
     return offers
 
 
-def generate_feed(offers, docker):
+def generate_feed(offers: list[LootOffer], docker: bool) -> None:
     last_updated = datetime.now()
     local_timezone = timezone("Europe/Berlin")
     last_updated = last_updated.replace(tzinfo=local_timezone)
 
     # Generate Feed Info
     # See http://www.atomenabled.org/developers/syndication/#requiredFeedElements
-    fg = FeedGenerator()
+    feed_generator = FeedGenerator()
     # XML
-    fg.language("en")
+    feed_generator.language("en")
     # Atom Needed
-    fg.id("https://phenx.de/loot")
-    fg.title("Free Games and Loot Feed - phenx.de")
-    fg.updated(last_updated)
+    feed_generator.id("https://phenx.de/loot")
+    feed_generator.title("Free Games and Loot Feed - phenx.de")
+    feed_generator.updated(last_updated)
     # Atom Recommended
-    fg.link(rel="self", href="https://feed.phenx.de/gameloot.xml")
-    fg.link(rel="alternate", href="https://phenx.de/loot")
-    fg.author(
+    feed_generator.link(rel="self", href="https://feed.phenx.de/gameloot.xml")
+    feed_generator.link(rel="alternate", href="https://phenx.de/loot")
+    feed_generator.author(
         {
             "name": "Eiko Wagenknecht",
             "email": "rss@ew-mail.de",
@@ -272,23 +283,23 @@ def generate_feed(offers, docker):
     # - Logo
     # - Rights
     # - Subtitle
-    # fg.subtitle('This is a cool feed!')
+    # feed_generator.subtitle('This is a cool feed!')
 
     entry_id = 1000
     for offer in offers:
         entry_id = entry_id + 1
-        fe = fg.add_entry()
+        feed_entry = feed_generator.add_entry()
         # Atom Needed
-        fe.id(str(entry_id))
-        fe.title(offer.source + ": " + offer.type + " - " + offer.title)
-        fg.updated(last_updated)
+        feed_entry.id(str(entry_id))
+        feed_entry.title(offer.source + ": " + offer.type + " - " + offer.title)
+        feed_generator.updated(last_updated)
         # Atom Recommended
-        fg.link()
+        feed_generator.link()
         # - Author
         # - Content
         # - Link
         # - Summary
-        # fe.summary("asd")
+        # feed_entry.summary("xxx")
         # Atom Optional
         # - category
         # - contributor
@@ -296,7 +307,7 @@ def generate_feed(offers, docker):
         # - source
         # - rights
 
-        fe.content(
+        feed_entry.content(
             f"""<p>Title: {offer.title}</p>
             <p>Subtitle: {offer.subtitle}</p>
             <p>Publisher: {offer.publisher}</p>
@@ -304,10 +315,10 @@ def generate_feed(offers, docker):
         """,
             type="html",
         )
-        # fe.link(href="http://lernfunk.de/feed")
+        # feed_entry.link(href="http://lernfunk.de/feed")
 
     outputfile = "/data/gameloot.xml" if docker else "data/gameloot.xml"
-    fg.atom_file(outputfile)  # Write the ATOM feed to a file
+    feed_generator.atom_file(outputfile)  # Write the ATOM feed to a file
 
 
 if __name__ == "__main__":

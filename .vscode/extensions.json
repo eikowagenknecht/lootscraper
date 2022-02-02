@@ -1,5 +1,7 @@
 {
     "recommendations": [
-        "njqdev.vscode-python-typehint"
+        "njqdev.vscode-python-typehint",
+        "ms-python.python",
+        "ms-python.vscode-pylance"
     ]
 }
