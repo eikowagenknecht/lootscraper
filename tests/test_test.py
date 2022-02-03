@@ -1,11 +1,11 @@
 import unittest
 
-import scrape_prime_loot
+import lootscraper as lootscraper
 
 
 class TestUtils(unittest.TestCase):
     def test_pagedriver(self) -> None:
-        driver = scrape_prime_loot.get_pagedriver(False)
+        driver = lootscraper.get_pagedriver(False)
         self.assertIsNotNone(driver)
 
 

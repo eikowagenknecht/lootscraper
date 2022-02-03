@@ -24,9 +24,9 @@ ENV DISPLAY=:99
 
 # Add the script
 RUN mkdir /app
-COPY scrape_prime_loot.py /app
+COPY app/lootscraper.py /app/app
 COPY requirements.txt /app
-COPY inject.js /app
+COPY inject.js /app/js
 
 WORKDIR /app
 
