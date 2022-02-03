@@ -169,7 +169,7 @@ def read_amazon_offers(offer_type: str, driver: WebDriver) -> list[LootOffer]:
         if (
             guessed_end_date < datetime.now()
         ):  # Maybe add an offset of some days here, depends on when amazon removes old offers from the page
-            guessed_end_date = guessed_end_date.replace(year = guessed_end_date.year + 1)
+            guessed_end_date = guessed_end_date.replace(year=guessed_end_date.year + 1)
 
         loot_offer = LootOffer(
             "Amazon Prime",
