@@ -32,9 +32,9 @@ WORKDIR /app
 
 # Install needed Python libraries
 RUN pip install --upgrade pip
-pip install -r requirements.txt
+RUN pip install -r requirements.txt
 
 # Run the script
-CMD [ "python", "scrape_prime_loot.py" ]
+CMD [ "python", "lootscraper.py", "--docker" ]
 
 VOLUME /data
