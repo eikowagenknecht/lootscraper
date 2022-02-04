@@ -15,7 +15,7 @@ class Arguments(TypedArgs):
 
 def main() -> None:
     args = parse_commandline_arguments()
-    amazon_offers = AmazonScraper().scrape(args.docker)
+    amazon_offers = AmazonScraper.scrape(args.docker)
     database = prepare_database(args.docker)
     insert_offers(database, amazon_offers)
     all_offers = read_offers(database)

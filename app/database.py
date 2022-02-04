@@ -56,10 +56,9 @@ def read_offers(db_connection: sqlite3.Connection) -> list[LootOffer]:
     cursor.execute(
         "SELECT source, type, title, subtitle, publisher, valid_until FROM loot ORDER BY type"
     )
-    rows = cursor.fetchall()
-
     offers = []
-    for row in rows:
-        offers.append(LootOffer(row[0], row[1], row[2], row[3], row[4], row[5]))
+
+    for row in cursor:  # type: ignore
+        offers.append(LootOffer(row[0], row[1], row[2], row[3], row[4], row[5]))  # type: ignore
 
     return offers
