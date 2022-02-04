@@ -1,4 +1,10 @@
 from dataclasses import dataclass
+from enum import Enum
+
+
+class OfferType(Enum):
+    LOOT = "Loot"
+    GAME = "Game"
 
 
 @dataclass

@@ -1,8 +1,7 @@
 import sqlite3
 from typing import Final
 
-from .datamodel import LootOffer
-
+from .common import LootOffer
 
 DROP_LOOT_TABLE: Final = """DROP TABLE IF EXISTS loot"""
 CREATE_LOOT_TABLE: Final = """CREATE TABLE "loot" (
