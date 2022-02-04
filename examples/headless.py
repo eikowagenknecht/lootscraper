@@ -3,6 +3,7 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.remote.webelement import WebElement
 
 import chromedriver_binary  # pylint: disable=unused-import # noqa: F401 # Imported for the sideeffects!
 
@@ -34,7 +35,8 @@ with open(INJECTION_FILE, "r", encoding="utf-8") as file:
     js_to_inject = file.read()
 
 driver.execute_cdp_cmd(
-    "Page.addScriptToEvaluateOnNewDocument", {"source": js_to_inject}
+    "Page.addScriptToEvaluateOnNewDocument",
+    {"source": js_to_inject},  # type: ignore
 )  # type: ignore
 
 driver.get(
@@ -44,13 +46,14 @@ driver.get(
 
 try:
     # Wait max. 10 seconds for the res to pop up
-    element = WebDriverWait(driver, 10).until(
+    WebDriverWait(driver, 10).until(
         EC.presence_of_element_located((By.CLASS_NAME, "result"))
     )
 
-    res = driver.find_element(By.XPATH, "//table")
+    res: WebElement = driver.find_element(By.XPATH, "//table")
+    res_str: str = res.text
     driver.save_screenshot("headless_results.png")
-    print(res.text)
+    print(res_str)
 finally:
     # time.sleep(50)
     driver.quit()

@@ -31,7 +31,8 @@ def get_pagedriver(docker: bool) -> WebDriver:
         js_to_inject = file.read()
 
     driver.execute_cdp_cmd(
-        "Page.addScriptToEvaluateOnNewDocument", {"source": js_to_inject}
+        "Page.addScriptToEvaluateOnNewDocument",
+        {"source": js_to_inject},  # type: ignore
     )  # type: ignore
 
     return driver

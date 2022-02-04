@@ -1,4 +1,4 @@
-from collections import namedtuple
+from dataclasses import dataclass
 from datetime import datetime
 
 from selenium.webdriver.chrome.webdriver import WebDriver
@@ -6,6 +6,7 @@ from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
+from selenium.common.exceptions import WebDriverException
 
 from app.common import LootOffer, OfferType
 from app.pagedriver import get_pagedriver
@@ -15,13 +16,20 @@ MAX_WAIT_SECONDS = 10
 BASE_ELEMENT_LOOT = "offer-list-IN_GAME_LOOT"
 BASE_ELEMENT_GAMES = "offer-list-FGWP_FULL"
 
-RawOffer = namedtuple("RawOffer", "title paragraph enddate")
+
+@dataclass
+class RawOffer:
+    title: str
+    paragraph: str
+    enddate: str
 
 
 class AmazonScraper:
-    def scrape(self, use_docker_settings: bool) -> list[LootOffer]:
+    @staticmethod
+    def scrape(use_docker_settings: bool) -> list[LootOffer]:
         amazon_offers = []
 
+        driver: WebDriver
         with get_pagedriver(use_docker_settings) as driver:
             driver.get(AMAZON_PRIME_LOOT_URL)
 
@@ -52,28 +60,53 @@ class AmazonScraper:
             case _:
                 raise ValueError
 
-        elements = driver.find_elements(
-            By.XPATH,
-            '//div[@data-a-target="'
-            + search_element
-            + '"]//div[@data-a-target="Offer"]',
-        )
+        try:
+            elements: list[WebElement] = driver.find_elements(
+                By.XPATH,
+                '//div[@data-a-target="'
+                + search_element
+                + '"]//div[@data-a-target="Offer"]',
+            )
+        except WebDriverException:  # type: ignore
+            # TODO: Cancel this scraping, root element not found!
+            pass
 
         raw_offers: list[RawOffer] = []
+        title_str: str
+        paragraph_str: str
+        enddate_str: str
 
         for element in elements:
-            title: WebElement = element.find_element(
-                By.XPATH,
-                './/div[contains(concat(" ", normalize-space(@class), " "), " offer__body__titles")]/h3',
-            )
-            paragraph: WebElement = element.find_element(
-                By.XPATH,
-                './/div[contains(concat(" ", normalize-space(@class), " "), " offer__body__titles")]/p',
-            )
-            enddate: WebElement = element.find_element(
-                By.XPATH, './/p[@data-test-selector="offer-end-time"]/span'
-            )
-            raw_offers.append(RawOffer(title.text, paragraph.text, enddate.text))
+            try:
+                title: WebElement = element.find_element(
+                    By.XPATH,
+                    './/div[contains(concat(" ", normalize-space(@class), " "), " offer__body__titles")]/h3',
+                )
+                title_str = title.text
+            except WebDriverException:  # type: ignore
+                # Nothing to do here, string stays empty
+                pass
+
+            try:
+                paragraph: WebElement = element.find_element(
+                    By.XPATH,
+                    './/div[contains(concat(" ", normalize-space(@class), " "), " offer__body__titles")]/p',
+                )
+                paragraph_str = paragraph.text
+            except WebDriverException:  # type: ignore
+                # Nothing to do here, string stays empty
+                pass
+
+            try:
+                enddate: WebElement = element.find_element(
+                    By.XPATH, './/p[@data-test-selector="offer-end-time"]/span'
+                )
+                enddate_str = enddate.text
+            except WebDriverException:  # type: ignore
+                # Nothing to do here, string stays empty
+                pass
+
+            raw_offers.append(RawOffer(title_str, paragraph_str, enddate_str))
 
         normalized_offers = AmazonScraper.normalize_offers(offer_type, raw_offers)
 
@@ -99,8 +132,6 @@ class AmazonScraper:
             guessed_end_date = datetime(
                 datetime.now().year, parsed_date.month, parsed_date.day
             )
-
-            # TODO: Maybe add an offset of some days here, depends on when amazon removes old offers from the page
             if guessed_end_date < datetime.now():
                 guessed_end_date = guessed_end_date.replace(
                     year=guessed_end_date.year + 1
