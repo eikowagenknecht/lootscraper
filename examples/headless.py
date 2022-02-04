@@ -1,9 +1,12 @@
-from selenium import webdriver
+from selenium.webdriver import Chrome
 from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
+
+import chromedriver_binary  # pylint: disable=unused-import # noqa: F401 # Imported for the sideeffects!
+
+INJECTION_FILE = "js/inject.js"
 
 # Headless solution for *nix OS:
 # https://stackoverflow.com/questions/45370018/selenium-working-with-chrome-but-not-headless-chrome?rq=1
@@ -17,10 +20,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 # Headless Test umgehen (Teil 2 mit Puppeteer)
 # https://intoli.com/blog/not-possible-to-block-chrome-headless/
 
-DRIVER_PATH = R"C:\Entwicklung\chromedriver\chromedriver.exe"
 USER_AGENT = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/64.0.3282.39 Safari/537.36"
-with open("inject.js", "r", encoding="utf-8") as file:
-    INJECTED_JAVASCRIPT = file.read()
 
 options = Options()
 options.add_argument("headless")
@@ -28,11 +28,15 @@ options.add_argument("window-size=1920,1200")
 options.add_argument("lang=en-US")
 options.add_argument("user-agent=" + USER_AGENT)
 
-serv = Service(DRIVER_PATH)
-driver = webdriver.Chrome(options=options, service=serv)
+driver = Chrome(options=options)
+
+with open(INJECTION_FILE, "r", encoding="utf-8") as file:
+    js_to_inject = file.read()
+
 driver.execute_cdp_cmd(
-    "Page.addScriptToEvaluateOnNewDocument", {"source": INJECTED_JAVASCRIPT}
-)
+    "Page.addScriptToEvaluateOnNewDocument", {"source": js_to_inject}
+)  # type: ignore
+
 driver.get(
     "https://intoli.com/blog/not-possible-to-block-chrome-headless/chrome-headless-test.html"
 )

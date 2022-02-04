@@ -11,20 +11,21 @@ RUN apt-get -y update
 RUN apt-get install -y google-chrome-stable
 
 # Install Unzip
-RUN apt-get install -yqq unzip
+#RUN apt-get install -yqq unzip
 
 # Download Chrome Driver
-RUN wget -O /tmp/chromedriver.zip http://chromedriver.storage.googleapis.com/`curl -sS chromedriver.storage.googleapis.com/LATEST_RELEASE`/chromedriver_linux64.zip
+#RUN wget -O /tmp/chromedriver.zip http://chromedriver.storage.googleapis.com/`curl -sS chromedriver.storage.googleapis.com/LATEST_RELEASE`/chromedriver_linux64.zip
 
 # Unzip Chrome Driver into /usr/local/bin directory
-RUN unzip /tmp/chromedriver.zip chromedriver -d /usr/local/bin/
+#RUN unzip /tmp/chromedriver.zip chromedriver -d /usr/local/bin/
 
 # Set display port as an environment variable
 ENV DISPLAY=:99
 
 # Add the script
 RUN mkdir /app
-COPY app/lootscraper.py /app/app
+COPY lootscraper.py /app
+COPY app /app/app
 COPY requirements.txt /app
 COPY inject.js /app/js
 
