@@ -4,9 +4,9 @@ from argparse import ArgumentParser
 from typed_argparse import TypedArgs
 
 from app.database import insert_offers, prepare_database, read_offers
-from app.datamodel import LootOffer
+from app.common import LootOffer
 from app.feed import generate_feed
-from app.scraper.amazon_prime import scrape_amazon
+from app.scraper.amazon_prime import AmazonScraper
 
 
 class Arguments(TypedArgs):
@@ -15,7 +15,7 @@ class Arguments(TypedArgs):
 
 def main() -> None:
     args = parse_commandline_arguments()
-    amazon_offers = scrape_amazon(args.docker)
+    amazon_offers = AmazonScraper().scrape(args.docker)
     database = prepare_database(args.docker)
     insert_offers(database, amazon_offers)
     all_offers = read_offers(database)
