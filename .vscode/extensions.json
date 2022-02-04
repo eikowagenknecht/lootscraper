@@ -2,6 +2,8 @@
     "recommendations": [
         "njqdev.vscode-python-typehint",
         "ms-python.python",
-        "ms-python.vscode-pylance"
+        "ms-python.vscode-pylance",
+        "bierner.github-markdown-preview",
+        "davidanson.vscode-markdownlint"
     ]
 }
