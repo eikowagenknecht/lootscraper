@@ -1,12 +1,13 @@
-from selenium import webdriver
+from selenium.webdriver import Chrome
+from selenium.webdriver.chrome.webdriver import WebDriver
 from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.chrome.service import Service
+
+import chromedriver_binary  # pylint: disable=unused-import # noqa: F401 # Imported for the sideeffects!
 
 INJECTION_FILE = "js/inject.js"
-DRIVER_PATH = R"C:\Entwicklung\tools\Chromedriver\chromedriver.exe"
 
 
-def get_pagedriver(docker: bool) -> webdriver.chrome.webdriver.WebDriver:
+def get_pagedriver(docker: bool) -> WebDriver:
     options = Options()
     options.add_argument("--headless")
     options.add_argument(
@@ -22,10 +23,8 @@ def get_pagedriver(docker: bool) -> webdriver.chrome.webdriver.WebDriver:
     if docker:
         options.add_argument("--no-sandbox")
         options.add_argument("--disable-dev-shm-usage")
-        driver = webdriver.Chrome(options=options)
-    else:
-        serv = Service(DRIVER_PATH)
-        driver = webdriver.Chrome(options=options, service=serv)
+
+    driver = Chrome(options=options)
 
     # Inject JS
     with open(INJECTION_FILE, "r", encoding="utf-8") as file:
@@ -33,6 +32,6 @@ def get_pagedriver(docker: bool) -> webdriver.chrome.webdriver.WebDriver:
 
     driver.execute_cdp_cmd(
         "Page.addScriptToEvaluateOnNewDocument", {"source": js_to_inject}
-    )
+    )  # type: ignore
 
     return driver

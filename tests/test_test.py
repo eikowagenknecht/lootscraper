@@ -1,11 +1,11 @@
 import unittest
 
-import lootscraper as lootscraper
+from app.pagedriver import get_pagedriver
 
 
 class TestUtils(unittest.TestCase):
     def test_pagedriver(self) -> None:
-        driver = lootscraper.get_pagedriver(False)
+        driver = get_pagedriver(False)
         self.assertIsNotNone(driver)
 
 
