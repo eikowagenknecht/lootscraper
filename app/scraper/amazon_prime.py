@@ -5,8 +5,8 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
-from app.datamodel import LootOffer
-from app.pagedriver import get_pagedriver
+from ..datamodel import LootOffer
+from ..pagedriver import get_pagedriver
 
 AMAZON_PRIME_LOOT_URL = "https://gaming.amazon.com/home"
 MAX_WAIT_SECONDS = 10

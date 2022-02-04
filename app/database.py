@@ -1,6 +1,20 @@
 import sqlite3
+from typing import Final
 
-from app.datamodel import LootOffer
+from .datamodel import LootOffer
+
+
+DROP_LOOT_TABLE: Final = """DROP TABLE IF EXISTS loot"""
+CREATE_LOOT_TABLE: Final = """CREATE TABLE "loot" (
+    "first_scraped_date" TEXT,
+    "last_scraped_date" TEXT,
+    "source" TEXT,
+    "type" TEXT,
+    "title" TEXT,
+    "subtitle" TEXT,
+    "publisher" TEXT,
+    "valid_until" TEXT
+);"""
 
 
 def prepare_database(docker: bool) -> sqlite3.Connection:
@@ -10,26 +24,9 @@ def prepare_database(docker: bool) -> sqlite3.Connection:
     cur = db_connection.cursor()
 
     # Initialize database
-    # TODO: Only do this if it's empty
-    cur.execute("""DROP TABLE IF EXISTS loot""")
-    cur.execute("""DROP TABLE IF EXISTS version""")
-    cur.execute(
-        """CREATE TABLE "loot" (
-            "first_scraped_date" TEXT,
-            "last_scraped_date" TEXT,
-            "source" TEXT,
-            "type" TEXT,
-            "title" TEXT,
-            "subtitle" TEXT,
-            "publisher" TEXT,
-            "valid_until" TEXT
-        );"""
-    )
-    cur.execute(
-        """CREATE TABLE "version" (
-            "schema_version" INTEGER
-        );"""
-    )
+
+    cur.execute(DROP_LOOT_TABLE)
+    cur.execute(CREATE_LOOT_TABLE)
 
     return db_connection
 
