@@ -65,7 +65,7 @@ class AmazonScraper:
             title: WebElement = element.find_element(
                 By.XPATH,
                 './/div[contains(concat(" ", normalize-space(@class), " "), " offer__body__titles")]/h3',
-            ).text
+            )
             paragraph: WebElement = element.find_element(
                 By.XPATH,
                 './/div[contains(concat(" ", normalize-space(@class), " "), " offer__body__titles")]/p',
