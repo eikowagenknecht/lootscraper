@@ -3,7 +3,7 @@ from datetime import datetime
 from feedgen.feed import FeedGenerator
 from pytz import timezone
 
-from app.datamodel import LootOffer
+from .datamodel import LootOffer
 
 
 def generate_feed(offers: list[LootOffer], docker: bool) -> None:
