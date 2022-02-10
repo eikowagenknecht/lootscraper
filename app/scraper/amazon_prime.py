@@ -1,15 +1,14 @@
 from dataclasses import dataclass
 from datetime import datetime
 
+from selenium.common.exceptions import WebDriverException
 from selenium.webdriver.chrome.webdriver import WebDriver
-from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.common.by import By
+from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
-from selenium.common.exceptions import WebDriverException
 
-from app.common import LootOffer, OfferType
-from app.const import DATEFORMAT
+from app.common import DATEFORMAT, LootOffer, OfferType
 from app.pagedriver import get_pagedriver
 
 SCRAPER_NAME = "Amazon Prime"

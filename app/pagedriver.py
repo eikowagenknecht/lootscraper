@@ -1,8 +1,7 @@
-from selenium.webdriver import Chrome
-from selenium.webdriver.chrome.webdriver import WebDriver
-from selenium.webdriver.chrome.options import Options
-
 import chromedriver_binary  # pylint: disable=unused-import # noqa: F401 # Imported for the sideeffects!
+from selenium.webdriver import Chrome
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.webdriver import WebDriver
 
 INJECTION_FILE = "js/inject.js"
 
