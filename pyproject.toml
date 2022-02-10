@@ -36,5 +36,6 @@ disable = [
     "line-too-long",
     "fixme",
     "import-error",
-    "unused-import"
+    "unused-import",
+    "invalid-name",
 ]
