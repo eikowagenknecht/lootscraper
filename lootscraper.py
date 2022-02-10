@@ -17,22 +17,43 @@ class Arguments(TypedArgs):
 def main() -> None:
     args = parse_commandline_arguments()
 
-    db_path = Path("/data/") if args.docker else Path("data/")
+    data_path = Path("/data/") if args.docker else Path("data/")
 
     db: LootDatabase
-    with LootDatabase(db_path) as db:
+    with LootDatabase(data_path) as db:
         db.create_tables()
         amazon_offers = AmazonScraper.scrape(args.docker)
-        db.insert_offers(amazon_offers)
 
         # Check which offers are new and which are updated, then act accordingly:
         # - Offers that are neither new nor updated just get a new date
         # - Offers that are new are inserted
         # - Offers that are updated are updated
-        all_offers = db.read_offers()
+        db_offers = db.read_offers()
 
-    debug_print_offers(all_offers)
-    generate_feed(all_offers, args.docker)
+        for scraped_offer in amazon_offers:
+            exists_in_db = False
+            # Check every database entry if this is a match. Could probably made much faster, but irrelevant for now.
+            for db_offer in db_offers:
+                if (
+                    db_offer.source == scraped_offer.source
+                    and db_offer.title == scraped_offer.title
+                    and db_offer.subtitle == scraped_offer.subtitle
+                    and db_offer.enddate == scraped_offer.enddate
+                ):
+                    exists_in_db = True
+                    break
+
+            if exists_in_db:
+                # Offer has already been scraped, so do not insert this into the database, but update the "last seen" timestamp
+                db.touch_offer(scraped_offer.id)
+            else:
+                # The enddate has been changed or it is a new offer, insert it into the database
+                db.insert_offer(scraped_offer)
+
+        new_offers = db.read_offers()
+
+    debug_print_offers(new_offers)
+    generate_feed(new_offers, data_path)
 
 
 def debug_print_offers(all_offers: list[LootOffer]) -> None:

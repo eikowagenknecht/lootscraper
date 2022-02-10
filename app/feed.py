@@ -1,13 +1,16 @@
 # mypy: ignore-errors
 from datetime import datetime
+from pathlib import Path
 
 from feedgen.feed import FeedGenerator
 from pytz import timezone
 
-from .common import LootOffer
+from .common import TIMESTAMP_LONG, LootOffer
+
+FILE_NAME: Path = Path("gameloot.xml")
 
 
-def generate_feed(offers: list[LootOffer], docker: bool) -> None:
+def generate_feed(offers: list[LootOffer], out_path: Path = None) -> None:
     last_updated = datetime.now()
     local_timezone = timezone("Europe/Berlin")
     last_updated = last_updated.replace(tzinfo=local_timezone)
@@ -27,7 +30,7 @@ def generate_feed(offers: list[LootOffer], docker: bool) -> None:
     feed_generator.author(
         {
             "name": "Eiko Wagenknecht",
-            "email": "rss@ew-mail.de",
+            "email": "feed@ew-mail.de",
             "uri": "eiko-wagenknecht.de",
         }
     )
@@ -39,39 +42,52 @@ def generate_feed(offers: list[LootOffer], docker: bool) -> None:
     # - Logo
     # - Rights
     # - Subtitle
-    # feed_generator.subtitle('This is a cool feed!')
 
-    entry_id = 1000
     for offer in offers:
-        entry_id = entry_id + 1
         feed_entry = feed_generator.add_entry()
         # Atom Needed
-        feed_entry.id(str(entry_id))
-        feed_entry.title(offer.source + ": " + offer.type + " - " + offer.title)
-        feed_generator.updated(last_updated)
+        feed_entry.id(str(offer.id))
+        feed_entry.title(f"{offer.type} - {offer.title}")
+        feed_entry.updated(offer.seen_last.replace(tzinfo=local_timezone))
         # Atom Recommended
-        feed_generator.link()
         # - Author
+        feed_entry.author(
+            {
+                "name": "Eiko Wagenknecht",
+                "email": "feed@ew-mail.de",
+                "uri": "eiko-wagenknecht.de",
+            }
+        )
         # - Content
+        feed_entry.content(
+            (
+                f"<h1>{offer.title}</h1>"
+                f"<h2>{offer.subtitle}</h2>"
+                f"<p>Type: {offer.type}</p>"
+                f"<p>Publisher: {offer.publisher}</p>"
+                f"<p>Valid until: {offer.enddate}</p>"
+                f'<p>Source: <a href="{offer.url}">"{offer.source}"</a></p>'
+                f"<p>Seen: {offer.seen_first.strftime(TIMESTAMP_LONG)} - {offer.seen_last.strftime(TIMESTAMP_LONG)}</p>"
+            ),
+            type="html",
+        )
         # - Link
+        feed_entry.link(rel="alternate", href=offer.url)
         # - Summary
-        # feed_entry.summary("xxx")
         # Atom Optional
         # - category
         # - contributor
         # - published
+        feed_entry.published(offer.seen_first.replace(tzinfo=local_timezone))
         # - source
         # - rights
 
-        feed_entry.content(
-            f"""<p>Title: {offer.title}</p>
-            <p>Subtitle: {offer.subtitle}</p>
-            <p>Publisher: {offer.publisher}</p>
-            <p>Valid until: {offer.enddate}</p>
-        """,
-            type="html",
-        )
         # feed_entry.link(href="http://lernfunk.de/feed")
 
-    outputfile = "/data/gameloot.xml" if docker else "data/gameloot.xml"
-    feed_generator.atom_file(outputfile)  # Write the ATOM feed to a file
+    if out_path is not None:
+        out_file = Path(out_path) / Path(FILE_NAME)
+    else:
+        out_file = Path("data") / Path(FILE_NAME)
+
+    # Write the ATOM feed to a file
+    feed_generator.atom_file(filename=str(out_file), pretty=True)

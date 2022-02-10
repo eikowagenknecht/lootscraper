@@ -8,7 +8,7 @@ from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
-from app.common import DATEFORMAT, LootOffer, OfferType
+from app.common import TIMESTAMP_SHORT, LootOffer, OfferType
 from app.pagedriver import get_pagedriver
 
 SCRAPER_NAME = "Amazon Prime"
@@ -155,7 +155,8 @@ class AmazonScraper:
                 title=title,
                 subtitle=subtitle,
                 publisher=publisher,
-                enddate=guessed_end_date.strftime(DATEFORMAT),
+                enddate=guessed_end_date.strftime(TIMESTAMP_SHORT),
+                url=ROOT_URL,
             )
 
             normalized_offers.append(loot_offer)

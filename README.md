@@ -14,13 +14,15 @@ This project is in ongoing development, not yet usable for the average user and 
 - [x] Scrape offers into a SQLITE database
 - [x] Generate ATOM feed from the offers in the database
 - [x] Store parsed and interpreted text
-- [ ] Incrementally update the database and ATOM feed with only new offers
+- [x] Incrementally update the database and ATOM feed with only new offers
 - [ ] Upload results with FTP
 - [ ] Add tests
 - [ ] Make the script run on a daily basis within the Docker container
 - [ ] Dynamically generate ATOM feeds split by source and type (e.g. only amazon ingame loot) in addition to the full feed
 - [ ] Add links to the claim page in the feed
 - [ ] Notify by mail when something goes wrong (e.g. a source cannot be scraped)
+- [ ] Better support of timezones
+- [ ] Support multiple languages (at least EN and DE)
 
 ### Advanced features
 

@@ -1,7 +1,9 @@
 from dataclasses import dataclass
+from datetime import datetime
 from enum import Enum
 
-DATEFORMAT = "%Y-%m-%d"
+TIMESTAMP_SHORT = "%Y-%m-%d"
+TIMESTAMP_LONG = "%Y-%m-%d %H:%M:%S"
 
 
 class OfferType(Enum):
@@ -14,8 +16,8 @@ class LootOffer:
     """Represents a database entry in the "loot" table"""
 
     id: int | None = None
-    first_scraped_date: str | None = None
-    last_scraped_date: str | None = None
+    seen_first: datetime | None = None
+    seen_last: datetime | None = None
     source: str | None = None
     type: str | None = None
     title: str | None = None
@@ -23,3 +25,4 @@ class LootOffer:
     publisher: str | None = None
     enddate: str | None = None
     rawtext: str | None = None
+    url: str | None = None
