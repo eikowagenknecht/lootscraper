@@ -1,5 +1,8 @@
 import sqlite3
 from typing import Final
+from datetime import date
+
+from .const import DATEFORMAT
 
 from .common import LootOffer
 
@@ -36,13 +39,14 @@ def insert_offers(db_connection: sqlite3.Connection, offers: list[LootOffer]) ->
     # TODO: Only insert offers that are new (type+title+subtitle match)
     cursor = db_connection.cursor()
 
+    current_date = date.today().strftime(DATEFORMAT)
     for offer in offers:
         cursor.execute(
             """INSERT INTO loot(first_scraped_date, last_scraped_date, rawtext, source, type, title, subtitle, publisher, valid_until)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
             (
-                "1234-56-78",
-                "1234-56-78",
+                current_date,
+                current_date,
                 offer.rawtext,
                 offer.source,
                 offer.type,

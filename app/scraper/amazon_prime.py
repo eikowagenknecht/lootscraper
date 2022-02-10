@@ -9,9 +9,11 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.common.exceptions import WebDriverException
 
 from app.common import LootOffer, OfferType
+from app.const import DATEFORMAT
 from app.pagedriver import get_pagedriver
 
-AMAZON_PRIME_LOOT_URL = "https://gaming.amazon.com/home"
+SCRAPER_NAME = "Amazon Prime"
+ROOT_URL = "https://gaming.amazon.com/home"
 MAX_WAIT_SECONDS = 10
 BASE_ELEMENT_LOOT = "offer-list-IN_GAME_LOOT"
 BASE_ELEMENT_GAMES = "offer-list-FGWP_FULL"
@@ -31,7 +33,7 @@ class AmazonScraper:
 
         driver: WebDriver
         with get_pagedriver(use_docker_settings) as driver:
-            driver.get(AMAZON_PRIME_LOOT_URL)
+            driver.get(ROOT_URL)
 
             amazon_offers.extend(
                 AmazonScraper.read_offers_from_page(OfferType.GAME, driver)
@@ -148,13 +150,13 @@ class AmazonScraper:
                 )
 
             loot_offer = LootOffer(
-                source="Amazon Prime",
+                source=SCRAPER_NAME,
                 type=offer_type.value,
                 rawtext=rawtext,
                 title=title,
                 subtitle=subtitle,
                 publisher=publisher,
-                enddate=guessed_end_date.strftime("%Y-%m-%d"),
+                enddate=guessed_end_date.strftime(DATEFORMAT),
             )
 
             normalized_offers.append(loot_offer)
