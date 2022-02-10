@@ -3,7 +3,7 @@ from argparse import ArgumentParser
 
 from typed_argparse import TypedArgs
 
-from app.database import insert_offers, prepare_database, read_offers
+from app.database import insert_offers, prepare_database, read_offers, terminate_connection
 from app.common import LootOffer
 from app.feed import generate_feed
 from app.scraper.amazon_prime import AmazonScraper
@@ -19,6 +19,7 @@ def main() -> None:
     database = prepare_database(args.docker)
     insert_offers(database, amazon_offers)
     all_offers = read_offers(database)
+    terminate_connection(database)
     debug_print_offers(all_offers)
     generate_feed(all_offers, args.docker)
 

@@ -9,6 +9,7 @@ CREATE_LOOT_TABLE: Final = """CREATE TABLE "loot" (
     "last_scraped_date" TEXT,
     "source" TEXT,
     "type" TEXT,
+    "rawtext" TEXT,
     "title" TEXT,
     "subtitle" TEXT,
     "publisher" TEXT,
@@ -37,11 +38,13 @@ def insert_offers(db_connection: sqlite3.Connection, offers: list[LootOffer]) ->
 
     for offer in offers:
         cursor.execute(
-            "INSERT INTO loot VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+            """INSERT INTO loot(first_scraped_date, last_scraped_date, rawtext, source, type, title, subtitle, publisher, valid_until)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
             (
                 "1234-56-78",
                 "1234-56-78",
-                "source",
+                offer.rawtext,
+                offer.source,
                 offer.type,
                 offer.title,
                 offer.subtitle,
@@ -49,6 +52,11 @@ def insert_offers(db_connection: sqlite3.Connection, offers: list[LootOffer]) ->
                 offer.enddate,
             ),
         )
+
+
+def terminate_connection(db_connection: sqlite3.Connection) -> None:
+    db_connection.commit()
+    db_connection.close()
 
 
 def read_offers(db_connection: sqlite3.Connection) -> list[LootOffer]:
@@ -59,6 +67,7 @@ def read_offers(db_connection: sqlite3.Connection) -> list[LootOffer]:
     offers = []
 
     for row in cursor:  # type: ignore
-        offers.append(LootOffer(row[0], row[1], row[2], row[3], row[4], row[5]))  # type: ignore
+        offer = LootOffer(source=row[0], type=row[1], title=row[2], subtitle=row[3], publisher=row[4], enddate=row[5])  # type: ignore
+        offers.append(offer)
 
     return offers

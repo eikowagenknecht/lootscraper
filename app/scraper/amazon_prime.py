@@ -119,6 +119,16 @@ class AmazonScraper:
         normalized_offers: list[LootOffer] = []
 
         for offer in offers:
+            # Raw text
+            rawtext = (
+                "<title>"
+                + offer.title
+                + "</title>"
+                + "<paragraph>"
+                + offer.paragraph
+                + "</paragraph>"
+            )
+
             # Title
             parsed_heads = offer.title.split(": ", 1)
             title = parsed_heads[0]
@@ -138,12 +148,13 @@ class AmazonScraper:
                 )
 
             loot_offer = LootOffer(
-                "Amazon Prime",
-                offer_type.value,
-                title,
-                subtitle,
-                publisher,
-                guessed_end_date.strftime("%Y-%m-%d"),
+                source="Amazon Prime",
+                type=offer_type.value,
+                rawtext=rawtext,
+                title=title,
+                subtitle=subtitle,
+                publisher=publisher,
+                enddate=guessed_end_date.strftime("%Y-%m-%d"),
             )
 
             normalized_offers.append(loot_offer)

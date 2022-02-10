@@ -13,6 +13,7 @@ This project is in ongoing development, not yet usable for the average user and 
 - [x] Runnable in a docker container (e.g. on a Synology NAS)
 - [x] Scrape offers into a SQLITE database
 - [x] Generate ATOM feed from the offers in the database
+- [x] Store parsed and interpreted text
 - [ ] Incrementally update the database and ATOM feed with only new offers
 - [ ] Upload results with FTP
 - [ ] Add tests
