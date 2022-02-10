@@ -1,27 +1,28 @@
 from __future__ import annotations
 
 import sqlite3
-from datetime import date
+from datetime import datetime
 from pathlib import Path
 from types import TracebackType
 from typing import Final, Type
 
-from .common import DATEFORMAT, LootOffer
+from .common import TIMESTAMP_LONG, LootOffer
 
 DB_NAME: Path = Path("loot.db")
 
 DROP_LOOT_TABLE: Final = """DROP TABLE IF EXISTS loot"""
-CREATE_LOOT_TABLE: Final = """CREATE TABLE "loot" (
+CREATE_LOOT_TABLE: Final = """CREATE TABLE IF NOT EXISTS "loot" (
     "id" INTEGER PRIMARY KEY,
-    "first_scraped_date" TEXT,
-    "last_scraped_date" TEXT,
+    "seen_first" TEXT,
+    "seen_last" TEXT,
     "source" TEXT,
     "type" TEXT,
     "rawtext" TEXT,
     "title" TEXT,
     "subtitle" TEXT,
     "publisher" TEXT,
-    "valid_until" TEXT
+    "valid_until" TEXT,
+    "url" TEXT
 );"""
 
 
@@ -53,15 +54,46 @@ class LootDatabase:
         self.connection.close()
 
     def create_tables(self) -> None:
-        self.cursor.execute(DROP_LOOT_TABLE)
+        # self.cursor.execute(DROP_LOOT_TABLE)
         self.cursor.execute(CREATE_LOOT_TABLE)
 
+    def touch_offer(self, rowid: int | None) -> None:
+        if rowid is None:
+            return
+
+        current_date = datetime.now().strftime(TIMESTAMP_LONG)
+        self.cursor.execute(
+            """UPDATE loot
+                SET seen_last = ?
+                WHERE id = ?""",
+            (current_date, rowid),
+        )
+
+    def insert_offer(self, offer: LootOffer) -> None:
+        current_date = datetime.now().strftime(TIMESTAMP_LONG)
+        self.cursor.execute(
+            """INSERT INTO loot(seen_first, seen_last, rawtext, source, type, title, subtitle, publisher, valid_until, url)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+            (
+                current_date,
+                current_date,
+                offer.rawtext,
+                offer.source,
+                offer.type,
+                offer.title,
+                offer.subtitle,
+                offer.publisher,
+                offer.enddate,
+                offer.url,
+            ),
+        )
+
     def insert_offers(self, offers: list[LootOffer]) -> None:
-        current_date = date.today().strftime(DATEFORMAT)
+        current_date = datetime.now().strftime(TIMESTAMP_LONG)
         for offer in offers:
             self.cursor.execute(
-                """INSERT INTO loot(first_scraped_date, last_scraped_date, rawtext, source, type, title, subtitle, publisher, valid_until)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                """INSERT INTO loot(seen_first, seen_last, rawtext, source, type, title, subtitle, publisher, valid_until, url)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
                 (
                     current_date,
                     current_date,
@@ -72,17 +104,42 @@ class LootDatabase:
                     offer.subtitle,
                     offer.publisher,
                     offer.enddate,
+                    offer.url,
                 ),
             )
 
     def read_offers(self) -> list[LootOffer]:
         self.cursor.execute(
-            "SELECT source, type, title, subtitle, publisher, valid_until FROM loot ORDER BY type"
+            (
+                "SELECT id"
+                ", source"
+                ", type"
+                ", title"
+                ", subtitle"
+                ", publisher"
+                ", valid_until"
+                ", seen_first"
+                ", seen_last"
+                ", url"
+                " FROM loot"
+                " ORDER BY type"
+            )
         )
         offers = []
 
         for row in self.cursor:  # type: ignore
-            offer = LootOffer(source=row[0], type=row[1], title=row[2], subtitle=row[3], publisher=row[4], enddate=row[5])  # type: ignore
+            offer = LootOffer(
+                id=row[0],  # type: ignore
+                source=row[1],  # type: ignore
+                type=row[2],  # type: ignore
+                title=row[3],  # type: ignore
+                subtitle=row[4],  # type: ignore
+                publisher=row[5],  # type: ignore
+                enddate=row[6],  # type: ignore
+                seen_first=datetime.strptime(row[7], TIMESTAMP_LONG),  # type: ignore
+                seen_last=datetime.strptime(row[8], TIMESTAMP_LONG),  # type: ignore
+                url=row[9],  # type: ignore
+            )
             offers.append(offer)
 
         return offers
