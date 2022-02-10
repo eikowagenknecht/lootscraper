@@ -8,6 +8,7 @@ from app.common import LootOffer
 from app.database import LootDatabase
 from app.feed import generate_feed
 from app.scraper.amazon_prime import AmazonScraper
+from app.upload import upload_to_server
 
 
 class Arguments(TypedArgs):
@@ -40,13 +41,12 @@ def main() -> None:
                     and db_offer.subtitle == scraped_offer.subtitle
                     and db_offer.enddate == scraped_offer.enddate
                 ):
+                    # Offer has already been scraped, so do not insert this into the database, but update the "last seen" timestamp
+                    db.touch_offer(db_offer.id)
                     exists_in_db = True
                     break
 
-            if exists_in_db:
-                # Offer has already been scraped, so do not insert this into the database, but update the "last seen" timestamp
-                db.touch_offer(scraped_offer.id)
-            else:
+            if not exists_in_db:
                 # The enddate has been changed or it is a new offer, insert it into the database
                 db.insert_offer(scraped_offer)
 
@@ -54,6 +54,7 @@ def main() -> None:
 
     debug_print_offers(new_offers)
     generate_feed(new_offers, data_path)
+    upload_to_server(data_path)
 
 
 def debug_print_offers(all_offers: list[LootOffer]) -> None:

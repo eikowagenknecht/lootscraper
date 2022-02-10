@@ -15,7 +15,7 @@ This project is in ongoing development, not yet usable for the average user and 
 - [x] Generate ATOM feed from the offers in the database
 - [x] Store parsed and interpreted text
 - [x] Incrementally update the database and ATOM feed with only new offers
-- [ ] Upload results with FTP
+- [x] Upload results with FTP
 - [ ] Add tests
 - [ ] Make the script run on a daily basis within the Docker container
 - [ ] Dynamically generate ATOM feeds split by source and type (e.g. only amazon ingame loot) in addition to the full feed
