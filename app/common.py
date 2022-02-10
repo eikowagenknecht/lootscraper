@@ -15,3 +15,4 @@ class LootOffer:
     subtitle: str
     publisher: str
     enddate: str
+    rawtext: str = ""
