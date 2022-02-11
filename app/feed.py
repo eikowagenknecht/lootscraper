@@ -5,9 +5,7 @@ from pathlib import Path
 from feedgen.feed import FeedGenerator
 from pytz import timezone
 
-from .common import TIMESTAMP_LONG, LootOffer
-
-FILE_NAME: Path = Path("gameloot.xml")
+from .common import FEED_FILE, TIMESTAMP_LONG, LootOffer
 
 
 def generate_feed(offers: list[LootOffer], out_path: Path = None) -> None:
@@ -85,9 +83,9 @@ def generate_feed(offers: list[LootOffer], out_path: Path = None) -> None:
         # feed_entry.link(href="http://lernfunk.de/feed")
 
     if out_path is not None:
-        out_file = Path(out_path) / Path(FILE_NAME)
+        out_file = Path(out_path) / Path(FEED_FILE)
     else:
-        out_file = Path("data") / Path(FILE_NAME)
+        out_file = Path("data") / Path(FEED_FILE)
 
     # Write the ATOM feed to a file
     feed_generator.atom_file(filename=str(out_file), pretty=True)

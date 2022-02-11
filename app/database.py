@@ -6,9 +6,9 @@ from pathlib import Path
 from types import TracebackType
 from typing import Final, Type
 
-from .common import TIMESTAMP_LONG, LootOffer
+from .common import DATABASE_FILE, TIMESTAMP_LONG, LootOffer
 
-DB_NAME: Path = Path("loot.db")
+DB_NAME: Path = Path(DATABASE_FILE)
 
 DROP_LOOT_TABLE: Final = """DROP TABLE IF EXISTS loot"""
 CREATE_LOOT_TABLE: Final = """CREATE TABLE IF NOT EXISTS "loot" (
@@ -57,8 +57,8 @@ class LootDatabase:
         # self.cursor.execute(DROP_LOOT_TABLE)
         self.cursor.execute(CREATE_LOOT_TABLE)
 
-    def touch_offer(self, rowid: int | None) -> None:
-        if rowid is None:
+    def touch_offer(self, db_offer: LootOffer) -> None:
+        if db_offer.id is None:
             return
 
         current_date = datetime.now().strftime(TIMESTAMP_LONG)
@@ -66,7 +66,20 @@ class LootDatabase:
             """UPDATE loot
                 SET seen_last = ?
                 WHERE id = ?""",
-            (current_date, rowid),
+            (current_date, db_offer.id),
+        )
+
+    def update_url(self, db_offer: LootOffer) -> None:
+        """Helper method for migration."""
+
+        if db_offer.id is None:
+            return
+
+        self.cursor.execute(
+            """UPDATE loot
+                SET url = ?
+                WHERE id = ?""",
+            (db_offer.url, db_offer.id),
         )
 
     def insert_offer(self, offer: LootOffer) -> None:

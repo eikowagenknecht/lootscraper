@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import date, datetime, timedelta
 
 from selenium.common.exceptions import WebDriverException
 from selenium.webdriver.chrome.webdriver import WebDriver
@@ -8,7 +8,7 @@ from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
-from app.common import TIMESTAMP_SHORT, LootOffer, OfferType
+from app.common import LootOffer, OfferType
 from app.pagedriver import get_pagedriver
 
 SCRAPER_NAME = "Amazon Prime"
@@ -150,11 +150,16 @@ class AmazonScraper:
             publisher = offer.paragraph
 
             # Date
-            parsed_date = datetime.strptime(offer.enddate, "%b %d")
-            guessed_end_date = datetime(
-                datetime.now().year, parsed_date.month, parsed_date.day
+            # This is a little bit more complicated as only month and day are
+            # displayed on the site. The year is guessed assuming that old
+            # offers are not shown any more. "Old" means older than yesterday
+            # to avoid time zone problems.
+            parsed_date = datetime.strptime(offer.enddate, "%b %d").date()
+            guessed_end_date = date(
+                date.today().year, parsed_date.month, parsed_date.day
             )
-            if guessed_end_date < datetime.now():
+            yesterday = date.today() - timedelta(days=1)
+            if guessed_end_date < yesterday:
                 guessed_end_date = guessed_end_date.replace(
                     year=guessed_end_date.year + 1
                 )
@@ -167,7 +172,7 @@ class AmazonScraper:
                 title=title,
                 subtitle=subtitle,
                 publisher=publisher,
-                enddate=guessed_end_date.strftime(TIMESTAMP_SHORT),
+                enddate=guessed_end_date.isoformat(),
                 url=nearest_url,
             )
 
