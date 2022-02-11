@@ -102,7 +102,8 @@ class AmazonScraper:
 
             try:
                 enddate: WebElement = element.find_element(
-                    By.XPATH, './/p[@data-test-selector="offer-end-time"]/span'
+                    By.XPATH,
+                    './/p[@data-test-selector="offer-end-time"]/span',
                 )
                 enddate_str = enddate.text
             except WebDriverException:  # type: ignore
