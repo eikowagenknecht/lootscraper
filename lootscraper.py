@@ -42,7 +42,9 @@ def main() -> None:
                     and db_offer.enddate == scraped_offer.enddate
                 ):
                     # Offer has already been scraped, so do not insert this into the database, but update the "last seen" timestamp
-                    db.touch_offer(db_offer.id)
+                    scraped_offer.id = db_offer.id
+                    # db.update_url(scraped_offer)
+                    db.touch_offer(scraped_offer)
                     exists_in_db = True
                     break
 
