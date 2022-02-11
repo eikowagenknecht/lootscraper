@@ -23,6 +23,7 @@ class RawOffer:
     title: str
     paragraph: str
     enddate: str
+    url: str
 
 
 class AmazonScraper:
@@ -76,6 +77,7 @@ class AmazonScraper:
         title_str: str
         paragraph_str: str
         enddate_str: str
+        url_str: str
 
         for element in elements:
             try:
@@ -86,7 +88,7 @@ class AmazonScraper:
                 title_str = title.text
             except WebDriverException:  # type: ignore
                 # Nothing to do here, string stays empty
-                pass
+                title_str = ""
 
             try:
                 paragraph: WebElement = element.find_element(
@@ -96,7 +98,7 @@ class AmazonScraper:
                 paragraph_str = paragraph.text
             except WebDriverException:  # type: ignore
                 # Nothing to do here, string stays empty
-                pass
+                paragraph_str = ""
 
             try:
                 enddate: WebElement = element.find_element(
@@ -105,9 +107,21 @@ class AmazonScraper:
                 enddate_str = enddate.text
             except WebDriverException:  # type: ignore
                 # Nothing to do here, string stays empty
-                pass
+                enddate_str = ""
 
-            raw_offers.append(RawOffer(title_str, paragraph_str, enddate_str))
+            try:
+                url: WebElement = element.find_element(
+                    By.XPATH,
+                    './/a[@data-a-target="learn-more-card"]',
+                )
+                link: str | None = url.get_attribute("href")  # type: ignore
+                if link is not None:
+                    url_str = link
+            except WebDriverException:  # type: ignore
+                # Nothing to do here, string stays empty
+                url_str = ""
+
+            raw_offers.append(RawOffer(title_str, paragraph_str, enddate_str, url_str))
 
         normalized_offers = AmazonScraper.normalize_offers(offer_type, raw_offers)
 
@@ -122,12 +136,8 @@ class AmazonScraper:
         for offer in offers:
             # Raw text
             rawtext = (
-                "<title>"
-                + offer.title
-                + "</title>"
-                + "<paragraph>"
-                + offer.paragraph
-                + "</paragraph>"
+                f"<title>{offer.title}</title>"
+                f"<paragraph>{offer.paragraph}</paragraph>"
             )
 
             # Title
@@ -148,6 +158,7 @@ class AmazonScraper:
                     year=guessed_end_date.year + 1
                 )
 
+            nearest_url = offer.url if offer.url else ROOT_URL
             loot_offer = LootOffer(
                 source=SCRAPER_NAME,
                 type=offer_type.value,
@@ -156,7 +167,7 @@ class AmazonScraper:
                 subtitle=subtitle,
                 publisher=publisher,
                 enddate=guessed_end_date.strftime(TIMESTAMP_SHORT),
-                url=ROOT_URL,
+                url=nearest_url,
             )
 
             normalized_offers.append(loot_offer)
