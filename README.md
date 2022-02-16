@@ -17,8 +17,8 @@ This project is in ongoing development, not yet usable for the average user and 
 - [x] Incrementally update the database and ATOM feed with only new offers
 - [x] Upload results with FTP
 - [x] Add links to the claim page in the feed
-- [ ] Add tests
-- [ ] Make the script run on a daily basis within the Docker container
+- [ ] Add tests (pytest?)
+- [ ] Make the script run on a daily basis within the Docker container (<https://github.com/dbader/schedule>)
 - [ ] Dynamically generate ATOM feeds split by source and type (e.g. only amazon ingame loot) in addition to the full feed
 - [ ] Notify by mail when something goes wrong (e.g. a source cannot be scraped)
 - [ ] Better support of timezones

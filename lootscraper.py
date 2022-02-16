@@ -1,4 +1,6 @@
 import sys
+from time import sleep
+import schedule
 from argparse import ArgumentParser
 from pathlib import Path
 
@@ -18,6 +20,14 @@ class Arguments(TypedArgs):
 def main() -> None:
     args = parse_commandline_arguments()
 
+    schedule.every().hour.do(job, args=args)  # type: ignore
+
+    while True:
+        schedule.run_pending()  # type: ignore
+        sleep(1)
+
+
+def job(args: Arguments) -> None:
     data_path = Path("/data/") if args.docker else Path("data/")
 
     db: LootDatabase

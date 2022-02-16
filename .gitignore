@@ -2,7 +2,7 @@
 /.venv/
 
 # Secrets
-config.py
+/app/config/upload.py
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
