@@ -1,7 +1,7 @@
 from ftplib import FTP_TLS  # nosec
 from pathlib import Path
-from app.common import FEED_FILE
 
+from app.common import FEED_FILE
 from app.config.upload import HOST, PASS, UPLOAD, USER
 
 

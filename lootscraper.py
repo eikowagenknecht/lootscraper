@@ -1,9 +1,9 @@
 import sys
-from time import sleep
-import schedule
 from argparse import ArgumentParser
 from pathlib import Path
+from time import sleep
 
+import schedule
 from typed_argparse import TypedArgs
 
 from app.common import LootOffer
