@@ -2,7 +2,7 @@ from ftplib import FTP_TLS  # nosec
 from pathlib import Path
 from app.common import FEED_FILE
 
-from app.config import HOST, PASS, UPLOAD, USER
+from app.config.upload import HOST, PASS, UPLOAD, USER
 
 
 def upload_to_server(path: Path = None) -> None:
