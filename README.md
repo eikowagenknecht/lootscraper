@@ -24,6 +24,7 @@ This project is in ongoing development, not yet usable for the average user and 
 - [ ] Better support of timezones
 - [ ] Support multiple languages (at least EN and DE)
 - [ ] Support start and end dates of offers
+- [ ] Configuration in INI file
 
 ### Advanced features
 

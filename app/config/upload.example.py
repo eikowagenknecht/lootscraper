@@ -1,4 +1,4 @@
-# Copy this file to config.py and change the values there
+# Copy this file to data/config.py and change the values there
 
 HOST = "ftp.mypage.com"
 USER = "username"
