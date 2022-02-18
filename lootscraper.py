@@ -1,9 +1,9 @@
 import logging
 import shutil
 import sys
-from threading import Event
 from datetime import datetime, timedelta
 from pathlib import Path
+from threading import Event
 from types import FrameType
 
 from app.common import TIMESTAMP_LONG, LootOffer
@@ -12,7 +12,6 @@ from app.database import LootDatabase
 from app.feed import generate_feed
 from app.scraper.amazon_prime import AmazonScraper
 from app.upload import upload_to_server
-
 
 exit = Event()
 
