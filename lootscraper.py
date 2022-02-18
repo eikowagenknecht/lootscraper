@@ -1,4 +1,5 @@
 import logging
+import shutil
 import sys
 from threading import Event
 from datetime import datetime, timedelta
@@ -6,7 +7,7 @@ from pathlib import Path
 from types import FrameType
 
 from app.common import TIMESTAMP_LONG, LootOffer
-from app.config.config import DATA_PATH, LOG_FILE, LOGLEVEL, WAIT_BETWEEN_RUNS
+from app.configparser import Config
 from app.database import LootDatabase
 from app.feed import generate_feed
 from app.scraper.amazon_prime import AmazonScraper
@@ -17,31 +18,45 @@ exit = Event()
 
 
 def main() -> None:
+    # First thing to do: Copy the config file to the data directory if there is
+    # not yet a config file there!
+    config_file = Config.config_file()
+    if not config_file.exists():
+        print(f"Config file {config_file} not found, creating a new one")
+        example_config_file = "config.default.ini"
+        shutil.copy(example_config_file, config_file)
+
+    filename = Config.data_path() / Path(Config.config()["common"]["LogFile"])
+    loglevel = Config.config()["common"]["Loglevel"]
     logging.basicConfig(
-        filename=Path(DATA_PATH) / Path(LOG_FILE),
+        filename=filename,
         encoding="utf-8",
-        level=LOGLEVEL,
+        level=logging.getLevelName(loglevel),  # type: ignore
         format="%(asctime)s [%(levelname)-5s] %(message)s",
         datefmt=TIMESTAMP_LONG,
     )
     logging.getLogger().addHandler(logging.StreamHandler(sys.stdout))
     logging.info("Starting script")
 
-    # Run the job every hour. Yes, this is not exact because it does not
-    # account for the execution time, but that doesn't matter in our context.
+    # Run the job every hour (or whatever is set in the config file). This is
+    # not exact because it does not account for the execution time, but that
+    # doesn't matter in our context.
+    run = 1
     while not exit.is_set():
-        logging.info("Starting Job")
+        logging.info(f"Starting Run # {run}")
         job()
 
-        next_execution = datetime.now() + timedelta(seconds=WAIT_BETWEEN_RUNS)
+        time_between_runs = int(Config.config()["common"]["WaitBetweenRuns"])
+        next_execution = datetime.now() + timedelta(seconds=time_between_runs)
 
         logging.info(
             f"Waiting until {next_execution.strftime(TIMESTAMP_LONG)} for next execution"
         )
 
-        exit.wait(WAIT_BETWEEN_RUNS)
+        run += 1
+        exit.wait(time_between_runs)
 
-    logging.info("Exiting script")
+    logging.info(f"Exiting script after {run} runs")
 
 
 def quit(signo: int, _frame: FrameType | None) -> None:

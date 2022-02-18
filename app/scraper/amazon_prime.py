@@ -14,7 +14,7 @@ from app.pagedriver import get_pagedriver
 
 SCRAPER_NAME = "Amazon Prime"
 ROOT_URL = "https://gaming.amazon.com/home"
-MAX_WAIT_SECONDS = 10
+MAX_WAIT_SECONDS = 60  # Needs to be quite high in Docker for first run
 BASE_ELEMENT_LOOT = "offer-list-IN_GAME_LOOT"
 BASE_ELEMENT_GAMES = "offer-list-FGWP_FULL"
 
@@ -57,10 +57,14 @@ class AmazonScraper:
     def read_offers_from_page(
         offer_type: OfferType, driver: WebDriver
     ) -> list[LootOffer]:
-        # Wait until the page loaded
-        WebDriverWait(driver, MAX_WAIT_SECONDS).until(
-            EC.presence_of_element_located((By.CLASS_NAME, "offer"))
-        )
+        try:
+            # Wait until the page loaded
+            WebDriverWait(driver, MAX_WAIT_SECONDS).until(
+                EC.presence_of_element_located((By.CLASS_NAME, "offer"))
+            )
+        except WebDriverException:  # type: ignore
+            logging.error(f"Page took longer than {MAX_WAIT_SECONDS} to load")
+            return []
 
         match offer_type:
             case OfferType.LOOT:
@@ -185,4 +189,5 @@ class AmazonScraper:
             )
 
             normalized_offers.append(loot_offer)
+            logging.info(f"Found offer for {loot_offer.title}")
         return normalized_offers
