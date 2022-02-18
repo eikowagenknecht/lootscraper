@@ -6,7 +6,7 @@ from pathlib import Path
 from types import TracebackType
 from typing import Final, Type
 
-from app.config.config import DATA_PATH, DATABASE_FILE
+from app.configparser import Config
 
 from .common import TIMESTAMP_LONG, LootOffer
 
@@ -28,7 +28,7 @@ CREATE_LOOT_TABLE: Final = """CREATE TABLE IF NOT EXISTS "loot" (
 
 class LootDatabase:
     def __init__(self) -> None:
-        path = Path(DATA_PATH) / Path(DATABASE_FILE)
+        path = Config.data_path() / Path(Config.config()["common"]["DatabaseFile"])
 
         self.connection = sqlite3.connect(path)
         self.cursor = self.connection.cursor()

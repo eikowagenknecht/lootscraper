@@ -5,7 +5,7 @@ from pathlib import Path
 from feedgen.feed import FeedGenerator
 from pytz import timezone
 
-from app.config.config import DATA_PATH, FEED_FILE
+from app.configparser import Config
 
 from .common import TIMESTAMP_LONG, LootOffer
 
@@ -89,7 +89,7 @@ def generate_feed(offers: list[LootOffer]) -> None:
 
         # feed_entry.link(href="http://lernfunk.de/feed")
 
-    out_file = Path(DATA_PATH) / Path(FEED_FILE)
+    out_file = Config.data_path() / Path(Config.config()["common"]["FeedFile"])
 
     # Write the ATOM feed to a file
     feed_generator.atom_file(filename=str(out_file), pretty=True)

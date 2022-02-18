@@ -33,6 +33,7 @@ RUN pip install -r requirements.txt
 
 # Add the script
 COPY lootscraper.py /app
+COPY config.default.ini /app
 COPY app /app/app
 COPY js /app/js
 
