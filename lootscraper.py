@@ -1,14 +1,14 @@
+from datetime import datetime, timedelta
 import logging
 from pathlib import Path
 import sys
 from argparse import ArgumentParser
 from time import sleep
 
-import schedule
 from typed_argparse import TypedArgs
 
 from app.common import TIMESTAMP_LONG, LootOffer
-from app.config.config import DATA_PATH, LOG_FILE, LOGLEVEL
+from app.config.config import DATA_PATH, LOG_FILE, LOGLEVEL, WAIT_BETWEEN_RUNS
 from app.database import LootDatabase
 from app.feed import generate_feed
 from app.scraper.amazon_prime import AmazonScraper
@@ -30,12 +30,18 @@ def main() -> None:
     logging.info("Script started")
     args = parse_commandline_arguments()
 
-    schedule.every().hour.do(job, args=args)  # type: ignore
-
+    # Run the job every hour. Yes, this is not exact because it does not
+    # account for the execution time, but that doesn't matter in our context.
     while True:
-        schedule.run_pending()  # type: ignore
-        logging.debug("Waiting for next execution")
-        sleep(1)
+        job(args)
+
+        current_time = datetime.now()
+        next_execution = current_time + timedelta(seconds=WAIT_BETWEEN_RUNS)
+
+        logging.debug(
+            f"Waiting until {next_execution.strftime(TIMESTAMP_LONG)} for next execution"
+        )
+        sleep(WAIT_BETWEEN_RUNS)
 
 
 def job(args: Arguments) -> None:
