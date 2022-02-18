@@ -1,3 +1,5 @@
+import logging
+
 import chromedriver_binary  # pylint: disable=unused-import # noqa: F401 # Imported for the sideeffects!
 from selenium.webdriver import Chrome
 from selenium.webdriver.chrome.options import Options
@@ -9,6 +11,7 @@ INJECTION_FILE = "js/inject.js"
 
 
 def get_pagedriver() -> WebDriver:
+    logging.info("Getting pagedriver options")
     options = Options()
     options.add_argument("--headless")
     options.add_argument(
@@ -22,12 +25,14 @@ def get_pagedriver() -> WebDriver:
     options.add_argument("--silent")
 
     if CONTAINER_MODE:
+        logging.info("Adding Docker options")
         options.add_argument("--no-sandbox")
         options.add_argument("--disable-dev-shm-usage")
 
+    logging.info("Creating driver")
     driver = Chrome(options=options)
 
-    # Inject JS
+    logging.info("Injecting JS")
     with open(INJECTION_FILE, "r", encoding="utf-8") as file:
         js_to_inject = file.read()
 

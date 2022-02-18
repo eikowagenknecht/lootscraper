@@ -1,5 +1,5 @@
-from ftplib import FTP_TLS  # nosec
 import logging
+from ftplib import FTP_TLS  # nosec
 from pathlib import Path
 
 from app.config.config import DATA_PATH, FEED_FILE, HOST, PASS, UPLOAD, USER

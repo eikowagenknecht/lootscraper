@@ -24,16 +24,17 @@ ENV DISPLAY=:99
 
 # Add the script
 RUN mkdir /app
-COPY lootscraper.py /app
-COPY app /app/app
-COPY requirements.txt /app
-COPY inject.js /app/js
-
 WORKDIR /app
 
 # Install needed Python libraries
+COPY requirements.txt /app
 RUN pip install --upgrade pip
 RUN pip install -r requirements.txt
+
+# Add the script
+COPY lootscraper.py /app
+COPY app /app/app
+COPY js /app/js
 
 # Run the script
 CMD [ "python", "lootscraper.py", "--docker" ]
