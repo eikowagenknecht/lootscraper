@@ -5,10 +5,12 @@ from pathlib import Path
 from feedgen.feed import FeedGenerator
 from pytz import timezone
 
-from .common import FEED_FILE, TIMESTAMP_LONG, LootOffer
+from app.config.config import DATA_PATH, FEED_FILE
+
+from .common import TIMESTAMP_LONG, LootOffer
 
 
-def generate_feed(offers: list[LootOffer], out_path: Path = None) -> None:
+def generate_feed(offers: list[LootOffer]) -> None:
     last_updated = datetime.now()
     local_timezone = timezone("Europe/Berlin")
     last_updated = last_updated.replace(tzinfo=local_timezone)
@@ -82,10 +84,7 @@ def generate_feed(offers: list[LootOffer], out_path: Path = None) -> None:
 
         # feed_entry.link(href="http://lernfunk.de/feed")
 
-    if out_path is not None:
-        out_file = Path(out_path) / Path(FEED_FILE)
-    else:
-        out_file = Path("data") / Path(FEED_FILE)
+    out_file = Path(DATA_PATH) / Path(FEED_FILE)
 
     # Write the ATOM feed to a file
     feed_generator.atom_file(filename=str(out_file), pretty=True)

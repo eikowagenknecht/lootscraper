@@ -3,10 +3,12 @@ from selenium.webdriver import Chrome
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.webdriver import WebDriver
 
+from app.config.config import CONTAINER_MODE
+
 INJECTION_FILE = "js/inject.js"
 
 
-def get_pagedriver(docker: bool) -> WebDriver:
+def get_pagedriver() -> WebDriver:
     options = Options()
     options.add_argument("--headless")
     options.add_argument(
@@ -19,7 +21,7 @@ def get_pagedriver(docker: bool) -> WebDriver:
     options.add_argument("--log-level=3")
     options.add_argument("--silent")
 
-    if docker:
+    if CONTAINER_MODE:
         options.add_argument("--no-sandbox")
         options.add_argument("--disable-dev-shm-usage")
 
