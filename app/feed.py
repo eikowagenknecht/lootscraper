@@ -46,7 +46,7 @@ def generate_feed(offers: list[LootOffer]) -> None:
     for offer in offers:
         feed_entry = feed_generator.add_entry()
         # Atom Needed
-        feed_entry.id(str(offer.id))
+        feed_entry.id(f"https://phenx.de/loot/ {offer.id}")
         title = f"{offer.type}: {offer.title}"
         if offer.subtitle:
             title += f" - {offer.subtitle}"
