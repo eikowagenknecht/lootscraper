@@ -28,11 +28,11 @@ class RawOffer:
 
 class AmazonScraper:
     @staticmethod
-    def scrape(use_docker_settings: bool) -> list[LootOffer]:
+    def scrape() -> list[LootOffer]:
         amazon_offers = []
 
         driver: WebDriver
-        with get_pagedriver(use_docker_settings) as driver:
+        with get_pagedriver() as driver:
             driver.get(ROOT_URL)
 
             amazon_offers.extend(

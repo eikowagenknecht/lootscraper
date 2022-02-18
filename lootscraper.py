@@ -1,12 +1,14 @@
+import logging
+from pathlib import Path
 import sys
 from argparse import ArgumentParser
-from pathlib import Path
 from time import sleep
 
 import schedule
 from typed_argparse import TypedArgs
 
-from app.common import LootOffer
+from app.common import TIMESTAMP_LONG, LootOffer
+from app.config.config import DATA_PATH, LOG_FILE, LOGLEVEL
 from app.database import LootDatabase
 from app.feed import generate_feed
 from app.scraper.amazon_prime import AmazonScraper
@@ -18,22 +20,29 @@ class Arguments(TypedArgs):
 
 
 def main() -> None:
+    logging.basicConfig(
+        filename=Path(DATA_PATH) / Path(LOG_FILE),
+        encoding="utf-8",
+        level=LOGLEVEL,
+        format="%(asctime)s %(levelname)-8s %(message)s",
+        datefmt=TIMESTAMP_LONG,
+    )
+    logging.info("Script started")
     args = parse_commandline_arguments()
 
     schedule.every().hour.do(job, args=args)  # type: ignore
 
     while True:
         schedule.run_pending()  # type: ignore
+        logging.debug("Waiting for next execution")
         sleep(1)
 
 
 def job(args: Arguments) -> None:
-    data_path = Path("/data/") if args.docker else Path("data/")
-
     db: LootDatabase
-    with LootDatabase(data_path) as db:
+    with LootDatabase() as db:
         db.create_tables()
-        amazon_offers = AmazonScraper.scrape(args.docker)
+        amazon_offers = AmazonScraper.scrape()
 
         # Check which offers are new and which are updated, then act accordingly:
         # - Offers that are neither new nor updated just get a new date
@@ -62,16 +71,19 @@ def job(args: Arguments) -> None:
                 # The enddate has been changed or it is a new offer, insert it into the database
                 db.insert_offer(scraped_offer)
 
-        new_offers = db.read_offers()
+        all_offers = db.read_offers()
 
-    debug_print_offers(new_offers)
-    generate_feed(new_offers, data_path)
-    upload_to_server(data_path)
+    log_offers(all_offers)
+    generate_feed(all_offers)
+    upload_to_server()
 
 
-def debug_print_offers(all_offers: list[LootOffer]) -> None:
+def log_offers(all_offers: list[LootOffer]) -> None:
+    logging.info("Offers currently in database:")
     for offer in all_offers:
-        print(f"{offer.type}: {offer.title} || {offer.subtitle} || {offer.enddate}")
+        logging.info(
+            f"{offer.type}: {offer.title} || {offer.subtitle} || {offer.enddate}"
+        )
 
 
 def parse_commandline_arguments() -> Arguments:

@@ -1,23 +1,24 @@
 from ftplib import FTP_TLS  # nosec
+import logging
 from pathlib import Path
 
-from app.common import FEED_FILE
-from app.config.upload import HOST, PASS, UPLOAD, USER
+from app.config.config import DATA_PATH, FEED_FILE, HOST, PASS, UPLOAD, USER
 
 
-def upload_to_server(path: Path = None) -> None:
+def upload_to_server() -> None:
     if UPLOAD is False:
+        logging.info("Upload is disabled, skipping")
         return
 
-    if path is not None:
-        filename = path / Path(FEED_FILE)
-    else:
-        filename = Path("data") / Path(FEED_FILE)
+    filename = Path(DATA_PATH) / Path(FEED_FILE)
 
+    logging.info(f"Uploading {filename} to host {HOST} as user {USER}")
     with FTP_TLS(HOST) as session:
         session.auth()
         session.prot_p()
         session.login(USER, PASS)
 
         with open(filename, "rb") as file:
-            session.storbinary("STOR gameloot.xml", file)
+            session.storbinary("STOR " + FEED_FILE, file)
+
+    logging.info("Finished uploading")

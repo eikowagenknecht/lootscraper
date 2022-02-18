@@ -4,8 +4,6 @@ from enum import Enum
 
 TIMESTAMP_SHORT = "%Y-%m-%d"
 TIMESTAMP_LONG = "%Y-%m-%d %H:%M:%S"
-DATABASE_FILE = "loot.db"
-FEED_FILE = "gameloot.xml"
 
 
 class OfferType(Enum):
