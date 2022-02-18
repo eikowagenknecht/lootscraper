@@ -86,7 +86,7 @@ def job() -> None:
 
         all_offers = db.read_offers()
 
-    logging.info("Found {new_offers} new offers")
+    logging.info(f"Found {new_offers} new offers")
     if new_offers:
         generate_feed(all_offers)
         upload_to_server()
