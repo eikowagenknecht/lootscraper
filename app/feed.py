@@ -47,7 +47,10 @@ def generate_feed(offers: list[LootOffer]) -> None:
         feed_entry = feed_generator.add_entry()
         # Atom Needed
         feed_entry.id(str(offer.id))
-        feed_entry.title(f"{offer.type} - {offer.title}")
+        title = f"{offer.type}: {offer.title}"
+        if offer.subtitle:
+            title += f" - {offer.subtitle}"
+        feed_entry.title(title)
         feed_entry.updated(offer.seen_last.replace(tzinfo=local_timezone))
         # Atom Recommended
         # - Author
@@ -63,11 +66,13 @@ def generate_feed(offers: list[LootOffer]) -> None:
             (
                 f"<h1>{offer.title}</h1>"
                 f"<h2>{offer.subtitle}</h2>"
-                f"<p>Type: {offer.type}</p>"
-                f"<p>Publisher: {offer.publisher}</p>"
-                f"<p>Valid until: {offer.enddate}</p>"
-                f'<p>Source: <a href="{offer.url}">"{offer.source}"</a></p>'
-                f"<p>Seen: {offer.seen_first.strftime(TIMESTAMP_LONG)} - {offer.seen_last.strftime(TIMESTAMP_LONG)}</p>"
+                "<ul>"
+                f"<li>Type: {offer.type}</li>"
+                f"<li>Publisher: {offer.publisher}</li>"
+                f"<li>Valid until: {offer.enddate}</li>"
+                f'<li>Source: <a href="{offer.url}">"{offer.source}"</a></li>'
+                f"<li>Seen: {offer.seen_first.strftime(TIMESTAMP_LONG)} - {offer.seen_last.strftime(TIMESTAMP_LONG)}</li>"
+                "</ul>"
             ),
             type="html",
         )
