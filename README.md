@@ -22,6 +22,7 @@ This project is in ongoing development, not yet usable for the average user and 
 - [ ] Add tests (pytest?)
 
 - [ ] Dynamically generate ATOM feeds split by source and type (e.g. only amazon ingame loot) in addition to the full feed
+- [ ] Error handling
 - [ ] Notify by mail when something goes wrong (e.g. a source cannot be scraped)
 - [ ] Better support of timezones
 - [ ] Support multiple languages (at least EN and DE)
@@ -39,6 +40,36 @@ This project is in ongoing development, not yet usable for the average user and 
 - [ ] Epic Games
 - [ ] Steam
 - [ ] GOG.com
+
+## Howto
+
+### Run locally
+
+Needs an installed Python 3.10 environment.
+
+- Download repository
+- Copy config.example.py to config.py and replace with your settings
+- Create virtual environment (`python -m venv .venv`)
+- Activate virtual environment (`./.venv/Scripts/Activate`)
+- Run (`python ./lootscraper.py`)
+
+### Build and run Docker container
+
+Docker needs to be installed first of course.
+
+- Download repository
+- Copy config.example.py to config.py and replace with your settings
+- In terminal go to directory
+- First run:
+  - Build: `docker build . -t eikowagenknecht/lootscraper:latest`
+  - Start: `docker run --detach --volume /your/local/path:/data --name lootscraper eikowagenknecht/lootscraper:latest`
+- Update:
+  - Stop: `docker stop lootscraper`
+  - Remove: `docker container rm lootscraper`
+  - Build without cache: `docker build . --no-cache -t eikowagenknecht/lootscraper:latest`
+  - Start: `docker run --detach --volume /your/local/path:/data --name lootscraper eikowagenknecht/lootscraper:latest`
+- Debug: `docker run -it --entrypoint /bin/bash --volume /your/local/path:/data --name lootscraper_debug eikowagenknecht/lootscraper:latest`
+- To stop, run `docker stop lootscraper`
 
 ## License
 

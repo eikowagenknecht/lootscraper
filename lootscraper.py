@@ -1,5 +1,6 @@
-from datetime import datetime, timedelta
 import logging
+import sys
+from datetime import datetime, timedelta
 from pathlib import Path
 from time import sleep
 
@@ -16,23 +17,27 @@ def main() -> None:
         filename=Path(DATA_PATH) / Path(LOG_FILE),
         encoding="utf-8",
         level=LOGLEVEL,
-        format="%(asctime)s %(levelname)-8s %(message)s",
+        format="%(asctime)s [%(levelname)-5s] %(message)s",
         datefmt=TIMESTAMP_LONG,
     )
+    logging.getLogger().addHandler(logging.StreamHandler(sys.stdout))
     logging.info("Script started")
 
     # Run the job every hour. Yes, this is not exact because it does not
     # account for the execution time, but that doesn't matter in our context.
     while True:
+        logging.info("Starting Job")
         job()
 
-        current_time = datetime.now()
-        next_execution = current_time + timedelta(seconds=WAIT_BETWEEN_RUNS)
+        next_execution = datetime.now() + timedelta(seconds=WAIT_BETWEEN_RUNS)
 
-        logging.debug(
+        logging.info(
             f"Waiting until {next_execution.strftime(TIMESTAMP_LONG)} for next execution"
         )
-        sleep(WAIT_BETWEEN_RUNS)
+
+        # Sleep in 1 second cycles so for interrupts can terminate the thread
+        for i in range(WAIT_BETWEEN_RUNS):
+            sleep(1)
 
 
 def job() -> None:

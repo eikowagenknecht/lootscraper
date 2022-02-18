@@ -1,3 +1,4 @@
+import logging
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta
 
@@ -29,19 +30,26 @@ class RawOffer:
 class AmazonScraper:
     @staticmethod
     def scrape() -> list[LootOffer]:
+        logging.info(f"Start scraping of {SCRAPER_NAME}")
         amazon_offers = []
 
-        driver: WebDriver
-        with get_pagedriver() as driver:
-            driver.get(ROOT_URL)
+        try:
+            driver: WebDriver
+            with get_pagedriver() as driver:
+                driver.get(ROOT_URL)
 
-            amazon_offers.extend(
-                AmazonScraper.read_offers_from_page(OfferType.GAME, driver)
-            )
-            amazon_offers.extend(
-                AmazonScraper.read_offers_from_page(OfferType.LOOT, driver)
-            )
-            driver.quit()
+                logging.info(f"Analyzing {ROOT_URL} for {OfferType.GAME.name} offers")
+                amazon_offers.extend(
+                    AmazonScraper.read_offers_from_page(OfferType.GAME, driver)
+                )
+                logging.info(f"Analyzing {ROOT_URL} for {OfferType.LOOT.name} offers")
+                amazon_offers.extend(
+                    AmazonScraper.read_offers_from_page(OfferType.LOOT, driver)
+                )
+                driver.quit()
+        except WebDriverException as err:  # type: ignore
+            logging.error(f"Failure starting Chrome WebDriver, aborting: {err.msg}")  # type: ignore
+            raise err
 
         return amazon_offers
 
@@ -70,8 +78,8 @@ class AmazonScraper:
                 + '"]//div[@data-a-target="Offer"]',
             )
         except WebDriverException:  # type: ignore
-            # TODO: Cancel this scraping, root element not found!
-            pass
+            logging.error("Root element not fould, could not scrape!")
+            return []
 
         raw_offers: list[RawOffer] = []
         title_str: str
