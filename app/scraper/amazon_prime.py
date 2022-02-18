@@ -38,11 +38,11 @@ class AmazonScraper:
             with get_pagedriver() as driver:
                 driver.get(ROOT_URL)
 
-                logging.info(f"Analyzing {ROOT_URL} for {OfferType.GAME.name} offers")
+                logging.info(f"Analyzing {ROOT_URL} for {OfferType.GAME.value} offers")
                 amazon_offers.extend(
                     AmazonScraper.read_offers_from_page(OfferType.GAME, driver)
                 )
-                logging.info(f"Analyzing {ROOT_URL} for {OfferType.LOOT.name} offers")
+                logging.info(f"Analyzing {ROOT_URL} for {OfferType.LOOT.value} offers")
                 amazon_offers.extend(
                     AmazonScraper.read_offers_from_page(OfferType.LOOT, driver)
                 )

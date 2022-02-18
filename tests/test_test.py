@@ -5,7 +5,7 @@ from app.pagedriver import get_pagedriver
 
 class TestUtils(unittest.TestCase):
     def test_pagedriver(self) -> None:
-        driver = get_pagedriver(False)
+        driver = get_pagedriver()
         self.assertIsNotNone(driver)
 
 
