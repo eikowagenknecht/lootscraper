@@ -16,4 +16,6 @@ DATABASE_FILE = "loot.db"
 FEED_FILE = "gameloot.xml"
 LOG_FILE = "lootscraper.log"
 
-LOGLEVEL = logging.DEBUG
+LOGLEVEL = logging.INFO
+
+WAIT_BETWEEN_RUNS = 3600
