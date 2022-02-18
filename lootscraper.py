@@ -1,11 +1,7 @@
 from datetime import datetime, timedelta
 import logging
 from pathlib import Path
-import sys
-from argparse import ArgumentParser
 from time import sleep
-
-from typed_argparse import TypedArgs
 
 from app.common import TIMESTAMP_LONG, LootOffer
 from app.config.config import DATA_PATH, LOG_FILE, LOGLEVEL, WAIT_BETWEEN_RUNS
@@ -13,10 +9,6 @@ from app.database import LootDatabase
 from app.feed import generate_feed
 from app.scraper.amazon_prime import AmazonScraper
 from app.upload import upload_to_server
-
-
-class Arguments(TypedArgs):
-    docker: bool
 
 
 def main() -> None:
@@ -28,12 +20,11 @@ def main() -> None:
         datefmt=TIMESTAMP_LONG,
     )
     logging.info("Script started")
-    args = parse_commandline_arguments()
 
     # Run the job every hour. Yes, this is not exact because it does not
     # account for the execution time, but that doesn't matter in our context.
     while True:
-        job(args)
+        job()
 
         current_time = datetime.now()
         next_execution = current_time + timedelta(seconds=WAIT_BETWEEN_RUNS)
@@ -44,7 +35,7 @@ def main() -> None:
         sleep(WAIT_BETWEEN_RUNS)
 
 
-def job(args: Arguments) -> None:
+def job() -> None:
     db: LootDatabase
     with LootDatabase() as db:
         db.create_tables()
@@ -90,25 +81,6 @@ def log_offers(all_offers: list[LootOffer]) -> None:
         logging.info(
             f"{offer.type}: {offer.title} || {offer.subtitle} || {offer.enddate}"
         )
-
-
-def parse_commandline_arguments() -> Arguments:
-    args = sys.argv[1:]
-
-    parser = ArgumentParser(
-        description="Parse loot from various files into an ATOM feed."
-    )
-    parser.add_argument(
-        "-d",
-        "--docker",
-        action="store_true",
-        dest="docker",
-        default=False,
-        help="use docker paths and options",
-    )
-    arguments = Arguments(parser.parse_args(args))
-
-    return arguments
 
 
 if __name__ == "__main__":
