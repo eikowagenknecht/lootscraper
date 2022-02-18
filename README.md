@@ -8,6 +8,10 @@ This project reads the free offers from various sources (Amazon Prime, Epic Game
 
 This project is in ongoing development, not yet usable for the average user and might often introduce breaking changes (a.k.a. "alpha" stage).
 
+### TODO
+
+- [ ] Fix SIGINT (Strg+C) handling. Currently it does not exit the script
+
 ### Features
 
 - [x] Runnable in a docker container (e.g. on a Synology NAS)
