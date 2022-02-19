@@ -23,6 +23,7 @@ class LootOffer:
     title: str | None = None
     subtitle: str | None = None
     publisher: str | None = None
-    enddate: str | None = None
+    valid_from: str | None = None
+    valid_to: str | None = None
     rawtext: str | None = None
     url: str | None = None
