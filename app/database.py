@@ -83,7 +83,7 @@ class LootDatabase:
         current_date = datetime.now().strftime(TIMESTAMP_LONG)
         self.cursor.execute(
             """INSERT INTO loot(seen_first, seen_last, rawtext, source, type, title, subtitle, publisher, valid_from, valid_to, url)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
             (
                 current_date,
                 current_date,
@@ -93,6 +93,7 @@ class LootDatabase:
                 offer.title,
                 offer.subtitle,
                 offer.publisher,
+                offer.valid_from,
                 offer.valid_to,
                 offer.url,
             ),
@@ -103,7 +104,7 @@ class LootDatabase:
         for offer in offers:
             self.cursor.execute(
                 """INSERT INTO loot(seen_first, seen_last, rawtext, source, type, title, subtitle, publisher, valid_from, valid_to, url)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
                 (
                     current_date,
                     current_date,
@@ -113,6 +114,7 @@ class LootDatabase:
                     offer.title,
                     offer.subtitle,
                     offer.publisher,
+                    offer.valid_from,
                     offer.valid_to,
                     offer.url,
                 ),

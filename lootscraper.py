@@ -70,8 +70,8 @@ def job() -> None:
         db.initialize_or_update()
         scraped_offers: list[LootOffer] = []
 
-        cfg_amazon: bool = Config.config().getboolean["actions", "ScrapeAmazon"]  # type: ignore
-        cfg_epic: bool = Config.config().getboolean["actions", "ScrapeEpic"]  # type: ignore
+        cfg_amazon: bool = Config.config().getboolean("actions", "ScrapeAmazon")  # type: ignore
+        cfg_epic: bool = Config.config().getboolean("actions", "ScrapeEpic")  # type: ignore
 
         if cfg_amazon:
             scraped_offers.extend(AmazonScraper.scrape())
@@ -116,8 +116,8 @@ def job() -> None:
 
     logging.info(f"Found {new_offers} new offers")
 
-    cfg_generate_feed: bool = Config.config().getboolean["actions", "GenerateFeed"]  # type: ignore
-    cfg_upload: bool = Config.config().getboolean["actions", "UploadFtp"]  # type: ignore
+    cfg_generate_feed: bool = Config.config().getboolean("actions", "GenerateFeed")  # type: ignore
+    cfg_upload: bool = Config.config().getboolean("actions", "UploadFtp")  # type: ignore
 
     if cfg_generate_feed:
         generate_feed(all_offers)

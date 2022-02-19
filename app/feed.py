@@ -14,6 +14,7 @@ from .common import TIMESTAMP_LONG, LootOffer
 # TODO: Use valid_from for entry date if exists, otherwise use seen_first
 # Include only entries where valid_from is either in the past or empty
 
+
 def generate_feed(offers: list[LootOffer]) -> None:
     last_updated = datetime.now()
     local_timezone = timezone("Europe/Berlin")
@@ -50,8 +51,8 @@ def generate_feed(offers: list[LootOffer]) -> None:
     for offer in offers:
         feed_entry = feed_generator.add_entry()
         # Atom Needed
-        feed_entry.id(f"https://phenx.de/loot/{offer.id}")
-        title = f"{offer.type}: {offer.title}"
+        feed_entry.id(f"https://phenx.de/loot/{int(offer.id)}")
+        title = f"({offer.source}) {offer.type}: {offer.title}"
         if offer.subtitle:
             title += f" - {offer.subtitle}"
         feed_entry.title(title)
@@ -66,19 +67,19 @@ def generate_feed(offers: list[LootOffer]) -> None:
             }
         )
         # - Content
-        feed_entry.content(
-            (
-                f"<h1>{html.escape(offer.type)}: {html.escape(title)}</h1>"
-                "<ul>"
-                f"<li>Publisher: {html.escape(offer.publisher)}</li>"
-                f"<li>Valid until: {html.escape(offer.valid_to)}</li>"
-                f"<li>Seen first: {offer.seen_first.strftime(TIMESTAMP_LONG)}</li>"
-                f"<li>Seen last: {offer.seen_last.strftime(TIMESTAMP_LONG)}</li>"
-                f'<li>Source: <a href="{html.escape(offer.url)}">{html.escape(offer.source)}</a></li>'
-                "</ul>"
-            ),
-            type="xhtml",
-        )
+        content = f"<h1>{html.escape(title)}</h1><ul>"
+        if offer.publisher:
+            content += f"<li>Publisher: {html.escape(offer.publisher)}</li>"
+        if offer.valid_from:
+            content += f"<li>Valid from: {html.escape(offer.valid_from)}</li>"
+        if offer.valid_to:
+            content += f"<li>Valid to: {html.escape(offer.valid_to)}</li>"
+        content += f"<li>Seen first: {offer.seen_first.strftime(TIMESTAMP_LONG)}</li>"
+        content += f"<li>Seen last: {offer.seen_last.strftime(TIMESTAMP_LONG)}</li>"
+        if offer.url:
+            content += f'<li>Source: <a href="{html.escape(offer.url)}">{html.escape(offer.source)}</a></li>'
+        content += "</ul>"
+        feed_entry.content(content, type="xhtml")
         # - Link
         feed_entry.link(rel="alternate", href=offer.url)
         # - Summary
