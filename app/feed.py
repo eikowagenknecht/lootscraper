@@ -23,7 +23,7 @@ def generate_feed(offers: list[LootOffer]) -> None:
     feed_generator.language("en")
     # Atom Needed
     feed_generator.id("https://phenx.de/loot")
-    feed_generator.title("Free Games and Loot Feed - phenx.de")
+    feed_generator.title("Free Games and Loot")
     feed_generator.updated(last_updated)
     # Atom Recommended
     feed_generator.link(rel="self", href="https://feed.phenx.de/gameloot.xml")
