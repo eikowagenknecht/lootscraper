@@ -11,10 +11,6 @@ from app.configparser import Config
 from .common import TIMESTAMP_LONG, LootOffer
 
 
-# TODO: Use valid_from for entry date if exists, otherwise use seen_first
-# Include only entries where valid_from is either in the past or empty
-
-
 def generate_feed(offers: list[LootOffer]) -> None:
     last_updated = datetime.now()
     local_timezone = timezone("Europe/Berlin")
@@ -49,12 +45,17 @@ def generate_feed(offers: list[LootOffer]) -> None:
     # - Subtitle
 
     for offer in offers:
+        if offer.valid_from and offer.valid_from > datetime.utcnow():
+            # Skip future entries
+            continue
+
         feed_entry = feed_generator.add_entry()
         # Atom Needed
         feed_entry.id(f"https://phenx.de/loot/{int(offer.id)}")
-        title = f"({offer.source}) {offer.type}: {offer.title}"
+        title = f"{offer.source} - {offer.title}"
         if offer.subtitle:
-            title += f" - {offer.subtitle}"
+            title += f": {offer.subtitle}"
+        title += f" ({offer.type})"
         feed_entry.title(title)
         feed_entry.updated(offer.seen_last.replace(tzinfo=local_timezone))
         # Atom Recommended
@@ -67,15 +68,17 @@ def generate_feed(offers: list[LootOffer]) -> None:
             }
         )
         # - Content
-        content = f"<h1>{html.escape(title)}</h1><ul>"
-        if offer.publisher:
-            content += f"<li>Publisher: {html.escape(offer.publisher)}</li>"
+        content = "<ul>"
         if offer.valid_from:
             content += f"<li>Valid from: {html.escape(offer.valid_from)}</li>"
+        else:
+            content += f"<li>Valid from: {html.escape(offer.seen_first)}</li>"
         if offer.valid_to:
-            content += f"<li>Valid to: {html.escape(offer.valid_to)}</li>"
+            content += f"<li><b>Valid to: {html.escape(offer.valid_to)}</b></li>"
         content += f"<li>Seen first: {offer.seen_first.strftime(TIMESTAMP_LONG)}</li>"
         content += f"<li>Seen last: {offer.seen_last.strftime(TIMESTAMP_LONG)}</li>"
+        if offer.publisher:
+            content += f"<li>Publisher: {html.escape(offer.publisher)}</li>"
         if offer.url:
             content += f'<li>Source: <a href="{html.escape(offer.url)}">{html.escape(offer.source)}</a></li>'
         content += "</ul>"
