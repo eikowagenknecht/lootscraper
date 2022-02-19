@@ -11,6 +11,9 @@ from app.configparser import Config
 from .common import TIMESTAMP_LONG, LootOffer
 
 
+# TODO: Use valid_from for entry date if exists, otherwise use seen_first
+# Include only entries where valid_from is either in the past or empty
+
 def generate_feed(offers: list[LootOffer]) -> None:
     last_updated = datetime.now()
     local_timezone = timezone("Europe/Berlin")
@@ -68,7 +71,7 @@ def generate_feed(offers: list[LootOffer]) -> None:
                 f"<h1>{html.escape(offer.type)}: {html.escape(title)}</h1>"
                 "<ul>"
                 f"<li>Publisher: {html.escape(offer.publisher)}</li>"
-                f"<li>Valid until: {html.escape(offer.enddate)}</li>"
+                f"<li>Valid until: {html.escape(offer.valid_to)}</li>"
                 f"<li>Seen first: {offer.seen_first.strftime(TIMESTAMP_LONG)}</li>"
                 f"<li>Seen last: {offer.seen_last.strftime(TIMESTAMP_LONG)}</li>"
                 f'<li>Source: <a href="{html.escape(offer.url)}">{html.escape(offer.source)}</a></li>'

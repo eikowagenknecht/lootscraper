@@ -21,7 +21,8 @@ CREATE_LOOT_TABLE: Final = """CREATE TABLE IF NOT EXISTS "loot" (
     "title" TEXT,
     "subtitle" TEXT,
     "publisher" TEXT,
-    "valid_until" TEXT,
+    "valid_from" TEXT,
+    "valid_to" TEXT,
     "url" TEXT
 );"""
 
@@ -49,7 +50,7 @@ class LootDatabase:
             self.connection.commit()
         self.connection.close()
 
-    def create_tables(self) -> None:
+    def initialize_or_update(self) -> None:
         # self.cursor.execute(DROP_LOOT_TABLE)
         self.cursor.execute(CREATE_LOOT_TABLE)
 
@@ -81,7 +82,7 @@ class LootDatabase:
     def insert_offer(self, offer: LootOffer) -> None:
         current_date = datetime.now().strftime(TIMESTAMP_LONG)
         self.cursor.execute(
-            """INSERT INTO loot(seen_first, seen_last, rawtext, source, type, title, subtitle, publisher, valid_until, url)
+            """INSERT INTO loot(seen_first, seen_last, rawtext, source, type, title, subtitle, publisher, valid_from, valid_to, url)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
             (
                 current_date,
@@ -92,7 +93,7 @@ class LootDatabase:
                 offer.title,
                 offer.subtitle,
                 offer.publisher,
-                offer.enddate,
+                offer.valid_to,
                 offer.url,
             ),
         )
@@ -101,7 +102,7 @@ class LootDatabase:
         current_date = datetime.now().strftime(TIMESTAMP_LONG)
         for offer in offers:
             self.cursor.execute(
-                """INSERT INTO loot(seen_first, seen_last, rawtext, source, type, title, subtitle, publisher, valid_until, url)
+                """INSERT INTO loot(seen_first, seen_last, rawtext, source, type, title, subtitle, publisher, valid_from, valid_to, url)
                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
                 (
                     current_date,
@@ -112,7 +113,7 @@ class LootDatabase:
                     offer.title,
                     offer.subtitle,
                     offer.publisher,
-                    offer.enddate,
+                    offer.valid_to,
                     offer.url,
                 ),
             )
@@ -126,7 +127,8 @@ class LootDatabase:
                 ", title"
                 ", subtitle"
                 ", publisher"
-                ", valid_until"
+                ", valid_from"
+                ", valid_to"
                 ", seen_first"
                 ", seen_last"
                 ", url"
@@ -144,10 +146,11 @@ class LootDatabase:
                 title=row[3],  # type: ignore
                 subtitle=row[4],  # type: ignore
                 publisher=row[5],  # type: ignore
-                enddate=row[6],  # type: ignore
-                seen_first=datetime.strptime(row[7], TIMESTAMP_LONG),  # type: ignore
-                seen_last=datetime.strptime(row[8], TIMESTAMP_LONG),  # type: ignore
-                url=row[9],  # type: ignore
+                valid_from=row[6],  # type: ignore
+                valid_to=row[7],  # type: ignore
+                seen_first=datetime.strptime(row[8], TIMESTAMP_LONG),  # type: ignore
+                seen_last=datetime.strptime(row[9], TIMESTAMP_LONG),  # type: ignore
+                url=row[10],  # type: ignore
             )
             offers.append(offer)
 

@@ -6,11 +6,6 @@ from app.configparser import Config
 
 
 def upload_to_server() -> None:
-    upload: bool = Config.config().getboolean["upload", "Enable"]  # type: ignore
-    if upload is False:
-        logging.info("Upload is disabled, skipping")
-        return
-
     host = Config.config()["upload"]["Host"]
     user = Config.config()["upload"]["User"]
     password = Config.config()["upload"]["Password"]

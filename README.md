@@ -41,7 +41,7 @@ This project is in ongoing development, not yet usable for the average user and 
 ### Scrapers
 
 - [x] Amazon Prime (Games and InGame)
-- [ ] Epic Games
+- [x] Epic Games
 - [ ] Steam
 - [ ] GOG.com
 

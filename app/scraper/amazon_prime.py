@@ -23,7 +23,7 @@ BASE_ELEMENT_GAMES = "offer-list-FGWP_FULL"
 class RawOffer:
     title: str
     paragraph: str
-    enddate: str
+    valid_to: str
     url: str
 
 
@@ -31,7 +31,7 @@ class AmazonScraper:
     @staticmethod
     def scrape() -> list[LootOffer]:
         logging.info(f"Start scraping of {SCRAPER_NAME}")
-        amazon_offers = []
+        offers = []
 
         try:
             driver: WebDriver
@@ -39,11 +39,11 @@ class AmazonScraper:
                 driver.get(ROOT_URL)
 
                 logging.info(f"Analyzing {ROOT_URL} for {OfferType.GAME.value} offers")
-                amazon_offers.extend(
+                offers.extend(
                     AmazonScraper.read_offers_from_page(OfferType.GAME, driver)
                 )
                 logging.info(f"Analyzing {ROOT_URL} for {OfferType.LOOT.value} offers")
-                amazon_offers.extend(
+                offers.extend(
                     AmazonScraper.read_offers_from_page(OfferType.LOOT, driver)
                 )
                 driver.quit()
@@ -51,7 +51,7 @@ class AmazonScraper:
             logging.error(f"Failure starting Chrome WebDriver, aborting: {err.msg}")  # type: ignore
             raise err
 
-        return amazon_offers
+        return offers
 
     @staticmethod
     def read_offers_from_page(
@@ -166,7 +166,8 @@ class AmazonScraper:
             # displayed on the site. The year is guessed assuming that old
             # offers are not shown any more. "Old" means older than yesterday
             # to avoid time zone problems.
-            parsed_date = datetime.strptime(offer.enddate, "%b %d").date()
+            # TODO: Save this in UTC time instead of German time!
+            parsed_date = datetime.strptime(offer.valid_to, "%b %d").date()
             guessed_end_date = date(
                 date.today().year, parsed_date.month, parsed_date.day
             )
@@ -184,7 +185,7 @@ class AmazonScraper:
                 title=title,
                 subtitle=subtitle,
                 publisher=publisher,
-                enddate=guessed_end_date.isoformat(),
+                valid_to=guessed_end_date.isoformat(),
                 url=nearest_url,
             )
 

@@ -11,6 +11,7 @@ from app.configparser import Config
 from app.database import LootDatabase
 from app.feed import generate_feed
 from app.scraper.amazon_prime import AmazonScraper
+from app.scraper.epic_games import EpicScraper
 from app.upload import upload_to_server
 
 exit = Event()
@@ -66,8 +67,21 @@ def quit(signo: int, _frame: FrameType | None) -> None:
 def job() -> None:
     db: LootDatabase
     with LootDatabase() as db:
-        db.create_tables()
-        amazon_offers = AmazonScraper.scrape()
+        db.initialize_or_update()
+        scraped_offers: list[LootOffer] = []
+
+        cfg_amazon: bool = Config.config().getboolean["actions", "ScrapeAmazon"]  # type: ignore
+        cfg_epic: bool = Config.config().getboolean["actions", "ScrapeEpic"]  # type: ignore
+
+        if cfg_amazon:
+            scraped_offers.extend(AmazonScraper.scrape())
+        else:
+            logging.info("Skipping Amazon")
+
+        if cfg_epic:
+            scraped_offers.extend(EpicScraper.scrape())
+        else:
+            logging.info("Skipping Epic")
 
         # Check which offers are new and which are updated, then act accordingly:
         # - Offers that are neither new nor updated just get a new date
@@ -76,7 +90,7 @@ def job() -> None:
         db_offers = db.read_offers()
         new_offers: int = 0
 
-        for scraped_offer in amazon_offers:
+        for scraped_offer in scraped_offers:
             exists_in_db = False
             # Check every database entry if this is a match. Could probably made much faster, but irrelevant for now.
             for db_offer in db_offers:
@@ -84,7 +98,7 @@ def job() -> None:
                     db_offer.source == scraped_offer.source
                     and db_offer.title == scraped_offer.title
                     and db_offer.subtitle == scraped_offer.subtitle
-                    and db_offer.enddate == scraped_offer.enddate
+                    and db_offer.valid_to == scraped_offer.valid_to
                 ):
                     # Offer has already been scraped, so do not insert this into the database, but update the "last seen" timestamp
                     scraped_offer.id = db_offer.id
@@ -101,19 +115,27 @@ def job() -> None:
         all_offers = db.read_offers()
 
     logging.info(f"Found {new_offers} new offers")
-    if new_offers:
+
+    cfg_generate_feed: bool = Config.config().getboolean["actions", "GenerateFeed"]  # type: ignore
+    cfg_upload: bool = Config.config().getboolean["actions", "UploadFtp"]  # type: ignore
+
+    if cfg_generate_feed:
         generate_feed(all_offers)
+    else:
+        logging.info("Skipping feed generation")
+
+    if cfg_upload:
         upload_to_server()
     else:
-        logging.info("Skipping feed generation and upload")
+        logging.info("Skipping upload")
 
 
 def log_new_offer(offer: LootOffer) -> None:
     res: str = f"New {offer.type} offer found: {offer.title}"
     if offer.subtitle:
         res += ": " + offer.subtitle
-    if offer.enddate:
-        res += " " + offer.enddate
+    if offer.valid_to:
+        res += " " + offer.valid_to
 
     logging.info(res)
 
