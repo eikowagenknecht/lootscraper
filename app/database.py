@@ -10,6 +10,8 @@ from app.configparser import Config
 
 from .common import TIMESTAMP_LONG, LootOffer
 
+CURRENT_DB_VERSION = 0
+
 DROP_LOOT_TABLE: Final = """DROP TABLE IF EXISTS loot"""
 CREATE_LOOT_TABLE: Final = """CREATE TABLE IF NOT EXISTS "loot" (
     "id" INTEGER PRIMARY KEY,
@@ -51,8 +53,21 @@ class LootDatabase:
         self.connection.close()
 
     def initialize_or_update(self) -> None:
-        # self.cursor.execute(DROP_LOOT_TABLE)
-        self.cursor.execute(CREATE_LOOT_TABLE)
+        if self.get_version() == 0:
+            # New DB file, initialize
+            self.cursor.execute(CREATE_LOOT_TABLE)
+            self.set_version(1)
+
+        if self.get_version() == 1:
+            # Migration logic from v1 to v2 here
+            pass
+
+    def get_version(self) -> int:
+        version: int = self.cursor.execute("PRAGMA user_version").fetchone()[0]  # type: ignore
+        return version
+
+    def set_version(self, version: int) -> None:
+        self.cursor.execute("PRAGMA user_version = {v:d}".format(v=version))
 
     def touch_offer(self, db_offer: LootOffer) -> None:
         if db_offer.id is None:
@@ -98,27 +113,6 @@ class LootDatabase:
                 offer.url,
             ),
         )
-
-    def insert_offers(self, offers: list[LootOffer]) -> None:
-        current_date = datetime.now().strftime(TIMESTAMP_LONG)
-        for offer in offers:
-            self.cursor.execute(
-                """INSERT INTO loot(seen_first, seen_last, rawtext, source, type, title, subtitle, publisher, valid_from, valid_to, url)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
-                (
-                    current_date,
-                    current_date,
-                    offer.rawtext,
-                    offer.source,
-                    offer.type,
-                    offer.title,
-                    offer.subtitle,
-                    offer.publisher,
-                    offer.valid_from,
-                    offer.valid_to,
-                    offer.url,
-                ),
-            )
 
     def read_offers(self) -> list[LootOffer]:
         self.cursor.execute(
