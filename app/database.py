@@ -115,7 +115,7 @@ class LootDatabase:
         else:
             # Rewrite the timestamp
             new_value: str = fixed_date.replace(tzinfo=timezone.utc).isoformat()
-            if row[1] == new_value:
+            if row[1] == new_value:  # type: ignore
                 return
 
             logging.info(
