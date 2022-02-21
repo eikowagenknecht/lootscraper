@@ -82,6 +82,10 @@ class LootDatabase:
         for row in self.cursor.fetchall():  # type: ignore
             self.fix_date(row, "valid_to")  # type: ignore
 
+        self.cursor.execute("SELECT id, valid_from FROM loot ORDER BY type")
+        for row in self.cursor.fetchall():  # type: ignore
+            self.fix_date(row, "valid_from")  # type: ignore
+
     def fix_date(self, row: Any, field: str) -> None:
         if not row[1]:  # type: ignore
             return
