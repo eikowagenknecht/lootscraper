@@ -1,3 +1,4 @@
+import hashlib
 import logging
 import shutil
 import sys
@@ -128,15 +129,23 @@ def job() -> None:
     cfg_generate_feed: bool = Config.config().getboolean("actions", "GenerateFeed")  # type: ignore
     cfg_upload: bool = Config.config().getboolean("actions", "UploadFtp")  # type: ignore
 
-    if cfg_generate_feed:
-        generate_feed(all_offers)
-    else:
-        logging.info("Skipping feed generation")
+    feed_file = Config.data_path() / Path(Config.config()["common"]["FeedFile"])
 
-    if cfg_upload:
+    old_hash = hash_file(feed_file)
+
+    if cfg_generate_feed:
+        generate_feed(all_offers, feed_file)
+    else:
+        logging.info("Skipping feed generation, disabled")
+
+    new_hash = hash_file(feed_file)
+
+    if new_hash == old_hash:
+        logging.info("Skipping upload, no changes to feed file")
+    elif cfg_upload:
         upload_to_server()
     else:
-        logging.info("Skipping upload")
+        logging.info("Skipping upload, disabled")
 
 
 def log_new_offer(offer: LootOffer) -> None:
@@ -147,6 +156,22 @@ def log_new_offer(offer: LootOffer) -> None:
         res += " " + offer.valid_to.strftime(TIMESTAMP_LONG)
 
     logging.info(res)
+
+
+def hash_file(file: Path) -> str:
+    if not file.exists():
+        return ""
+
+    hash = hashlib.sha256()
+
+    with open(file, "rb") as f:
+        while True:
+            data = f.read(65536)
+            if not data:
+                break
+            hash.update(data)
+
+    return hash.hexdigest()
 
 
 if __name__ == "__main__":
