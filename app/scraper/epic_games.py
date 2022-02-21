@@ -23,6 +23,7 @@ XPATH_COMING_SOON = """//a[contains(@aria-label, "Free Games") and contains(@ari
 SUBPATH_TITLE = """.//span[@data-testid="offer-title-info-title"]/div"""  # /text()
 SUBPATH_TIME_FROM = """.//span[@data-testid="offer-title-info-subtitle"]//time[1]"""  # /@datetime  # format 2022-02-24T16:00:00.000Z
 SUBPATH_TIME_TO = """.//span[@data-testid="offer-title-info-subtitle"]//time[2]"""  # /@datetime  # format 2022-02-24T16:00:00.000Z
+SUBPATH_IMG = """.//img"""
 
 
 @dataclass
@@ -31,6 +32,7 @@ class RawOffer:
     valid_from: str
     valid_to: str
     url: str
+    img_url: str
 
 
 class EpicScraper:
@@ -77,12 +79,15 @@ class EpicScraper:
         title: WebElement
         startdate: WebElement
         enddate: WebElement
+        img: WebElement
 
         for element in current_elements:
             title_str = ""
-            startdate_str = ""
-            enddate_str = ""
+            valid_from_str = ""
+            valid_to_str = ""
             url_str = ""
+            img_url_str = ""
+
             try:
                 title = element.find_element(By.XPATH, SUBPATH_TITLE)
                 title_str = title.text
@@ -92,7 +97,7 @@ class EpicScraper:
 
             try:
                 enddate = element.find_element(By.XPATH, SUBPATH_TIME_TO)
-                enddate_str = enddate.get_attribute("datetime")  # type: ignore
+                valid_to_str = enddate.get_attribute("datetime")  # type: ignore
             except WebDriverException:  # type: ignore
                 # Nothing to do here, string stays empty
                 pass
@@ -101,12 +106,28 @@ class EpicScraper:
                 url: str | None = element.get_attribute("href")  # type: ignore
                 if url is not None:
                     url_str = url
+            except WebDriverException:  # type: ignore
+                # Nothing to do here, string stays empty
+                pass
+
+            try:
+                img = element.find_element(By.XPATH, SUBPATH_IMG)
+                if img is not None:
+                    img_url_str = img.get_attribute("src")  # type: ignore
 
             except WebDriverException:  # type: ignore
                 # Nothing to do here, string stays empty
                 pass
 
-            raw_offers.append(RawOffer(title_str, startdate_str, enddate_str, url_str))
+            raw_offers.append(
+                RawOffer(
+                    title=title_str,
+                    valid_from=valid_from_str,
+                    valid_to=valid_to_str,
+                    url=url_str,
+                    img_url=img_url_str,
+                )
+            )
 
         try:
             future_elements: list[WebElement] = driver.find_elements(
@@ -118,9 +139,11 @@ class EpicScraper:
 
         for element in future_elements:
             title_str = ""
-            startdate_str = ""
-            enddate_str = ""
+            valid_from_str = ""
+            valid_to_str = ""
             url_str = ""
+            img_url_str = ""
+
             try:
                 title = element.find_element(By.XPATH, SUBPATH_TITLE)
                 title_str = title.text
@@ -130,14 +153,14 @@ class EpicScraper:
 
             try:
                 startdate = element.find_element(By.XPATH, SUBPATH_TIME_FROM)
-                startdate_str = startdate.get_attribute("datetime")  # type: ignore
+                valid_from_str = startdate.get_attribute("datetime")  # type: ignore
             except WebDriverException:  # type: ignore
                 # Nothing to do here, string stays empty
                 pass
 
             try:
                 enddate = element.find_element(By.XPATH, SUBPATH_TIME_TO)
-                enddate_str = enddate.get_attribute("datetime")  # type: ignore
+                valid_to_str = enddate.get_attribute("datetime")  # type: ignore
             except WebDriverException:  # type: ignore
                 # Nothing to do here, string stays empty
                 pass
@@ -151,7 +174,24 @@ class EpicScraper:
                 # Nothing to do here, string stays empty
                 pass
 
-            raw_offers.append(RawOffer(title_str, startdate_str, enddate_str, url_str))
+            try:
+                img = element.find_element(By.XPATH, SUBPATH_IMG)
+                if img is not None:
+                    img_url_str = img.get_attribute("src")  # type: ignore
+
+            except WebDriverException:  # type: ignore
+                # Nothing to do here, string stays empty
+                pass
+
+            raw_offers.append(
+                RawOffer(
+                    title=title_str,
+                    valid_from=valid_from_str,
+                    valid_to=valid_to_str,
+                    url=url_str,
+                    img_url=img_url_str,
+                )
+            )
 
         normalized_offers = EpicScraper.normalize_offers(raw_offers)
 
@@ -202,6 +242,7 @@ class EpicScraper:
                 valid_from=utc_startdate,
                 valid_to=utc_enddate,
                 url=nearest_url,
+                img_url=offer.img_url,
             )
 
             normalized_offers.append(loot_offer)

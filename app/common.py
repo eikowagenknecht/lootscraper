@@ -28,3 +28,4 @@ class LootOffer:
     valid_to: datetime | None = None
     rawtext: str | None = None
     url: str | None = None
+    img_url: str | None = None

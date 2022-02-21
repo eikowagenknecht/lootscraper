@@ -102,8 +102,10 @@ def job() -> None:
                 ):
                     # Offer has already been scraped, so do not insert this into the database, but update the "last seen" timestamp
                     scraped_offer.id = db_offer.id
-                    # db.update_url(scraped_offer)
-                    db.touch_offer(scraped_offer)
+                    if Config.config().getboolean("common", "ForceUpdate"):  # type: ignore
+                        db.update_offer(scraped_offer)
+                    else:
+                        db.touch_offer(scraped_offer)
                     exists_in_db = True
                     break
 

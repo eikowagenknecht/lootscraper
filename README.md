@@ -36,7 +36,7 @@ This project is in ongoing development, not yet usable for the average user and 
 
 ### Advanced features
 
-- [ ] Add a preview picture
+- [x] Add a preview picture
 - [ ] Add the metacritic score for the game and/or other useful information
 
 ### Scrapers

@@ -15,8 +15,17 @@ from app.pagedriver import get_pagedriver
 SCRAPER_NAME = "Amazon Prime"
 ROOT_URL = "https://gaming.amazon.com/home"
 MAX_WAIT_SECONDS = 60  # Needs to be quite high in Docker for first run
-BASE_ELEMENT_LOOT = "offer-list-IN_GAME_LOOT"
-BASE_ELEMENT_GAMES = "offer-list-FGWP_FULL"
+XPATH_LOOT = (
+    '//div[@data-a-target="offer-list-IN_GAME_LOOT"]//div[@data-a-target="Offer"]'
+)
+XPATH_GAMES = (
+    '//div[@data-a-target="offer-list-FGWP_FULL"]//div[@data-a-target="Offer"]'
+)
+SUBPATH_TITLE = './/div[contains(concat(" ", normalize-space(@class), " "), " offer__body__titles")]/h3'
+SUBPATH_PARAGRAPH = './/div[contains(concat(" ", normalize-space(@class), " "), " offer__body__titles")]/p'
+SUBPATH_ENDDATE = './/p[@data-test-selector="offer-end-time"]/span'
+SUBPATH_LINK = './/a[@data-a-target="learn-more-card"]'
+SUBPATH_IMG = './/img[@class="tw-image"]'
 
 
 @dataclass
@@ -25,6 +34,7 @@ class RawOffer:
     paragraph: str
     valid_to: str
     url: str
+    img_url: str
 
 
 class AmazonScraper:
@@ -68,35 +78,27 @@ class AmazonScraper:
 
         match offer_type:
             case OfferType.LOOT:
-                search_element = BASE_ELEMENT_LOOT
+                search_xpath = XPATH_LOOT
             case OfferType.GAME:
-                search_element = BASE_ELEMENT_GAMES
+                search_xpath = XPATH_GAMES
             case _:
                 raise ValueError
 
         try:
-            elements: list[WebElement] = driver.find_elements(
-                By.XPATH,
-                '//div[@data-a-target="'
-                + search_element
-                + '"]//div[@data-a-target="Offer"]',
-            )
+            elements: list[WebElement] = driver.find_elements(By.XPATH, search_xpath)
         except WebDriverException:  # type: ignore
-            logging.error("Root element not fould, could not scrape!")
+            logging.error("Root element not found, could not scrape!")
             return []
 
         raw_offers: list[RawOffer] = []
         title_str: str
         paragraph_str: str
-        enddate_str: str
+        valid_to_str: str
         url_str: str
 
         for element in elements:
             try:
-                title: WebElement = element.find_element(
-                    By.XPATH,
-                    './/div[contains(concat(" ", normalize-space(@class), " "), " offer__body__titles")]/h3',
-                )
+                title: WebElement = element.find_element(By.XPATH, SUBPATH_TITLE)
                 title_str = title.text
             except WebDriverException:  # type: ignore
                 # Nothing to do here, string stays empty
@@ -104,8 +106,7 @@ class AmazonScraper:
 
             try:
                 paragraph: WebElement = element.find_element(
-                    By.XPATH,
-                    './/div[contains(concat(" ", normalize-space(@class), " "), " offer__body__titles")]/p',
+                    By.XPATH, SUBPATH_PARAGRAPH
                 )
                 paragraph_str = paragraph.text
             except WebDriverException:  # type: ignore
@@ -113,20 +114,14 @@ class AmazonScraper:
                 paragraph_str = ""
 
             try:
-                enddate: WebElement = element.find_element(
-                    By.XPATH,
-                    './/p[@data-test-selector="offer-end-time"]/span',
-                )
-                enddate_str = enddate.text
+                enddate: WebElement = element.find_element(By.XPATH, SUBPATH_ENDDATE)
+                valid_to_str = enddate.text
             except WebDriverException:  # type: ignore
                 # Nothing to do here, string stays empty
-                enddate_str = ""
+                valid_to_str = ""
 
             try:
-                url: WebElement = element.find_element(
-                    By.XPATH,
-                    './/a[@data-a-target="learn-more-card"]',
-                )
+                url: WebElement = element.find_element(By.XPATH, SUBPATH_LINK)
                 link: str | None = url.get_attribute("href")  # type: ignore
                 if link is not None:
                     url_str = link
@@ -134,7 +129,24 @@ class AmazonScraper:
                 # Nothing to do here, string stays empty
                 url_str = ""
 
-            raw_offers.append(RawOffer(title_str, paragraph_str, enddate_str, url_str))
+            try:
+                img_url: WebElement = element.find_element(By.XPATH, SUBPATH_IMG)
+                link: str | None = img_url.get_attribute("src")  # type: ignore
+                if link is not None:
+                    img_url_str = link
+            except WebDriverException:  # type: ignore
+                # Nothing to do here, string stays empty
+                img_url_str = ""
+
+            raw_offers.append(
+                RawOffer(
+                    title=title_str,
+                    paragraph=paragraph_str,
+                    valid_to=valid_to_str,
+                    url=url_str,
+                    img_url=img_url_str,
+                )
+            )
 
         normalized_offers = AmazonScraper.normalize_offers(offer_type, raw_offers)
 
@@ -195,6 +207,7 @@ class AmazonScraper:
                 publisher=publisher,
                 valid_to=normalized_end_date if normalized_end_date else None,
                 url=nearest_url,
+                img_url=offer.img_url,
             )
 
             normalized_offers.append(loot_offer)
