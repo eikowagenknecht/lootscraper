@@ -25,12 +25,12 @@ This project is in ongoing development, not yet usable for the average user and 
 - [x] Configuration in INI file
 - [x] Script for data migration in case of updates
 - [x] Store all dates in UTC
+- [x] Support start and end dates of offers
 - [ ] Add tests (pytest?)
 - [ ] Dynamically generate ATOM feeds split by source and type (e.g. only amazon ingame loot) in addition to the full feed
 - [ ] Error handling
 - [ ] Notify by mail when something goes wrong (e.g. a source cannot be scraped)
 - [ ] Support multiple languages (at least EN and DE)
-- [ ] Support start and end dates of offers
 - [ ] Push mails for offers that are valid only for a short time (less than 1 day)
 
 ### Advanced features
