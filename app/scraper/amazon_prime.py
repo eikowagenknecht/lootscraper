@@ -1,6 +1,6 @@
 import logging
 from dataclasses import dataclass
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, time, timedelta
 
 from selenium.common.exceptions import WebDriverException
 from selenium.webdriver.chrome.webdriver import WebDriver
@@ -177,6 +177,13 @@ class AmazonScraper:
                     year=guessed_end_date.year + 1
                 )
 
+            # Add 1 day because of the notation
+            # ("Valid to 01 Jan 2022" means "Valid to 2022-01-02 00:00:00")
+            normalized_end_date = datetime.combine(
+                guessed_end_date + timedelta(days=1),
+                time.min,
+            )
+
             nearest_url = offer.url if offer.url else ROOT_URL
             loot_offer = LootOffer(
                 source=SCRAPER_NAME,
@@ -185,7 +192,7 @@ class AmazonScraper:
                 title=title,
                 subtitle=subtitle,
                 publisher=publisher,
-                valid_to=guessed_end_date.isoformat(),
+                valid_to=normalized_end_date if normalized_end_date else None,
                 url=nearest_url,
             )
 

@@ -158,10 +158,10 @@ class EpicScraper:
         return normalized_offers
 
     @staticmethod
-    def normalize_offers(offers: list[RawOffer]) -> list[LootOffer]:
+    def normalize_offers(raw_offers: list[RawOffer]) -> list[LootOffer]:
         normalized_offers: list[LootOffer] = []
 
-        for offer in offers:
+        for offer in raw_offers:
             # Raw text
             rawtext = (
                 f"<title>{offer.title}</title>"
@@ -198,8 +198,8 @@ class EpicScraper:
                 type=OfferType.GAME.value,
                 rawtext=rawtext,
                 title=title,
-                valid_from=utc_startdate.isoformat() if utc_startdate else None,
-                valid_to=utc_enddate.isoformat() if utc_enddate else None,
+                valid_from=utc_startdate,
+                valid_to=utc_enddate,
                 url=nearest_url,
             )
 

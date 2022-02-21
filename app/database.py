@@ -1,14 +1,15 @@
 from __future__ import annotations
+import logging
 
 import sqlite3
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 from types import TracebackType
-from typing import Final, Type
+from typing import Any, Final, Type
 
 from app.configparser import Config
 
-from .common import TIMESTAMP_LONG, LootOffer
+from .common import TIMESTAMP_LONG, TIMESTAMP_SHORT, TIMESTAMP_ISO, LootOffer
 
 CURRENT_DB_VERSION = 0
 
@@ -54,13 +55,96 @@ class LootDatabase:
 
     def initialize_or_update(self) -> None:
         if self.get_version() == 0:
-            # New DB file, initialize
+            logging.info("New database, initializing to v1")
             self.cursor.execute(CREATE_LOOT_TABLE)
             self.set_version(1)
 
         if self.get_version() == 1:
-            # Migration logic from v1 to v2 here
+            logging.info("Updating database from v1 to v2")
+            self.fix_date_format()
+            self.set_version(2)
+
+    def fix_date_format(self) -> None:
+        self.cursor.execute("SELECT id, seen_first FROM loot ORDER BY type")
+        for row in self.cursor.fetchall():  # type: ignore
+            self.fix_seen_first(row)  # type: ignore
+
+        self.cursor.execute("SELECT id, seen_last FROM loot ORDER BY type")
+        for row in self.cursor.fetchall():  # type: ignore
+            self.fix_seen_last(row)  # type: ignore
+
+        self.cursor.execute("SELECT id, valid_to FROM loot ORDER BY type")
+        for row in self.cursor.fetchall():  # type: ignore
+            self.fix_valid_to(row)  # type: ignore
+
+    def fix_valid_to(self, row: Any) -> None:
+        parsed_date = None
+        try:
+            parsed_date = datetime.strptime(row[1], TIMESTAMP_ISO) if row[1] else None  # type: ignore
+        except ValueError:
             pass
+
+        if parsed_date is None:
+            try:
+                valid_to: datetime = datetime.strptime(row[1], TIMESTAMP_SHORT) if row[1] else None  # type: ignore
+                new_value: str = (valid_to + timedelta(days=1)).isoformat()
+                logging.info(
+                    f"Updating valid_to for entry {row[0]} from {row[1]} to {new_value}"  # type: ignore
+                )
+                self.cursor.execute(
+                    "UPDATE loot SET valid_to = ? WHERE id = ?",
+                    (new_value, row[0]),  # type: ignore
+                )
+            except ValueError:
+                logging.error(
+                    f"Could not convert valid_to for entry {row[0]}"  # type: ignore
+                )
+
+    def fix_seen_last(self, row: Any) -> None:
+        parsed_date = None
+        try:
+            parsed_date = datetime.strptime(row[1], TIMESTAMP_ISO) if row[1] else None  # type: ignore
+        except ValueError:
+            pass
+
+        if parsed_date is None:
+            try:
+                seen_last: datetime = datetime.strptime(row[1], TIMESTAMP_LONG) if row[1] else None  # type: ignore
+                new_value: str = seen_last.isoformat()
+                logging.info(
+                    f"Updating seen_last for entry {row[0]} from {row[1]} to {new_value}"  # type: ignore
+                )
+                self.cursor.execute(
+                    "UPDATE loot SET seen_last = ? WHERE id = ?",
+                    (new_value, row[0]),  # type: ignore
+                )
+            except ValueError:
+                logging.error(
+                    f"Could not convert seen_last for entry {row[0]}"  # type: ignore
+                )
+
+    def fix_seen_first(self, row: Any) -> None:
+        parsed_date = None
+        try:
+            parsed_date = datetime.strptime(row[1], TIMESTAMP_ISO) if row[1] else None  # type: ignore
+        except ValueError:
+            pass
+
+        if parsed_date is None:
+            try:
+                seen_first: datetime = datetime.strptime(row[1], TIMESTAMP_LONG) if row[1] else None  # type: ignore
+                new_value: str = seen_first.isoformat()
+                logging.info(
+                    f"Updating seen_first for entry {row[0]} from {row[1]} to {new_value}"  # type: ignore
+                )
+                self.cursor.execute(
+                    "UPDATE loot SET seen_first = ? WHERE id = ?",
+                    (new_value, row[0]),  # type: ignore
+                )
+            except ValueError:
+                logging.error(
+                    f"Could not convert seen_first for entry {row[0]}"  # type: ignore
+                )
 
     def get_version(self) -> int:
         version: int = self.cursor.execute("PRAGMA user_version").fetchone()[0]  # type: ignore
@@ -73,12 +157,14 @@ class LootDatabase:
         if db_offer.id is None:
             return
 
-        current_date = datetime.now().strftime(TIMESTAMP_LONG)
         self.cursor.execute(
             """UPDATE loot
                 SET seen_last = ?
                 WHERE id = ?""",
-            (current_date, db_offer.id),
+            (
+                datetime.now().isoformat(),
+                db_offer.id,
+            ),
         )
 
     def update_url(self, db_offer: LootOffer) -> None:
@@ -95,21 +181,21 @@ class LootDatabase:
         )
 
     def insert_offer(self, offer: LootOffer) -> None:
-        current_date = datetime.now().strftime(TIMESTAMP_LONG)
+        current_date = datetime.now()
         self.cursor.execute(
             """INSERT INTO loot(seen_first, seen_last, rawtext, source, type, title, subtitle, publisher, valid_from, valid_to, url)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
             (
-                current_date,
-                current_date,
+                current_date.isoformat(),
+                current_date.isoformat(),
                 offer.rawtext,
                 offer.source,
                 offer.type,
                 offer.title,
                 offer.subtitle,
                 offer.publisher,
-                offer.valid_from,
-                offer.valid_to,
+                offer.valid_from.isoformat() if offer.valid_from else "",
+                offer.valid_to.isoformat() if offer.valid_to else "",
                 offer.url,
             ),
         )
@@ -142,10 +228,10 @@ class LootDatabase:
                 title=row[3],  # type: ignore
                 subtitle=row[4],  # type: ignore
                 publisher=row[5],  # type: ignore
-                valid_from=row[6],  # type: ignore
-                valid_to=row[7],  # type: ignore
-                seen_first=datetime.strptime(row[8], TIMESTAMP_LONG),  # type: ignore
-                seen_last=datetime.strptime(row[9], TIMESTAMP_LONG),  # type: ignore
+                valid_from=datetime.fromisoformat(row[6]) if row[6] else None,  # type: ignore
+                valid_to=datetime.fromisoformat(row[7]) if row[7] else None,  # type: ignore
+                seen_first=datetime.fromisoformat(row[8]),  # type: ignore
+                seen_last=datetime.fromisoformat(row[9]),  # type: ignore
                 url=row[10],  # type: ignore
             )
             offers.append(offer)
