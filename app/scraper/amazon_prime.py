@@ -30,16 +30,16 @@ SUBPATH_IMG = './/img[@class="tw-image"]'
 
 @dataclass
 class RawOffer:
-    title: str
-    paragraph: str
-    valid_to: str
-    url: str
-    img_url: str
+    title: str | None = None
+    paragraph: str | None = None
+    valid_to: str | None = None
+    url: str | None = None
+    img_url: str | None = None
 
 
 class AmazonScraper:
     @staticmethod
-    def scrape() -> list[LootOffer]:
+    def scrape(games: bool, loot: bool) -> list[LootOffer]:
         logging.info(f"Start scraping of {SCRAPER_NAME}")
         offers = []
 
@@ -48,14 +48,21 @@ class AmazonScraper:
             with get_pagedriver() as driver:
                 driver.get(ROOT_URL)
 
-                logging.info(f"Analyzing {ROOT_URL} for {OfferType.GAME.value} offers")
-                offers.extend(
-                    AmazonScraper.read_offers_from_page(OfferType.GAME, driver)
-                )
-                logging.info(f"Analyzing {ROOT_URL} for {OfferType.LOOT.value} offers")
-                offers.extend(
-                    AmazonScraper.read_offers_from_page(OfferType.LOOT, driver)
-                )
+                if games:
+                    logging.info(
+                        f"Analyzing {ROOT_URL} for {OfferType.GAME.value} offers"
+                    )
+                    offers.extend(
+                        AmazonScraper.read_offers_from_page(OfferType.GAME, driver)
+                    )
+
+                if loot:
+                    logging.info(
+                        f"Analyzing {ROOT_URL} for {OfferType.LOOT.value} offers"
+                    )
+                    offers.extend(
+                        AmazonScraper.read_offers_from_page(OfferType.LOOT, driver)
+                    )
                 driver.quit()
         except WebDriverException as err:  # type: ignore
             logging.error(f"Failure starting Chrome WebDriver, aborting: {err.msg}")  # type: ignore
@@ -91,10 +98,10 @@ class AmazonScraper:
             return []
 
         raw_offers: list[RawOffer] = []
-        title_str: str
-        paragraph_str: str
-        valid_to_str: str
-        url_str: str
+        title_str: str | None
+        paragraph_str: str | None
+        valid_to_str: str | None
+        url_str: str | None
 
         for element in elements:
             try:
@@ -102,7 +109,7 @@ class AmazonScraper:
                 title_str = title.text
             except WebDriverException:  # type: ignore
                 # Nothing to do here, string stays empty
-                title_str = ""
+                title_str = None
 
             try:
                 paragraph: WebElement = element.find_element(
@@ -111,14 +118,14 @@ class AmazonScraper:
                 paragraph_str = paragraph.text
             except WebDriverException:  # type: ignore
                 # Nothing to do here, string stays empty
-                paragraph_str = ""
+                paragraph_str = None
 
             try:
                 enddate: WebElement = element.find_element(By.XPATH, SUBPATH_ENDDATE)
                 valid_to_str = enddate.text
             except WebDriverException:  # type: ignore
                 # Nothing to do here, string stays empty
-                valid_to_str = ""
+                valid_to_str = None
 
             try:
                 url: WebElement = element.find_element(By.XPATH, SUBPATH_LINK)
@@ -127,7 +134,7 @@ class AmazonScraper:
                     url_str = link
             except WebDriverException:  # type: ignore
                 # Nothing to do here, string stays empty
-                url_str = ""
+                url_str = None
 
             try:
                 img_url: WebElement = element.find_element(By.XPATH, SUBPATH_IMG)
@@ -136,7 +143,7 @@ class AmazonScraper:
                     img_url_str = link
             except WebDriverException:  # type: ignore
                 # Nothing to do here, string stays empty
-                img_url_str = ""
+                img_url_str = None
 
             raw_offers.append(
                 RawOffer(
@@ -160,41 +167,53 @@ class AmazonScraper:
 
         for offer in offers:
             # Raw text
-            rawtext = (
-                f"<title>{offer.title}</title>"
+            rawtext = ""
+            if offer.title:
+                rawtext += f"<title>{offer.title}</title>"
+
+            if offer.paragraph:
                 f"<paragraph>{offer.paragraph}</paragraph>"
-            )
 
             # Title
-            parsed_heads = offer.title.split(": ", 1)
-            title = parsed_heads[0]
-            subtitle = parsed_heads[1] if len(parsed_heads) == 2 else ""
+            title = None
+            subtitle = None
+            if offer.title is not None:
+                parsed_heads = offer.title.split(": ", 1)
+                title = parsed_heads[0]
+                subtitle = parsed_heads[1] if len(parsed_heads) == 2 else None
 
             # Paragraph
-            publisher = offer.paragraph
+            publisher = None
+            if offer.paragraph:
+                publisher = offer.paragraph
 
             # Date
             # This is a little bit more complicated as only month and day are
             # displayed on the site. The year is guessed assuming that old
             # offers are not shown any more. "Old" means older than yesterday
             # to avoid time zone problems.
-            # TODO: Save this in UTC time instead of German time!
-            parsed_date = datetime.strptime(offer.valid_to, "%b %d").date()
-            guessed_end_date = date(
-                date.today().year, parsed_date.month, parsed_date.day
-            )
-            yesterday = date.today() - timedelta(days=1)
-            if guessed_end_date < yesterday:
-                guessed_end_date = guessed_end_date.replace(
-                    year=guessed_end_date.year + 1
-                )
+            # TODO: Check in wich timezone this is saved!
+            end_date = None
+            if offer.valid_to:
+                try:
+                    parsed_date = datetime.strptime(offer.valid_to, "%b %d").date()
+                    guessed_end_date = date(
+                        date.today().year, parsed_date.month, parsed_date.day
+                    )
+                    yesterday = date.today() - timedelta(days=1)
+                    if guessed_end_date < yesterday:
+                        guessed_end_date = guessed_end_date.replace(
+                            year=guessed_end_date.year + 1
+                        )
 
-            # Add 1 day because of the notation
-            # ("Valid to 01 Jan 2022" means "Valid to 2022-01-02 00:00:00")
-            normalized_end_date = datetime.combine(
-                guessed_end_date + timedelta(days=1),
-                time.min,
-            ).replace(tzinfo=timezone.utc)
+                    # Add 1 day because of the notation
+                    # ("Valid to 01 Jan 2022" means "Valid to 2022-01-02 00:00:00")
+                    end_date = datetime.combine(
+                        guessed_end_date + timedelta(days=1),
+                        time.min,
+                    ).replace(tzinfo=timezone.utc)
+                except ValueError:
+                    pass
 
             nearest_url = offer.url if offer.url else ROOT_URL
             loot_offer = LootOffer(
@@ -205,7 +224,7 @@ class AmazonScraper:
                 title=title,
                 subtitle=subtitle,
                 publisher=publisher,
-                valid_to=normalized_end_date if normalized_end_date else None,
+                valid_to=end_date,
                 url=nearest_url,
                 img_url=offer.img_url,
             )
