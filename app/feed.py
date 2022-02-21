@@ -1,10 +1,9 @@
 # mypy: ignore-errors
 import html
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 from feedgen.feed import FeedGenerator
-from pytz import timezone
 
 from app.configparser import Config
 
@@ -12,9 +11,7 @@ from .common import TIMESTAMP_LONG, TIMESTAMP_READABLE_WITH_HOUR, LootOffer
 
 
 def generate_feed(offers: list[LootOffer]) -> None:
-    last_updated = datetime.now()
-    local_timezone = timezone("Europe/Berlin")
-    last_updated = last_updated.replace(tzinfo=local_timezone)
+    last_updated = datetime.now(timezone.utc)
 
     # Generate Feed Info
     # See http://www.atomenabled.org/developers/syndication/#requiredFeedElements
@@ -45,7 +42,7 @@ def generate_feed(offers: list[LootOffer]) -> None:
     # - Subtitle
 
     for offer in offers:
-        if offer.valid_from and offer.valid_from > datetime.utcnow():
+        if offer.valid_from and offer.valid_from > datetime.now(timezone.utc):
             # Skip future entries
             continue
 
@@ -57,7 +54,7 @@ def generate_feed(offers: list[LootOffer]) -> None:
             title += f": {offer.subtitle}"
         title += f" ({offer.type})"
         feed_entry.title(title)
-        feed_entry.updated(offer.seen_last.replace(tzinfo=local_timezone))
+        feed_entry.updated(offer.seen_last)
         # Atom Recommended
         # - Author
         feed_entry.author(
@@ -91,7 +88,7 @@ def generate_feed(offers: list[LootOffer]) -> None:
         # - category
         # - contributor
         # - published
-        feed_entry.published(offer.seen_first.replace(tzinfo=local_timezone))
+        feed_entry.published(offer.seen_first)
         # - source
         # - rights
 

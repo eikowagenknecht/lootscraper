@@ -1,6 +1,6 @@
 import logging
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timezone
 
 from selenium.common.exceptions import WebDriverException
 from selenium.webdriver.chrome.webdriver import WebDriver
@@ -177,7 +177,7 @@ class EpicScraper:
                 utc_startdate = datetime.strptime(
                     offer.valid_from,
                     "%Y-%m-%dT%H:%M:%S.000Z",
-                )
+                ).replace(tzinfo=timezone.utc)
             except ValueError:
                 utc_startdate = None
             # utc_startdate.replace(tzinfo=timezone.utc).astimezone(tz=None)
@@ -187,13 +187,14 @@ class EpicScraper:
                 utc_enddate = datetime.strptime(
                     offer.valid_to,
                     "%Y-%m-%dT%H:%M:%S.000Z",
-                )
+                ).replace(tzinfo=timezone.utc)
             except ValueError:
                 utc_enddate = None
             # utc_enddate.replace(tzinfo=timezone.utc).astimezone(tz=None)
 
             nearest_url = offer.url if offer.url else ROOT_URL
             loot_offer = LootOffer(
+                seen_last=datetime.now(timezone.utc),
                 source=SCRAPER_NAME,
                 type=OfferType.GAME.value,
                 rawtext=rawtext,

@@ -2,7 +2,7 @@ from __future__ import annotations
 import logging
 
 import sqlite3
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from types import TracebackType
 from typing import Any, Final, Type
@@ -228,10 +228,10 @@ class LootDatabase:
                 title=row[3],  # type: ignore
                 subtitle=row[4],  # type: ignore
                 publisher=row[5],  # type: ignore
-                valid_from=datetime.fromisoformat(row[6]) if row[6] else None,  # type: ignore
-                valid_to=datetime.fromisoformat(row[7]) if row[7] else None,  # type: ignore
-                seen_first=datetime.fromisoformat(row[8]),  # type: ignore
-                seen_last=datetime.fromisoformat(row[9]),  # type: ignore
+                valid_from=datetime.fromisoformat(row[6]).replace(tzinfo=timezone.utc) if row[6] else None,  # type: ignore
+                valid_to=datetime.fromisoformat(row[7]).replace(tzinfo=timezone.utc) if row[7] else None,  # type: ignore
+                seen_first=datetime.fromisoformat(row[8]).replace(tzinfo=timezone.utc),  # type: ignore
+                seen_last=datetime.fromisoformat(row[9]).replace(tzinfo=timezone.utc),  # type: ignore
                 url=row[10],  # type: ignore
             )
             offers.append(offer)
