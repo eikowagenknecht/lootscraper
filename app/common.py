@@ -5,7 +5,6 @@ from enum import Enum
 TIMESTAMP_SHORT = "%Y-%m-%d"
 TIMESTAMP_LONG = "%Y-%m-%d %H:%M:%S"
 TIMESTAMP_READABLE_WITH_HOUR = "%a, %d %b %H:%M (UTC)"
-TIMESTAMP_ISO = "%Y-%m-%dT%H:%M:%S"
 
 
 class OfferType(Enum):

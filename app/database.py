@@ -9,7 +9,7 @@ from typing import Any, Final, Type
 
 from app.configparser import Config
 
-from .common import TIMESTAMP_LONG, TIMESTAMP_SHORT, TIMESTAMP_ISO, LootOffer
+from .common import TIMESTAMP_LONG, TIMESTAMP_SHORT, LootOffer
 
 CURRENT_DB_VERSION = 0
 
@@ -64,87 +64,67 @@ class LootDatabase:
             self.fix_date_format()
             self.set_version(2)
 
+        if self.get_version() == 2:
+            logging.info("Updating database from v2 to v3")
+            self.fix_date_format()
+            self.set_version(3)
+
     def fix_date_format(self) -> None:
         self.cursor.execute("SELECT id, seen_first FROM loot ORDER BY type")
         for row in self.cursor.fetchall():  # type: ignore
-            self.fix_seen_first(row)  # type: ignore
+            self.fix_date(row, "seen_first")  # type: ignore
 
         self.cursor.execute("SELECT id, seen_last FROM loot ORDER BY type")
         for row in self.cursor.fetchall():  # type: ignore
-            self.fix_seen_last(row)  # type: ignore
+            self.fix_date(row, "seen_last")  # type: ignore
 
         self.cursor.execute("SELECT id, valid_to FROM loot ORDER BY type")
         for row in self.cursor.fetchall():  # type: ignore
-            self.fix_valid_to(row)  # type: ignore
+            self.fix_date(row, "valid_to")  # type: ignore
 
-    def fix_valid_to(self, row: Any) -> None:
-        parsed_date = None
+    def fix_date(self, row: Any, field: str) -> None:
+        if not row[1]:  # type: ignore
+            return
+
+        fixed_date: datetime | None = None
+        # Try to fix ISO timestamps (includes those without timezone info)
         try:
-            parsed_date = datetime.strptime(row[1], TIMESTAMP_ISO) if row[1] else None  # type: ignore
+            fixed_date = datetime.fromisoformat(row[1]) if row[1] else None  # type: ignore
         except ValueError:
             pass
 
-        if parsed_date is None:
+        # Try to fix short timestamps (only for valid_until, so add 1 day for correct end second)
+        if fixed_date is None:
             try:
-                valid_to: datetime = datetime.strptime(row[1], TIMESTAMP_SHORT) if row[1] else None  # type: ignore
-                new_value: str = (valid_to + timedelta(days=1)).isoformat()
-                logging.info(
-                    f"Updating valid_to for entry {row[0]} from {row[1]} to {new_value}"  # type: ignore
-                )
-                self.cursor.execute(
-                    "UPDATE loot SET valid_to = ? WHERE id = ?",
-                    (new_value, row[0]),  # type: ignore
-                )
+                fixed_date = datetime.strptime(row[1], TIMESTAMP_SHORT) if row[1] else None  # type: ignore
+                fixed_date = fixed_date + timedelta(days=1) if fixed_date else None
             except ValueError:
-                logging.error(
-                    f"Could not convert valid_to for entry {row[0]}"  # type: ignore
-                )
+                pass
 
-    def fix_seen_last(self, row: Any) -> None:
-        parsed_date = None
-        try:
-            parsed_date = datetime.strptime(row[1], TIMESTAMP_ISO) if row[1] else None  # type: ignore
-        except ValueError:
-            pass
-
-        if parsed_date is None:
+        # Try to fix long timestamps
+        if fixed_date is None:
             try:
-                seen_last: datetime = datetime.strptime(row[1], TIMESTAMP_LONG) if row[1] else None  # type: ignore
-                new_value: str = seen_last.isoformat()
-                logging.info(
-                    f"Updating seen_last for entry {row[0]} from {row[1]} to {new_value}"  # type: ignore
-                )
-                self.cursor.execute(
-                    "UPDATE loot SET seen_last = ? WHERE id = ?",
-                    (new_value, row[0]),  # type: ignore
-                )
+                fixed_date = datetime.strptime(row[1], TIMESTAMP_LONG) if row[1] else None  # type: ignore
             except ValueError:
-                logging.error(
-                    f"Could not convert seen_last for entry {row[0]}"  # type: ignore
-                )
+                pass
 
-    def fix_seen_first(self, row: Any) -> None:
-        parsed_date = None
-        try:
-            parsed_date = datetime.strptime(row[1], TIMESTAMP_ISO) if row[1] else None  # type: ignore
-        except ValueError:
-            pass
+        if fixed_date is None:
+            logging.error(
+                f"Could not convert {field} for entry {row[0]}"  # type: ignore
+            )
+        else:
+            # Rewrite the timestamp
+            new_value: str = fixed_date.replace(tzinfo=timezone.utc).isoformat()
+            if row[1] == new_value:
+                return
 
-        if parsed_date is None:
-            try:
-                seen_first: datetime = datetime.strptime(row[1], TIMESTAMP_LONG) if row[1] else None  # type: ignore
-                new_value: str = seen_first.isoformat()
-                logging.info(
-                    f"Updating seen_first for entry {row[0]} from {row[1]} to {new_value}"  # type: ignore
-                )
-                self.cursor.execute(
-                    "UPDATE loot SET seen_first = ? WHERE id = ?",
-                    (new_value, row[0]),  # type: ignore
-                )
-            except ValueError:
-                logging.error(
-                    f"Could not convert seen_first for entry {row[0]}"  # type: ignore
-                )
+            logging.info(
+                f"Updating {field} for entry {row[0]} from {row[1]} to {new_value}"  # type: ignore
+            )
+            self.cursor.execute(
+                f"UPDATE loot SET {field} = ? WHERE id = ?",  # nosec only 3 possible calls with fixed values
+                (new_value, row[0]),  # type: ignore
+            )
 
     def get_version(self) -> int:
         version: int = self.cursor.execute("PRAGMA user_version").fetchone()[0]  # type: ignore
