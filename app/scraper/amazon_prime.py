@@ -1,6 +1,6 @@
 import logging
 from dataclasses import dataclass
-from datetime import date, datetime, time, timedelta
+from datetime import date, datetime, time, timedelta, timezone
 
 from selenium.common.exceptions import WebDriverException
 from selenium.webdriver.chrome.webdriver import WebDriver
@@ -182,10 +182,11 @@ class AmazonScraper:
             normalized_end_date = datetime.combine(
                 guessed_end_date + timedelta(days=1),
                 time.min,
-            )
+            ).replace(tzinfo=timezone.utc)
 
             nearest_url = offer.url if offer.url else ROOT_URL
             loot_offer = LootOffer(
+                seen_last=datetime.now(timezone.utc),
                 source=SCRAPER_NAME,
                 type=offer_type.value,
                 rawtext=rawtext,
