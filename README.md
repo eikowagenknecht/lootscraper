@@ -24,7 +24,7 @@ This project is in ongoing development, not yet usable for the average user and 
 - [x] Make the script run hourly within the Docker container (<https://github.com/dbader/schedule>)
 - [x] Configuration in INI file
 - [x] Script for data migration in case of updates
-- [ ] Store all dates in UTC
+- [x] Store all dates in UTC
 - [ ] Add tests (pytest?)
 - [ ] Dynamically generate ATOM feeds split by source and type (e.g. only amazon ingame loot) in addition to the full feed
 - [ ] Error handling
@@ -59,7 +59,7 @@ Needs an installed Python 3.10 environment.
 
 ### Build and run Docker container
 
-Docker needs to be installed first of course.
+Docker needs to be installed first of course. If you want to skip the build step, you can use <https://hub.docker.com/r/eikowagenknecht/lootscraper> as the image.
 
 - Download repository
 - Copy config.example.py to config.py and replace with your settings
