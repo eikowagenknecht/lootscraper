@@ -165,21 +165,21 @@ class LootDatabase:
         )
 
     def insert_offer(self, offer: LootOffer) -> None:
-        current_date = datetime.now()
+        current_date = datetime.now().replace(tzinfo=timezone.utc).isoformat()
         self.cursor.execute(
             """INSERT INTO loot(seen_first, seen_last, rawtext, source, type, title, subtitle, publisher, valid_from, valid_to, url)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
             (
-                current_date.isoformat(),
-                current_date.isoformat(),
+                current_date,
+                current_date,
                 offer.rawtext,
                 offer.source,
                 offer.type,
                 offer.title,
                 offer.subtitle,
                 offer.publisher,
-                offer.valid_from.isoformat() if offer.valid_from else "",
-                offer.valid_to.isoformat() if offer.valid_to else "",
+                offer.valid_from.replace(tzinfo=timezone.utc).isoformat() if offer.valid_from else "",
+                offer.valid_to.replace(tzinfo=timezone.utc).isoformat() if offer.valid_to else "",
                 offer.url,
             ),
         )
