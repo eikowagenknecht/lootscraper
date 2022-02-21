@@ -47,11 +47,11 @@ def main() -> None:
         job()
 
         time_between_runs = int(Config.config()["common"]["WaitBetweenRuns"])
+        if time_between_runs == 0:
+            break
         next_execution = datetime.now() + timedelta(seconds=time_between_runs)
 
-        logging.info(
-            f"Waiting until {next_execution.strftime(TIMESTAMP_LONG)} for next execution"
-        )
+        logging.info(f"Waiting until {next_execution.isoformat()} for next execution")
 
         run += 1
         exit.wait(time_between_runs)
@@ -135,7 +135,7 @@ def log_new_offer(offer: LootOffer) -> None:
     if offer.subtitle:
         res += ": " + offer.subtitle
     if offer.valid_to:
-        res += " " + offer.valid_to
+        res += " " + offer.valid_to.strftime(TIMESTAMP_LONG)
 
     logging.info(res)
 
