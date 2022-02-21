@@ -5,12 +5,10 @@ from pathlib import Path
 
 from feedgen.feed import FeedGenerator
 
-from app.configparser import Config
-
 from .common import TIMESTAMP_LONG, TIMESTAMP_READABLE_WITH_HOUR, LootOffer
 
 
-def generate_feed(offers: list[LootOffer]) -> None:
+def generate_feed(offers: list[LootOffer], out_file: Path) -> None:
     last_updated = datetime.now(timezone.utc)
 
     # Generate Feed Info
@@ -54,7 +52,7 @@ def generate_feed(offers: list[LootOffer]) -> None:
             title += f": {offer.subtitle}"
         title += f" ({offer.type})"
         feed_entry.title(title)
-        feed_entry.updated(offer.seen_last)
+        feed_entry.updated(offer.seen_first)
         # Atom Recommended
         # - Author
         feed_entry.author(
@@ -80,7 +78,7 @@ def generate_feed(offers: list[LootOffer]) -> None:
         if offer.publisher:
             content += f"<li>Publisher: {html.escape(offer.publisher)}</li>"
         content += "</ul><p>"
-        content += f"<small>Source: {html.escape(offer.source)}, Seen first: {offer.seen_first.strftime(TIMESTAMP_LONG)}, Seen last: {offer.seen_last.strftime(TIMESTAMP_LONG)}</small>"
+        content += f"<small>Source: {html.escape(offer.source)}, Seen first: {offer.seen_first.strftime(TIMESTAMP_LONG)}</small>"
         content += "</p>"
         feed_entry.content(content, type="xhtml")
         # - Link
@@ -95,8 +93,6 @@ def generate_feed(offers: list[LootOffer]) -> None:
         # - rights
 
         # feed_entry.link(href="http://lernfunk.de/feed")
-
-    out_file = Config.data_path() / Path(Config.config()["common"]["FeedFile"])
 
     # Write the ATOM feed to a file
     feed_generator.atom_file(filename=str(out_file), pretty=True)

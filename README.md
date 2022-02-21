@@ -26,7 +26,7 @@ This project is in ongoing development, not yet usable for the average user and 
 - [x] Script for data migration in case of updates
 - [x] Store all dates in UTC
 - [x] Support start and end dates of offers
-- [ ] Only upload if hash of gameloot.xml has changed
+- [x] Only upload if hash of gameloot.xml has changed
 - [ ] Add tests (pytest?)
 - [ ] Dynamically generate ATOM feeds split by source and type (e.g. only amazon ingame loot) in addition to the full feed
 - [ ] Error handling
