@@ -70,11 +70,14 @@ def job() -> None:
         db.initialize_or_update()
         scraped_offers: list[LootOffer] = []
 
-        cfg_amazon: bool = Config.config().getboolean("actions", "ScrapeAmazon")  # type: ignore
-        cfg_epic: bool = Config.config().getboolean("actions", "ScrapeEpic")  # type: ignore
+        cfg_amazon_games: bool = Config.config().getboolean("actions", "ScrapeAmazonGames")  # type: ignore
+        cfg_amazon_loot: bool = Config.config().getboolean("actions", "ScrapeAmazonLoot")  # type: ignore
+        cfg_epic: bool = Config.config().getboolean("actions", "ScrapeEpicGames")  # type: ignore
 
-        if cfg_amazon:
-            scraped_offers.extend(AmazonScraper.scrape())
+        if cfg_amazon_games or cfg_amazon_loot:
+            scraped_offers.extend(
+                AmazonScraper.scrape(cfg_amazon_games, cfg_amazon_loot)
+            )
         else:
             logging.info("Skipping Amazon")
 
@@ -92,22 +95,26 @@ def job() -> None:
 
         for scraped_offer in scraped_offers:
             exists_in_db = False
-            # Check every database entry if this is a match. Could probably made much faster, but irrelevant for now.
+            # Check every database entry if this is a match.
+            # TODO: Could probably made much faster using SQL, but irrelevant for now.
             for db_offer in db_offers:
-                if (
-                    db_offer.source == scraped_offer.source
-                    and db_offer.title == scraped_offer.title
-                    and db_offer.subtitle == scraped_offer.subtitle
-                    and db_offer.valid_to == scraped_offer.valid_to
-                ):
-                    # Offer has already been scraped, so do not insert this into the database, but update the "last seen" timestamp
-                    scraped_offer.id = db_offer.id
-                    if Config.config().getboolean("common", "ForceUpdate"):  # type: ignore
-                        db.update_offer(scraped_offer)
-                    else:
-                        db.touch_offer(scraped_offer)
-                    exists_in_db = True
-                    break
+                if db_offer.source != scraped_offer.source:
+                    continue
+                if db_offer.title != scraped_offer.title:
+                    continue
+                if db_offer.subtitle != scraped_offer.subtitle:
+                    continue
+                if db_offer.valid_to != scraped_offer.valid_to:
+                    continue
+
+                # Offer has already been scraped, so do not insert this into the database, but update the "last seen" timestamp
+                scraped_offer.id = db_offer.id
+                if Config.config().getboolean("common", "ForceUpdate"):  # type: ignore
+                    db.update_offer(scraped_offer)
+                else:
+                    db.touch_offer(scraped_offer)
+                exists_in_db = True
+                break
 
             if not exists_in_db:
                 # The enddate has been changed or it is a new offer, insert it into the database
