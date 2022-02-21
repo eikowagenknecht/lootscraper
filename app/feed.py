@@ -8,7 +8,7 @@ from pytz import timezone
 
 from app.configparser import Config
 
-from .common import TIMESTAMP_LONG, LootOffer
+from .common import TIMESTAMP_LONG, TIMESTAMP_READABLE_WITH_HOUR, LootOffer
 
 
 def generate_feed(offers: list[LootOffer]) -> None:
@@ -68,20 +68,21 @@ def generate_feed(offers: list[LootOffer]) -> None:
             }
         )
         # - Content
-        content = "<ul>"
+        content = f"<p>{offer.type} found."
+        if offer.url:
+            content += f' Claim it here: <a href="{html.escape(offer.url)}">{html.escape(offer.source)}</a>.'
+        content += "</p><ul>"
         if offer.valid_from:
-            content += f"<li>Valid from: {html.escape(offer.valid_from)}</li>"
+            content += f"<li>Valid from: {html.escape(offer.valid_from.strftime(TIMESTAMP_READABLE_WITH_HOUR))}</li>"
         else:
-            content += f"<li>Valid from: {html.escape(offer.seen_first)}</li>"
+            content += f"<li>Valid from: {html.escape(offer.seen_first.strftime(TIMESTAMP_READABLE_WITH_HOUR))}</li>"
         if offer.valid_to:
-            content += f"<li><b>Valid to: {html.escape(offer.valid_to)}</b></li>"
-        content += f"<li>Seen first: {offer.seen_first.strftime(TIMESTAMP_LONG)}</li>"
-        content += f"<li>Seen last: {offer.seen_last.strftime(TIMESTAMP_LONG)}</li>"
+            content += f"<li>Valid to: {html.escape(offer.valid_to.strftime(TIMESTAMP_READABLE_WITH_HOUR))}</li>"
         if offer.publisher:
             content += f"<li>Publisher: {html.escape(offer.publisher)}</li>"
-        if offer.url:
-            content += f'<li>Source: <a href="{html.escape(offer.url)}">{html.escape(offer.source)}</a></li>'
-        content += "</ul>"
+        content += "</ul><p>"
+        content += f"<small>Source: {html.escape(offer.source)}, Seen first: {offer.seen_first.strftime(TIMESTAMP_LONG)}, Seen last: {offer.seen_last.strftime(TIMESTAMP_LONG)}</small>"
+        content += "</p>"
         feed_entry.content(content, type="xhtml")
         # - Link
         feed_entry.link(rel="alternate", href=offer.url)

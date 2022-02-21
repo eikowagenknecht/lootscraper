@@ -4,6 +4,8 @@ from enum import Enum
 
 TIMESTAMP_SHORT = "%Y-%m-%d"
 TIMESTAMP_LONG = "%Y-%m-%d %H:%M:%S"
+TIMESTAMP_READABLE_WITH_HOUR = "%a, %d %b %H:%M (UTC)"
+TIMESTAMP_ISO = "%Y-%m-%dT%H:%M:%S"
 
 
 class OfferType(Enum):
@@ -23,7 +25,7 @@ class LootOffer:
     title: str | None = None
     subtitle: str | None = None
     publisher: str | None = None
-    valid_from: str | None = None
-    valid_to: str | None = None
+    valid_from: datetime | None = None
+    valid_to: datetime | None = None
     rawtext: str | None = None
     url: str | None = None
