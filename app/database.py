@@ -5,29 +5,13 @@ import sqlite3
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from types import TracebackType
-from typing import Any, Final, Type
+from typing import Any, Type
 
 from app.configparser import Config
 
 from .common import TIMESTAMP_LONG, TIMESTAMP_SHORT, LootOffer
 
 CURRENT_DB_VERSION = 0
-
-DROP_LOOT_TABLE: Final = """DROP TABLE IF EXISTS loot"""
-CREATE_LOOT_TABLE: Final = """CREATE TABLE IF NOT EXISTS "loot" (
-    "id" INTEGER PRIMARY KEY,
-    "seen_first" TEXT,
-    "seen_last" TEXT,
-    "source" TEXT,
-    "type" TEXT,
-    "rawtext" TEXT,
-    "title" TEXT,
-    "subtitle" TEXT,
-    "publisher" TEXT,
-    "valid_from" TEXT,
-    "valid_to" TEXT,
-    "url" TEXT
-);"""
 
 
 class LootDatabase:
@@ -56,7 +40,22 @@ class LootDatabase:
     def initialize_or_update(self) -> None:
         if self.get_version() == 0:
             logging.info("New database, initializing to v1")
-            self.cursor.execute(CREATE_LOOT_TABLE)
+            self.cursor.execute(
+                """CREATE TABLE IF NOT EXISTS "loot" (
+                    "id" INTEGER PRIMARY KEY,
+                    "seen_first" TEXT,
+                    "seen_last" TEXT,
+                    "source" TEXT,
+                    "type" TEXT,
+                    "rawtext" TEXT,
+                    "title" TEXT,
+                    "subtitle" TEXT,
+                    "publisher" TEXT,
+                    "valid_from" TEXT,
+                    "valid_to" TEXT,
+                    "url" TEXT
+                );"""
+            )
             self.set_version(1)
 
         if self.get_version() == 1:
@@ -68,6 +67,11 @@ class LootDatabase:
             logging.info("Updating database from v2 to v3")
             self.fix_date_format()
             self.set_version(3)
+
+        if self.get_version() == 3:
+            logging.info("Updating database from v3 to v4")
+            self.cursor.execute("ALTER TABLE loot ADD img_url TEXT")
+            self.set_version(4)
 
     def fix_date_format(self) -> None:
         self.cursor.execute("SELECT id, seen_first FROM loot ORDER BY type")
@@ -137,8 +141,8 @@ class LootDatabase:
     def set_version(self, version: int) -> None:
         self.cursor.execute("PRAGMA user_version = {v:d}".format(v=version))
 
-    def touch_offer(self, db_offer: LootOffer) -> None:
-        if db_offer.id is None:
+    def touch_offer(self, offer: LootOffer) -> None:
+        if offer.id is None:
             return
 
         self.cursor.execute(
@@ -146,8 +150,48 @@ class LootDatabase:
                 SET seen_last = ?
                 WHERE id = ?""",
             (
-                datetime.now().isoformat(),
-                db_offer.id,
+                datetime.now().replace(tzinfo=timezone.utc).isoformat(),
+                offer.id,
+            ),
+        )
+
+    def update_offer(self, offer: LootOffer) -> None:
+        if offer.id is None:
+            return
+
+        self.cursor.execute(
+            """
+                UPDATE loot SET
+                    seen_last = ?,
+                    rawtext = ?,
+                    source = ?,
+                    type = ?,
+                    title = ?,
+                    subtitle = ?,
+                    publisher = ?,
+                    valid_from = ?,
+                    valid_to = ?,
+                    url = ?,
+                    img_url = ?
+                WHERE id = ?
+            """,
+            (
+                datetime.now().replace(tzinfo=timezone.utc).isoformat(),
+                offer.rawtext or None,
+                offer.source or None,
+                offer.type or None,
+                offer.title or None,
+                offer.subtitle or None,
+                offer.publisher or None,
+                offer.valid_from.replace(tzinfo=timezone.utc).isoformat()
+                if offer.valid_from
+                else None,
+                offer.valid_to.replace(tzinfo=timezone.utc).isoformat()
+                if offer.valid_to
+                else None,
+                offer.url or None,
+                offer.img_url or None,
+                offer.id,
             ),
         )
 
@@ -167,20 +211,39 @@ class LootDatabase:
     def insert_offer(self, offer: LootOffer) -> None:
         current_date = datetime.now().replace(tzinfo=timezone.utc).isoformat()
         self.cursor.execute(
-            """INSERT INTO loot(seen_first, seen_last, rawtext, source, type, title, subtitle, publisher, valid_from, valid_to, url)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+            """
+                INSERT INTO loot(
+                    seen_first,
+                    seen_last,
+                    rawtext,
+                    source,
+                    type,
+                    title,
+                    subtitle,
+                    publisher,
+                    valid_from,
+                    valid_to,
+                    url,
+                    img_url
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
             (
                 current_date,
                 current_date,
-                offer.rawtext,
-                offer.source,
-                offer.type,
-                offer.title,
-                offer.subtitle,
-                offer.publisher,
-                offer.valid_from.replace(tzinfo=timezone.utc).isoformat() if offer.valid_from else "",
-                offer.valid_to.replace(tzinfo=timezone.utc).isoformat() if offer.valid_to else "",
-                offer.url,
+                offer.rawtext or None,
+                offer.source or None,
+                offer.type or None,
+                offer.title or None,
+                offer.subtitle or None,
+                offer.publisher or None,
+                offer.valid_from.replace(tzinfo=timezone.utc).isoformat()
+                if offer.valid_from
+                else None,
+                offer.valid_to.replace(tzinfo=timezone.utc).isoformat()
+                if offer.valid_to
+                else None,
+                offer.url or None,
+                offer.img_url or None,
             ),
         )
 
@@ -198,6 +261,7 @@ class LootDatabase:
                 ", seen_first"
                 ", seen_last"
                 ", url"
+                ", img_url"
                 " FROM loot"
                 " ORDER BY type"
             )
@@ -217,6 +281,7 @@ class LootDatabase:
                 seen_first=datetime.fromisoformat(row[8]).replace(tzinfo=timezone.utc),  # type: ignore
                 seen_last=datetime.fromisoformat(row[9]).replace(tzinfo=timezone.utc),  # type: ignore
                 url=row[10],  # type: ignore
+                img_url=row[11],  # type: ignore
             )
             offers.append(offer)
 

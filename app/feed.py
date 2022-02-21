@@ -66,6 +66,8 @@ def generate_feed(offers: list[LootOffer]) -> None:
         )
         # - Content
         content = f"<p>{offer.type} found."
+        if offer.img_url:
+            content += f'</p><img src="{html.escape(offer.img_url)}" /><p>'
         if offer.url:
             content += f' Claim it here: <a href="{html.escape(offer.url)}">{html.escape(offer.source)}</a>.'
         content += "</p><ul>"
