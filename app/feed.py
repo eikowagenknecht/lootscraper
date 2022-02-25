@@ -40,8 +40,8 @@ def generate_feed(offers: list[LootOffer], out_file: Path) -> None:
     # - Subtitle
 
     for offer in offers:
-        if offer.valid_from and offer.valid_from > datetime.now(timezone.utc):
-            # Skip future entries
+        if offer.valid_from > offer.seen_last:
+            # Skip future entries and entries that are no longer seen on valid_from date
             continue
 
         feed_entry = feed_generator.add_entry()
