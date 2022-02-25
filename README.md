@@ -11,6 +11,7 @@ This project is in ongoing development, not yet usable for the average user and 
 ### TODO
 
 - [ ] Check TODO comments in code.
+- [ ] Before open-sourcing: Make URLs in feed customizable
 
 ### Features
 
