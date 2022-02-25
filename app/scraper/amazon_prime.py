@@ -9,7 +9,7 @@ from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
-from app.common import LootOffer, OfferType
+from app.common import LootOffer, OfferType, Source
 from app.pagedriver import get_pagedriver
 from app.scraper.scraper import Scraper
 
@@ -40,30 +40,31 @@ class RawOffer:
 
 class AmazonScraper(Scraper):
     @staticmethod
-    def scrape(options: dict[str, bool] = None) -> list[LootOffer]:
+    def scrape(options: dict[str, bool] = None) -> dict[str, list[LootOffer]]:
         logging.info(f"Start scraping of {SCRAPER_NAME}")
-        offers = []
+        offers = {}
 
         try:
             driver: WebDriver
             with get_pagedriver() as driver:
                 driver.get(ROOT_URL)
 
-                if not options or options["games"]:
+                if not options or options[OfferType.GAME.name]:
                     logging.info(
                         f"Analyzing {ROOT_URL} for {OfferType.GAME.value} offers"
                     )
-                    offers.extend(
-                        AmazonScraper.read_offers_from_page(OfferType.GAME, driver)
+                    offers[OfferType.GAME.name] = AmazonScraper.read_offers_from_page(
+                        OfferType.GAME, driver
                     )
 
-                if not options or options["loot"]:
+                if not options or options[OfferType.LOOT.name]:
                     logging.info(
                         f"Analyzing {ROOT_URL} for {OfferType.LOOT.value} offers"
                     )
-                    offers.extend(
-                        AmazonScraper.read_offers_from_page(OfferType.LOOT, driver)
+                    offers[OfferType.LOOT.name] = AmazonScraper.read_offers_from_page(
+                        OfferType.LOOT, driver
                     )
+
                 driver.quit()
         except WebDriverException as err:  # type: ignore
             logging.error(f"Failure starting Chrome WebDriver, aborting: {err.msg}")  # type: ignore
@@ -219,8 +220,8 @@ class AmazonScraper(Scraper):
             nearest_url = offer.url if offer.url else ROOT_URL
             loot_offer = LootOffer(
                 seen_last=datetime.now(timezone.utc),
-                source=SCRAPER_NAME,
-                type=offer_type.value,
+                source=Source.AMAZON,
+                type=offer_type,
                 rawtext=rawtext,
                 title=title,
                 subtitle=subtitle,

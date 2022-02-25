@@ -9,7 +9,13 @@ from typing import Any, Type
 
 from app.configparser import Config
 
-from .common import TIMESTAMP_LONG, TIMESTAMP_SHORT, LootOffer
+from .common import (
+    TIMESTAMP_LONG,
+    TIMESTAMP_SHORT,
+    LootOffer,
+    OfferType,
+    Source,
+)
 
 CURRENT_DB_VERSION = 0
 
@@ -178,8 +184,8 @@ class LootDatabase:
             (
                 datetime.now().replace(tzinfo=timezone.utc).isoformat(),
                 offer.rawtext or None,
-                offer.source or None,
-                offer.type or None,
+                offer.source.value if offer.source else None,
+                offer.type.value if offer.type else None,
                 offer.title or None,
                 offer.subtitle or None,
                 offer.publisher or None,
@@ -231,8 +237,8 @@ class LootDatabase:
                 current_date,
                 current_date,
                 offer.rawtext or None,
-                offer.source or None,
-                offer.type or None,
+                offer.source.value if offer.source else None,
+                offer.type.value if offer.type else None,
                 offer.title or None,
                 offer.subtitle or None,
                 offer.publisher or None,
@@ -247,7 +253,7 @@ class LootDatabase:
             ),
         )
 
-    def read_offers(self) -> dict[str, list[LootOffer]]:
+    def read_offers(self) -> dict[str, dict[str, list[LootOffer]]]:
         self.cursor.execute(
             (
                 "SELECT id"
@@ -266,7 +272,7 @@ class LootDatabase:
                 " ORDER BY type"
             )
         )
-        offers: dict[str, list[LootOffer]] = {}
+        offers: dict[str, dict[str, list[LootOffer]]] = {}
 
         for row in self.cursor:  # type: ignore
             offer = LootOffer(
@@ -284,10 +290,13 @@ class LootDatabase:
                 img_url=row[11],  # type: ignore
             )
 
-            source: str = row[1]  # type: ignore
+            source: str = Source(row[1]).name  # type: ignore
+            type: str = OfferType(row[2]).name  # type: ignore
             if source not in offers:
-                offers[source] = []
+                offers[source] = {}
+            if type not in offers[source]:
+                offers[source][type] = []
 
-            offers[source].append(offer)
+            offers[source][type].append(offer)
 
         return offers

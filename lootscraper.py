@@ -7,7 +7,12 @@ from pathlib import Path
 from threading import Event
 from types import FrameType
 
-from app.common import TIMESTAMP_LONG, LootOffer, Source, get_shortname, get_source
+from app.common import (
+    TIMESTAMP_LONG,
+    LootOffer,
+    OfferType,
+    Source,
+)
 from app.configparser import Config
 from app.database import LootDatabase
 from app.feed import generate_feed
@@ -69,26 +74,33 @@ def job() -> None:
     db: LootDatabase
     with LootDatabase() as db:
         db.initialize_or_update()
-        scraped_offers: dict[str, list[LootOffer]] = {}
+        scraped_offers: dict[str, dict[str, list[LootOffer]]] = {}
 
-        cfg_amazon_games: bool = Config.config().getboolean("actions", "ScrapeAmazonGames")  # type: ignore
-        cfg_amazon_loot: bool = Config.config().getboolean("actions", "ScrapeAmazonLoot")  # type: ignore
+        cfg_amazon: bool = Config.config().getboolean("actions", "ScrapeAmazon")  # type: ignore
+        cfg_epic: bool = Config.config().getboolean("actions", "ScrapeEpic")  # type: ignore
 
-        if cfg_amazon_games or cfg_amazon_loot:
+        cfg_games: bool = Config.config().getboolean("actions", "ScrapeGames")  # type: ignore
+        cfg_loot: bool = Config.config().getboolean("actions", "ScrapeLoot")  # type: ignore
+
+        if cfg_amazon:
             scraped_offers[Source.AMAZON.name] = AmazonScraper.scrape(
                 {
-                    "games": cfg_amazon_games,
-                    "loot": cfg_amazon_loot,
+                    OfferType.GAME.name: cfg_games,
+                    OfferType.LOOT.name: cfg_loot,
                 }
             )
         else:
-            logging.info("Skipping Amazon")
+            logging.info(f"Skipping {Source.AMAZON.value}")
 
-        cfg_epic: bool = Config.config().getboolean("actions", "ScrapeEpicGames")  # type: ignore
         if cfg_epic:
-            scraped_offers[Source.EPIC.name] = EpicScraper.scrape()
+            scraped_offers[Source.EPIC.name] = EpicScraper.scrape(
+                {
+                    OfferType.GAME.name: cfg_games,
+                    OfferType.LOOT.name: cfg_loot,
+                }
+            )
         else:
-            logging.info("Skipping Epic")
+            logging.info(f"Skipping {Source.EPIC.value}")
 
         # Check which offers are new and which are updated, then act accordingly:
         # - Offers that are neither new nor updated just get a new date
@@ -97,34 +109,36 @@ def job() -> None:
         db_offers = db.read_offers()
         new_offers: int = 0
 
-        for scraper in scraped_offers:
-            for source_offer in scraped_offers[scraper]:
-                exists_in_db = False
-                # Check every database entry if this is a match.
-                # TODO: Could probably made much faster using SQL, but irrelevant for now.
-                for db_offer in db_offers[scraper]:
-                    if db_offer.source != source_offer.source:
-                        continue
-                    if db_offer.title != source_offer.title:
-                        continue
-                    if db_offer.subtitle != source_offer.subtitle:
-                        continue
-                    if db_offer.valid_to != source_offer.valid_to:
-                        continue
+        for scraper_source in scraped_offers:
+            for scraper_type in scraped_offers[scraper_source]:
+                for scraper_offer in scraped_offers[scraper_source][scraper_type]:
+                    exists_in_db = False
+                    # Check every database entry if this is a match.
+                    # TODO: Could probably made much faster using SQL, but irrelevant for now.
+                    for db_type in db_offers[scraper_source]:
+                        for db_offer in db_offers[scraper_source][scraper_type]:
+                            if db_offer.source != scraper_offer.source:
+                                continue
+                            if db_offer.title != scraper_offer.title:
+                                continue
+                            if db_offer.subtitle != scraper_offer.subtitle:
+                                continue
+                            if db_offer.valid_to != scraper_offer.valid_to:
+                                continue
 
-                    # Offer has already been scraped, so do not insert this into the database, but update the "last seen" timestamp
-                    source_offer.id = db_offer.id
-                    if Config.config().getboolean("common", "ForceUpdate"):  # type: ignore
-                        db.update_offer(source_offer)
-                    else:
-                        db.touch_offer(source_offer)
-                    exists_in_db = True
-                    break
+                            # Offer has already been scraped, so do not insert this into the database, but update the "last seen" timestamp
+                            scraper_offer.id = db_offer.id
+                            if Config.config().getboolean("common", "ForceUpdate"):  # type: ignore
+                                db.update_offer(scraper_offer)
+                            else:
+                                db.touch_offer(scraper_offer)
+                            exists_in_db = True
+                            break
 
-                if not exists_in_db:
-                    # The enddate has been changed or it is a new offer, insert it into the database
-                    db.insert_offer(source_offer)
-                    new_offers += 1
+                    if not exists_in_db:
+                        # The enddate has been changed or it is a new offer, insert it into the database
+                        db.insert_offer(scraper_offer)
+                        new_offers += 1
 
         db_offers = db.read_offers()
 
@@ -136,28 +150,35 @@ def job() -> None:
     if cfg_generate_feed:
         # Generate and upload feeds split by source
         any_feed_changed = False
-        for scraper in db_offers:
-            feed_changed = False
-            feed_file = Config.data_path() / Path(
-                Config.config()["common"]["FeedFilePrefix"]
-                + "_"
-                + get_shortname(get_source(scraper))
-                + ".xml"
-            )
-            old_hash = hash_file(feed_file)
-            generate_feed(db_offers[scraper], feed_file)
-            new_hash = hash_file(feed_file)
-            if old_hash != new_hash:
-                feed_changed = True
-                any_feed_changed = True
+        for scraper_source in db_offers:
+            for scraper_type in db_offers[scraper_source]:
+                feed_changed = False
+                feed_file = Config.data_path() / Path(
+                    Config.config()["common"]["FeedFilePrefix"]
+                    + f"_{Source[scraper_source].name.lower()}"
+                    + f"_{OfferType[scraper_type].name.lower()}"
+                    + ".xml"
+                )
+                old_hash = hash_file(feed_file)
+                generate_feed(
+                    offers=db_offers[scraper_source][scraper_type],
+                    out_file=feed_file,
+                    source=Source[scraper_source],
+                    type=OfferType[scraper_type],
+                )
+                new_hash = hash_file(feed_file)
+                if old_hash != new_hash:
+                    feed_changed = True
+                    any_feed_changed = True
 
-            if feed_changed and cfg_upload:
-                upload_to_server(feed_file)
+                if feed_changed and cfg_upload:
+                    upload_to_server(feed_file)
 
         # Generate and upload cumulated feed
         all_offers = []
-        for scraper in db_offers:
-            all_offers.extend(db_offers[scraper])
+        for scraper_source in db_offers:
+            for scraper_type in db_offers[scraper_source]:
+                all_offers.extend(db_offers[scraper_source][scraper_type])
 
         if any_feed_changed:
             feed_file = Config.data_path() / Path(

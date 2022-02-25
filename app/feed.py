@@ -5,10 +5,21 @@ from pathlib import Path
 
 from feedgen.feed import FeedGenerator
 
-from .common import TIMESTAMP_LONG, TIMESTAMP_READABLE_WITH_HOUR, LootOffer
+from .common import (
+    TIMESTAMP_LONG,
+    TIMESTAMP_READABLE_WITH_HOUR,
+    LootOffer,
+    OfferType,
+    Source,
+)
 
 
-def generate_feed(offers: list[LootOffer], out_file: Path) -> None:
+def generate_feed(
+    offers: list[LootOffer],
+    out_file: Path,
+    source: Source = None,
+    type: OfferType = None,
+) -> None:
     last_updated = datetime.now(timezone.utc)
 
     # Generate Feed Info
@@ -17,14 +28,8 @@ def generate_feed(offers: list[LootOffer], out_file: Path) -> None:
     # XML
     feed_generator.language("en")
     # Atom Needed
-    if out_file.name == "gameloot.xml":
-        feed_generator.id("https://phenx.de/loot")
-        feed_generator.title("Free Games and Loot")
-    else:
-        # Use the part between "gameloot_" and ".xml" as the feed id
-        subfeed = out_file.name.split("_", 1)[1][0:-4]
-        feed_generator.id("https://phenx.de/loot/" + subfeed)
-        feed_generator.title("Free Offers: " + subfeed.replace("_", " / ").title())
+    feed_generator.id(get_feed_id(out_file.name))
+    feed_generator.title(get_feed_title(source, type))
     feed_generator.updated(last_updated)
     # Atom Recommended
     feed_generator.link(rel="self", href="https://feed.phenx.de/" + out_file.name)
@@ -100,3 +105,29 @@ def generate_feed(offers: list[LootOffer], out_file: Path) -> None:
 
     # Write the ATOM feed to a file
     feed_generator.atom_file(filename=str(out_file), pretty=True)
+
+
+def get_feed_id(filename: str) -> str:
+    if filename == "gameloot.xml":
+        return "https://phenx.de/loot"
+    else:
+        # Use the part between "gameloot_" and ".xml" as the feed id
+        subfeed = filename.split("_", 1)[1][0:-4]
+        return "https://phenx.de/loot/" + subfeed
+
+
+def get_feed_title(source: Source | None, type: OfferType | None):
+    if source is None and type is None:
+        return "Free Games and Loot"
+
+    title = "Free"
+    if source is not None:
+        title += f" {source.value}"
+    if type is not None:
+        match OfferType:
+            case OfferType.GAME:
+                title += " Games"
+            case OfferType.LOOT:
+                title += " Loot"
+
+    return title
