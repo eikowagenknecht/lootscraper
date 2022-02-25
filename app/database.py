@@ -247,7 +247,7 @@ class LootDatabase:
             ),
         )
 
-    def read_offers(self) -> list[LootOffer]:
+    def read_offers(self) -> dict[str, list[LootOffer]]:
         self.cursor.execute(
             (
                 "SELECT id"
@@ -266,7 +266,7 @@ class LootDatabase:
                 " ORDER BY type"
             )
         )
-        offers = []
+        offers: dict[str, list[LootOffer]] = {}
 
         for row in self.cursor:  # type: ignore
             offer = LootOffer(
@@ -283,6 +283,11 @@ class LootDatabase:
                 url=row[10],  # type: ignore
                 img_url=row[11],  # type: ignore
             )
-            offers.append(offer)
+
+            source: str = row[1]  # type: ignore
+            if source not in offers:
+                offers[source] = []
+
+            offers[source].append(offer)
 
         return offers
