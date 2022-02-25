@@ -183,7 +183,7 @@ def job() -> None:
             if cfg_upload:
                 upload_to_server(feed_file)
             else:
-                logging.info("Skipping upload")
+                logging.info("Skipping upload, disabled")
 
     else:
         logging.info("Skipping feed generation, disabled")
