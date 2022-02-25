@@ -1,6 +1,6 @@
 # mypy: ignore-errors
 import html
-from datetime import datetime, timezone
+from datetime import datetime
 from pathlib import Path
 
 from feedgen.feed import FeedGenerator
@@ -20,37 +20,20 @@ def generate_feed(
     source: Source = None,
     type: OfferType = None,
 ) -> None:
-    last_updated = datetime.now(timezone.utc)
+    """Generates a feed using the ATOM standard, see
+    http://www.atomenabled.org/developers/syndication/#requiredFeedElements for
+    details."""
 
-    # Generate Feed Info
-    # See http://www.atomenabled.org/developers/syndication/#requiredFeedElements
+    if len(offers) == 0:
+        return
+
     feed_generator = FeedGenerator()
-    # XML
-    feed_generator.language("en")
-    # Atom Needed
-    feed_generator.id(get_feed_id(out_file.name))
-    feed_generator.title(get_feed_title(source, type))
-    feed_generator.updated(last_updated)
-    # Atom Recommended
-    feed_generator.link(rel="self", href="https://feed.phenx.de/" + out_file.name)
-    feed_generator.link(rel="alternate", href="https://phenx.de/loot")
-    feed_generator.author(
-        {
-            "name": "Eiko Wagenknecht",
-            "email": "feed@ew-mail.de",
-            "uri": "eiko-wagenknecht.de",
-        }
-    )
-    # Atom Optional
-    # - Category
-    # - Contributor
-    # - Generator
-    # - Icon
-    # - Logo
-    # - Rights
-    # - Subtitle
+    latest_date: datetime = None
 
     for offer in offers:
+        if not latest_date or offer.seen_first > latest_date:
+            latest_date = offer.seen_first
+
         if offer.valid_from and offer.valid_from > offer.seen_last:
             # Skip future entries and entries that are no longer seen on valid_from date
             continue
@@ -102,6 +85,31 @@ def generate_feed(
         feed_entry.published(offer.seen_first)
         # - source
         # - rights
+
+    # XML
+    feed_generator.language("en")
+    # Atom Needed
+    feed_generator.id(get_feed_id(out_file.name))
+    feed_generator.title(get_feed_title(source, type))
+    feed_generator.updated(latest_date)
+    # Atom Recommended
+    feed_generator.link(rel="self", href="https://feed.phenx.de/" + out_file.name)
+    feed_generator.link(rel="alternate", href="https://phenx.de/loot")
+    feed_generator.author(
+        {
+            "name": "Eiko Wagenknecht",
+            "email": "feed@ew-mail.de",
+            "uri": "eiko-wagenknecht.de",
+        }
+    )
+    # Atom Optional
+    # - Category
+    # - Contributor
+    # - Generator
+    # - Icon
+    # - Logo
+    # - Rights
+    # - Subtitle
 
     # Write the ATOM feed to a file
     feed_generator.atom_file(filename=str(out_file), pretty=True)
