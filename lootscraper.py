@@ -7,7 +7,7 @@ from pathlib import Path
 from threading import Event
 from types import FrameType
 
-from app.common import TIMESTAMP_LONG, LootOffer
+from app.common import TIMESTAMP_LONG, LootOffer, Source, get_shortname, get_source
 from app.configparser import Config
 from app.database import LootDatabase
 from app.feed import generate_feed
@@ -73,17 +73,20 @@ def job() -> None:
 
         cfg_amazon_games: bool = Config.config().getboolean("actions", "ScrapeAmazonGames")  # type: ignore
         cfg_amazon_loot: bool = Config.config().getboolean("actions", "ScrapeAmazonLoot")  # type: ignore
-        cfg_epic: bool = Config.config().getboolean("actions", "ScrapeEpicGames")  # type: ignore
 
         if cfg_amazon_games or cfg_amazon_loot:
-            scraped_offers[AmazonScraper.get_name()] = AmazonScraper.scrape(
-                cfg_amazon_games, cfg_amazon_loot
+            scraped_offers[Source.AMAZON.name] = AmazonScraper.scrape(
+                {
+                    "games": cfg_amazon_games,
+                    "loot": cfg_amazon_loot,
+                }
             )
         else:
             logging.info("Skipping Amazon")
 
+        cfg_epic: bool = Config.config().getboolean("actions", "ScrapeEpicGames")  # type: ignore
         if cfg_epic:
-            scraped_offers[EpicScraper.get_name()] = EpicScraper.scrape()
+            scraped_offers[Source.EPIC.name] = EpicScraper.scrape()
         else:
             logging.info("Skipping Epic")
 
@@ -138,7 +141,7 @@ def job() -> None:
             feed_file = Config.data_path() / Path(
                 Config.config()["common"]["FeedFilePrefix"]
                 + "_"
-                + get_scraper_shortname(scraper)
+                + get_shortname(get_source(scraper))
                 + ".xml"
             )
             old_hash = hash_file(feed_file)
@@ -194,15 +197,6 @@ def hash_file(file: Path) -> str:
             hash.update(data)
 
     return hash.hexdigest()
-
-
-def get_scraper_shortname(longname: str) -> str:
-    if longname == "Amazon Prime":
-        return "amazon"
-    elif longname == "Epic Games":
-        return "epic"
-    else:
-        return ""
 
 
 if __name__ == "__main__":

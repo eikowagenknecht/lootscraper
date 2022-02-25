@@ -11,6 +11,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 
 from app.common import LootOffer, OfferType
 from app.pagedriver import get_pagedriver
+from app.scraper.scraper import Scraper
 
 SCRAPER_NAME = "Amazon Prime"
 ROOT_URL = "https://gaming.amazon.com/home"
@@ -37,9 +38,9 @@ class RawOffer:
     img_url: str | None = None
 
 
-class AmazonScraper:
+class AmazonScraper(Scraper):
     @staticmethod
-    def scrape(games: bool, loot: bool) -> list[LootOffer]:
+    def scrape(options: dict[str, bool] = None) -> list[LootOffer]:
         logging.info(f"Start scraping of {SCRAPER_NAME}")
         offers = []
 
@@ -48,7 +49,7 @@ class AmazonScraper:
             with get_pagedriver() as driver:
                 driver.get(ROOT_URL)
 
-                if games:
+                if not options or options["games"]:
                     logging.info(
                         f"Analyzing {ROOT_URL} for {OfferType.GAME.value} offers"
                     )
@@ -56,7 +57,7 @@ class AmazonScraper:
                         AmazonScraper.read_offers_from_page(OfferType.GAME, driver)
                     )
 
-                if loot:
+                if not options or options["loot"]:
                     logging.info(
                         f"Analyzing {ROOT_URL} for {OfferType.LOOT.value} offers"
                     )
@@ -232,7 +233,3 @@ class AmazonScraper:
             normalized_offers.append(loot_offer)
             logging.info(f"Found offer for {loot_offer.title}")
         return normalized_offers
-
-    @staticmethod
-    def get_name() -> str:
-        return SCRAPER_NAME
