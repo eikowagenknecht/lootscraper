@@ -12,6 +12,11 @@ class OfferType(Enum):
     GAME = "Game"
 
 
+class Source(Enum):
+    AMAZON = "Amazon"
+    EPIC = "Epic"
+
+
 @dataclass
 class LootOffer:
     """Represents a database entry in the "loot" table"""
@@ -29,3 +34,30 @@ class LootOffer:
     rawtext: str | None = None
     url: str | None = None
     img_url: str | None = None
+
+
+def get_shortname(source: Source) -> str:
+    if source == Source.AMAZON:
+        return "amazon"
+    elif source == Source.EPIC:
+        return "epic"
+    else:
+        raise ValueError("Unknown Scraper")
+
+
+def get_longname(source: Source) -> str:
+    if source == Source.AMAZON:
+        return "Amazon Prime"
+    elif source == Source.EPIC:
+        return "Epic Games"
+    else:
+        raise ValueError("Unknown Scraper")
+
+
+def get_source(longname: str) -> Source:
+    if longname == "Amazon Prime":
+        return Source.AMAZON
+    elif longname == "Epic Games":
+        return Source.EPIC
+    else:
+        raise ValueError("Unknown Scraper")

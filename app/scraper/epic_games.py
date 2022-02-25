@@ -11,6 +11,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 
 from app.common import LootOffer, OfferType
 from app.pagedriver import get_pagedriver
+from app.scraper.scraper import Scraper
 
 SCRAPER_NAME = "Epic Games"
 ROOT_URL = "https://www.epicgames.com/store/en-US/"
@@ -35,9 +36,9 @@ class RawOffer:
     img_url: str | None
 
 
-class EpicScraper:
+class EpicScraper(Scraper):
     @staticmethod
-    def scrape() -> list[LootOffer]:
+    def scrape(options: dict[str, bool] = None) -> list[LootOffer]:
         logging.info(f"Start scraping of {SCRAPER_NAME}")
         offers = []
 
@@ -206,7 +207,3 @@ class EpicScraper:
             normalized_offers.append(loot_offer)
             logging.info(f"Found offer for {loot_offer.title}")
         return normalized_offers
-
-    @staticmethod
-    def get_name() -> str:
-        return SCRAPER_NAME
