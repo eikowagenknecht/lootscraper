@@ -25,11 +25,11 @@ class Source(Enum):
 class LootOffer:
     """Represents a database entry in the "loot" table"""
 
+    source: Source
+    type: OfferType
     id: int | None = None
     seen_first: datetime | None = None
     seen_last: datetime | None = None
-    source: Source | None = None
-    type: OfferType | None = None
     title: str | None = None
     subtitle: str | None = None
     publisher: str | None = None

@@ -1,6 +1,7 @@
 import logging
 from dataclasses import dataclass
 from datetime import date, datetime, time, timedelta, timezone
+from time import sleep
 
 from selenium.common.exceptions import WebDriverException
 from selenium.webdriver.chrome.webdriver import WebDriver
@@ -16,6 +17,7 @@ from app.scraper.scraper import Scraper
 SCRAPER_NAME = "Amazon Prime"
 ROOT_URL = "https://gaming.amazon.com/home"
 MAX_WAIT_SECONDS = 60  # Needs to be quite high in Docker for first run
+XPATH_WAIT = '//div[@data-a-target="Offer"]'
 XPATH_LOOT = (
     '//div[@data-a-target="offer-list-IN_GAME_LOOT"]//div[@data-a-target="Offer"]'
 )
@@ -65,7 +67,9 @@ class AmazonScraper(Scraper):
                         OfferType.LOOT, driver
                     )
 
+                logging.info("Shutting down driver")
                 driver.quit()
+            logging.info("Shutdown complete")
         except WebDriverException as err:  # type: ignore
             logging.error(f"Failure starting Chrome WebDriver, aborting: {err.msg}")  # type: ignore
             raise err
@@ -79,8 +83,9 @@ class AmazonScraper(Scraper):
         try:
             # Wait until the page loaded
             WebDriverWait(driver, MAX_WAIT_SECONDS).until(
-                EC.presence_of_element_located((By.CLASS_NAME, "offer"))
+                EC.presence_of_element_located((By.XPATH, XPATH_WAIT))
             )
+            sleep(1)  # Otherwise the first element sometimes is not correctly evaluated
         except WebDriverException:  # type: ignore
             logging.error(f"Page took longer than {MAX_WAIT_SECONDS} to load")
             return []
@@ -231,6 +236,10 @@ class AmazonScraper(Scraper):
                 img_url=offer.img_url,
             )
 
-            normalized_offers.append(loot_offer)
-            logging.info(f"Found offer for {loot_offer.title}")
+            if not loot_offer.title:
+                logging.error(f"Error with offer, has no title: {loot_offer}")
+            else:
+                logging.info(f"Found offer for {loot_offer.title}")
+                normalized_offers.append(loot_offer)
+
         return normalized_offers

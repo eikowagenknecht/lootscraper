@@ -253,6 +253,41 @@ class LootDatabase:
             ),
         )
 
+    def find_offers(
+        self,
+        source: str | None,
+        title: str | None,
+        subtitle: str | None,
+        valid_to: datetime | None,
+    ) -> int:
+        offers = self.cursor.execute(  # type: ignore
+            """
+                SELECT id FROM loot WHERE
+                source IS ? AND
+                title IS ?  AND
+                subtitle IS ? AND
+                valid_to IS ?
+            """,
+            (
+                source,
+                title,
+                subtitle,
+                valid_to.replace(tzinfo=timezone.utc).isoformat() if valid_to else None,
+            ),
+        ).fetchall()
+
+        if len(offers) == 0:  # type: ignore
+            return 0
+
+        # Too many offers found, return the first one, but log an error
+        if len(offers) >= 2:  # type: ignore
+            logging.error(
+                f"Too many offers found for {source}, {title}, {subtitle}, {valid_to}"
+            )
+
+        # ID of the offer
+        return offers[0][0]  # type: ignore
+
     def read_offers(self) -> dict[str, dict[str, list[LootOffer]]]:
         self.cursor.execute(
             (

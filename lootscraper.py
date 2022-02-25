@@ -114,26 +114,21 @@ def job() -> None:
                 for scraper_offer in scraped_offers[scraper_source][scraper_type]:
                     exists_in_db = False
                     # Check every database entry if this is a match.
-                    # TODO: Could probably made much faster using SQL, but irrelevant for now.
-                    for db_type in db_offers[scraper_source]:
-                        for db_offer in db_offers[scraper_source][scraper_type]:
-                            if db_offer.source != scraper_offer.source:
-                                continue
-                            if db_offer.title != scraper_offer.title:
-                                continue
-                            if db_offer.subtitle != scraper_offer.subtitle:
-                                continue
-                            if db_offer.valid_to != scraper_offer.valid_to:
-                                continue
-
-                            # Offer has already been scraped, so do not insert this into the database, but update the "last seen" timestamp
-                            scraper_offer.id = db_offer.id
-                            if Config.config().getboolean("common", "ForceUpdate"):  # type: ignore
-                                db.update_offer(scraper_offer)
-                            else:
-                                db.touch_offer(scraper_offer)
-                            exists_in_db = True
-                            break
+                    id = db.find_offers(
+                        scraper_offer.source.value,
+                        scraper_offer.title,
+                        scraper_offer.subtitle,
+                        scraper_offer.valid_to,
+                    )
+                    if id > 0:
+                        # Offer has already been scraped, so do not insert this into the database, but update the "last seen" timestamp
+                        scraper_offer.id = id
+                        if Config.config().getboolean("common", "ForceUpdate"):  # type: ignore
+                            db.update_offer(scraper_offer)
+                        else:
+                            db.touch_offer(scraper_offer)
+                        exists_in_db = True
+                        break
 
                     if not exists_in_db:
                         # The enddate has been changed or it is a new offer, insert it into the database
