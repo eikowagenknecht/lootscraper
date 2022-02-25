@@ -98,7 +98,5 @@ def generate_feed(offers: list[LootOffer], out_file: Path) -> None:
         # - source
         # - rights
 
-        # feed_entry.link(href="http://lernfunk.de/feed")
-
     # Write the ATOM feed to a file
     feed_generator.atom_file(filename=str(out_file), pretty=True)
