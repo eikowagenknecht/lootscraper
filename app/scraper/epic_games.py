@@ -53,7 +53,10 @@ class EpicScraper(Scraper):
 
                 logging.info(f"Analyzing {ROOT_URL} for {OfferType.GAME.value} offers")
                 offers[OfferType.GAME.name] = EpicScraper.read_offers_from_page(driver)
+
+                logging.info("Shutting down driver")
                 driver.quit()
+            logging.info("Shutdown complete")
         except WebDriverException as err:  # type: ignore
             logging.error(f"Failure starting Chrome WebDriver, aborting: {err.msg}")  # type: ignore
             raise err
