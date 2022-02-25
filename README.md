@@ -32,12 +32,18 @@ This project is in ongoing development, not yet usable for the average user and 
 - [ ] Error handling
 - [ ] Notify by mail when something goes wrong (e.g. a source cannot be scraped)
 - [ ] Support multiple languages (at least EN and DE)
-- [ ] Push mails for offers that are valid only for a short time (less than 1 day)
 
 ### Advanced features
 
 - [x] Add a preview picture
-- [ ] Add the metacritic score for the game and/or other useful information
+- [ ] Add the steam score for the game
+  API: <https://partner.steamgames.com/doc/webapi/ISteamApps>
+  All games: <http://api.steampowered.com/ISteamApps/GetAppList/v0002/?format=json>
+  Game details: <https://store.steampowered.com/api/appdetails?appids=10> > metacritic
+  <https://store.steampowered.com/app/10/>
+  Storefront API: <https://wiki.teamfortress.com/wiki/User:RJackson/StorefrontAPI>
+- [ ] Telegram Bot / Notifications
+- [ ] Mail notifications (for offers that are valid only for a short time (less than 1 day))
 
 ### Scrapers
 
