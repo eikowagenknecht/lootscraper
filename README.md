@@ -12,6 +12,7 @@ This project is in ongoing development, not yet usable for the average user and 
 
 - [ ] Check TODO comments in code.
 - [ ] Before open-sourcing: Make URLs in feed customizable
+- [ ] Normalize database, split into games and offers
 
 ### Features
 
