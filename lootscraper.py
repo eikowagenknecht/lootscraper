@@ -69,21 +69,21 @@ def job() -> None:
     db: LootDatabase
     with LootDatabase() as db:
         db.initialize_or_update()
-        scraped_offers: list[LootOffer] = []
+        scraped_offers: dict[str, list[LootOffer]] = {}
 
         cfg_amazon_games: bool = Config.config().getboolean("actions", "ScrapeAmazonGames")  # type: ignore
         cfg_amazon_loot: bool = Config.config().getboolean("actions", "ScrapeAmazonLoot")  # type: ignore
         cfg_epic: bool = Config.config().getboolean("actions", "ScrapeEpicGames")  # type: ignore
 
         if cfg_amazon_games or cfg_amazon_loot:
-            scraped_offers.extend(
-                AmazonScraper.scrape(cfg_amazon_games, cfg_amazon_loot)
+            scraped_offers[AmazonScraper.get_name()] = AmazonScraper.scrape(
+                cfg_amazon_games, cfg_amazon_loot
             )
         else:
             logging.info("Skipping Amazon")
 
         if cfg_epic:
-            scraped_offers.extend(EpicScraper.scrape())
+            scraped_offers[EpicScraper.get_name()] = EpicScraper.scrape()
         else:
             logging.info("Skipping Epic")
 
@@ -94,58 +94,80 @@ def job() -> None:
         db_offers = db.read_offers()
         new_offers: int = 0
 
-        for scraped_offer in scraped_offers:
-            exists_in_db = False
-            # Check every database entry if this is a match.
-            # TODO: Could probably made much faster using SQL, but irrelevant for now.
-            for db_offer in db_offers:
-                if db_offer.source != scraped_offer.source:
-                    continue
-                if db_offer.title != scraped_offer.title:
-                    continue
-                if db_offer.subtitle != scraped_offer.subtitle:
-                    continue
-                if db_offer.valid_to != scraped_offer.valid_to:
-                    continue
+        for scraper in scraped_offers:
+            for source_offer in scraped_offers[scraper]:
+                exists_in_db = False
+                # Check every database entry if this is a match.
+                # TODO: Could probably made much faster using SQL, but irrelevant for now.
+                for db_offer in db_offers[scraper]:
+                    if db_offer.source != source_offer.source:
+                        continue
+                    if db_offer.title != source_offer.title:
+                        continue
+                    if db_offer.subtitle != source_offer.subtitle:
+                        continue
+                    if db_offer.valid_to != source_offer.valid_to:
+                        continue
 
-                # Offer has already been scraped, so do not insert this into the database, but update the "last seen" timestamp
-                scraped_offer.id = db_offer.id
-                if Config.config().getboolean("common", "ForceUpdate"):  # type: ignore
-                    db.update_offer(scraped_offer)
-                else:
-                    db.touch_offer(scraped_offer)
-                exists_in_db = True
-                break
+                    # Offer has already been scraped, so do not insert this into the database, but update the "last seen" timestamp
+                    source_offer.id = db_offer.id
+                    if Config.config().getboolean("common", "ForceUpdate"):  # type: ignore
+                        db.update_offer(source_offer)
+                    else:
+                        db.touch_offer(source_offer)
+                    exists_in_db = True
+                    break
 
-            if not exists_in_db:
-                # The enddate has been changed or it is a new offer, insert it into the database
-                db.insert_offer(scraped_offer)
-                new_offers += 1
+                if not exists_in_db:
+                    # The enddate has been changed or it is a new offer, insert it into the database
+                    db.insert_offer(source_offer)
+                    new_offers += 1
 
-        all_offers = db.read_offers()
+        db_offers = db.read_offers()
 
     logging.info(f"Found {new_offers} new offers")
 
     cfg_generate_feed: bool = Config.config().getboolean("actions", "GenerateFeed")  # type: ignore
     cfg_upload: bool = Config.config().getboolean("actions", "UploadFtp")  # type: ignore
 
-    feed_file = Config.data_path() / Path(Config.config()["common"]["FeedFile"])
-
-    old_hash = hash_file(feed_file)
-
     if cfg_generate_feed:
-        generate_feed(all_offers, feed_file)
+        # Generate and upload feeds split by source
+        any_feed_changed = False
+        for scraper in db_offers:
+            feed_changed = False
+            feed_file = Config.data_path() / Path(
+                Config.config()["common"]["FeedFilePrefix"]
+                + "_"
+                + get_scraper_shortname(scraper)
+                + ".xml"
+            )
+            old_hash = hash_file(feed_file)
+            generate_feed(db_offers[scraper], feed_file)
+            new_hash = hash_file(feed_file)
+            if old_hash != new_hash:
+                feed_changed = True
+                any_feed_changed = True
+
+            if feed_changed and cfg_upload:
+                upload_to_server(feed_file)
+
+        # Generate and upload cumulated feed
+        all_offers = []
+        for scraper in db_offers:
+            all_offers.extend(db_offers[scraper])
+
+        if any_feed_changed:
+            feed_file = Config.data_path() / Path(
+                Config.config()["common"]["FeedFilePrefix"] + ".xml"
+            )
+            generate_feed(all_offers, feed_file)
+            if cfg_upload:
+                upload_to_server(feed_file)
+            else:
+                logging.info("Skipping upload")
+
     else:
         logging.info("Skipping feed generation, disabled")
-
-    new_hash = hash_file(feed_file)
-
-    if new_hash == old_hash:
-        logging.info("Skipping upload, no changes to feed file")
-    elif cfg_upload:
-        upload_to_server()
-    else:
-        logging.info("Skipping upload, disabled")
 
 
 def log_new_offer(offer: LootOffer) -> None:
@@ -172,6 +194,15 @@ def hash_file(file: Path) -> str:
             hash.update(data)
 
     return hash.hexdigest()
+
+
+def get_scraper_shortname(longname: str) -> str:
+    if longname == "Amazon Prime":
+        return "amazon"
+    elif longname == "Epic Games":
+        return "epic"
+    else:
+        return ""
 
 
 if __name__ == "__main__":

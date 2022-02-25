@@ -232,3 +232,7 @@ class AmazonScraper:
             normalized_offers.append(loot_offer)
             logging.info(f"Found offer for {loot_offer.title}")
         return normalized_offers
+
+    @staticmethod
+    def get_name() -> str:
+        return SCRAPER_NAME
