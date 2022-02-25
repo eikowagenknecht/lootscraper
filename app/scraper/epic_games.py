@@ -9,7 +9,7 @@ from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
-from app.common import LootOffer, OfferType
+from app.common import LootOffer, OfferType, Source
 from app.pagedriver import get_pagedriver
 from app.scraper.scraper import Scraper
 
@@ -38,9 +38,13 @@ class RawOffer:
 
 class EpicScraper(Scraper):
     @staticmethod
-    def scrape(options: dict[str, bool] = None) -> list[LootOffer]:
+    def scrape(options: dict[str, bool] = None) -> dict[str, list[LootOffer]]:
+        if options and not options[OfferType.GAME.name]:
+            return {}
+
         logging.info(f"Start scraping of {SCRAPER_NAME}")
-        offers = []
+
+        offers = {}
 
         try:
             driver: WebDriver
@@ -48,7 +52,7 @@ class EpicScraper(Scraper):
                 driver.get(ROOT_URL)
 
                 logging.info(f"Analyzing {ROOT_URL} for {OfferType.GAME.value} offers")
-                offers.extend(EpicScraper.read_offers_from_page(driver))
+                offers[OfferType.GAME.name] = EpicScraper.read_offers_from_page(driver)
                 driver.quit()
         except WebDriverException as err:  # type: ignore
             logging.error(f"Failure starting Chrome WebDriver, aborting: {err.msg}")  # type: ignore
@@ -194,8 +198,8 @@ class EpicScraper(Scraper):
             nearest_url = offer.url if offer.url else ROOT_URL
             loot_offer = LootOffer(
                 seen_last=datetime.now(timezone.utc),
-                source=SCRAPER_NAME,
-                type=OfferType.GAME.value,
+                source=Source.EPIC,
+                type=OfferType.GAME,
                 rawtext=rawtext,
                 title=title,
                 valid_from=utc_valid_from,

@@ -8,13 +8,17 @@ TIMESTAMP_READABLE_WITH_HOUR = "%a, %d %b %H:%M (UTC)"
 
 
 class OfferType(Enum):
+    """TODO: The value is used in the database, switch to the name instead"""
+
     LOOT = "Loot"
     GAME = "Game"
 
 
 class Source(Enum):
-    AMAZON = "Amazon"
-    EPIC = "Epic"
+    """TODO: The value is used in the database, switch to the name instead"""
+
+    AMAZON = "Amazon Prime"
+    EPIC = "Epic Games"
 
 
 @dataclass
@@ -24,8 +28,8 @@ class LootOffer:
     id: int | None = None
     seen_first: datetime | None = None
     seen_last: datetime | None = None
-    source: str | None = None
-    type: str | None = None
+    source: Source | None = None
+    type: OfferType | None = None
     title: str | None = None
     subtitle: str | None = None
     publisher: str | None = None
@@ -36,28 +40,28 @@ class LootOffer:
     img_url: str | None = None
 
 
-def get_shortname(source: Source) -> str:
-    if source == Source.AMAZON:
-        return "amazon"
-    elif source == Source.EPIC:
-        return "epic"
-    else:
-        raise ValueError("Unknown Scraper")
+# def get_shortname(source: Source) -> str:
+#     if source == Source.AMAZON:
+#         return "amazon"
+#     elif source == Source.EPIC:
+#         return "epic"
+#     else:
+#         raise ValueError("Unknown Scraper")
 
 
-def get_longname(source: Source) -> str:
-    if source == Source.AMAZON:
-        return "Amazon Prime"
-    elif source == Source.EPIC:
-        return "Epic Games"
-    else:
-        raise ValueError("Unknown Scraper")
+# def get_longname(source: Source) -> str:
+#     if source == Source.AMAZON:
+#         return "Amazon Prime"
+#     elif source == Source.EPIC:
+#         return "Epic Games"
+#     else:
+#         raise ValueError("Unknown Scraper")
 
 
-def get_source(longname: str) -> Source:
-    if longname == "Amazon Prime":
-        return Source.AMAZON
-    elif longname == "Epic Games":
-        return Source.EPIC
-    else:
-        raise ValueError("Unknown Scraper")
+# def get_source(longname: str) -> Source:
+#     if longname == "Amazon Prime":
+#         return Source.AMAZON
+#     elif longname == "Epic Games":
+#         return Source.EPIC
+#     else:
+#         raise ValueError("Unknown Scraper")
