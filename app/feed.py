@@ -17,11 +17,17 @@ def generate_feed(offers: list[LootOffer], out_file: Path) -> None:
     # XML
     feed_generator.language("en")
     # Atom Needed
-    feed_generator.id("https://phenx.de/loot")
-    feed_generator.title("Free Games and Loot")
+    if out_file.name == "gameloot.xml":
+        feed_generator.id("https://phenx.de/loot")
+        feed_generator.title("Free Games and Loot")
+    else:
+        # Use the part between "gameloot_" and ".xml" as the feed id
+        subfeed = out_file.name.split("_", 1)[1][0:-4]
+        feed_generator.id("https://phenx.de/loot/" + subfeed)
+        feed_generator.title("Free Offers: " + subfeed.replace("_", " / ").title())
     feed_generator.updated(last_updated)
     # Atom Recommended
-    feed_generator.link(rel="self", href="https://feed.phenx.de/gameloot.xml")
+    feed_generator.link(rel="self", href="https://feed.phenx.de/" + out_file.name)
     feed_generator.link(rel="alternate", href="https://phenx.de/loot")
     feed_generator.author(
         {
