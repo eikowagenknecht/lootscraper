@@ -168,10 +168,10 @@ class EpicScraper(Scraper):
                 rawtext += f"<title>{offer.title}</title>"
 
             if offer.valid_from:
-                f"<startdate>{offer.valid_from}</startdate>"
+                rawtext += f"<startdate>{offer.valid_from}</startdate>"
 
             if offer.valid_to:
-                f"<enddate>{offer.valid_to}</enddate>"
+                rawtext += f"<enddate>{offer.valid_to}</enddate>"
 
             # Title
             title = offer.title
