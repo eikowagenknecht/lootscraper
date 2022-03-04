@@ -179,7 +179,7 @@ class AmazonScraper(Scraper):
                 rawtext += f"<title>{offer.title}</title>"
 
             if offer.paragraph:
-                f"<paragraph>{offer.paragraph}</paragraph>"
+                rawtext += f"<paragraph>{offer.paragraph}</paragraph>"
 
             # Title
             title = None
