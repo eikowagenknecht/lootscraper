@@ -29,7 +29,7 @@ This project is in ongoing development, not yet usable for the average user and 
 - [x] Store all dates in UTC
 - [x] Support start and end dates of offers
 - [x] Only upload if hash of gameloot.xml has changed
-- [ ] Add tests (pytest?)
+- [ ] Add tests (pytest? <https://www.heise.de/news/Test-Framework-pytest-7-bietet-mehr-Type-Annotations-und-baut-Altlasten-ab-6349971.html?wt_mc=rss.red.ho.ho.atom.beitrag.beitrag>)
 - [ ] Dynamically generate ATOM feeds split by source and type (e.g. only amazon ingame loot) in addition to the full feed
 - [ ] Error handling
 - [ ] Notify by mail when something goes wrong (e.g. a source cannot be scraped)
@@ -46,6 +46,7 @@ This project is in ongoing development, not yet usable for the average user and 
   Storefront API: <https://wiki.teamfortress.com/wiki/User:RJackson/StorefrontAPI>
 - [ ] Telegram Bot / Notifications
 - [ ] Mail notifications (for offers that are valid only for a short time (less than 1 day))
+- [ ] Generate a web page like <https://www.indiegamebundles.com/category/free/>
 
 ### Scrapers
 
@@ -53,6 +54,8 @@ This project is in ongoing development, not yet usable for the average user and 
 - [x] Epic Games
 - [ ] Steam
 - [ ] GOG.com
+- [ ] Stuff listed on <https://www.reddit.com/r/FreeGameFindings/>
+- [ ] Xbox Game Pass (<https://www.xbox.com/en-US/xbox-game-pass/games#PCgames>)
 
 ## Howto
 

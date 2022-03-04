@@ -128,7 +128,7 @@ def job() -> None:
                         else:
                             db.touch_offer(scraper_offer)
                         exists_in_db = True
-                        break
+                        continue
 
                     if not exists_in_db:
                         # The enddate has been changed or it is a new offer, insert it into the database
