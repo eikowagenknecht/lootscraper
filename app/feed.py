@@ -17,6 +17,12 @@ from .common import (
 def generate_feed(
     offers: list[LootOffer],
     out_file: Path,
+    author_name: str,
+    author_mail: str,
+    author_web: str,
+    feed_url_prefix: str,
+    feed_url_alternate: str,
+    feed_id_prefix: str,
     source: Source = None,
     type: OfferType = None,
 ) -> None:
@@ -45,7 +51,7 @@ def generate_feed(
 
         feed_entry = feed_generator.add_entry()
         # Atom Needed
-        feed_entry.id(f"https://phenx.de/loot/{int(offer.id)}")
+        feed_entry.id(f"{feed_id_prefix}{int(offer.id)}")
         title = f"{offer.source} - {offer.title}"
         if offer.subtitle:
             title += f": {offer.subtitle}"
@@ -56,9 +62,9 @@ def generate_feed(
         # - Author
         feed_entry.author(
             {
-                "name": "Eiko Wagenknecht",
-                "email": "feed@ew-mail.de",
-                "uri": "eiko-wagenknecht.de",
+                "name": author_name,
+                "email": author_mail,
+                "uri": author_web,
             }
         )
         # - Content
@@ -94,23 +100,26 @@ def generate_feed(
     # XML
     feed_generator.language("en")
     # Atom Needed
-    feed_generator.id(get_feed_id(out_file.name))
+    feed_generator.id(feed_id_prefix + get_feed_id(out_file.name))
     feed_generator.title(get_feed_title(source, type))
     feed_generator.updated(latest_date)
     # Atom Recommended
-    feed_generator.link(rel="self", href="https://feed.phenx.de/" + out_file.name)
-    feed_generator.link(rel="alternate", href="https://phenx.de/loot")
+    feed_generator.link(rel="self", href=f"{feed_url_prefix}{out_file.name}")
+    feed_generator.link(rel="alternate", href=feed_url_alternate)
     feed_generator.author(
         {
-            "name": "Eiko Wagenknecht",
-            "email": "feed@ew-mail.de",
-            "uri": "eiko-wagenknecht.de",
+            "name": author_name,
+            "email": author_mail,
+            "uri": author_web,
         }
     )
     # Atom Optional
     # - Category
     # - Contributor
     # - Generator
+    feed_generator.generator(
+        generator="LootScraper", uri="https://github.com/eikowagenknecht/lootscraper"
+    )
     # - Icon
     # - Logo
     # - Rights
@@ -122,11 +131,11 @@ def generate_feed(
 
 def get_feed_id(filename: str) -> str:
     if filename == "gameloot.xml":
-        return "https://phenx.de/loot"
+        return ""
     else:
         # Use the part between "gameloot_" and ".xml" as the feed id
         subfeed = filename.split("_", 1)[1][0:-4]
-        return "https://phenx.de/loot/" + subfeed
+        return subfeed
 
 
 def get_feed_title(source: Source | None, type: OfferType | None):

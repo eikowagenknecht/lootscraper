@@ -143,6 +143,13 @@ def job() -> None:
     cfg_generate_feed: bool = Config.config().getboolean("actions", "GenerateFeed")  # type: ignore
     cfg_upload: bool = Config.config().getboolean("actions", "UploadFtp")  # type: ignore
 
+    cfg_author_name: str = Config.config()["feed"]["AuthorName"]  # type: ignore
+    cfg_author_mail: str = Config.config()["feed"]["AuthorMail"]  # type: ignore
+    cfg_author_web: str = Config.config()["feed"]["AuthorWeb"]  # type: ignore
+    cfg_feed_url_prefix: str = Config.config()["feed"]["FeedUrlPrefix"]  # type: ignore
+    cfg_feed_url_alternate: str = Config.config()["feed"]["FeedUrlAlternate"]  # type: ignore
+    cfg_feed_id_prefix: str = Config.config()["feed"]["FeedIdPrefix"]  # type: ignore
+
     if cfg_generate_feed:
         # Generate and upload feeds split by source
         any_feed_changed = False
@@ -159,6 +166,12 @@ def job() -> None:
                 generate_feed(
                     offers=db_offers[scraper_source][scraper_type],
                     out_file=feed_file,
+                    author_name=cfg_author_name,
+                    author_web=cfg_author_web,
+                    author_mail=cfg_author_mail,
+                    feed_url_prefix=cfg_feed_url_prefix,
+                    feed_url_alternate=cfg_feed_url_alternate,
+                    feed_id_prefix=cfg_feed_id_prefix,
                     source=Source[scraper_source],
                     type=OfferType[scraper_type],
                 )
@@ -180,7 +193,16 @@ def job() -> None:
             feed_file = Config.data_path() / Path(
                 Config.config()["common"]["FeedFilePrefix"] + ".xml"
             )
-            generate_feed(all_offers, feed_file)
+            generate_feed(
+                offers=all_offers,
+                out_file=feed_file,
+                author_name=cfg_author_name,
+                author_web=cfg_author_web,
+                author_mail=cfg_author_mail,
+                feed_url_prefix=cfg_feed_url_prefix,
+                feed_url_alternate=cfg_feed_url_alternate,
+                feed_id_prefix=cfg_feed_id_prefix,
+            )
             if cfg_upload:
                 upload_to_server(feed_file)
             else:
