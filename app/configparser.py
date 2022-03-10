@@ -1,8 +1,10 @@
 import configparser
-import logging
 from pathlib import Path
 
 CONFIG_FILE = Path("config.ini")
+
+# Do not use logging here. This is executed before the logging framework is
+# initialized and using logging here would initialize with the wrong values.
 
 
 class Config:
@@ -17,8 +19,6 @@ class Config:
             config_file = data_path / Path(CONFIG_FILE)
             Config.__config_file = config_file
 
-            logging.info(f"Using config file: {Config.__config_file}")
-
         return Config.__config_file
 
     @staticmethod
@@ -30,7 +30,6 @@ class Config:
                 Config.__data_path = docker_path
             else:
                 Config.__data_path = local_path
-            logging.info(f"Using data path: {Config.__data_path}")
 
         return Config.__data_path
 
