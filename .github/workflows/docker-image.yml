@@ -20,15 +20,19 @@ jobs:
       with:
         images: eikowagenknecht/lootscraper
         flavor: |
+          # tagges semver releases get a "latest" entry as well
           latest=auto
           prefix=
           suffix=
         tags: |
+          # refs/branches/main -> "main"
           type=ref,event=branch
-          type=ref,event=pr
+          # refs/tags/v1.2.3 -> "1.2.3"
           type=semver,pattern={{version}}
+          # refs/tags/v1.2.3 -> "1.2"
           type=semver,pattern={{major}}.{{minor}}
-          type=raw,value=latest
+          # refs/tags/v1.2.3 -> "1", only if >0
+          type=semver,pattern={{major}},enable=${{ !startsWith(github.ref, 'refs/tags/v0.') }}
 
     - name: Log in to Docker Hub
       if: github.event_name != 'pull_request'
