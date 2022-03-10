@@ -38,6 +38,7 @@ Needs an installed Python 3.10+ environment.
 - Download repository
 - Create virtual environment (`python -m venv .venv`)
 - Activate virtual environment (`./.venv/Scripts/Activate`)
+- Install the required packages (`pip install -r requirements.txt`)
 - Run (`python ./lootscraper.py`)
 
 ### Build and run Docker container
