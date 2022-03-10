@@ -2,7 +2,10 @@ name: Publish to Docker Hub CI
 
 on:
   push:
-    branches: [ main ]
+    branches:
+      - 'main'
+    tags:
+      - 'v*'
 
 jobs:
   build:
@@ -10,6 +13,29 @@ jobs:
     steps:
     - name: Check out repository
       uses: actions/checkout@v2
-    - run: echo "💡 The ${{ github.repository }} repository has been cloned to the runner."
-    - name: Build the Docker image
-      run: docker build . --tag eikowagenknecht/lootscraper:$(date +%s) --tag eikowagenknecht/lootscraper:latest
+
+    - name: Extract metadata for Docker
+      id: meta
+      uses: docker/metadata-action@v3.6.2
+      with:
+        images: eikowagenknecht/lootscraper
+        tags: |
+          type=ref,event=branch
+          type=ref,event=pr
+          type=semver,pattern={{version}}
+          type=semver,pattern={{major}}.{{minor}}
+
+    - name: Log in to Docker Hub
+      if: github.event_name != 'pull_request'
+      uses: docker/login-action@v1.14.1
+      with:
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
+
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v2.9.0
+      with:
+        context: .
+        push: ${{ github.event_name != 'pull_request' }}
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
