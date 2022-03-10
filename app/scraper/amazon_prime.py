@@ -199,7 +199,9 @@ class AmazonScraper(Scraper):
             # displayed on the site. The year is guessed assuming that old
             # offers are not shown any more. "Old" means older than yesterday
             # to avoid time zone problems.
-            # TODO: Check in wich timezone this is saved!
+            # Side note: Valid to 01 Jan 2022 seems to mean "We will end this
+            # offer on that day but won't tell you when." I've seen real ending
+            # times ranging from 02:00 to 19:00.
             end_date = None
             if offer.valid_to:
                 try:
