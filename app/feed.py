@@ -38,6 +38,11 @@ def generate_feed(
             # Skip future entries and entries that are no longer seen on valid_from date
             continue
 
+        if offer.valid_from and offer.valid_from > offer.seen_first:
+            updated = offer.valid_from
+        else:
+            updated = offer.seen_first
+
         feed_entry = feed_generator.add_entry()
         # Atom Needed
         feed_entry.id(f"https://phenx.de/loot/{int(offer.id)}")
@@ -46,7 +51,7 @@ def generate_feed(
             title += f": {offer.subtitle}"
         title += f" ({offer.type})"
         feed_entry.title(title)
-        feed_entry.updated(offer.seen_first)
+        feed_entry.updated(updated)
         # Atom Recommended
         # - Author
         feed_entry.author(
