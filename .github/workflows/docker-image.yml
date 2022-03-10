@@ -25,13 +25,13 @@ jobs:
           prefix=
           suffix=
         tags: |
-          # refs/branches/main -> "main"
+          # refs/branches/main -> tag:main
           type=ref,event=branch
-          # refs/tags/v1.2.3 -> "1.2.3"
+          # refs/tags/v1.2.3 -> tag:1.2.3
           type=semver,pattern={{version}}
-          # refs/tags/v1.2.3 -> "1.2"
+          # refs/tags/v1.2.3 -> tag:1.2
           type=semver,pattern={{major}}.{{minor}}
-          # refs/tags/v1.2.3 -> "1", only if >0
+          # refs/tags/v1.2.3 -> tag:1, only if greater zero
           type=semver,pattern={{major}},enable=${{ !startsWith(github.ref, 'refs/tags/v0.') }}
 
     - name: Log in to Docker Hub
