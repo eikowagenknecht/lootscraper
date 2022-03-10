@@ -19,11 +19,16 @@ jobs:
       uses: docker/metadata-action@v3.6.2
       with:
         images: eikowagenknecht/lootscraper
+        flavor: |
+          latest=auto
+          prefix=
+          suffix=
         tags: |
           type=ref,event=branch
           type=ref,event=pr
           type=semver,pattern={{version}}
           type=semver,pattern={{major}}.{{minor}}
+          type=raw,value=latest
 
     - name: Log in to Docker Hub
       if: github.event_name != 'pull_request'
