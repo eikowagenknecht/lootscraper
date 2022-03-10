@@ -1,90 +1,60 @@
-# Loot Scraper
+# LootScraper
 
 [![CC BY-NC-SA 4.0][cc-by-nc-sa-shield]][cc-by-nc-sa]
 
-This project reads the free offers from various sources (Amazon Prime, Epic Games, Steam) and puts them in ATOM feeds.
+You enjoy getting games for free but you *don’t* enjoy having to keep track of the various sources (Amazon Prime, Epic Games, ...) for free offers? Also your F5 key starts to look a bit worn out? Then this is for you!
+
+This Python (3.10+) application uses Selenium to automatically visit sites with free gaming related offers (currently only Amazon Prime and Epic Games but more will follow) and then neatly puts the gathered information into RSS feeds. So now you can track the offers using your favorite news reader like Feedly instead of manually visiting the sites.
+
+You can either run this script locally on your computer or in any environment capable of running a Docker container.
+
+Just want the feeds? Sure. You can use the links below. They are updated every 20 minutes and contain offers for Amazon Prime (games and ingame loot) and Epic Games (games only). Currently the following feeds are available:
+
+- <https://feed.phenx.de/gameloot.xml>: Everything (Amazon Prime games and ingame loot)
+- <https://feed.phenx.de/gameloot_epic_game.xml>: Epic games only
+- <https://feed.phenx.de/gameloot_amazon_game.xml>: Amazon Prime games only
+- <https://feed.phenx.de/gameloot_amazon_loot.xml>: Amazon Prime ingame loot only
+
+This is what it currently looks like in Feedly:
+
+![image](https://phenx.de/wp-content/uploads/2022/02/image.png)
 
 ## State
 
-This project is in ongoing development, not yet usable for the average user and might often introduce breaking changes (a.k.a. "alpha" stage).
+This project is still in ongoing development, so expect a few rough edges if you try to run it yourself. If you encounter any problems feel free to open an issue here and I'll try to help.
 
-### TODO
+I have quite a few features on my mind that I'd like to implement. Those are tracked [here](https://github.com/eikowagenknecht/lootscraper/issues/6). I also plan to extend this to more sources for free offers, those are tracked [here](https://github.com/eikowagenknecht/lootscraper/issues/7).
 
-- [ ] Check TODO comments in code.
-- [ ] Before open-sourcing: Make URLs in feed customizable
-- [ ] Normalize database, split into games and offers
+### Settings
 
-### Features
-
-- [x] Runnable in a docker container (e.g. on a Synology NAS)
-- [x] Scrape offers into a SQLITE database
-- [x] Generate ATOM feed from the offers in the database
-- [x] Store parsed and interpreted text
-- [x] Incrementally update the database and ATOM feed with only new offers
-- [x] Upload results with FTP
-- [x] Add links to the claim page in the feed
-- [x] Make the script run hourly within the Docker container (<https://github.com/dbader/schedule>)
-- [x] Configuration in INI file
-- [x] Script for data migration in case of updates
-- [x] Store all dates in UTC
-- [x] Support start and end dates of offers
-- [x] Only upload if hash of gameloot.xml has changed
-- [ ] Add tests (pytest? <https://www.heise.de/news/Test-Framework-pytest-7-bietet-mehr-Type-Annotations-und-baut-Altlasten-ab-6349971.html?wt_mc=rss.red.ho.ho.atom.beitrag.beitrag>)
-- [ ] Dynamically generate ATOM feeds split by source and type (e.g. only amazon ingame loot) in addition to the full feed
-- [ ] Error handling
-- [ ] Notify by mail when something goes wrong (e.g. a source cannot be scraped)
-- [ ] Support multiple languages (at least EN and DE)
-
-### Advanced features
-
-- [x] Add a preview picture
-- [ ] Add the steam score for the game
-  API: <https://partner.steamgames.com/doc/webapi/ISteamApps>
-  All games: <http://api.steampowered.com/ISteamApps/GetAppList/v0002/?format=json>
-  Game details: <https://store.steampowered.com/api/appdetails?appids=10> > metacritic
-  <https://store.steampowered.com/app/10/>
-  Storefront API: <https://wiki.teamfortress.com/wiki/User:RJackson/StorefrontAPI>
-- [ ] Telegram Bot / Notifications
-- [ ] Mail notifications (for offers that are valid only for a short time (less than 1 day))
-- [ ] Generate a web page like <https://www.indiegamebundles.com/category/free/>
-
-### Scrapers
-
-- [x] Amazon Prime (Games and InGame)
-- [x] Epic Games
-- [ ] Steam
-- [ ] GOG.com
-- [ ] Stuff listed on <https://www.reddit.com/r/FreeGameFindings/>
-- [ ] Xbox Game Pass (<https://www.xbox.com/en-US/xbox-game-pass/games#PCgames>)
+On the first startup, a default configuration file will be created in `./data/config.ini`. You can edit this file to change the settings (e.g. the sites to visit and the actions to perform).
 
 ## Howto
 
 ### Run locally
 
-Needs an installed Python 3.10 environment.
+Needs an installed Python 3.10+ environment.
 
 - Download repository
-- Copy config.example.py to config.py and replace with your settings
 - Create virtual environment (`python -m venv .venv`)
 - Activate virtual environment (`./.venv/Scripts/Activate`)
 - Run (`python ./lootscraper.py`)
 
 ### Build and run Docker container
 
-Docker needs to be installed first of course. If you want to skip the build step, you can use <https://hub.docker.com/r/eikowagenknecht/lootscraper> as the image.
+Docker needs to be installed first of course. If you want to skip the build step, you can use <https://hub.docker.com/r/eikowagenknecht/lootscraper> as the image. Use the "main" tag to get the latest build from this repository.
 
 - Download repository
-- Copy config.example.py to config.py and replace with your settings
 - In terminal go to directory
 - First run:
-  - Build: `docker build . -t eikowagenknecht/lootscraper:latest`
-  - Start: `docker run --detach --volume /your/local/path:/data --name lootscraper eikowagenknecht/lootscraper:latest`
+  - Build: `docker build . -t eikowagenknecht/lootscraper:main`
+  - Start: `docker run --detach --volume /your/local/path:/data --name lootscraper eikowagenknecht/lootscraper:main`
 - Update:
   - Stop: `docker stop lootscraper`
   - Remove: `docker container rm lootscraper`
-  - Build without cache: `docker build . --no-cache -t eikowagenknecht/lootscraper:latest`
-  - Start: `docker run --detach --volume /your/local/path:/data --name lootscraper eikowagenknecht/lootscraper:latest`
-- Debug: `docker run -it --entrypoint /bin/bash --volume /your/local/path:/data --name lootscraper_debug eikowagenknecht/lootscraper:latest`
+  - Build without cache: `docker build . --no-cache -t eikowagenknecht/lootscraper:main`
+  - Start: `docker run --detach --volume /your/local/path:/data --name lootscraper eikowagenknecht/lootscraper:main`
+- Debug: `docker run -it --entrypoint /bin/bash --volume /your/local/path:/data --name lootscraper_debug eikowagenknecht/lootscraper:main`
 - To stop, run `docker stop lootscraper`
 
 ## License
