@@ -27,9 +27,10 @@ def main() -> None:
     # First thing to do: Copy the config file to the data directory if there is
     # not yet a config file there!
     config_file = Config.config_file()
-    if not config_file.exists():
+    if not config_file.is_file():
         print(f"Config file {config_file} not found, creating a new one")
         example_config_file = "config.default.ini"
+        config_file.parent.mkdir(exist_ok=True, parents=True)
         shutil.copy(example_config_file, config_file)
 
     filename = Config.data_path() / Path(Config.config()["common"]["LogFile"])
