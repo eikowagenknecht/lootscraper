@@ -6,6 +6,8 @@ You enjoy getting games for free but you *don’t* enjoy having to keep track of
 
 This Python (3.10+) application uses Selenium to automatically visit sites with free gaming related offers (currently only Amazon Prime and Epic Games but more will follow) and then neatly puts the gathered information into RSS feeds. So now you can track the offers using your favorite news reader like Feedly instead of manually visiting the sites.
 
+## Usage
+
 You can either run this script locally on your computer or in any environment capable of running a Docker container.
 
 Just want the feeds? Sure. You can use the links below. They are updated every 20 minutes and contain offers for Amazon Prime (games and ingame loot) and Epic Games (games only). Currently the following feeds are available:
@@ -18,6 +20,8 @@ Just want the feeds? Sure. You can use the links below. They are updated every 2
 This is what it currently looks like in Feedly:
 
 ![image](https://phenx.de/wp-content/uploads/2022/02/image.png)
+
+If you want to get the offers by email instead, you can use free services like <https://blogtrottr.com/> or <https://feedsub.com/>.
 
 ## State
 
