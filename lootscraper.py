@@ -18,6 +18,7 @@ from app.database import LootDatabase
 from app.feed import generate_feed
 from app.scraper.amazon_prime import AmazonScraper
 from app.scraper.epic_games import EpicScraper
+from app.scraper.steamdb import SteamScraper
 from app.upload import upload_to_server
 
 exit = Event()
@@ -79,6 +80,7 @@ def job() -> None:
 
         cfg_amazon: bool = Config.config().getboolean("actions", "ScrapeAmazon")  # type: ignore
         cfg_epic: bool = Config.config().getboolean("actions", "ScrapeEpic")  # type: ignore
+        cfg_steam: bool = Config.config().getboolean("actions", "ScrapeSteam")  # type: ignore
 
         cfg_games: bool = Config.config().getboolean("actions", "ScrapeGames")  # type: ignore
         cfg_loot: bool = Config.config().getboolean("actions", "ScrapeLoot")  # type: ignore
@@ -102,6 +104,16 @@ def job() -> None:
             )
         else:
             logging.info(f"Skipping {Source.EPIC.value}")
+
+        if cfg_steam:
+            scraped_offers[Source.STEAM.name] = SteamScraper.scrape(
+                {
+                    OfferType.GAME.name: cfg_games,
+                    OfferType.LOOT.name: cfg_loot,
+                }
+            )
+        else:
+            logging.info(f"Skipping {Source.STEAM.value}")
 
         # Check which offers are new and which are updated, then act accordingly:
         # - Offers that are neither new nor updated just get a new date
