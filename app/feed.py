@@ -16,7 +16,7 @@ from .common import (
 
 def generate_feed(
     offers: list[LootOffer],
-    out_file: Path,
+    feed_file_base: Path,
     author_name: str,
     author_mail: str,
     author_web: str,
@@ -32,6 +32,13 @@ def generate_feed(
 
     if len(offers) == 0:
         return
+
+    if source is not None and type is not None:
+        file = feed_file_base.with_stem(
+            f"{feed_file_base.stem}_{source.name.lower()}_{type.name.lower()}"
+        )
+    else:
+        file = feed_file_base
 
     feed_generator = FeedGenerator()
     latest_date: datetime = None
@@ -100,11 +107,12 @@ def generate_feed(
     # XML
     feed_generator.language("en")
     # Atom Needed
-    feed_generator.id(feed_id_prefix + get_feed_id(out_file.name))
+    feed_id = get_feed_id(file.name) if file.name != feed_file_base.name else ""
+    feed_generator.id(feed_id_prefix + feed_id)
     feed_generator.title(get_feed_title(source, type))
     feed_generator.updated(latest_date)
     # Atom Recommended
-    feed_generator.link(rel="self", href=f"{feed_url_prefix}{out_file.name}")
+    feed_generator.link(rel="self", href=f"{feed_url_prefix}{file.name}")
     feed_generator.link(rel="alternate", href=feed_url_alternate)
     feed_generator.author(
         {
@@ -126,16 +134,13 @@ def generate_feed(
     # - Subtitle
 
     # Write the ATOM feed to a file
-    feed_generator.atom_file(filename=str(out_file), pretty=True)
+    feed_generator.atom_file(filename=str(file), pretty=True)
 
 
 def get_feed_id(filename: str) -> str:
-    if filename == "gameloot.xml":
-        return ""
-    else:
-        # Use the part between "gameloot_" and ".xml" as the feed id
-        subfeed = filename.split("_", 1)[1][0:-4]
-        return subfeed
+    # Use the part between "<base_filename>_" and ".xml" as the feed id
+    subfeed = filename.split("_", 1)[1][0:-4]
+    return subfeed
 
 
 def get_feed_title(source: Source | None, type: OfferType | None):
@@ -144,7 +149,7 @@ def get_feed_title(source: Source | None, type: OfferType | None):
 
     title = "Free"
     if source is not None:
-        title += f" {source.value}"
+        title += " " + source.value
     if type is not None:
         match OfferType:
             case OfferType.GAME:

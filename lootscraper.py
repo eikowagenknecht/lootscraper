@@ -151,6 +151,9 @@ def job() -> None:
     cfg_feed_id_prefix: str = Config.config()["feed"]["FeedIdPrefix"]  # type: ignore
 
     if cfg_generate_feed:
+        feed_file_base = Config.data_path() / Path(
+            Config.config()["common"]["FeedFilePrefix"] + ".xml"
+        )
         # Generate and upload feeds split by source
         any_feed_changed = False
         for scraper_source in db_offers:
@@ -165,7 +168,7 @@ def job() -> None:
                 old_hash = hash_file(feed_file)
                 generate_feed(
                     offers=db_offers[scraper_source][scraper_type],
-                    out_file=feed_file,
+                    feed_file_base=feed_file_base,
                     author_name=cfg_author_name,
                     author_web=cfg_author_web,
                     author_mail=cfg_author_mail,
@@ -190,12 +193,9 @@ def job() -> None:
                 all_offers.extend(db_offers[scraper_source][scraper_type])
 
         if any_feed_changed:
-            feed_file = Config.data_path() / Path(
-                Config.config()["common"]["FeedFilePrefix"] + ".xml"
-            )
             generate_feed(
                 offers=all_offers,
-                out_file=feed_file,
+                feed_file_base=feed_file_base,
                 author_name=cfg_author_name,
                 author_web=cfg_author_web,
                 author_mail=cfg_author_mail,
@@ -204,7 +204,7 @@ def job() -> None:
                 feed_id_prefix=cfg_feed_id_prefix,
             )
             if cfg_upload:
-                upload_to_server(feed_file)
+                upload_to_server(feed_file_base)
             else:
                 logging.info("Skipping upload, disabled")
 

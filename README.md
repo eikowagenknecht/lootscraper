@@ -12,10 +12,10 @@ You can either run this script locally on your computer or in any environment ca
 
 Just want the feeds? Sure. You can use the links below. They are updated every 20 minutes and contain offers for Amazon Prime (games and ingame loot) and Epic Games (games only). Currently the following feeds are available:
 
-- <https://feed.phenx.de/gameloot.xml>: Everything (Amazon Prime games and ingame loot)
-- <https://feed.phenx.de/gameloot_epic_game.xml>: Epic games only
-- <https://feed.phenx.de/gameloot_amazon_game.xml>: Amazon Prime games only
-- <https://feed.phenx.de/gameloot_amazon_loot.xml>: Amazon Prime ingame loot only
+- <https://feed.phenx.de/lootscraper.xml>: Everything (Amazon Prime games and ingame loot)
+- <https://feed.phenx.de/lootscraper_epic_game.xml>: Epic games only
+- <https://feed.phenx.de/lootscraper_amazon_game.xml>: Amazon Prime games only
+- <https://feed.phenx.de/lootscraper_amazon_loot.xml>: Amazon Prime ingame loot only
 
 This is what it currently looks like in Feedly:
 
