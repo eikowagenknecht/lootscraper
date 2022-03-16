@@ -7,8 +7,12 @@ on:
     tags:
       - 'v*'
 
+concurrency: 
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  build:
+  build-and-publish:
     runs-on: ubuntu-latest
     steps:
     - name: Check out repository
