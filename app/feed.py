@@ -151,10 +151,10 @@ def get_feed_title(source: Source | None, type: OfferType | None):
     if source is not None:
         title += " " + source.value
     if type is not None:
-        match OfferType:
+        match type:
             case OfferType.GAME:
-                title += " Games"
+                title += " games"
             case OfferType.LOOT:
-                title += " Loot"
+                title += " loot"
 
     return title
