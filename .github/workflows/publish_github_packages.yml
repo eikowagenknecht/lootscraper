@@ -23,6 +23,9 @@ jobs:
       packages: write
       
     steps:
+    - name: Job information
+      run: echo ${{ github.workflow }}-${{ github.ref }}
+
     - name: Check out repository
       uses: actions/checkout@v2
 
