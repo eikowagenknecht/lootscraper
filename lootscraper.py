@@ -11,6 +11,7 @@ from app.common import TIMESTAMP_LONG, LootOffer, OfferType, Source
 from app.configparser import Config
 from app.database import LootDatabase
 from app.feed import generate_feed
+from app.gameinfo import get_possible_steam_appid, get_steam_info
 from app.scraper.amazon_prime import AmazonScraper
 from app.scraper.epic_games import EpicScraper
 from app.upload import upload_to_server
@@ -127,11 +128,31 @@ def job() -> None:
                         continue
 
                     if not exists_in_db:
-                        # The enddate has been changed or it is a new offer, insert it into the database
+                        # The enddate has been changed or it is a new offer, get information about it (if it's a game)
+                        # and insert it into the database
+                        if scraper_type == OfferType.GAME.value:
+                            if scraper_offer.title:
+                                steam_id = get_possible_steam_appid(scraper_offer.title)
+                                if steam_id:
+                                    gameinfo = get_steam_info(steam_id)
+                                    scraper_offer.gameinfo = gameinfo
                         db.insert_offer(scraper_offer)
                         new_offers += 1
 
         db_offers = db.read_offers()
+
+        # Get Steam game information if ForceUpdate is set
+        if Config.config().getboolean("common", "ForceUpdate"):
+            for scraper_source in db_offers:
+                for db_offer in db_offers[scraper_source][OfferType.GAME.name]:
+                    if db_offer.title is None:
+                        continue
+                    steam_id = get_possible_steam_appid(db_offer.title)
+                    if steam_id == 0:
+                        continue
+                    gameinfo = get_steam_info(steam_id)
+                    db_offer.gameinfo = gameinfo
+                    db.update_offer(db_offer)
 
     logging.info(f"Found {new_offers} new offers")
 

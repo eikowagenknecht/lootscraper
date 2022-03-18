@@ -59,10 +59,9 @@ def generate_feed(
         feed_entry = feed_generator.add_entry()
         # Atom Needed
         feed_entry.id(f"{feed_id_prefix}{int(offer.id)}")
-        title = f"{offer.source} - {offer.title}"
+        title = f"{offer.source.value} ({offer.type.value}) - {offer.title}"
         if offer.subtitle:
             title += f": {offer.subtitle}"
-        title += f" ({offer.type})"
         feed_entry.title(title)
         feed_entry.updated(updated)
         # Atom Recommended
@@ -75,23 +74,59 @@ def generate_feed(
             }
         )
         # - Content
-        content = f"<p>{offer.type} found."
+        content = ""
         if offer.img_url:
-            content += f'</p><img src="{html.escape(offer.img_url)}" /><p>'
+            content += f'<img src="{html.escape(offer.img_url)}" />'
+        content += f"<p>{offer.type} found."
         if offer.url:
-            content += f' Claim it here: <a href="{html.escape(offer.url)}">{html.escape(offer.source)}</a>.'
-        content += "</p><ul>"
-        if offer.valid_from:
-            content += f"<li>Valid from: {html.escape(offer.valid_from.strftime(TIMESTAMP_READABLE_WITH_HOUR))}</li>"
-        else:
-            content += f"<li>Valid from: {html.escape(offer.seen_first.strftime(TIMESTAMP_READABLE_WITH_HOUR))}</li>"
-        if offer.valid_to:
-            content += f"<li>Valid to: {html.escape(offer.valid_to.strftime(TIMESTAMP_READABLE_WITH_HOUR))}</li>"
-        if offer.publisher:
-            content += f"<li>Publisher: {html.escape(offer.publisher)}</li>"
-        content += "</ul><p>"
-        content += f"<small>Source: {html.escape(offer.source)}, Seen first: {offer.seen_first.strftime(TIMESTAMP_LONG)}</small>"
+            content += f' Claim it directoy on <a href="{html.escape(offer.url)}">{html.escape(offer.source.value)}</a>.'
         content += "</p>"
+        content += "<ul>"
+        if offer.valid_from:
+            content += f"<li><b>Valid from:</b> {html.escape(offer.valid_from.strftime(TIMESTAMP_READABLE_WITH_HOUR))}</li>"
+        else:
+            content += f"<li><b>Valid from:</b> {html.escape(offer.seen_first.strftime(TIMESTAMP_READABLE_WITH_HOUR))}</li>"
+        if offer.valid_to:
+            content += f"<li><b>Valid to:</b> {html.escape(offer.valid_to.strftime(TIMESTAMP_READABLE_WITH_HOUR))}</li>"
+        if offer.publisher:
+            content += f"<li><b>Publisher:</b> {html.escape(offer.publisher)}</li>"
+        content += "</ul>"
+        if offer.gameinfo:
+            content += "<p>The following information results from a search based on the offer name. It *can* be wrong sometimes:</p>"
+            content += "<ul>"
+            if offer.gameinfo.name:
+                content += f'<li><b>Name:</b> <a href="{offer.gameinfo.shop_url}">{offer.gameinfo.name}</a></li>'
+            if offer.gameinfo.short_description:
+                content += (
+                    f"<li><b>Description:</b> {offer.gameinfo.short_description}</li>"
+                )
+            if offer.gameinfo.genre:
+                content += f"<li><b>Genre:</b> {offer.gameinfo.genre}</li>"
+            if offer.gameinfo.release_date:
+                content += (
+                    f"<li><b>Release date:</b> {offer.gameinfo.release_date}</li>"
+                )
+            if offer.gameinfo.recommended_price:
+                content += f"<li><b>Recommended price:</b> {offer.gameinfo.recommended_price}</li>"
+            if offer.gameinfo.metacritic_score and offer.gameinfo.metacritic_url:
+                content += f'<li><b>Metacritic:</b> <a href="{offer.gameinfo.metacritic_url}">{offer.gameinfo.metacritic_score} %</a></li>'
+            elif offer.gameinfo.metacritic_score:
+                content += (
+                    f"<li><b>Metacritic:</b> {offer.gameinfo.metacritic_score}%</li>"
+                )
+            if offer.gameinfo.rating_percent:
+                content += (
+                    f"<li><b>Steam rating:</b> {offer.gameinfo.rating_percent} %</li>"
+                )
+            if offer.gameinfo.rating_score:
+                content += (
+                    f"<li><b>Steam score:</b> {offer.gameinfo.rating_score} / 10</li>"
+                )
+            if offer.gameinfo.recommendations:
+                content += f"<li><b>Steam recommendations:</b> {offer.gameinfo.recommendations}</li>"
+            content += "</ul>"
+
+        content += f"<p><small>Source: {html.escape(offer.source.value)}, Seen first: {offer.seen_first.strftime(TIMESTAMP_LONG)}</small></p>"
         feed_entry.content(content, type="xhtml")
         # - Link
         feed_entry.link(rel="alternate", href=offer.url)
