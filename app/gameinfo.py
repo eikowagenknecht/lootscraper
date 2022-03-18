@@ -1,8 +1,8 @@
-from dataclasses import dataclass
 import json
 import logging
 import urllib.parse
 import urllib.request
+from dataclasses import dataclass
 
 from selenium.common.exceptions import WebDriverException
 from selenium.webdriver.chrome.webdriver import WebDriver
