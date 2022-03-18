@@ -7,12 +7,7 @@ from pathlib import Path
 from threading import Event
 from types import FrameType
 
-from app.common import (
-    TIMESTAMP_LONG,
-    LootOffer,
-    OfferType,
-    Source,
-)
+from app.common import TIMESTAMP_LONG, LootOffer, OfferType, Source
 from app.configparser import Config
 from app.database import LootDatabase
 from app.feed import generate_feed

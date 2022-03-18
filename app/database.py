@@ -1,6 +1,6 @@
 from __future__ import annotations
-import logging
 
+import logging
 import sqlite3
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -9,13 +9,7 @@ from typing import Any, Type
 
 from app.configparser import Config
 
-from .common import (
-    TIMESTAMP_LONG,
-    TIMESTAMP_SHORT,
-    LootOffer,
-    OfferType,
-    Source,
-)
+from .common import TIMESTAMP_LONG, TIMESTAMP_SHORT, LootOffer, OfferType, Source
 
 CURRENT_DB_VERSION = 0
 
