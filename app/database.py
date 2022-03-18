@@ -1,4 +1,6 @@
 from __future__ import annotations
+import dataclasses
+import json
 
 import logging
 import sqlite3
@@ -8,6 +10,7 @@ from types import TracebackType
 from typing import Any, Type
 
 from app.configparser import Config
+from app.gameinfo import Gameinfo
 
 from .common import TIMESTAMP_LONG, TIMESTAMP_SHORT, LootOffer, OfferType, Source
 
@@ -72,6 +75,11 @@ class LootDatabase:
             logging.info("Updating database from v3 to v4")
             self.cursor.execute("ALTER TABLE loot ADD img_url TEXT")
             self.set_version(4)
+
+        if self.get_version() == 4:
+            logging.info("Updating database from v4 to v5")
+            self.cursor.execute("ALTER TABLE loot ADD gameinfo TEXT")
+            self.set_version(5)
 
     def fix_date_format(self) -> None:
         self.cursor.execute("SELECT id, seen_first FROM loot ORDER BY type")
@@ -159,6 +167,9 @@ class LootDatabase:
         if offer.id is None:
             return
 
+        gameinfo_json: str | None = (
+            json.dumps(dataclasses.asdict(offer.gameinfo)) if offer.gameinfo else None  # type: ignore
+        )
         self.cursor.execute(
             """
                 UPDATE loot SET
@@ -172,7 +183,8 @@ class LootDatabase:
                     valid_from = ?,
                     valid_to = ?,
                     url = ?,
-                    img_url = ?
+                    img_url = ?,
+                    gameinfo = ?
                 WHERE id = ?
             """,
             (
@@ -191,6 +203,7 @@ class LootDatabase:
                 else None,
                 offer.url or None,
                 offer.img_url or None,
+                gameinfo_json,
                 offer.id,
             ),
         )
@@ -210,6 +223,10 @@ class LootDatabase:
 
     def insert_offer(self, offer: LootOffer) -> None:
         current_date = datetime.now().replace(tzinfo=timezone.utc).isoformat()
+
+        gameinfo_json: str | None = (
+            json.dumps(dataclasses.asdict(offer.gameinfo)) if offer.gameinfo else None  # type: ignore
+        )
         self.cursor.execute(
             """
                 INSERT INTO loot(
@@ -224,8 +241,9 @@ class LootDatabase:
                     valid_from,
                     valid_to,
                     url,
-                    img_url
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    img_url,
+                    gameinfo
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
                 current_date,
@@ -244,6 +262,7 @@ class LootDatabase:
                 else None,
                 offer.url or None,
                 offer.img_url or None,
+                gameinfo_json,
             ),
         )
 
@@ -297,6 +316,7 @@ class LootDatabase:
                 ", seen_last"
                 ", url"
                 ", img_url"
+                ", gameinfo"
                 " FROM loot"
                 " ORDER BY type"
             )
@@ -304,10 +324,12 @@ class LootDatabase:
         offers: dict[str, dict[str, list[LootOffer]]] = {}
 
         for row in self.cursor:  # type: ignore
+
+            gameinfo: Gameinfo | None = Gameinfo.from_json(row[12]) if row[12] else None  # type: ignore
             offer = LootOffer(
                 id=row[0],  # type: ignore
-                source=row[1],  # type: ignore
-                type=row[2],  # type: ignore
+                source=Source(row[1]),  # type: ignore
+                type=OfferType(row[2]),  # type: ignore
                 title=row[3],  # type: ignore
                 subtitle=row[4],  # type: ignore
                 publisher=row[5],  # type: ignore
@@ -317,6 +339,7 @@ class LootDatabase:
                 seen_last=datetime.fromisoformat(row[9]).replace(tzinfo=timezone.utc),  # type: ignore
                 url=row[10],  # type: ignore
                 img_url=row[11],  # type: ignore
+                gameinfo=gameinfo,
             )
 
             source: str = Source(row[1]).name  # type: ignore

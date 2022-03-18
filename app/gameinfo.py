@@ -1,3 +1,4 @@
+from __future__ import annotations
 import json
 import logging
 import urllib.parse
@@ -23,6 +24,8 @@ STEAM_DETAILS_JSON = "https://store.steampowered.com/api/appdetails?appids="
 STEAM_DETAILS_STORE = "https://store.steampowered.com/app/"
 STEAM_DETAILS_REVIEW_SCORE = '//div[@id="userReviews"]/div[@itemprop="aggregateRating"]'  # data-tooltip-html attribute
 STEAM_DETAILS_REVIEW_SCORE_VALUE = '//div[@id="userReviews"]/div[@itemprop="aggregateRating"]//meta[@itemprop="ratingValue"]'  # content attribute
+STEAM_PRICE_FULL = '(//div[contains(concat(" ", normalize-space(@class), " "), " game_area_purchase_game ")])[1]//div[contains(concat(" ", normalize-space(@class), " "), " game_purchase_action")]//div[contains(concat(" ", normalize-space(@class), " "), " game_purchase_price")]'  # text=" 27,99€ "
+STEAM_PRICE_DISCOUNTED_ORIGINAL = '(//div[contains(concat(" ", normalize-space(@class), " "), " game_area_purchase_game ")])[1]//div[contains(concat(" ", normalize-space(@class), " "), " game_purchase_action")]//div[contains(concat(" ", normalize-space(@class), " "), " discount_original_price")]'  # text=" 27,99€ "
 MAX_WAIT_SECONDS = 60  # Needs to be quite high in Docker for first run
 
 
@@ -40,11 +43,74 @@ class Gameinfo:
     rating_score: int | None = None
     metacritic_score: int | None = None
     metacritic_url: str | None = None
+    shop_url: str | None = None
+
+    @classmethod
+    def from_json(cls, json_str: str) -> Gameinfo:
+        dictionary = json.loads(json_str)  # type: ignore
+
+        result: Gameinfo = Gameinfo(dictionary["steam_id"])  # type: ignore
+        try:
+            result.name = dictionary["name"]  # type: ignore
+        except KeyError:
+            pass
+
+        try:
+            result.short_description = dictionary["short_description"]  # type: ignore
+        except KeyError:
+            pass
+
+        try:
+            result.release_date = dictionary["release_date"]  # type: ignore
+        except KeyError:
+            pass
+
+        try:
+            result.recommended_price = dictionary["recommended_price"]  # type: ignore
+        except KeyError:
+            pass
+
+        try:
+            result.genre = dictionary["genre"]  # type: ignore
+        except KeyError:
+            pass
+
+        try:
+            result.recommendations = dictionary["recommendations"]  # type: ignore
+        except KeyError:
+            pass
+
+        try:
+            result.rating_percent = dictionary["rating_percent"]  # type: ignore
+        except KeyError:
+            pass
+
+        try:
+            result.rating_score = dictionary["rating_score"]  # type: ignore
+        except KeyError:
+            pass
+
+        try:
+            result.metacritic_score = dictionary["metacritic_score"]  # type: ignore
+        except KeyError:
+            pass
+
+        try:
+            result.metacritic_url = dictionary["metacritic_url"]  # type: ignore
+        except KeyError:
+            pass
+
+        try:
+            result.shop_url = dictionary["shop_url"]  # type: ignore
+        except KeyError:
+            pass
+
+        return result
 
 
 def get_possible_steam_appid(title: str) -> int:
     encoded_title = urllib.parse.quote_plus(title, safe="")
-    appid_str: str
+    appid_str: str | None = None
 
     url = STEAM_SEARCH_URL + encoded_title + STEAM_SEARCH_OPTIONS
     try:
@@ -143,6 +209,8 @@ def get_steam_info(appid: int) -> Gameinfo:
         f"Trying to determine the Details for Steam App ID {appid} from Steam store"
     )
 
+    result.shop_url = STEAM_DETAILS_STORE + str(appid)
+
     try:
         driver: WebDriver
         with get_pagedriver() as driver:
@@ -179,6 +247,36 @@ def get_steam_info(appid: int) -> Gameinfo:
 
             except WebDriverException:  # type: ignore
                 logging.error("No Steam absolute rating found for {title}!")
+
+            if (
+                result.recommended_price is None
+                or not result.recommended_price.endswith("EUR")
+            ):
+                try:
+                    element3: WebElement = element.find_element(
+                        By.XPATH, STEAM_PRICE_DISCOUNTED_ORIGINAL
+                    )
+                    price_str: str = element3.text  # type: ignore
+                    price = float(price_str.replace("€", "").strip())
+                    result.recommended_price = str(price) + " EUR"
+
+                except WebDriverException:  # type: ignore
+                    logging.error("No Steam price found for {title}!")
+
+            if (
+                result.recommended_price is None
+                or not result.recommended_price.endswith("EUR")
+            ):
+                try:
+                    element4: WebElement = element.find_element(
+                        By.XPATH, STEAM_PRICE_FULL
+                    )
+                    price_str: str = element4.text  # type: ignore
+                    price = float(price_str.replace("€", "").strip())
+                    result.recommended_price = str(price) + " EUR"
+
+                except WebDriverException:  # type: ignore
+                    logging.error("No Steam price found for {title}!")
 
             logging.info("Shutting down driver")
             driver.quit()

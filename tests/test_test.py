@@ -45,6 +45,13 @@ class TestUtils(unittest.TestCase):
         self.assertEquals(gameinfo.metacritic_score, None)
         self.assertEquals(gameinfo.metacritic_url, None)
 
+    # This is a weird one where the price is shown in "KWR" in the JSON, so the
+    # store page has to be used instead to get the price in EUR
+    def test_steam_appinfo_price(self) -> None:
+        gameinfo = get_steam_info(255710)
+        self.assertEquals(gameinfo.name, "Cities: Skylines")
+        self.assertEquals(gameinfo.recommended_price, "27.99 EUR")
+
 
 if __name__ == "__main__":
     unittest.main()

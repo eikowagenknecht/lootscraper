@@ -2,6 +2,8 @@ from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
 
+from app.gameinfo import Gameinfo
+
 TIMESTAMP_SHORT = "%Y-%m-%d"
 TIMESTAMP_LONG = "%Y-%m-%d %H:%M:%S"
 TIMESTAMP_READABLE_WITH_HOUR = "%a, %d %b %H:%M (UTC)"
@@ -38,6 +40,7 @@ class LootOffer:
     rawtext: str | None = None
     url: str | None = None
     img_url: str | None = None
+    gameinfo: Gameinfo | None = None
 
 
 # def get_shortname(source: Source) -> str:
