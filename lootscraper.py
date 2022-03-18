@@ -7,11 +7,14 @@ from pathlib import Path
 from threading import Event
 from types import FrameType
 
+from selenium.webdriver.chrome.webdriver import WebDriver
+
 from app.common import TIMESTAMP_LONG, LootOffer, OfferType, Source
 from app.configparser import Config
 from app.database import LootDatabase
 from app.feed import generate_feed
 from app.gameinfo import get_possible_steam_appid, get_steam_info
+from app.pagedriver import get_pagedriver
 from app.scraper.amazon_prime import AmazonScraper
 from app.scraper.epic_games import EpicScraper
 from app.upload import upload_to_server
@@ -69,7 +72,8 @@ def quit(signo: int, _frame: FrameType | None) -> None:
 
 def job() -> None:
     db: LootDatabase
-    with LootDatabase() as db:
+    webdriver: WebDriver
+    with (LootDatabase() as db, get_pagedriver() as webdriver):
         db.initialize_or_update()
         scraped_offers: dict[str, dict[str, list[LootOffer]]] = {}
 
@@ -81,20 +85,22 @@ def job() -> None:
 
         if cfg_amazon:
             scraped_offers[Source.AMAZON.name] = AmazonScraper.scrape(
+                webdriver,
                 {
                     OfferType.GAME.name: cfg_games,
                     OfferType.LOOT.name: cfg_loot,
-                }
+                },
             )
         else:
             logging.info(f"Skipping {Source.AMAZON.value}")
 
         if cfg_epic:
             scraped_offers[Source.EPIC.name] = EpicScraper.scrape(
+                webdriver,
                 {
                     OfferType.GAME.name: cfg_games,
                     OfferType.LOOT.name: cfg_loot,
-                }
+                },
             )
         else:
             logging.info(f"Skipping {Source.EPIC.value}")
@@ -132,9 +138,11 @@ def job() -> None:
                         # and insert it into the database
                         if scraper_type == OfferType.GAME.value:
                             if scraper_offer.title:
-                                steam_id = get_possible_steam_appid(scraper_offer.title)
+                                steam_id = get_possible_steam_appid(
+                                    webdriver, scraper_offer.title
+                                )
                                 if steam_id:
-                                    gameinfo = get_steam_info(steam_id)
+                                    gameinfo = get_steam_info(webdriver, steam_id)
                                     scraper_offer.gameinfo = gameinfo
                         db.insert_offer(scraper_offer)
                         new_offers += 1
@@ -147,10 +155,10 @@ def job() -> None:
                 for db_offer in db_offers[scraper_source][OfferType.GAME.name]:
                     if db_offer.title is None:
                         continue
-                    steam_id = get_possible_steam_appid(db_offer.title)
+                    steam_id = get_possible_steam_appid(webdriver, db_offer.title)
                     if steam_id == 0:
                         continue
-                    gameinfo = get_steam_info(steam_id)
+                    gameinfo = get_steam_info(webdriver, steam_id)
                     db_offer.gameinfo = gameinfo
                     db.update_offer(db_offer)
 
