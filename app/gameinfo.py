@@ -13,8 +13,6 @@ from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
-from app.pagedriver import get_pagedriver
-
 STEAM_SEARCH_URL = "https://store.steampowered.com/search/?term="
 STEAM_SEARCH_OPTIONS = "&category1=998"  # Games only
 STEAM_SEARCH_RESULTS = '//div[@id = "search_results"]'
@@ -109,44 +107,32 @@ class Gameinfo:
         return result
 
 
-def get_possible_steam_appid(title: str) -> int:
+def get_possible_steam_appid(driver: WebDriver, title: str) -> int:
     encoded_title = urllib.parse.quote_plus(title, safe="")
     appid_str: str | None = None
 
     url = STEAM_SEARCH_URL + encoded_title + STEAM_SEARCH_OPTIONS
+
+    driver.get(url)
+
+    logging.info(f"Trying to determine the Steam App ID for {title}")
+
     try:
-        driver: WebDriver
-        with get_pagedriver() as driver:
-            driver.get(url)
-
-            logging.info(f"Trying to determine the Steam App ID for {title}")
-
-            try:
-                # Wait until the page loaded
-                WebDriverWait(driver, MAX_WAIT_SECONDS).until(
-                    EC.presence_of_element_located((By.XPATH, STEAM_SEARCH_RESULTS))
-                )
-
-            except WebDriverException as err:  # type: ignore
-                logging.error(f"Page took longer than {MAX_WAIT_SECONDS} to load")
-                raise err
-
-            try:
-                element: WebElement = driver.find_element(
-                    By.XPATH, STEAM_SEARCH_BEST_RESULT
-                )
-                appid_str: str = element.get_attribute("data-ds-appid")  # type: ignore
-
-            except WebDriverException:  # type: ignore
-                logging.error("No Steam results found for {title}!")
-
-            logging.info("Shutting down driver")
-            driver.quit()
-        logging.info("Shutdown complete")
+        # Wait until the page loaded
+        WebDriverWait(driver, MAX_WAIT_SECONDS).until(
+            EC.presence_of_element_located((By.XPATH, STEAM_SEARCH_RESULTS))
+        )
 
     except WebDriverException as err:  # type: ignore
-        logging.error(f"Failure starting Chrome WebDriver, aborting: {err.msg}")  # type: ignore
+        logging.error(f"Page took longer than {MAX_WAIT_SECONDS} to load")
         raise err
+
+    try:
+        element: WebElement = driver.find_element(By.XPATH, STEAM_SEARCH_BEST_RESULT)
+        appid_str: str = element.get_attribute("data-ds-appid")  # type: ignore
+
+    except WebDriverException:  # type: ignore
+        logging.error("No Steam results found for {title}!")
 
     if appid_str is not None:
         return int(appid_str)
@@ -154,7 +140,7 @@ def get_possible_steam_appid(title: str) -> int:
     return 0
 
 
-def get_steam_info(appid: int) -> Gameinfo:
+def get_steam_info(driver: WebDriver, appid: int) -> Gameinfo:
     logging.info(f"Trying to determine the Details for Steam App ID {appid} from JSON")
 
     result = Gameinfo(appid)
@@ -212,79 +198,56 @@ def get_steam_info(appid: int) -> Gameinfo:
 
     result.shop_url = STEAM_DETAILS_STORE + str(appid)
 
+    driver.get(STEAM_DETAILS_STORE + str(appid))
+
     try:
-        driver: WebDriver
-        with get_pagedriver() as driver:
-            driver.get(STEAM_DETAILS_STORE + str(appid))
-
-            try:
-                # Wait until the page loaded
-                WebDriverWait(driver, MAX_WAIT_SECONDS).until(
-                    EC.presence_of_element_located(
-                        (By.XPATH, STEAM_DETAILS_REVIEW_SCORE)
-                    )
-                )
-
-            except WebDriverException as err:  # type: ignore
-                logging.error(f"Page took longer than {MAX_WAIT_SECONDS} to load")
-                raise err
-
-            try:
-                element: WebElement = driver.find_element(
-                    By.XPATH, STEAM_DETAILS_REVIEW_SCORE
-                )
-                rating_str: str = element.get_attribute("data-tooltip-html")  # type: ignore
-                result.rating_percent = int(rating_str.split("%")[0].strip())
-
-            except WebDriverException:  # type: ignore
-                logging.error("No Steam percentage found for {title}!")
-
-            try:
-                element2: WebElement = element.find_element(
-                    By.XPATH, STEAM_DETAILS_REVIEW_SCORE_VALUE
-                )
-                rating_str: str = element2.get_attribute("content")  # type: ignore
-                result.rating_score = int(rating_str)
-
-            except WebDriverException:  # type: ignore
-                logging.error("No Steam absolute rating found for {title}!")
-
-            if (
-                result.recommended_price is None
-                or not result.recommended_price.endswith("EUR")
-            ):
-                try:
-                    element3: WebElement = element.find_element(
-                        By.XPATH, STEAM_PRICE_DISCOUNTED_ORIGINAL
-                    )
-                    price_str: str = element3.text  # type: ignore
-                    price = float(price_str.replace("€", "").strip())
-                    result.recommended_price = str(price) + " EUR"
-
-                except WebDriverException:  # type: ignore
-                    logging.error("No Steam price found for {title}!")
-
-            if (
-                result.recommended_price is None
-                or not result.recommended_price.endswith("EUR")
-            ):
-                try:
-                    element4: WebElement = element.find_element(
-                        By.XPATH, STEAM_PRICE_FULL
-                    )
-                    price_str: str = element4.text  # type: ignore
-                    price = float(price_str.replace("€", "").strip())
-                    result.recommended_price = str(price) + " EUR"
-
-                except WebDriverException:  # type: ignore
-                    logging.error("No Steam price found for {title}!")
-
-            logging.info("Shutting down driver")
-            driver.quit()
-        logging.info("Shutdown complete")
+        # Wait until the page loaded
+        WebDriverWait(driver, MAX_WAIT_SECONDS).until(
+            EC.presence_of_element_located((By.XPATH, STEAM_DETAILS_REVIEW_SCORE))
+        )
 
     except WebDriverException as err:  # type: ignore
-        logging.error(f"Failure starting Chrome WebDriver, aborting: {err.msg}")  # type: ignore
+        logging.error(f"Page took longer than {MAX_WAIT_SECONDS} to load")
         raise err
+
+    try:
+        element: WebElement = driver.find_element(By.XPATH, STEAM_DETAILS_REVIEW_SCORE)
+        rating_str: str = element.get_attribute("data-tooltip-html")  # type: ignore
+        result.rating_percent = int(rating_str.split("%")[0].strip())
+
+    except WebDriverException:  # type: ignore
+        logging.error("No Steam percentage found for {title}!")
+
+    try:
+        element2: WebElement = element.find_element(
+            By.XPATH, STEAM_DETAILS_REVIEW_SCORE_VALUE
+        )
+        rating_str: str = element2.get_attribute("content")  # type: ignore
+        result.rating_score = int(rating_str)
+
+    except WebDriverException:  # type: ignore
+        logging.error("No Steam absolute rating found for {title}!")
+
+    if result.recommended_price is None or not result.recommended_price.endswith("EUR"):
+        try:
+            element3: WebElement = element.find_element(
+                By.XPATH, STEAM_PRICE_DISCOUNTED_ORIGINAL
+            )
+            price_str: str = element3.text  # type: ignore
+            price = float(price_str.replace("€", "").strip())
+            result.recommended_price = str(price) + " EUR"
+
+        except WebDriverException:  # type: ignore
+            logging.error("No Steam price found for {title}!")
+
+    if result.recommended_price is None or not result.recommended_price.endswith("EUR"):
+        try:
+            element4: WebElement = element.find_element(By.XPATH, STEAM_PRICE_FULL)
+            price_str: str = element4.text  # type: ignore
+            price = float(price_str.replace("€", "").strip())
+            result.recommended_price = str(price) + " EUR"
+
+        except WebDriverException:  # type: ignore
+            logging.error("No Steam price found for {title}!")
 
     return result

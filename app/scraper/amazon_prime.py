@@ -11,7 +11,6 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
 from app.common import LootOffer, OfferType, Source
-from app.pagedriver import get_pagedriver
 from app.scraper.scraper import Scraper
 
 SCRAPER_NAME = "Amazon Prime"
@@ -26,7 +25,9 @@ XPATH_GAMES = (
 )
 SUBPATH_TITLE = './/div[contains(concat(" ", normalize-space(@class), " "), " offer__body__titles")]/h3'
 SUBPATH_PARAGRAPH = './/div[contains(concat(" ", normalize-space(@class), " "), " offer__body__titles")]/p'
-SUBPATH_ENDDATE = './/div[contains(concat(" ", normalize-space(@class), " "), " claim-info")]//p/span'
+SUBPATH_ENDDATE = (
+    './/div[contains(concat(" ", normalize-space(@class), " "), " claim-info")]//p/span'
+)
 SUBPATH_LINK = './/a[@data-a-target="learn-more-card"]'
 SUBPATH_IMG = './/img[@class="tw-image"]'
 
@@ -42,37 +43,25 @@ class RawOffer:
 
 class AmazonScraper(Scraper):
     @staticmethod
-    def scrape(options: dict[str, bool] = None) -> dict[str, list[LootOffer]]:
+    def scrape(
+        driver: WebDriver, options: dict[str, bool] = None
+    ) -> dict[str, list[LootOffer]]:
         logging.info(f"Start scraping of {SCRAPER_NAME}")
         offers = {}
 
-        try:
-            driver: WebDriver
-            with get_pagedriver() as driver:
-                driver.get(ROOT_URL)
+        driver.get(ROOT_URL)
 
-                if not options or options[OfferType.GAME.name]:
-                    logging.info(
-                        f"Analyzing {ROOT_URL} for {OfferType.GAME.value} offers"
-                    )
-                    offers[OfferType.GAME.name] = AmazonScraper.read_offers_from_page(
-                        OfferType.GAME, driver
-                    )
+        if not options or options[OfferType.GAME.name]:
+            logging.info(f"Analyzing {ROOT_URL} for {OfferType.GAME.value} offers")
+            offers[OfferType.GAME.name] = AmazonScraper.read_offers_from_page(
+                OfferType.GAME, driver
+            )
 
-                if not options or options[OfferType.LOOT.name]:
-                    logging.info(
-                        f"Analyzing {ROOT_URL} for {OfferType.LOOT.value} offers"
-                    )
-                    offers[OfferType.LOOT.name] = AmazonScraper.read_offers_from_page(
-                        OfferType.LOOT, driver
-                    )
-
-                logging.info("Shutting down driver")
-                driver.quit()
-            logging.info("Shutdown complete")
-        except WebDriverException as err:  # type: ignore
-            logging.error(f"Failure starting Chrome WebDriver, aborting: {err.msg}")  # type: ignore
-            raise err
+        if not options or options[OfferType.LOOT.name]:
+            logging.info(f"Analyzing {ROOT_URL} for {OfferType.LOOT.value} offers")
+            offers[OfferType.LOOT.name] = AmazonScraper.read_offers_from_page(
+                OfferType.LOOT, driver
+            )
 
         return offers
 

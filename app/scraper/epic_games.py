@@ -10,7 +10,6 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
 from app.common import LootOffer, OfferType, Source
-from app.pagedriver import get_pagedriver
 from app.scraper.scraper import Scraper
 
 SCRAPER_NAME = "Epic Games"
@@ -38,7 +37,9 @@ class RawOffer:
 
 class EpicScraper(Scraper):
     @staticmethod
-    def scrape(options: dict[str, bool] = None) -> dict[str, list[LootOffer]]:
+    def scrape(
+        driver: WebDriver, options: dict[str, bool] = None
+    ) -> dict[str, list[LootOffer]]:
         if options and not options[OfferType.GAME.name]:
             return {}
 
@@ -46,20 +47,9 @@ class EpicScraper(Scraper):
 
         offers = {}
 
-        try:
-            driver: WebDriver
-            with get_pagedriver() as driver:
-                driver.get(ROOT_URL)
-
-                logging.info(f"Analyzing {ROOT_URL} for {OfferType.GAME.value} offers")
-                offers[OfferType.GAME.name] = EpicScraper.read_offers_from_page(driver)
-
-                logging.info("Shutting down driver")
-                driver.quit()
-            logging.info("Shutdown complete")
-        except WebDriverException as err:  # type: ignore
-            logging.error(f"Failure starting Chrome WebDriver, aborting: {err.msg}")  # type: ignore
-            raise err
+        driver.get(ROOT_URL)
+        logging.info(f"Analyzing {ROOT_URL} for {OfferType.GAME.value} offers")
+        offers[OfferType.GAME.name] = EpicScraper.read_offers_from_page(driver)
 
         return offers
 
