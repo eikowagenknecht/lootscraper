@@ -12,7 +12,7 @@ from selenium.webdriver.chrome.webdriver import WebDriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support.ui import Select, WebDriverWait
 
 STEAM_SEARCH_URL = "https://store.steampowered.com/search/?term="
 STEAM_SEARCH_OPTIONS = "&category1=998"  # Games only
@@ -26,6 +26,7 @@ STEAM_DETAILS_JSON = "https://store.steampowered.com/api/appdetails?appids="
 STEAM_DETAILS_STORE = "https://store.steampowered.com/app/"
 STEAM_DETAILS_REVIEW_SCORE = '//div[@id="userReviews"]/div[@itemprop="aggregateRating"]'  # data-tooltip-html attribute
 STEAM_DETAILS_REVIEW_SCORE_VALUE = '//div[@id="userReviews"]/div[@itemprop="aggregateRating"]//meta[@itemprop="ratingValue"]'  # content attribute
+STEAM_DETAILS_LOADED = '//div[contains(concat(" ", normalize-space(@class), " "), " game_page_background ")]'
 STEAM_PRICE_FULL = '(//div[contains(concat(" ", normalize-space(@class), " "), " game_area_purchase_game ")])[1]//div[contains(concat(" ", normalize-space(@class), " "), " game_purchase_action")]//div[contains(concat(" ", normalize-space(@class), " "), " game_purchase_price")]'  # text=" 27,99€ "
 STEAM_PRICE_DISCOUNTED_ORIGINAL = '(//div[contains(concat(" ", normalize-space(@class), " "), " game_area_purchase_game ")])[1]//div[contains(concat(" ", normalize-space(@class), " "), " game_purchase_action")]//div[contains(concat(" ", normalize-space(@class), " "), " discount_original_price")]'  # text=" 27,99€ "
 MAX_WAIT_SECONDS = 30  # Needs to be quite high in Docker for first run
@@ -249,14 +250,10 @@ def get_steam_info(driver: WebDriver, title: str) -> Gameinfo | None:
 
     driver.get(STEAM_DETAILS_STORE + str(appid))
 
-    # TODO: Sometimes the element not being on the page just means that an age
-    # verification is needed. Enter a valid date and then move on. Order: First check
-    # for age verification (can the redirect to /*age*/ be noticed?).
-    # (use e.g. 12 July 1990), then move on to the actual shop page
     try:
         # Wait until the page loaded
         WebDriverWait(driver, MAX_WAIT_SECONDS).until(
-            EC.presence_of_element_located((By.XPATH, STEAM_DETAILS_REVIEW_SCORE))
+            EC.presence_of_element_located((By.XPATH, STEAM_DETAILS_LOADED))
         )
 
     except WebDriverException:  # type: ignore
@@ -264,6 +261,24 @@ def get_steam_info(driver: WebDriver, title: str) -> Gameinfo | None:
             f"Steam store page for {appid} didn't load after waiting for {MAX_WAIT_SECONDS}s"
         )
         pass
+
+    # For some games an age verification is needed. We have to skip that to see
+    # the interesting parts. So enter a valid date and then move on.
+    # (use e.g. 12 July 1990), then move on to the actual shop page
+    if "agecheck" in driver.current_url:
+        try:
+            select = Select(driver.find_element_by_id('ageDay'))
+            select.select_by_value("12")
+            select = Select(driver.find_element_by_id('ageMonth'))
+            select.select_by_value("March")
+            select = Select(driver.find_element_by_id('ageYear'))
+            select.select_by_value("1990")
+            driver.find_element(By.ID, "view_product_page_btn").click()
+            WebDriverWait(driver, MAX_WAIT_SECONDS).until(
+                EC.presence_of_element_located((By.XPATH, STEAM_DETAILS_REVIEW_SCORE))
+            )
+        except WebDriverException:  # type: ignore
+            logging.error("Something went wrong trying to pass the age verification")
 
     try:
         element: WebElement = driver.find_element(By.XPATH, STEAM_DETAILS_REVIEW_SCORE)
