@@ -77,9 +77,9 @@ def generate_feed(
         content = ""
         if offer.img_url:
             content += f'<img src="{html.escape(offer.img_url)}" />'
-        content += f"<p>{offer.type} found."
+        content += f"<p>{offer.type.value} found."
         if offer.url:
-            content += f' Claim it directoy on <a href="{html.escape(offer.url)}">{html.escape(offer.source.value)}</a>.'
+            content += f' Claim it on <a href="{html.escape(offer.url)}">{html.escape(offer.source.value)}</a>.'
         content += "</p>"
         content += "<ul>"
         if offer.valid_from:
