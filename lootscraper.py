@@ -136,12 +136,11 @@ def job() -> None:
                     if not exists_in_db:
                         # The enddate has been changed or it is a new offer, get information about it (if it's a game)
                         # and insert it into the database
-                        if scraper_type == OfferType.GAME.value:
-                            if scraper_offer.title:
-                                gameinfo = get_steam_info(
-                                    webdriver, scraper_offer.title
-                                )
-                                scraper_offer.gameinfo = gameinfo
+                        if scraper_offer.title:
+                            gameinfo = get_steam_info(
+                                webdriver, scraper_offer.title
+                            )
+                            scraper_offer.gameinfo = gameinfo
                         db.insert_offer(scraper_offer)
                         new_offers += 1
 
@@ -150,11 +149,12 @@ def job() -> None:
         # Get Steam game information if ForceUpdate is set
         if Config.config().getboolean("common", "ForceUpdate"):
             for scraper_source in db_offers:
-                for db_offer in db_offers[scraper_source][OfferType.LOOT.name]:
-                    if db_offer.title:
-                        gameinfo = get_steam_info(webdriver, db_offer.title)
-                        db_offer.gameinfo = gameinfo
-                        db.update_offer(db_offer)
+                for scraper_type in scraped_offers[scraper_source]:
+                    for db_offer in db_offers[scraper_source][scraper_type]:
+                        if db_offer.title:
+                            gameinfo = get_steam_info(webdriver, db_offer.title)
+                            db_offer.gameinfo = gameinfo
+                            db.update_offer(db_offer)
 
     logging.info(f"Found {new_offers} new offers")
 
