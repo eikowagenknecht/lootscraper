@@ -43,12 +43,9 @@ class EpicScraper(Scraper):
         if options and not options[OfferType.GAME.name]:
             return {}
 
-        logging.info(f"Start scraping of {SCRAPER_NAME}")
-
-        offers = {}
-
-        driver.get(ROOT_URL)
         logging.info(f"Analyzing {ROOT_URL} for {OfferType.GAME.value} offers")
+        driver.get(ROOT_URL)
+        offers = {}
         offers[OfferType.GAME.name] = EpicScraper.read_offers_from_page(driver)
 
         return offers

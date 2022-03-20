@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import difflib
 import json
 import logging
 import urllib.parse
@@ -15,8 +16,10 @@ from selenium.webdriver.support.ui import WebDriverWait
 
 STEAM_SEARCH_URL = "https://store.steampowered.com/search/?term="
 STEAM_SEARCH_OPTIONS = "&category1=998"  # Games only
-STEAM_SEARCH_RESULTS = '//div[@id = "search_results"]'
-STEAM_SEARCH_BEST_RESULT = '//div[@id = "search_result_container"]//a[1]'  # data-ds-appid contains the steam id
+STEAM_SEARCH_RESULTS_CONTAINER = '//div[@id = "search_results"]'
+STEAM_SEARCH_RESULTS = (
+    '//div[@id = "search_result_container"]//a'  # data-ds-appid contains the steam id
+)
 
 STEAM_DETAILS_JSON = "https://store.steampowered.com/api/appdetails?appids="
 
@@ -25,7 +28,7 @@ STEAM_DETAILS_REVIEW_SCORE = '//div[@id="userReviews"]/div[@itemprop="aggregateR
 STEAM_DETAILS_REVIEW_SCORE_VALUE = '//div[@id="userReviews"]/div[@itemprop="aggregateRating"]//meta[@itemprop="ratingValue"]'  # content attribute
 STEAM_PRICE_FULL = '(//div[contains(concat(" ", normalize-space(@class), " "), " game_area_purchase_game ")])[1]//div[contains(concat(" ", normalize-space(@class), " "), " game_purchase_action")]//div[contains(concat(" ", normalize-space(@class), " "), " game_purchase_price")]'  # text=" 27,99€ "
 STEAM_PRICE_DISCOUNTED_ORIGINAL = '(//div[contains(concat(" ", normalize-space(@class), " "), " game_area_purchase_game ")])[1]//div[contains(concat(" ", normalize-space(@class), " "), " game_purchase_action")]//div[contains(concat(" ", normalize-space(@class), " "), " discount_original_price")]'  # text=" 27,99€ "
-MAX_WAIT_SECONDS = 60  # Needs to be quite high in Docker for first run
+MAX_WAIT_SECONDS = 30  # Needs to be quite high in Docker for first run
 
 
 @dataclass
@@ -109,7 +112,6 @@ class Gameinfo:
 
 def get_possible_steam_appid(driver: WebDriver, title: str) -> int:
     encoded_title = urllib.parse.quote_plus(title, safe="")
-    appid_str: str | None = None
 
     url = STEAM_SEARCH_URL + encoded_title + STEAM_SEARCH_OPTIONS
 
@@ -120,28 +122,64 @@ def get_possible_steam_appid(driver: WebDriver, title: str) -> int:
     try:
         # Wait until the page loaded
         WebDriverWait(driver, MAX_WAIT_SECONDS).until(
-            EC.presence_of_element_located((By.XPATH, STEAM_SEARCH_RESULTS))
+            EC.presence_of_element_located((By.XPATH, STEAM_SEARCH_RESULTS_CONTAINER))
         )
 
-    except WebDriverException as err:  # type: ignore
-        logging.error(f"Page took longer than {MAX_WAIT_SECONDS} to load")
-        raise err
+    except WebDriverException:  # type: ignore
+        logging.error(f"Search results not found after waiting {MAX_WAIT_SECONDS}s")
+        return 0
 
+    # Read all results and use the one with the highest difflib score (lower cased!)
+    best_appid: int | None = None
+    best_score: float = 0
+    best_title: str | None = None
     try:
-        element: WebElement = driver.find_element(By.XPATH, STEAM_SEARCH_BEST_RESULT)
-        appid_str: str = element.get_attribute("data-ds-appid")  # type: ignore
+        elements: list[WebElement] = driver.find_elements(
+            By.XPATH, STEAM_SEARCH_RESULTS
+        )
+        for element in elements:
+            try:
+                title_element = element.find_element(By.CLASS_NAME, "title")  # type: ignore
+                title_str: str = title_element.text  # type: ignore
+
+                score = difflib.SequenceMatcher(
+                    a=title_str.lower(), b=title.lower()
+                ).ratio()
+                if score > best_score and score > 0.8:
+                    best_appid = int(element.get_attribute("data-ds-appid"))  # type: ignore
+                    best_score = score
+                    best_title = title_str
+                    logging.info(f"{title_str} has a score of {(score*100):.0f} %")
+                else:
+                    logging.info(
+                        f"Ignoring {title_str} as it's score of {(score*100):.0f} is too low"
+                    )
+            except WebDriverException:  # type: ignore
+                continue
+            except ValueError:
+                continue
 
     except WebDriverException:  # type: ignore
         logging.error("No Steam results found for {title}!")
 
-    if appid_str is not None:
-        return int(appid_str)
+    # Don't use any in the highest difflib score is <0.8
+    if best_appid is not None:
+        logging.info(
+            f"Using {best_title} as it has the highest score ({(best_score*100):.0f})"
+        )
+        return best_appid
 
     return 0
 
 
-def get_steam_info(driver: WebDriver, appid: int) -> Gameinfo:
-    logging.info(f"Trying to determine the Details for Steam App ID {appid} from JSON")
+def get_steam_info(driver: WebDriver, title: str) -> Gameinfo | None:
+    logging.info(f"Trying to determine the Details for {title} from JSON")
+
+    appid = get_possible_steam_appid(driver, title)
+
+    if appid == 0:
+        logging.info(f"No match found for {title}")
+        return None
 
     result = Gameinfo(appid)
 
@@ -149,6 +187,9 @@ def get_steam_info(driver: WebDriver, appid: int) -> Gameinfo:
         data = json.loads(url.read().decode())  # type: ignore
         try:
             result.name = data[str(appid)]["data"]["name"]  # type: ignore
+            logging.info(
+                f"Found entry {result.name} ({appid}) for search query {title}"
+            )
         except KeyError:
             pass
 
@@ -192,6 +233,14 @@ def get_steam_info(driver: WebDriver, appid: int) -> Gameinfo:
         except KeyError:
             pass
 
+    # We do not save prices in any other currency than EUR
+    if (
+        result.recommended_price
+        and not result.recommended_price.endswith("EUR")
+        or result.recommended_price == "Free"
+    ):
+        result.recommended_price = None
+
     logging.info(
         f"Trying to determine the Details for Steam App ID {appid} from Steam store"
     )
@@ -200,15 +249,21 @@ def get_steam_info(driver: WebDriver, appid: int) -> Gameinfo:
 
     driver.get(STEAM_DETAILS_STORE + str(appid))
 
+    # TODO: Sometimes the element not being on the page just means that an age
+    # verification is needed. Enter a valid date and then move on. Order: First check
+    # for age verification (can the redirect to /*age*/ be noticed?).
+    # (use e.g. 12 July 1990), then move on to the actual shop page
     try:
         # Wait until the page loaded
         WebDriverWait(driver, MAX_WAIT_SECONDS).until(
             EC.presence_of_element_located((By.XPATH, STEAM_DETAILS_REVIEW_SCORE))
         )
 
-    except WebDriverException as err:  # type: ignore
-        logging.error(f"Page took longer than {MAX_WAIT_SECONDS} to load")
-        raise err
+    except WebDriverException:  # type: ignore
+        logging.error(
+            f"Steam store page for {appid} didn't load after waiting for {MAX_WAIT_SECONDS}s"
+        )
+        pass
 
     try:
         element: WebElement = driver.find_element(By.XPATH, STEAM_DETAILS_REVIEW_SCORE)
@@ -216,38 +271,56 @@ def get_steam_info(driver: WebDriver, appid: int) -> Gameinfo:
         result.rating_percent = int(rating_str.split("%")[0].strip())
 
     except WebDriverException:  # type: ignore
-        logging.error("No Steam percentage found for {title}!")
+        logging.error(f"No Steam percentage found for {appid}!")
+
+    except ValueError:
+        logging.error(f"Invalid Steam percentage {rating_str} for {appid}!")
 
     try:
-        element2: WebElement = element.find_element(
+        element2: WebElement = driver.find_element(
             By.XPATH, STEAM_DETAILS_REVIEW_SCORE_VALUE
         )
         rating_str: str = element2.get_attribute("content")  # type: ignore
-        result.rating_score = int(rating_str)
+        try:
+            result.rating_score = int(rating_str)
+        except ValueError:
+            pass
 
     except WebDriverException:  # type: ignore
-        logging.error("No Steam absolute rating found for {title}!")
+        logging.error(f"No Steam rating found for {appid}!")
 
-    if result.recommended_price is None or not result.recommended_price.endswith("EUR"):
+    except ValueError:
+        logging.error(f"Invalid Steam rating {rating_str} for {appid}!")
+
+    if result.recommended_price is None:
         try:
-            element3: WebElement = element.find_element(
+            element3: WebElement = driver.find_element(
                 By.XPATH, STEAM_PRICE_DISCOUNTED_ORIGINAL
             )
             price_str: str = element3.text  # type: ignore
-            price = float(price_str.replace("€", "").strip())
-            result.recommended_price = str(price) + " EUR"
+            try:
+                price = float(price_str.replace("€", "").replace(",", ".").strip())
+                result.recommended_price = str(price) + " EUR"
+            except ValueError:
+                pass
 
         except WebDriverException:  # type: ignore
-            logging.error("No Steam price found for {title}!")
+            logging.info(f"No Steam discounted original price found for {appid}!")
 
-    if result.recommended_price is None or not result.recommended_price.endswith("EUR"):
+    if result.recommended_price is None:
         try:
-            element4: WebElement = element.find_element(By.XPATH, STEAM_PRICE_FULL)
-            price_str: str = element4.text  # type: ignore
-            price = float(price_str.replace("€", "").strip())
-            result.recommended_price = str(price) + " EUR"
+            element4: WebElement = driver.find_element(By.XPATH, STEAM_PRICE_FULL)
+            price_str: str = element4.text.replace("€", "").strip()  # type: ignore
+            if price_str.lower() == "free to play":
+                result.recommended_price = "Free"
+            else:
+                try:
+                    price = float(price_str)
+                    result.recommended_price = str(price) + " EUR"
+                except ValueError:
+                    pass
 
         except WebDriverException:  # type: ignore
-            logging.error("No Steam price found for {title}!")
+            logging.error(f"No Steam price found for {appid}!")
 
     return result
