@@ -21,7 +21,10 @@ class TestUtils(unittest.TestCase):
     def test_steam_appinfo(self) -> None:
         driver: WebDriver
         with get_pagedriver() as driver:
-            gameinfo: Gameinfo = get_steam_info(driver, 10)
+            gameinfo: Gameinfo | None = get_steam_info(driver, "Counter-Strike")
+            self.assertIsNotNone(gameinfo)
+            if gameinfo is None:
+                return
             self.assertEquals(gameinfo.name, "Counter-Strike")
             self.assertIsNotNone(gameinfo.short_description)
             self.assertEquals(gameinfo.release_date, "1 Nov, 2000")
@@ -40,7 +43,10 @@ class TestUtils(unittest.TestCase):
     def test_steam_appinfo2(self) -> None:
         driver: WebDriver
         with get_pagedriver() as driver:
-            gameinfo = get_steam_info(driver, 359550)
+            gameinfo = get_steam_info(driver, "Rainbow Six Siege")
+            self.assertIsNotNone(gameinfo)
+            if gameinfo is None:
+                return
             self.assertEquals(gameinfo.name, "Tom Clancy's Rainbow Six® Siege")
             self.assertIsNotNone(gameinfo.short_description)
             self.assertEquals(gameinfo.release_date, "1 Dec, 2015")
@@ -58,9 +64,22 @@ class TestUtils(unittest.TestCase):
     def test_steam_appinfo_price(self) -> None:
         driver: WebDriver
         with get_pagedriver() as driver:
-            gameinfo = get_steam_info(driver, 255710)
+            gameinfo = get_steam_info(driver, "Cities: Skylines")
+            self.assertIsNotNone(gameinfo)
+            if gameinfo is None:
+                return
             self.assertEquals(gameinfo.name, "Cities: Skylines")
             self.assertEquals(gameinfo.recommended_price, "27.99 EUR")
+
+    def test_steam_appinfo_ageverify(self) -> None:
+        driver: WebDriver
+        with get_pagedriver() as driver:
+            gameinfo = get_steam_info(driver, "Doom Eternal")
+            self.assertIsNotNone(gameinfo)
+            if gameinfo is None:
+                return
+            self.assertEquals(gameinfo.name, "DOOM Eternal")
+            self.assertEquals(gameinfo.rating_score, 9)
 
 
 if __name__ == "__main__":

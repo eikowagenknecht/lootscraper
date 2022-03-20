@@ -13,7 +13,7 @@ from app.common import TIMESTAMP_LONG, LootOffer, OfferType, Source
 from app.configparser import Config
 from app.database import LootDatabase
 from app.feed import generate_feed
-from app.gameinfo import get_possible_steam_appid, get_steam_info
+from app.gameinfo import get_steam_info
 from app.pagedriver import get_pagedriver
 from app.scraper.amazon_prime import AmazonScraper
 from app.scraper.epic_games import EpicScraper
@@ -138,12 +138,10 @@ def job() -> None:
                         # and insert it into the database
                         if scraper_type == OfferType.GAME.value:
                             if scraper_offer.title:
-                                steam_id = get_possible_steam_appid(
+                                gameinfo = get_steam_info(
                                     webdriver, scraper_offer.title
                                 )
-                                if steam_id:
-                                    gameinfo = get_steam_info(webdriver, steam_id)
-                                    scraper_offer.gameinfo = gameinfo
+                                scraper_offer.gameinfo = gameinfo
                         db.insert_offer(scraper_offer)
                         new_offers += 1
 
@@ -152,15 +150,11 @@ def job() -> None:
         # Get Steam game information if ForceUpdate is set
         if Config.config().getboolean("common", "ForceUpdate"):
             for scraper_source in db_offers:
-                for db_offer in db_offers[scraper_source][OfferType.GAME.name]:
-                    if db_offer.title is None:
-                        continue
-                    steam_id = get_possible_steam_appid(webdriver, db_offer.title)
-                    if steam_id == 0:
-                        continue
-                    gameinfo = get_steam_info(webdriver, steam_id)
-                    db_offer.gameinfo = gameinfo
-                    db.update_offer(db_offer)
+                for db_offer in db_offers[scraper_source][OfferType.LOOT.name]:
+                    if db_offer.title:
+                        gameinfo = get_steam_info(webdriver, db_offer.title)
+                        db_offer.gameinfo = gameinfo
+                        db.update_offer(db_offer)
 
     logging.info(f"Found {new_offers} new offers")
 

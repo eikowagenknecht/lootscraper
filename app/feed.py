@@ -92,7 +92,11 @@ def generate_feed(
             content += f"<li><b>Publisher:</b> {html.escape(offer.publisher)}</li>"
         content += "</ul>"
         if offer.gameinfo:
-            content += "<p>The following information results from a search based on the offer name. It *can* be wrong sometimes:</p>"
+            if offer.type == OfferType.LOOT:
+                content += "<p>The following information is about the game this loot belongs to:</p>"
+            elif offer.type == OfferType.GAME:
+                # Previous text: The following information results from a search based on the offer name. It *can* be wrong sometimes:
+                content += "<p>About the game:</p>"
             content += "<ul>"
             if offer.gameinfo.name:
                 content += f'<li><b>Name:</b> <a href="{offer.gameinfo.shop_url}">{offer.gameinfo.name}</a></li>'

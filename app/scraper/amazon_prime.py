@@ -46,22 +46,21 @@ class AmazonScraper(Scraper):
     def scrape(
         driver: WebDriver, options: dict[str, bool] = None
     ) -> dict[str, list[LootOffer]]:
-        logging.info(f"Start scraping of {SCRAPER_NAME}")
-        offers = {}
+        if not options or options[OfferType.GAME.name] or options[OfferType.LOOT.name]:
+            driver.get(ROOT_URL)
 
-        driver.get(ROOT_URL)
+            offers = {}
+            if not options or options[OfferType.GAME.name]:
+                logging.info(f"Analyzing {ROOT_URL} for {OfferType.GAME.value} offers")
+                offers[OfferType.GAME.name] = AmazonScraper.read_offers_from_page(
+                    OfferType.GAME, driver
+                )
 
-        if not options or options[OfferType.GAME.name]:
-            logging.info(f"Analyzing {ROOT_URL} for {OfferType.GAME.value} offers")
-            offers[OfferType.GAME.name] = AmazonScraper.read_offers_from_page(
-                OfferType.GAME, driver
-            )
-
-        if not options or options[OfferType.LOOT.name]:
-            logging.info(f"Analyzing {ROOT_URL} for {OfferType.LOOT.value} offers")
-            offers[OfferType.LOOT.name] = AmazonScraper.read_offers_from_page(
-                OfferType.LOOT, driver
-            )
+            if not options or options[OfferType.LOOT.name]:
+                logging.info(f"Analyzing {ROOT_URL} for {OfferType.LOOT.value} offers")
+                offers[OfferType.LOOT.name] = AmazonScraper.read_offers_from_page(
+                    OfferType.LOOT, driver
+                )
 
         return offers
 
