@@ -10,7 +10,6 @@ INJECTION_FILE = Path("js/inject.js")
 
 
 def get_pagedriver() -> WebDriver:
-    logging.info("Getting pagedriver options")
     options = Options()
 
     # ChromeDriver Fixes from https://stackoverflow.com/questions/48450594/selenium-timed-out-receiving-message-from-renderer
@@ -42,10 +41,10 @@ def get_pagedriver() -> WebDriver:
     #     "--user-agent=Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/64.0.3282.39 Safari/537.36"
     # )
 
-    logging.info("Creating driver")
+    logging.debug("Creating driver")
     driver = Chrome(options=options)
 
-    logging.info("Injecting JS")
+    logging.debug("Injecting JS")
     with open(INJECTION_FILE, "r", encoding="utf-8") as file:
         js_to_inject = file.read()
 

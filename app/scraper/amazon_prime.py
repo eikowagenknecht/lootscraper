@@ -229,7 +229,17 @@ class AmazonScraper(Scraper):
             if not loot_offer.title:
                 logging.error(f"Error with offer, has no title: {loot_offer}")
             else:
-                logging.info(f"Found offer for {loot_offer.title}")
                 normalized_offers.append(loot_offer)
+
+        results: list[str] = []
+        for normalized_offer in normalized_offers:
+            if normalized_offer.title:
+                text = normalized_offer.title
+                if normalized_offer.subtitle:
+                    text += ": " + normalized_offer.subtitle
+                results.append(text)
+
+        if len(results) > 0:
+            logging.info(f'Found offers: {",".join(results)}')
 
         return normalized_offers
