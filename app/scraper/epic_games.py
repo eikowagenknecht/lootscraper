@@ -199,5 +199,4 @@ class EpicScraper(Scraper):
             )
 
             normalized_offers.append(loot_offer)
-            logging.info(f"Found offer for {loot_offer.title}")
         return normalized_offers

@@ -231,15 +231,4 @@ class AmazonScraper(Scraper):
             else:
                 normalized_offers.append(loot_offer)
 
-        results: list[str] = []
-        for normalized_offer in normalized_offers:
-            if normalized_offer.title:
-                text = normalized_offer.title
-                if normalized_offer.subtitle:
-                    text += ": " + normalized_offer.subtitle
-                results.append(text)
-
-        if len(results) > 0:
-            logging.info(f'Found offers: {",".join(results)}')
-
         return normalized_offers
