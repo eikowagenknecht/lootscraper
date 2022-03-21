@@ -115,10 +115,7 @@ def get_possible_steam_appid(driver: WebDriver, title: str) -> int:
     encoded_title = urllib.parse.quote_plus(title, safe="")
 
     url = STEAM_SEARCH_URL + encoded_title + STEAM_SEARCH_OPTIONS
-
     driver.get(url)
-
-    logging.info(f"Trying to determine the Steam App ID for {title}")
 
     try:
         # Wait until the page loaded
@@ -127,7 +124,9 @@ def get_possible_steam_appid(driver: WebDriver, title: str) -> int:
         )
 
     except WebDriverException:  # type: ignore
-        logging.error(f"Search results not found after waiting {MAX_WAIT_SECONDS}s")
+        logging.error(
+            f"Problem loading search results for {title} after waiting {MAX_WAIT_SECONDS}s"
+        )
         return 0
 
     # Read all results and use the one with the highest difflib score (lower cased!)
@@ -150,9 +149,11 @@ def get_possible_steam_appid(driver: WebDriver, title: str) -> int:
                     best_appid = int(element.get_attribute("data-ds-appid"))  # type: ignore
                     best_score = score
                     best_title = title_str
-                    logging.info(f"{title_str} has a score of {(score*100):.0f} %")
+                    logging.debug(
+                        f"Found match {title_str} with a score of {(score*100):.0f} %"
+                    )
                 else:
-                    logging.info(
+                    logging.debug(
                         f"Ignoring {title_str} as it's score of {(score*100):.0f} is too low"
                     )
             except WebDriverException:  # type: ignore
@@ -161,25 +162,26 @@ def get_possible_steam_appid(driver: WebDriver, title: str) -> int:
                 continue
 
     except WebDriverException:  # type: ignore
-        logging.error("No Steam results found for {title}!")
+        logging.info("No search results found for {title}!")
 
     # Don't use any in the highest difflib score is <0.8
     if best_appid is not None:
         logging.info(
-            f"Using {best_title} as it has the highest score ({(best_score*100):.0f})"
+            f"Search for {title} resulted in {best_title} ({best_appid}) as the best match with a score of {(best_score*100):.0f}"
         )
         return best_appid
+
+    logging.info(f"Search for {title} found no result")
 
     return 0
 
 
 def get_steam_info(driver: WebDriver, title: str) -> Gameinfo | None:
-    logging.info(f"Trying to determine the Details for {title} from JSON")
+    logging.info(f"Reading Steam details for {title}")
 
     appid = get_possible_steam_appid(driver, title)
 
     if appid == 0:
-        logging.info(f"No match found for {title}")
         return None
 
     result = Gameinfo(appid)
@@ -188,9 +190,6 @@ def get_steam_info(driver: WebDriver, title: str) -> Gameinfo | None:
         data = json.loads(url.read().decode())  # type: ignore
         try:
             result.name = data[str(appid)]["data"]["name"]  # type: ignore
-            logging.info(
-                f"Found entry {result.name} ({appid}) for search query {title}"
-            )
         except KeyError:
             pass
 
@@ -242,12 +241,9 @@ def get_steam_info(driver: WebDriver, title: str) -> Gameinfo | None:
     ):
         result.recommended_price = None
 
-    logging.info(
-        f"Trying to determine the Details for Steam App ID {appid} from Steam store"
-    )
+    logging.debug(f"Now also checking the Steam store details page for app id {appid}")
 
     result.shop_url = STEAM_DETAILS_STORE + str(appid)
-
     driver.get(STEAM_DETAILS_STORE + str(appid))
 
     try:
@@ -266,17 +262,19 @@ def get_steam_info(driver: WebDriver, title: str) -> Gameinfo | None:
     # the interesting parts. So enter a valid date and then move on.
     # (use e.g. 12 July 1990), then move on to the actual shop page
     if "agecheck" in driver.current_url:
+        logging.debug(f"Trying to pass age verification for {appid}")
         try:
-            select = Select(driver.find_element_by_id('ageDay'))
+            select = Select(driver.find_element_by_id("ageDay"))
             select.select_by_value("12")
-            select = Select(driver.find_element_by_id('ageMonth'))
+            select = Select(driver.find_element_by_id("ageMonth"))
             select.select_by_value("March")
-            select = Select(driver.find_element_by_id('ageYear'))
+            select = Select(driver.find_element_by_id("ageYear"))
             select.select_by_value("1990")
             driver.find_element(By.ID, "view_product_page_btn").click()
             WebDriverWait(driver, MAX_WAIT_SECONDS).until(
                 EC.presence_of_element_located((By.XPATH, STEAM_DETAILS_REVIEW_SCORE))
             )
+            logging.debug(f"Passed age verification for {appid}")
         except WebDriverException:  # type: ignore
             logging.error("Something went wrong trying to pass the age verification")
 
@@ -320,7 +318,9 @@ def get_steam_info(driver: WebDriver, title: str) -> Gameinfo | None:
                 pass
 
         except WebDriverException:  # type: ignore
-            logging.info(f"No Steam discounted original price found for {appid}!")
+            logging.debug(
+                f"No Steam discounted original price found on shop page for {appid}"
+            )
 
     if result.recommended_price is None:
         try:
@@ -336,6 +336,9 @@ def get_steam_info(driver: WebDriver, title: str) -> Gameinfo | None:
                     pass
 
         except WebDriverException:  # type: ignore
-            logging.error(f"No Steam price found for {appid}!")
+            logging.debug(f"No Steam full price found on shop page for {appid}")
+
+    if result.recommended_price is None:
+        logging.error(f"No Steam price found for {appid}")
 
     return result

@@ -114,8 +114,9 @@ def job() -> None:
 
         for scraper_source in scraped_offers:
             for scraper_type in scraped_offers[scraper_source]:
+                existing_offer_titles = []
+                new_offer_titles = []
                 for scraper_offer in scraped_offers[scraper_source][scraper_type]:
-                    exists_in_db = False
                     # Check every database entry if this is a match.
                     id = db.find_offers(
                         scraper_offer.source.value,
@@ -123,26 +124,48 @@ def job() -> None:
                         scraper_offer.subtitle,
                         scraper_offer.valid_to,
                     )
+
+                    # Do not insert offers that already have been scraped,
+                    # but update their "last seen" date instead
                     if id > 0:
-                        # Offer has already been scraped, so do not insert this into the database, but update the "last seen" timestamp
                         scraper_offer.id = id
                         if Config.config().getboolean("common", "ForceUpdate"):  # type: ignore
                             db.update_offer(scraper_offer)
                         else:
                             db.touch_offer(scraper_offer)
-                        exists_in_db = True
+
+                        # Create a list of all existing offers (logging only)
+                        if scraper_offer.title:
+                            text = scraper_offer.title
+                            if scraper_offer.subtitle:
+                                text += ": " + scraper_offer.subtitle
+                            existing_offer_titles.append(text)
+
                         continue
 
-                    if not exists_in_db:
-                        # The enddate has been changed or it is a new offer, get information about it (if it's a game)
-                        # and insert it into the database
-                        if scraper_offer.title:
-                            gameinfo = get_steam_info(
-                                webdriver, scraper_offer.title
-                            )
-                            scraper_offer.gameinfo = gameinfo
-                        db.insert_offer(scraper_offer)
-                        new_offers += 1
+                    # Create a list of new scraped offers (logging only)
+                    if scraper_offer.title:
+                        text = scraper_offer.title
+                        if scraper_offer.subtitle:
+                            text += ": " + scraper_offer.subtitle
+                        new_offer_titles.append(text)
+
+                    # The enddate has been changed or it is a new offer, get information about it (if it's a game)
+                    # and insert it into the database
+                    if scraper_offer.title:
+                        gameinfo = get_steam_info(webdriver, scraper_offer.title)
+                        scraper_offer.gameinfo = gameinfo
+                    db.insert_offer(scraper_offer)
+                    new_offers += 1
+
+                if len(existing_offer_titles) > 0:
+                    logging.info(
+                        f'Found existing {scraper_source} {scraper_type} offers: {", ".join(existing_offer_titles)}'
+                    )
+                if len(new_offer_titles) > 0:
+                    logging.info(
+                        f'Found new {scraper_source} {scraper_type} offers: {", ".join(new_offer_titles)}'
+                    )
 
         db_offers = db.read_offers()
 
