@@ -19,4 +19,4 @@ def upload_to_server(file: Path) -> None:
         with open(file, "rb") as binary_file:
             session.storbinary("STOR " + file.name, binary_file)
 
-    logging.info("Finished uploading")
+    logging.debug("Finished uploading")
