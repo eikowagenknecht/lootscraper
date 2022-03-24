@@ -93,7 +93,7 @@ def generate_feed(
         content += "</ul>"
         if offer.gameinfo:
             if offer.type == OfferType.LOOT:
-                content += "<p>The following information is about the game this loot belongs to:</p>"
+                content += "<p>The following information is about the game this loot probably belongs to:</p>"
             elif offer.type == OfferType.GAME:
                 # Previous text: The following information results from a search based on the offer name. It *can* be wrong sometimes:
                 content += "<p>About the game:</p>"
