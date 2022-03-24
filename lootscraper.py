@@ -172,7 +172,7 @@ def job() -> None:
         # Get Steam game information if ForceUpdate is set
         if Config.config().getboolean("common", "ForceUpdate"):
             for scraper_source in db_offers:
-                for scraper_type in scraped_offers[scraper_source]:
+                for scraper_type in db_offers[scraper_source]:
                     for db_offer in db_offers[scraper_source][scraper_type]:
                         if db_offer.title:
                             gameinfo = get_steam_info(webdriver, db_offer.title)
