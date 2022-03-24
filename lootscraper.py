@@ -17,6 +17,7 @@ from app.gameinfo import get_steam_info
 from app.pagedriver import get_pagedriver
 from app.scraper.amazon_prime import AmazonScraper
 from app.scraper.epic_games import EpicScraper
+from app.scraper.steam import SteamScraper
 from app.upload import upload_to_server
 
 exit = Event()
@@ -79,31 +80,35 @@ def job() -> None:
 
         cfg_amazon: bool = Config.config().getboolean("actions", "ScrapeAmazon")  # type: ignore
         cfg_epic: bool = Config.config().getboolean("actions", "ScrapeEpic")  # type: ignore
+        cfg_steam: bool = Config.config().getboolean("actions", "ScrapeSteam")  # type: ignore
 
         cfg_games: bool = Config.config().getboolean("actions", "ScrapeGames")  # type: ignore
         cfg_loot: bool = Config.config().getboolean("actions", "ScrapeLoot")  # type: ignore
 
+        cfg_what_to_scrape = {
+            OfferType.GAME.name: cfg_games,
+            OfferType.LOOT.name: cfg_loot,
+        }
         if cfg_amazon:
             scraped_offers[Source.AMAZON.name] = AmazonScraper.scrape(
-                webdriver,
-                {
-                    OfferType.GAME.name: cfg_games,
-                    OfferType.LOOT.name: cfg_loot,
-                },
+                webdriver, cfg_what_to_scrape
             )
         else:
             logging.info(f"Skipping {Source.AMAZON.value}")
 
         if cfg_epic:
             scraped_offers[Source.EPIC.name] = EpicScraper.scrape(
-                webdriver,
-                {
-                    OfferType.GAME.name: cfg_games,
-                    OfferType.LOOT.name: cfg_loot,
-                },
+                webdriver, cfg_what_to_scrape
             )
         else:
             logging.info(f"Skipping {Source.EPIC.value}")
+
+        if cfg_steam:
+            scraped_offers[Source.STEAM.name] = SteamScraper.scrape(
+                webdriver, cfg_what_to_scrape
+            )
+        else:
+            logging.info(f"Skipping {Source.STEAM.value}")
 
         # Check which offers are new and which are updated, then act accordingly:
         # - Offers that are neither new nor updated just get a new date

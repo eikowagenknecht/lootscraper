@@ -21,6 +21,7 @@ class Source(Enum):
 
     AMAZON = "Amazon Prime"
     EPIC = "Epic Games"
+    STEAM = "Steam"
 
 
 @dataclass
