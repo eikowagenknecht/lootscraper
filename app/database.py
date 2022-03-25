@@ -10,7 +10,7 @@ from types import TracebackType
 from typing import Any, Type
 
 from app.configparser import Config
-from app.gameinfo import Gameinfo
+from app.scraper.info.gameinfo import Gameinfo
 
 from .common import TIMESTAMP_LONG, TIMESTAMP_SHORT, LootOffer, OfferType, Source
 
