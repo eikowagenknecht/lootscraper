@@ -121,7 +121,7 @@ class EpicScraper(Scraper):
             pass
 
         try:
-            url_str = str(element.get_attribute("href"))
+            url_str = str(element.get_attribute("href"))  # type: ignore
         except WebDriverException:
             # Nothing to do here, string stays empty
             pass

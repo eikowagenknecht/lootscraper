@@ -48,7 +48,7 @@ def get_pagedriver() -> WebDriver:
     with open(INJECTION_FILE, "r", encoding="utf-8") as file:
         js_to_inject = file.read()
 
-    driver.execute_cdp_cmd(
+    driver.execute_cdp_cmd(  # type: ignore
         "Page.addScriptToEvaluateOnNewDocument",
         {"source": js_to_inject},
     )

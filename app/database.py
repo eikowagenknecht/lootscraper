@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import dataclasses
-import json
 import logging
 import sqlite3
 from datetime import datetime, timedelta, timezone
@@ -112,7 +110,9 @@ class LootDatabase:
         # Try to fix short timestamps (only for valid_until, so add 1 day for correct end second)
         if fixed_date is None:
             try:
-                fixed_date = datetime.strptime(row[1], TIMESTAMP_SHORT) if row[1] else None
+                fixed_date = (
+                    datetime.strptime(row[1], TIMESTAMP_SHORT) if row[1] else None
+                )
                 fixed_date = fixed_date + timedelta(days=1) if fixed_date else None
             except ValueError:
                 pass
@@ -120,14 +120,14 @@ class LootDatabase:
         # Try to fix long timestamps
         if fixed_date is None:
             try:
-                fixed_date = datetime.strptime(row[1], TIMESTAMP_LONG) if row[1] else None
+                fixed_date = (
+                    datetime.strptime(row[1], TIMESTAMP_LONG) if row[1] else None
+                )
             except ValueError:
                 pass
 
         if fixed_date is None:
-            logging.error(
-                f"Could not convert {field} for entry {row[0]}"
-            )
+            logging.error(f"Could not convert {field} for entry {row[0]}")
         else:
             # Rewrite the timestamp
             new_value: str = fixed_date.replace(tzinfo=timezone.utc).isoformat()
@@ -167,9 +167,6 @@ class LootDatabase:
         if offer.id is None:
             return
 
-        gameinfo_json: str | None = (
-            json.dumps(dataclasses.asdict(offer.gameinfo)) if offer.gameinfo else None
-        )
         self.cursor.execute(
             """
                 UPDATE loot SET
@@ -203,7 +200,7 @@ class LootDatabase:
                 else None,
                 offer.url or None,
                 offer.img_url or None,
-                gameinfo_json,
+                offer.gameinfo.to_json() if offer.gameinfo else None,
                 offer.id,
             ),
         )
@@ -224,9 +221,6 @@ class LootDatabase:
     def insert_offer(self, offer: LootOffer) -> None:
         current_date = datetime.now().replace(tzinfo=timezone.utc).isoformat()
 
-        gameinfo_json: str | None = (
-            json.dumps(dataclasses.asdict(offer.gameinfo)) if offer.gameinfo else None
-        )
         self.cursor.execute(
             """
                 INSERT INTO loot(
@@ -262,7 +256,7 @@ class LootDatabase:
                 else None,
                 offer.url or None,
                 offer.img_url or None,
-                gameinfo_json,
+                offer.gameinfo.to_json() if offer.gameinfo else None,
             ),
         )
 
@@ -333,8 +327,12 @@ class LootDatabase:
                 title=row[3],
                 subtitle=row[4],
                 publisher=row[5],
-                valid_from=datetime.fromisoformat(row[6]).replace(tzinfo=timezone.utc) if row[6] else None,
-                valid_to=datetime.fromisoformat(row[7]).replace(tzinfo=timezone.utc) if row[7] else None,
+                valid_from=datetime.fromisoformat(row[6]).replace(tzinfo=timezone.utc)
+                if row[6]
+                else None,
+                valid_to=datetime.fromisoformat(row[7]).replace(tzinfo=timezone.utc)
+                if row[7]
+                else None,
                 seen_first=datetime.fromisoformat(row[8]).replace(tzinfo=timezone.utc),
                 seen_last=datetime.fromisoformat(row[9]).replace(tzinfo=timezone.utc),
                 url=row[10],
