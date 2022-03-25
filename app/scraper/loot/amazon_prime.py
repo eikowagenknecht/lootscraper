@@ -11,7 +11,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
 from app.common import LootOffer, OfferType, Source
-from app.scraper.scraper import Scraper
+from app.scraper.loot.scraper import Scraper
 
 SCRAPER_NAME = "Amazon Prime"
 ROOT_URL = "https://gaming.amazon.com/home"

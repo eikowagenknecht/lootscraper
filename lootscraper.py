@@ -13,11 +13,11 @@ from app.common import TIMESTAMP_LONG, LootOffer, OfferType, Source
 from app.configparser import Config
 from app.database import LootDatabase
 from app.feed import generate_feed
-from app.gameinfo import get_steam_info
 from app.pagedriver import get_pagedriver
-from app.scraper.amazon_prime import AmazonScraper
-from app.scraper.epic_games import EpicScraper
-from app.scraper.steam import SteamScraper
+from app.scraper.info.steam import get_steam_info
+from app.scraper.loot.amazon_prime import AmazonScraper
+from app.scraper.loot.epic_games import EpicScraper
+from app.scraper.loot.steam import SteamScraper
 from app.upload import upload_to_server
 
 exit = Event()

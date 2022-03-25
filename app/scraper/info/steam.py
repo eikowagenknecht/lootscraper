@@ -1,11 +1,9 @@
-from __future__ import annotations
 
 import difflib
 import json
 import logging
 import urllib.parse
 import urllib.request
-from dataclasses import dataclass
 
 from selenium.common.exceptions import WebDriverException
 from selenium.webdriver.chrome.webdriver import WebDriver
@@ -13,6 +11,8 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import Select, WebDriverWait
+
+from app.scraper.info.gameinfo import Gameinfo
 
 STEAM_SEARCH_URL = "https://store.steampowered.com/search/?term="
 STEAM_SEARCH_OPTIONS = "&category1=998"  # Games only
@@ -32,91 +32,6 @@ STEAM_PRICE_DISCOUNTED_ORIGINAL = '(//div[contains(concat(" ", normalize-space(@
 MAX_WAIT_SECONDS = 30  # Needs to be quite high in Docker for first run
 
 RESULT_MATCH_THRESHOLD = 0.8
-
-
-@dataclass
-class Gameinfo:
-    steam_id: int | None
-    name: str | None = None
-    short_description: str | None = None
-    release_date: str | None = None
-    recommended_price: str | None = None
-    genres: list[str] | None = None
-
-    recommendations: int | None = None
-    rating_percent: int | None = None
-    rating_score: int | None = None
-    metacritic_score: int | None = None
-    metacritic_url: str | None = None
-    shop_url: str | None = None
-    image_url: str | None = None
-
-    @classmethod
-    def from_json(cls, json_str: str) -> Gameinfo:
-        dictionary = json.loads(json_str)  # type: ignore
-
-        result: Gameinfo = Gameinfo(dictionary["steam_id"])  # type: ignore
-        try:
-            result.name = dictionary["name"]  # type: ignore
-        except KeyError:
-            pass
-
-        try:
-            result.short_description = dictionary["short_description"]  # type: ignore
-        except KeyError:
-            pass
-
-        try:
-            result.release_date = dictionary["release_date"]  # type: ignore
-        except KeyError:
-            pass
-
-        try:
-            result.recommended_price = dictionary["recommended_price"]  # type: ignore
-        except KeyError:
-            pass
-
-        try:
-            result.genres = dictionary["genres"]  # type: ignore
-        except KeyError:
-            pass
-
-        try:
-            result.recommendations = dictionary["recommendations"]  # type: ignore
-        except KeyError:
-            pass
-
-        try:
-            result.rating_percent = dictionary["rating_percent"]  # type: ignore
-        except KeyError:
-            pass
-
-        try:
-            result.rating_score = dictionary["rating_score"]  # type: ignore
-        except KeyError:
-            pass
-
-        try:
-            result.metacritic_score = dictionary["metacritic_score"]  # type: ignore
-        except KeyError:
-            pass
-
-        try:
-            result.metacritic_url = dictionary["metacritic_url"]  # type: ignore
-        except KeyError:
-            pass
-
-        try:
-            result.shop_url = dictionary["shop_url"]  # type: ignore
-        except KeyError:
-            pass
-
-        try:
-            result.image_url = dictionary["image_url"]  # type: ignore
-        except KeyError:
-            pass
-
-        return result
 
 
 def get_possible_steam_appid(driver: WebDriver, searchstring: str) -> int:

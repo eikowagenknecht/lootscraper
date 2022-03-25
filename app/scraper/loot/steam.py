@@ -10,7 +10,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
 from app.common import LootOffer, OfferType, Source
-from app.scraper.scraper import Scraper
+from app.scraper.loot.scraper import Scraper
 
 SCRAPER_NAME = "Steam"
 ROOT_URL = "https://store.steampowered.com/search/?maxprice=free&specials=1"
