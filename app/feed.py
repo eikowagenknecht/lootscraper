@@ -77,6 +77,8 @@ def generate_feed(
         content = ""
         if offer.img_url:
             content += f'<img src="{html.escape(offer.img_url)}" />'
+        elif offer.gameinfo and offer.gameinfo.image_url:
+            content += f'<img src="{html.escape(offer.gameinfo.image_url)}" />'
         content += f"<p>{offer.type.value} found."
         if offer.url:
             content += f' Claim it on <a href="{html.escape(offer.url)}">{html.escape(offer.source.value)}</a>.'
@@ -104,8 +106,8 @@ def generate_feed(
                 content += (
                     f"<li><b>Description:</b> {offer.gameinfo.short_description}</li>"
                 )
-            if offer.gameinfo.genre:
-                content += f"<li><b>Genre:</b> {offer.gameinfo.genre}</li>"
+            if offer.gameinfo.genres:
+                content += f'<li><b>Genres:</b> {", ".join(offer.gameinfo.genres)}</li>'
             if offer.gameinfo.release_date:
                 content += (
                     f"<li><b>Release date:</b> {offer.gameinfo.release_date}</li>"

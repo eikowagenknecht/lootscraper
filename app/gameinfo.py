@@ -31,6 +31,8 @@ STEAM_PRICE_FULL = '(//div[contains(concat(" ", normalize-space(@class), " "), "
 STEAM_PRICE_DISCOUNTED_ORIGINAL = '(//div[contains(concat(" ", normalize-space(@class), " "), " game_area_purchase_game ")])[1]//div[contains(concat(" ", normalize-space(@class), " "), " game_purchase_action")]//div[contains(concat(" ", normalize-space(@class), " "), " discount_original_price")]'  # text=" 27,99€ "
 MAX_WAIT_SECONDS = 30  # Needs to be quite high in Docker for first run
 
+RESULT_MATCH_THRESHOLD = 0.8
+
 
 @dataclass
 class Gameinfo:
@@ -47,6 +49,7 @@ class Gameinfo:
     metacritic_score: int | None = None
     metacritic_url: str | None = None
     shop_url: str | None = None
+    image_url: str | None = None
 
     @classmethod
     def from_json(cls, json_str: str) -> Gameinfo:
@@ -108,12 +111,17 @@ class Gameinfo:
         except KeyError:
             pass
 
+        try:
+            result.image_url = dictionary["image_url"]  # type: ignore
+        except KeyError:
+            pass
+
         return result
 
 
 def get_possible_steam_appid(driver: WebDriver, searchstring: str) -> int:
     encoded_searchstring = urllib.parse.quote_plus(searchstring, safe="")
-    threshold = 0.8
+
     url = STEAM_SEARCH_URL + encoded_searchstring + STEAM_SEARCH_OPTIONS
     driver.get(url)
 
@@ -142,29 +150,43 @@ def get_possible_steam_appid(driver: WebDriver, searchstring: str) -> int:
                 title_element = element.find_element(By.CLASS_NAME, "title")  # type: ignore
                 result: str = title_element.text  # type: ignore
 
+                cleaned_searchstring = (
+                    searchstring.replace("™", "")
+                    .replace("©", "")
+                    .replace("®", "")
+                    .replace("  ", " ")
+                ).lower()
+
+                cleaned_result = (
+                    result.replace("™", "")
+                    .replace("©", "")
+                    .replace("®", "")
+                    .replace("  ", " ")
+                ).lower()
+
                 score = difflib.SequenceMatcher(
-                    a=searchstring.lower(), b=result.lower()
+                    a=cleaned_searchstring, b=cleaned_result
                 ).ratio()
 
-                if score < threshold:
+                if score < RESULT_MATCH_THRESHOLD:
                     # If it is no match, look for a partial match instead. Look at the first x or last x words from the
                     # result because the result often includes additional text (e.g. a prepended "Tom Clancy's ...") or
                     # an appended " - Ultimate edition". x is the number of words the search term has.
 
-                    words_result = result.split(" ")
-                    words_searchstring = searchstring.split(" ")
+                    words_result = cleaned_result.split(" ")
+                    words_searchstring = cleaned_searchstring.split(" ")
 
                     score = max(
                         score,
                         difflib.SequenceMatcher(
-                            a=searchstring.lower(),
+                            a=cleaned_searchstring,
                             b=" ".join(words_result[: len(words_searchstring)]).lower(),
                         ).ratio(),
                     )
                     score = max(
                         score,
                         difflib.SequenceMatcher(
-                            a=searchstring.lower(),
+                            a=cleaned_searchstring,
                             b=" ".join(
                                 words_result[-len(words_searchstring) :]
                             ).lower(),
@@ -172,7 +194,7 @@ def get_possible_steam_appid(driver: WebDriver, searchstring: str) -> int:
                     )
                     pass
 
-                if score > threshold:
+                if score >= RESULT_MATCH_THRESHOLD:
                     best_appid = int(element.get_attribute("data-ds-appid"))  # type: ignore
                     best_score = score
                     best_title = result
@@ -184,7 +206,7 @@ def get_possible_steam_appid(driver: WebDriver, searchstring: str) -> int:
                     break
                 else:
                     logging.debug(
-                        f"Ignoring {result} as it's score of {(score*100):.0f} is too low"
+                        f"Ignoring {result} as it's score of {(score*100):.0f} % is too low"
                     )
             except WebDriverException:  # type: ignore
                 continue
@@ -197,7 +219,7 @@ def get_possible_steam_appid(driver: WebDriver, searchstring: str) -> int:
     # Don't use any in the highest difflib score is <0.8
     if best_appid is not None:
         logging.info(
-            f"Search for {searchstring} resulted in {best_title} ({best_appid}) as the best match with a score of {(best_score*100):.0f}"
+            f"Search for {searchstring} resulted in {best_title} ({best_appid}) as the best match with a score of {(best_score*100):.0f} %"
         )
         return best_appid
 
@@ -264,6 +286,12 @@ def get_steam_info(driver: WebDriver, title: str | int) -> Gameinfo | None:
         try:
             metacritic_url: str = data[str(appid)]["data"]["metacritic"]["url"]  # type: ignore
             result.metacritic_url = metacritic_url.replace(R"\/", "/")
+        except KeyError:
+            pass
+
+        try:
+            image_url: str = data[str(appid)]["data"]["screenshots"][0]["path_full"]  # type: ignore
+            result.image_url = image_url.replace(R"\/", "/")
         except KeyError:
             pass
 
