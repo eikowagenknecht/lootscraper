@@ -22,7 +22,7 @@ Just want the feeds? Sure. You can use the links below. They are updated every 2
 
 This is what it currently looks like in Feedly:
 
-![image](https://phenx.de/wp-content/uploads/2022/02/image.png)
+![image](https://user-images.githubusercontent.com/1475672/160145960-248c5cbf-3db1-4a64-ac8c-676b1ffb57b9.png)
 
 If you want to get the offers by email instead, you can use free services like <https://blogtrottr.com/> or <https://feedsub.com/>.
 
