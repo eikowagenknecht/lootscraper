@@ -111,10 +111,10 @@ class Gameinfo:
         return result
 
 
-def get_possible_steam_appid(driver: WebDriver, title: str) -> int:
-    encoded_title = urllib.parse.quote_plus(title, safe="")
-
-    url = STEAM_SEARCH_URL + encoded_title + STEAM_SEARCH_OPTIONS
+def get_possible_steam_appid(driver: WebDriver, searchstring: str) -> int:
+    encoded_searchstring = urllib.parse.quote_plus(searchstring, safe="")
+    threshold = 0.8
+    url = STEAM_SEARCH_URL + encoded_searchstring + STEAM_SEARCH_OPTIONS
     driver.get(url)
 
     try:
@@ -125,7 +125,7 @@ def get_possible_steam_appid(driver: WebDriver, title: str) -> int:
 
     except WebDriverException:  # type: ignore
         logging.error(
-            f"Problem loading search results for {title} after waiting {MAX_WAIT_SECONDS}s"
+            f"Problem loading search results for {searchstring} after waiting {MAX_WAIT_SECONDS}s"
         )
         return 0
 
@@ -140,21 +140,51 @@ def get_possible_steam_appid(driver: WebDriver, title: str) -> int:
         for element in elements:
             try:
                 title_element = element.find_element(By.CLASS_NAME, "title")  # type: ignore
-                title_str: str = title_element.text  # type: ignore
+                result: str = title_element.text  # type: ignore
 
                 score = difflib.SequenceMatcher(
-                    a=title_str.lower(), b=title.lower()
+                    a=searchstring.lower(), b=result.lower()
                 ).ratio()
-                if score > best_score and score > 0.8:
+
+                if score < threshold:
+                    # If it is no match, look for a partial match instead. Look at the first x or last x words from the
+                    # result because the result often includes additional text (e.g. a prepended "Tom Clancy's ...") or
+                    # an appended " - Ultimate edition". x is the number of words the search term has.
+
+                    words_result = result.split(" ")
+                    words_searchstring = searchstring.split(" ")
+
+                    score = max(
+                        score,
+                        difflib.SequenceMatcher(
+                            a=searchstring.lower(),
+                            b=" ".join(words_result[: len(words_searchstring)]).lower(),
+                        ).ratio(),
+                    )
+                    score = max(
+                        score,
+                        difflib.SequenceMatcher(
+                            a=searchstring.lower(),
+                            b=" ".join(
+                                words_result[-len(words_searchstring) :]
+                            ).lower(),
+                        ).ratio(),
+                    )
+                    pass
+
+                if score > threshold:
                     best_appid = int(element.get_attribute("data-ds-appid"))  # type: ignore
                     best_score = score
-                    best_title = title_str
+                    best_title = result
                     logging.debug(
-                        f"Found match {title_str} with a score of {(score*100):.0f} %"
+                        f"Found match {result} with a score of {(score*100):.0f} %"
                     )
+                    # Intentionally do not look for further matches if the first is good enough because most of the
+                    # times the first Steam result is an exact match.
+                    break
                 else:
                     logging.debug(
-                        f"Ignoring {title_str} as it's score of {(score*100):.0f} is too low"
+                        f"Ignoring {result} as it's score of {(score*100):.0f} is too low"
                     )
             except WebDriverException:  # type: ignore
                 continue
@@ -167,19 +197,21 @@ def get_possible_steam_appid(driver: WebDriver, title: str) -> int:
     # Don't use any in the highest difflib score is <0.8
     if best_appid is not None:
         logging.info(
-            f"Search for {title} resulted in {best_title} ({best_appid}) as the best match with a score of {(best_score*100):.0f}"
+            f"Search for {searchstring} resulted in {best_title} ({best_appid}) as the best match with a score of {(best_score*100):.0f}"
         )
         return best_appid
 
-    logging.info(f"Search for {title} found no result")
+    logging.info(f"Search for {searchstring} found no result")
 
     return 0
 
 
-def get_steam_info(driver: WebDriver, title: str) -> Gameinfo | None:
+def get_steam_info(driver: WebDriver, title: str | int) -> Gameinfo | None:
     logging.info(f"Reading Steam details for {title}")
-
-    appid = get_possible_steam_appid(driver, title)
+    if isinstance(title, int):
+        appid = title
+    else:
+        appid = get_possible_steam_appid(driver, title)
 
     if appid == 0:
         return None
