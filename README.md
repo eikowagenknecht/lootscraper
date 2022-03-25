@@ -4,20 +4,21 @@
 [![Publish to Github Packages](https://github.com/eikowagenknecht/lootscraper/actions/workflows/publish_github_packages.yml/badge.svg)](https://github.com/eikowagenknecht/lootscraper/actions/workflows/publish_github_packages.yml)
 [![CC BY-NC-SA 4.0][cc-by-nc-sa-shield]][cc-by-nc-sa]
 
-You enjoy getting games for free but you *don’t* enjoy having to keep track of the various sources (Amazon Prime, Epic Games, ...) for free offers? Also your F5 key starts to look a bit worn out? Then this is for you!
+You enjoy getting games for free but you *don’t* enjoy having to keep track of the various sources (Amazon Prime, Epic Games, Steam, ...) for free offers? Also your F5 key starts to look a bit worn out? Then this is for you!
 
-This Python (3.10+) application uses Selenium to automatically visit sites with free gaming related offers (currently only Amazon Prime and Epic Games but more will follow) and then neatly puts the gathered information into RSS feeds. So now you can track the offers using your favorite news reader like Feedly instead of manually visiting the sites.
+This Python (3.10+) application uses Selenium to automatically visit sites with free gaming related offers (currently Amazon Prime, Epic Games and Steam are supported, more will follow) and then neatly puts the gathered information into RSS feeds. So now you can track the offers using your favorite news reader like Feedly instead of manually visiting the sites.
 
 ## Usage
 
 You can either run this script locally on your computer or in any environment capable of running a Docker container.
 
-Just want the feeds? Sure. You can use the links below. They are updated every 20 minutes and contain offers for Amazon Prime (games and ingame loot) and Epic Games (games only). Currently the following feeds are available:
+Just want the feeds? Sure. You can use the links below. They are updated every 20 minutes and contain offers for Amazon Prime (games and ingame loot), Epic Games (games only) and Steam (games only). Currently the following feeds are available:
 
-- <https://feed.phenx.de/lootscraper.xml>: Everything (Amazon Prime games and ingame loot)
+- <https://feed.phenx.de/lootscraper.xml>: Everything
 - <https://feed.phenx.de/lootscraper_epic_game.xml>: Epic games only
 - <https://feed.phenx.de/lootscraper_amazon_game.xml>: Amazon Prime games only
 - <https://feed.phenx.de/lootscraper_amazon_loot.xml>: Amazon Prime ingame loot only
+- <https://feed.phenx.de/lootscraper_steam_game.xml>: Steam games only
 
 This is what it currently looks like in Feedly:
 
@@ -29,7 +30,7 @@ If you want to get the offers by email instead, you can use free services like <
 
 This project is still in ongoing development, so expect a few rough edges if you try to run it yourself. If you encounter any problems feel free to open an issue here and I'll try to help.
 
-I have quite a few features on my mind that I'd like to implement. Those are tracked [here](https://github.com/eikowagenknecht/lootscraper/issues/6). I also plan to extend this to more sources for free offers, those are tracked [here](https://github.com/eikowagenknecht/lootscraper/issues/7).
+I have quite a few features on my mind that I'd like to implement. I also plan to extend this to more sources for free offers. All of this is tracked in the Github issues.
 
 ### Settings
 
