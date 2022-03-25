@@ -57,14 +57,14 @@ class SteamScraper(Scraper):
                     (By.XPATH, STEAM_SEARCH_RESULTS_CONTAINER)
                 )
             )
-        except WebDriverException:  # type: ignore
+        except WebDriverException:
             logging.error(f"Page took longer than {MAX_WAIT_SECONDS} to load")
             return []
 
         elements: list[WebElement] = []
         try:
             elements.extend(driver.find_elements(By.XPATH, STEAM_SEARCH_RESULTS))
-        except WebDriverException:  # type: ignore
+        except WebDriverException:
             logging.info("No current offer found.")
             pass
 
@@ -83,16 +83,16 @@ class SteamScraper(Scraper):
         url_str: str | None = None
 
         try:
-            title_element = element.find_element(By.CLASS_NAME, "title")  # type: ignore
-            title_str = title_element.text  # type: ignore
-        except WebDriverException:  # type: ignore
+            title_element = element.find_element(By.CLASS_NAME, "title")
+            title_str = title_element.text
+        except WebDriverException:
             # Nothing to do here, string stays empty
             pass
 
         try:
             appid = int(element.get_attribute("data-ds-appid"))  # type: ignore
             url_str = DETAILS_URL + str(appid)
-        except (WebDriverException, ValueError):  # type: ignore
+        except (WebDriverException, ValueError):
             # Nothing to do here, string stays empty
             pass
 

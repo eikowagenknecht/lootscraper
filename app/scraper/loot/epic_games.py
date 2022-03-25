@@ -59,20 +59,20 @@ class EpicScraper(Scraper):
             WebDriverWait(driver, MAX_WAIT_SECONDS).until(
                 EC.presence_of_element_located((By.XPATH, XPATH_OFFER_HEADER))
             )
-        except WebDriverException:  # type: ignore
+        except WebDriverException:
             logging.error(f"Page took longer than {MAX_WAIT_SECONDS} to load")
             return []
 
         elements: list[WebElement] = []
         try:
             elements.extend(driver.find_elements(By.XPATH, XPATH_CURRENT))
-        except WebDriverException:  # type: ignore
+        except WebDriverException:
             logging.warning("No current offer found.")
             pass
 
         try:
             elements.extend(driver.find_elements(By.XPATH, XPATH_COMING_SOON))
-        except WebDriverException:  # type: ignore
+        except WebDriverException:
             logging.warning("No coming offer found.")
             pass
 
@@ -94,43 +94,43 @@ class EpicScraper(Scraper):
 
         try:
             title_str = str(
-                element.find_element(By.XPATH, SUBPATH_TITLE).text  # type: ignore
+                element.find_element(By.XPATH, SUBPATH_TITLE).text
             )
-        except WebDriverException:  # type: ignore
+        except WebDriverException:
             # Nothing to do here, string stays empty
             pass
 
         try:
             valid_from_str = str(
-                element.find_element(By.XPATH, SUBPATH_TIME_FROM).get_attribute(  # type: ignore
+                element.find_element(By.XPATH, SUBPATH_TIME_FROM).get_attribute(
                     "datetime"
                 )
             )
-        except WebDriverException:  # type: ignore
+        except WebDriverException:
             # Nothing to do here, string stays empty
             pass
 
         try:
             valid_to_str = str(
-                element.find_element(By.XPATH, SUBPATH_TIME_TO).get_attribute(  # type: ignore
+                element.find_element(By.XPATH, SUBPATH_TIME_TO).get_attribute(
                     "datetime"
                 )
             )
-        except WebDriverException:  # type: ignore
+        except WebDriverException:
             # Nothing to do here, string stays empty
             pass
 
         try:
-            url_str = str(element.get_attribute("href"))  # type: ignore
-        except WebDriverException:  # type: ignore
+            url_str = str(element.get_attribute("href"))
+        except WebDriverException:
             # Nothing to do here, string stays empty
             pass
 
         try:
             img_url_str = str(
-                element.find_element(By.XPATH, SUBPATH_IMG).get_attribute("src")  # type: ignore
+                element.find_element(By.XPATH, SUBPATH_IMG).get_attribute("src")
             )
-        except WebDriverException:  # type: ignore
+        except WebDriverException:
             # Nothing to do here, string stays empty
             pass
 

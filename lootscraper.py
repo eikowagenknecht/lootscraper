@@ -38,7 +38,7 @@ def main() -> None:
     logging.basicConfig(
         filename=filename,
         encoding="utf-8",
-        level=logging.getLevelName(loglevel),  # type: ignore
+        level=logging.getLevelName(loglevel),
         format="%(asctime)s [%(levelname)-5s] %(message)s",
         datefmt=TIMESTAMP_LONG,
     )
@@ -78,12 +78,12 @@ def job() -> None:
         db.initialize_or_update()
         scraped_offers: dict[str, dict[str, list[LootOffer]]] = {}
 
-        cfg_amazon: bool = Config.config().getboolean("sources_loot", "Amazon")  # type: ignore
-        cfg_epic: bool = Config.config().getboolean("sources_loot", "Epic")  # type: ignore
-        cfg_steam: bool = Config.config().getboolean("sources_loot", "Steam")  # type: ignore
+        cfg_amazon: bool = Config.config().getboolean("sources_loot", "Amazon")
+        cfg_epic: bool = Config.config().getboolean("sources_loot", "Epic")
+        cfg_steam: bool = Config.config().getboolean("sources_loot", "Steam")
 
-        cfg_games: bool = Config.config().getboolean("actions", "ScrapeGames")  # type: ignore
-        cfg_loot: bool = Config.config().getboolean("actions", "ScrapeLoot")  # type: ignore
+        cfg_games: bool = Config.config().getboolean("actions", "ScrapeGames")
+        cfg_loot: bool = Config.config().getboolean("actions", "ScrapeLoot")
 
         cfg_what_to_scrape = {
             OfferType.GAME.name: cfg_games,
@@ -134,7 +134,7 @@ def job() -> None:
                     # but update their "last seen" date instead
                     if id > 0:
                         scraper_offer.id = id
-                        if Config.config().getboolean("expert", "ForceUpdate"):  # type: ignore
+                        if Config.config().getboolean("expert", "ForceUpdate"):
                             db.update_offer(scraper_offer)
                         else:
                             db.touch_offer(scraper_offer)
@@ -186,15 +186,15 @@ def job() -> None:
 
     logging.info(f"Found {new_offers} new offers")
 
-    cfg_generate_feed: bool = Config.config().getboolean("actions", "GenerateFeed")  # type: ignore
-    cfg_upload: bool = Config.config().getboolean("actions", "UploadFtp")  # type: ignore
+    cfg_generate_feed: bool = Config.config().getboolean("actions", "GenerateFeed")
+    cfg_upload: bool = Config.config().getboolean("actions", "UploadFtp")
 
-    cfg_author_name: str = Config.config()["feed"]["AuthorName"]  # type: ignore
-    cfg_author_mail: str = Config.config()["feed"]["AuthorMail"]  # type: ignore
-    cfg_author_web: str = Config.config()["feed"]["AuthorWeb"]  # type: ignore
-    cfg_feed_url_prefix: str = Config.config()["feed"]["FeedUrlPrefix"]  # type: ignore
-    cfg_feed_url_alternate: str = Config.config()["feed"]["FeedUrlAlternate"]  # type: ignore
-    cfg_feed_id_prefix: str = Config.config()["feed"]["FeedIdPrefix"]  # type: ignore
+    cfg_author_name: str = Config.config()["feed"]["AuthorName"]
+    cfg_author_mail: str = Config.config()["feed"]["AuthorMail"]
+    cfg_author_web: str = Config.config()["feed"]["AuthorWeb"]
+    cfg_feed_url_prefix: str = Config.config()["feed"]["FeedUrlPrefix"]
+    cfg_feed_url_alternate: str = Config.config()["feed"]["FeedUrlAlternate"]
+    cfg_feed_id_prefix: str = Config.config()["feed"]["FeedIdPrefix"]
 
     if cfg_generate_feed:
         feed_file_base = Config.data_path() / Path(

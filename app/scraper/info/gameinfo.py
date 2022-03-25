@@ -23,76 +23,76 @@ class Gameinfo:
 
     @classmethod
     def from_json(cls, json_str: str) -> Gameinfo:
-        input = json.loads(json_str)  # type: ignore
+        input = json.loads(json_str)
 
-        result: Gameinfo = Gameinfo()  # type: ignore
+        result: Gameinfo = Gameinfo()
         try:
-            result.steam_id = input["steam_id"]  # type: ignore
+            result.steam_id = input["steam_id"]
         except KeyError:
             pass
 
         try:
-            result.idgb_id = input["idgb_id"]  # type: ignore
+            result.idgb_id = input["idgb_id"]
         except KeyError:
             pass
 
         try:
-            result.name = input["name"]  # type: ignore
+            result.name = input["name"]
         except KeyError:
             pass
 
         try:
-            result.short_description = input["short_description"]  # type: ignore
+            result.short_description = input["short_description"]
         except KeyError:
             pass
 
         try:
-            result.release_date = input["release_date"]  # type: ignore
+            result.release_date = input["release_date"]
         except KeyError:
             pass
 
         try:
-            result.recommended_price = input["recommended_price"]  # type: ignore
+            result.recommended_price = input["recommended_price"]
         except KeyError:
             pass
 
         try:
-            result.genres = input["genres"]  # type: ignore
+            result.genres = input["genres"]
         except KeyError:
             pass
 
         try:
-            result.recommendations = input["recommendations"]  # type: ignore
+            result.recommendations = input["recommendations"]
         except KeyError:
             pass
 
         try:
-            result.rating_percent = input["rating_percent"]  # type: ignore
+            result.rating_percent = input["rating_percent"]
         except KeyError:
             pass
 
         try:
-            result.rating_score = input["rating_score"]  # type: ignore
+            result.rating_score = input["rating_score"]
         except KeyError:
             pass
 
         try:
-            result.metacritic_score = input["metacritic_score"]  # type: ignore
+            result.metacritic_score = input["metacritic_score"]
         except KeyError:
             pass
 
         try:
-            result.metacritic_url = input["metacritic_url"]  # type: ignore
+            result.metacritic_url = input["metacritic_url"]
         except KeyError:
             pass
 
         try:
-            result.shop_url = input["shop_url"]  # type: ignore
+            result.shop_url = input["shop_url"]
         except KeyError:
             pass
 
         try:
-            result.image_url = input["image_url"]  # type: ignore
+            result.image_url = input["image_url"]
         except KeyError:
             pass
 
