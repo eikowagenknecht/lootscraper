@@ -5,11 +5,13 @@ profile = "black"
 [tool.mypy]
 
 python_version = "3.10"
+# ignore imports from 3rd party libraries where no stubs are available
+ignore_missing_imports = true
 warn_unused_configs = true
 disallow_untyped_calls = true
 disallow_untyped_defs = true
-disallow_any_unimported = true
-disallow_any_expr = true
+# disallow_any_unimported = true
+# disallow_any_expr = true
 disallow_any_generics = true
 
 [tool.pylint.master]

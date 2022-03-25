@@ -81,7 +81,7 @@ class AmazonScraper(Scraper):
                 EC.presence_of_element_located((By.XPATH, XPATH_WAIT))
             )
             sleep(1)  # Otherwise the first element sometimes is not correctly evaluated
-        except WebDriverException:  # type: ignore
+        except WebDriverException:
             logging.error(f"Page took longer than {MAX_WAIT_SECONDS} to load")
             return []
 
@@ -95,7 +95,7 @@ class AmazonScraper(Scraper):
 
         try:
             elements: list[WebElement] = driver.find_elements(By.XPATH, search_xpath)
-        except WebDriverException:  # type: ignore
+        except WebDriverException:
             logging.error("Root element not found, could not scrape!")
             return []
 
@@ -109,7 +109,7 @@ class AmazonScraper(Scraper):
             try:
                 title: WebElement = element.find_element(By.XPATH, SUBPATH_TITLE)
                 title_str = title.text
-            except WebDriverException:  # type: ignore
+            except WebDriverException:
                 # Nothing to do here, string stays empty
                 title_str = None
 
@@ -118,32 +118,32 @@ class AmazonScraper(Scraper):
                     By.XPATH, SUBPATH_PARAGRAPH
                 )
                 paragraph_str = paragraph.text
-            except WebDriverException:  # type: ignore
+            except WebDriverException:
                 # Nothing to do here, string stays empty
                 paragraph_str = None
 
             try:
                 enddate: WebElement = element.find_element(By.XPATH, SUBPATH_ENDDATE)
                 valid_to_str = enddate.text
-            except WebDriverException:  # type: ignore
+            except WebDriverException:
                 # Nothing to do here, string stays empty
                 valid_to_str = None
 
             try:
                 url: WebElement = element.find_element(By.XPATH, SUBPATH_LINK)
-                link: str | None = url.get_attribute("href")  # type: ignore
+                link: str | None = url.get_attribute("href")
                 if link is not None:
                     url_str = link
-            except WebDriverException:  # type: ignore
+            except WebDriverException:
                 # Nothing to do here, string stays empty
                 url_str = None
 
             try:
                 img_url: WebElement = element.find_element(By.XPATH, SUBPATH_IMG)
-                link: str | None = img_url.get_attribute("src")  # type: ignore
+                link: str | None = img_url.get_attribute("src")
                 if link is not None:
                     img_url_str = link
-            except WebDriverException:  # type: ignore
+            except WebDriverException:
                 # Nothing to do here, string stays empty
                 img_url_str = None
 

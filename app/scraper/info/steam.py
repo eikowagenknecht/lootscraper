@@ -1,4 +1,3 @@
-
 import difflib
 import json
 import logging
@@ -34,8 +33,8 @@ MAX_WAIT_SECONDS = 30  # Needs to be quite high in Docker for first run
 RESULT_MATCH_THRESHOLD = 0.8
 
 
-def get_possible_steam_appid(driver: WebDriver, searchstring: str) -> int:
-    encoded_searchstring = urllib.parse.quote_plus(searchstring, safe="")
+def get_possible_steam_appid(driver: WebDriver, search_string: str) -> int:
+    encoded_searchstring = urllib.parse.quote_plus(search_string, safe="")
 
     url = STEAM_SEARCH_URL + encoded_searchstring + STEAM_SEARCH_OPTIONS
     driver.get(url)
@@ -46,9 +45,9 @@ def get_possible_steam_appid(driver: WebDriver, searchstring: str) -> int:
             EC.presence_of_element_located((By.XPATH, STEAM_SEARCH_RESULTS_CONTAINER))
         )
 
-    except WebDriverException:  # type: ignore
+    except WebDriverException:
         logging.error(
-            f"Problem loading search results for {searchstring} after waiting {MAX_WAIT_SECONDS}s"
+            f"Problem loading search results for {search_string} after waiting {MAX_WAIT_SECONDS}s"
         )
         return 0
 
@@ -62,11 +61,11 @@ def get_possible_steam_appid(driver: WebDriver, searchstring: str) -> int:
         )
         for element in elements:
             try:
-                title_element = element.find_element(By.CLASS_NAME, "title")  # type: ignore
-                result: str = title_element.text  # type: ignore
+                title_element = element.find_element(By.CLASS_NAME, "title")
+                result: str = title_element.text
 
                 cleaned_searchstring = (
-                    searchstring.replace("™", "")
+                    search_string.replace("™", "")
                     .replace("©", "")
                     .replace("®", "")
                     .replace("  ", " ")
@@ -123,22 +122,22 @@ def get_possible_steam_appid(driver: WebDriver, searchstring: str) -> int:
                     logging.debug(
                         f"Ignoring {result} as it's score of {(score*100):.0f} % is too low"
                     )
-            except WebDriverException:  # type: ignore
+            except WebDriverException:
                 continue
             except ValueError:
                 continue
 
-    except WebDriverException:  # type: ignore
+    except WebDriverException:
         logging.info("No search results found for {title}!")
 
     # Don't use any in the highest difflib score is <0.8
     if best_appid is not None:
         logging.info(
-            f"Search for {searchstring} resulted in {best_title} ({best_appid}) as the best match with a score of {(best_score*100):.0f} %"
+            f"Search for {search_string} resulted in {best_title} ({best_appid}) as the best match with a score of {(best_score*100):.0f} %"
         )
         return best_appid
 
-    logging.info(f"Search for {searchstring} found no result")
+    logging.info(f"Search for {search_string} found no result")
 
     return 0
 
@@ -155,33 +154,33 @@ def get_steam_info(driver: WebDriver, title: str | int) -> Gameinfo | None:
 
     result = Gameinfo(appid)
 
-    with urllib.request.urlopen(STEAM_DETAILS_JSON + str(appid)) as url:  # type: ignore  # nosec
-        data = json.loads(url.read().decode())  # type: ignore
+    with urllib.request.urlopen(STEAM_DETAILS_JSON + str(appid)) as url:  # nosec
+        data = json.loads(url.read().decode())
         try:
-            result.name = data[str(appid)]["data"]["name"]  # type: ignore
+            result.name = data[str(appid)]["data"]["name"]
         except KeyError:
             pass
 
         try:
-            result.short_description = data[str(appid)]["data"]["short_description"]  # type: ignore
+            result.short_description = data[str(appid)]["data"]["short_description"]
         except KeyError:
             pass
 
         try:
             result.genres = []
-            for genre in data[str(appid)]["data"]["genres"]:  # type: ignore
-                result.genres.append(genre["description"])  # type: ignore
+            for genre in data[str(appid)]["data"]["genres"]:
+                result.genres.append(genre["description"])
         except KeyError:
             pass
 
         try:
-            result.release_date = data[str(appid)]["data"]["release_date"]["date"]  # type: ignore
+            result.release_date = data[str(appid)]["data"]["release_date"]["date"]
         except KeyError:
             pass
 
         try:
-            recommended_price_value: int = data[str(appid)]["data"]["price_overview"]["initial"]  # type: ignore
-            recommended_price_currency: str = data[str(appid)]["data"]["price_overview"]["currency"]  # type: ignore
+            recommended_price_value: int = data[str(appid)]["data"]["price_overview"]["initial"]
+            recommended_price_currency: str = data[str(appid)]["data"]["price_overview"]["currency"]
             result.recommended_price = (
                 f"{recommended_price_value / 100} {recommended_price_currency}"
             )
@@ -189,24 +188,24 @@ def get_steam_info(driver: WebDriver, title: str | int) -> Gameinfo | None:
             pass
 
         try:
-            result.recommendations = data[str(appid)]["data"]["recommendations"]["total"]  # type: ignore
+            result.recommendations = data[str(appid)]["data"]["recommendations"]["total"]
         except KeyError:
             pass
 
         try:
-            result.metacritic_score = data[str(appid)]["data"]["metacritic"]["score"]  # type: ignore
+            result.metacritic_score = data[str(appid)]["data"]["metacritic"]["score"]
         except KeyError:
             pass
 
         try:
-            result.metacritic_url = data[str(appid)]["data"]["metacritic"]["url"].replace(R"\/", "/")  # type: ignore
+            result.metacritic_url = data[str(appid)]["data"]["metacritic"]["url"].replace(R"\/", "/")
         except KeyError:
             pass
 
         try:
             # Prefer header image over first screenshot
-            result.image_url = data[str(appid)]["data"]["screenshots"][0]["path_full"].replace(R"\/", "/")  # type: ignore
-            result.image_url = data[str(appid)]["data"]["header_image"].replace(R"\/", "/")  # type: ignore
+            result.image_url = data[str(appid)]["data"]["screenshots"][0]["path_full"].replace(R"\/", "/")
+            result.image_url = data[str(appid)]["data"]["header_image"].replace(R"\/", "/")
         except KeyError:
             pass
 
@@ -229,7 +228,7 @@ def get_steam_info(driver: WebDriver, title: str | int) -> Gameinfo | None:
             EC.presence_of_element_located((By.XPATH, STEAM_DETAILS_LOADED))
         )
 
-    except WebDriverException:  # type: ignore
+    except WebDriverException:
         logging.error(
             f"Steam store page for {appid} didn't load after waiting for {MAX_WAIT_SECONDS}s"
         )
@@ -252,7 +251,7 @@ def get_steam_info(driver: WebDriver, title: str | int) -> Gameinfo | None:
                 EC.presence_of_element_located((By.XPATH, STEAM_DETAILS_REVIEW_SCORE))
             )
             logging.debug(f"Passed age verification for {appid}")
-        except WebDriverException:  # type: ignore
+        except WebDriverException:
             logging.error("Something went wrong trying to pass the age verification")
 
     try:
@@ -260,7 +259,7 @@ def get_steam_info(driver: WebDriver, title: str | int) -> Gameinfo | None:
         rating_str: str = element.get_attribute("data-tooltip-html")  # type: ignore
         result.rating_percent = int(rating_str.split("%")[0].strip())
 
-    except WebDriverException:  # type: ignore
+    except WebDriverException:
         logging.error(f"No Steam percentage found for {appid}!")
 
     except ValueError:
@@ -270,31 +269,31 @@ def get_steam_info(driver: WebDriver, title: str | int) -> Gameinfo | None:
         element2: WebElement = driver.find_element(
             By.XPATH, STEAM_DETAILS_REVIEW_SCORE_VALUE
         )
-        rating_str: str = element2.get_attribute("content")  # type: ignore
+        rating2_str: str = element2.get_attribute("content")  # type: ignore
         try:
-            result.rating_score = int(rating_str)
+            result.rating_score = int(rating2_str)
         except ValueError:
             pass
 
-    except WebDriverException:  # type: ignore
+    except WebDriverException:
         logging.error(f"No Steam rating found for {appid}!")
 
     except ValueError:
-        logging.error(f"Invalid Steam rating {rating_str} for {appid}!")
+        logging.error(f"Invalid Steam rating {rating2_str} for {appid}!")
 
     if result.recommended_price is None:
         try:
             element3: WebElement = driver.find_element(
                 By.XPATH, STEAM_PRICE_DISCOUNTED_ORIGINAL
             )
-            price_str: str = element3.text  # type: ignore
+            price_str: str = element3.text
             try:
                 price = float(price_str.replace("€", "").replace(",", ".").strip())
                 result.recommended_price = str(price) + " EUR"
             except ValueError:
                 pass
 
-        except WebDriverException:  # type: ignore
+        except WebDriverException:
             logging.debug(
                 f"No Steam discounted original price found on shop page for {appid}"
             )
@@ -302,17 +301,17 @@ def get_steam_info(driver: WebDriver, title: str | int) -> Gameinfo | None:
     if result.recommended_price is None:
         try:
             element4: WebElement = driver.find_element(By.XPATH, STEAM_PRICE_FULL)
-            price_str: str = element4.text.replace("€", "").strip()  # type: ignore
-            if price_str.lower() == "free to play":
+            price2_str: str = element4.text.replace("€", "").strip()
+            if price2_str.lower() == "free to play":
                 result.recommended_price = "Free"
             else:
                 try:
-                    price = float(price_str)
+                    price = float(price2_str)
                     result.recommended_price = str(price) + " EUR"
                 except ValueError:
                     pass
 
-        except WebDriverException:  # type: ignore
+        except WebDriverException:
             logging.debug(f"No Steam full price found on shop page for {appid}")
 
     if result.recommended_price is None:

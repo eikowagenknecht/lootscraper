@@ -50,7 +50,7 @@ def get_pagedriver() -> WebDriver:
 
     driver.execute_cdp_cmd(
         "Page.addScriptToEvaluateOnNewDocument",
-        {"source": js_to_inject},  # type: ignore
-    )  # type: ignore
+        {"source": js_to_inject},
+    )
 
     return driver

@@ -35,8 +35,8 @@ with open(INJECTION_FILE, "r", encoding="utf-8") as file:
 
 driver.execute_cdp_cmd(
     "Page.addScriptToEvaluateOnNewDocument",
-    {"source": js_to_inject},  # type: ignore
-)  # type: ignore
+    {"source": js_to_inject},
+)
 
 driver.get(
     "https://intoli.com/blog/not-possible-to-block-chrome-headless/chrome-headless-test.html"
