@@ -39,7 +39,7 @@ class Gameinfo:
     short_description: str | None = None
     release_date: str | None = None
     recommended_price: str | None = None
-    genre: str | None = None
+    genres: list[str] | None = None
 
     recommendations: int | None = None
     rating_percent: int | None = None
@@ -74,7 +74,7 @@ class Gameinfo:
             pass
 
         try:
-            result.genre = dictionary["genre"]  # type: ignore
+            result.genres = dictionary["genres"]  # type: ignore
         except KeyError:
             pass
 
@@ -199,7 +199,9 @@ def get_steam_info(driver: WebDriver, title: str) -> Gameinfo | None:
             pass
 
         try:
-            result.genre = data[str(appid)]["data"]["genres"][0]["description"]  # type: ignore
+            result.genres = []
+            for genre in data[str(appid)]["data"]["genres"]:  # type: ignore
+                result.genres.append(genre["description"])  # type: ignore
         except KeyError:
             pass
 
