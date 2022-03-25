@@ -284,14 +284,14 @@ def get_steam_info(driver: WebDriver, title: str | int) -> Gameinfo | None:
             pass
 
         try:
-            metacritic_url: str = data[str(appid)]["data"]["metacritic"]["url"]  # type: ignore
-            result.metacritic_url = metacritic_url.replace(R"\/", "/")
+            result.metacritic_url = data[str(appid)]["data"]["metacritic"]["url"].replace(R"\/", "/")  # type: ignore
         except KeyError:
             pass
 
         try:
-            image_url: str = data[str(appid)]["data"]["screenshots"][0]["path_full"]  # type: ignore
-            result.image_url = image_url.replace(R"\/", "/")
+            # Prefer header image over first screenshot
+            result.image_url = data[str(appid)]["data"]["screenshots"][0]["path_full"].replace(R"\/", "/")  # type: ignore
+            result.image_url = data[str(appid)]["data"]["header_image"].replace(R"\/", "/")  # type: ignore
         except KeyError:
             pass
 
