@@ -14,7 +14,9 @@ from app.configparser import Config
 from app.database import LootDatabase
 from app.feed import generate_feed
 from app.pagedriver import get_pagedriver
-from app.scraper.info.steam import get_steam_info
+from app.scraper.info.gameinfo import Gameinfo
+from app.scraper.info.igdb import get_igdb_details
+from app.scraper.info.steam import get_steam_details
 from app.scraper.loot.amazon_prime import AmazonScraper
 from app.scraper.loot.epic_games import EpicScraper
 from app.scraper.loot.steam import SteamScraper
@@ -157,9 +159,7 @@ def job() -> None:
 
                     # The enddate has been changed or it is a new offer, get information about it (if it's a game)
                     # and insert it into the database
-                    if scraper_offer.title:
-                        gameinfo = get_steam_info(webdriver, scraper_offer.title)
-                        scraper_offer.gameinfo = gameinfo
+                    add_game_info(webdriver, scraper_offer)
                     db.insert_offer(scraper_offer)
                     new_offers += 1
 
@@ -179,10 +179,8 @@ def job() -> None:
             for scraper_source in db_offers:
                 for scraper_type in db_offers[scraper_source]:
                     for db_offer in db_offers[scraper_source][scraper_type]:
-                        if db_offer.title:
-                            gameinfo = get_steam_info(webdriver, db_offer.title)
-                            db_offer.gameinfo = gameinfo
-                            db.update_offer(db_offer)
+                        add_game_info(webdriver, db_offer)
+                        db.update_offer(db_offer)
 
     logging.info(f"Found {new_offers} new offers")
 
@@ -256,6 +254,19 @@ def job() -> None:
 
     else:
         logging.info("Skipping feed generation, disabled")
+
+
+def add_game_info(webdriver: WebDriver, scraper_offer: LootOffer) -> None:
+    cfg_steam_info: bool = Config.config().getboolean("sources_info", "Steam")
+    cfg_igdb_info: bool = Config.config().getboolean("sources_info", "IGDB")
+
+    if scraper_offer.title and (cfg_steam_info or cfg_igdb_info):
+        gameinfo: Gameinfo | None = Gameinfo()
+        if cfg_igdb_info:
+            gameinfo = get_igdb_details(scraper_offer.title)
+        if cfg_steam_info:
+            gameinfo_steam = get_steam_details(webdriver, scraper_offer.title)
+            scraper_offer.gameinfo = Gameinfo.merge(gameinfo, gameinfo_steam)
 
 
 def log_new_offer(offer: LootOffer) -> None:

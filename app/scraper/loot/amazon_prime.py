@@ -131,7 +131,7 @@ class AmazonScraper(Scraper):
 
             try:
                 url: WebElement = element.find_element(By.XPATH, SUBPATH_LINK)
-                link: str | None = url.get_attribute("href")
+                link: str | None = url.get_attribute("href")  # type: ignore
                 if link is not None:
                     url_str = link
             except WebDriverException:
@@ -140,9 +140,9 @@ class AmazonScraper(Scraper):
 
             try:
                 img_url: WebElement = element.find_element(By.XPATH, SUBPATH_IMG)
-                link: str | None = img_url.get_attribute("src")
-                if link is not None:
-                    img_url_str = link
+                link2: str | None = img_url.get_attribute("src")  # type: ignore
+                if link2 is not None:
+                    img_url_str = link2
             except WebDriverException:
                 # Nothing to do here, string stays empty
                 img_url_str = None

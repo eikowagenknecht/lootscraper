@@ -3,6 +3,7 @@ import json
 import logging
 import urllib.parse
 import urllib.request
+from datetime import datetime, timezone
 
 from selenium.common.exceptions import WebDriverException
 from selenium.webdriver.chrome.webdriver import WebDriver
@@ -30,7 +31,7 @@ STEAM_PRICE_FULL = '(//div[contains(concat(" ", normalize-space(@class), " "), "
 STEAM_PRICE_DISCOUNTED_ORIGINAL = '(//div[contains(concat(" ", normalize-space(@class), " "), " game_area_purchase_game ")])[1]//div[contains(concat(" ", normalize-space(@class), " "), " game_purchase_action")]//div[contains(concat(" ", normalize-space(@class), " "), " discount_original_price")]'  # text=" 27,99€ "
 MAX_WAIT_SECONDS = 30  # Needs to be quite high in Docker for first run
 
-RESULT_MATCH_THRESHOLD = 0.8
+RESULT_MATCH_THRESHOLD = 0.85
 
 
 def get_possible_steam_appid(driver: WebDriver, search_string: str) -> int:
@@ -64,63 +65,18 @@ def get_possible_steam_appid(driver: WebDriver, search_string: str) -> int:
                 title_element = element.find_element(By.CLASS_NAME, "title")
                 result: str = title_element.text
 
-                cleaned_searchstring = (
-                    search_string.replace("™", "")
-                    .replace("©", "")
-                    .replace("®", "")
-                    .replace("  ", " ")
-                ).lower()
+                score = get_match_score(search_string, result)
 
-                cleaned_result = (
-                    result.replace("™", "")
-                    .replace("©", "")
-                    .replace("®", "")
-                    .replace("  ", " ")
-                ).lower()
-
-                score = difflib.SequenceMatcher(
-                    a=cleaned_searchstring, b=cleaned_result
-                ).ratio()
-
-                if score < RESULT_MATCH_THRESHOLD:
-                    # If it is no match, look for a partial match instead. Look at the first x or last x words from the
-                    # result because the result often includes additional text (e.g. a prepended "Tom Clancy's ...") or
-                    # an appended " - Ultimate edition". x is the number of words the search term has.
-
-                    words_result = cleaned_result.split(" ")
-                    words_searchstring = cleaned_searchstring.split(" ")
-
-                    score = max(
-                        score,
-                        difflib.SequenceMatcher(
-                            a=cleaned_searchstring,
-                            b=" ".join(words_result[: len(words_searchstring)]).lower(),
-                        ).ratio(),
-                    )
-                    score = max(
-                        score,
-                        difflib.SequenceMatcher(
-                            a=cleaned_searchstring,
-                            b=" ".join(
-                                words_result[-len(words_searchstring) :]
-                            ).lower(),
-                        ).ratio(),
-                    )
-                    pass
-
-                if score >= RESULT_MATCH_THRESHOLD:
+                if score >= RESULT_MATCH_THRESHOLD and score > best_score:
                     best_appid = int(element.get_attribute("data-ds-appid"))  # type: ignore
                     best_score = score
                     best_title = result
                     logging.debug(
-                        f"Found match {result} with a score of {(score*100):.0f} %"
+                        f"Steam: Found match {result} with a score of {(score*100):.0f} %"
                     )
-                    # Intentionally do not look for further matches if the first is good enough because most of the
-                    # times the first Steam result is an exact match.
-                    break
                 else:
                     logging.debug(
-                        f"Ignoring {result} as it's score of {(score*100):.0f} % is too low"
+                        f"Steam: Ignoring {result} as it's score of {(score*100):.0f} % is too low"
                     )
             except WebDriverException:
                 continue
@@ -128,22 +84,21 @@ def get_possible_steam_appid(driver: WebDriver, search_string: str) -> int:
                 continue
 
     except WebDriverException:
-        logging.info("No search results found for {title}!")
+        logging.info("Steam: No search results found for {title}!")
 
-    # Don't use any in the highest difflib score is <0.8
     if best_appid is not None:
         logging.info(
-            f"Search for {search_string} resulted in {best_title} ({best_appid}) as the best match with a score of {(best_score*100):.0f} %"
+            f"Steam: Search for {search_string} resulted in {best_title} ({best_appid}) as the best match with a score of {(best_score*100):.0f} %"
         )
         return best_appid
 
-    logging.info(f"Search for {search_string} found no result")
+    logging.info(f"Steam: Search for {search_string} found no result")
 
     return 0
 
 
-def get_steam_info(driver: WebDriver, title: str | int) -> Gameinfo | None:
-    logging.info(f"Reading Steam details for {title}")
+def get_steam_details(driver: WebDriver, title: str | int) -> Gameinfo | None:
+    logging.info(f"Steam: Reading details for {title}")
     if isinstance(title, int):
         appid = title
     else:
@@ -174,21 +129,29 @@ def get_steam_info(driver: WebDriver, title: str | int) -> Gameinfo | None:
             pass
 
         try:
-            result.release_date = data[str(appid)]["data"]["release_date"]["date"]
-        except KeyError:
+            date_string = data[str(appid)]["data"]["release_date"]["date"]
+            timestamp = datetime.strptime(date_string, "%d %b, %Y")
+            result.release_date = timestamp.replace(tzinfo=timezone.utc)
+        except (KeyError, ValueError):
             pass
 
         try:
-            recommended_price_value: int = data[str(appid)]["data"]["price_overview"]["initial"]
-            recommended_price_currency: str = data[str(appid)]["data"]["price_overview"]["currency"]
-            result.recommended_price = (
-                f"{recommended_price_value / 100} {recommended_price_currency}"
-            )
-        except KeyError:
+            # We do not save prices in any other currency than EUR (or free)
+            recommended_price_value: int = data[str(appid)]["data"]["price_overview"][
+                "initial"
+            ]
+            if (
+                recommended_price_value == 0
+                or data[str(appid)]["data"]["price_overview"]["currency"] == "EUR"
+            ):
+                result.recommended_price_eur = recommended_price_value / 100
+        except (KeyError, ValueError):
             pass
 
         try:
-            result.recommendations = data[str(appid)]["data"]["recommendations"]["total"]
+            result.steam_recommendations = data[str(appid)]["data"]["recommendations"][
+                "total"
+            ]
         except KeyError:
             pass
 
@@ -198,28 +161,26 @@ def get_steam_info(driver: WebDriver, title: str | int) -> Gameinfo | None:
             pass
 
         try:
-            result.metacritic_url = data[str(appid)]["data"]["metacritic"]["url"].replace(R"\/", "/")
+            result.metacritic_url = data[str(appid)]["data"]["metacritic"][
+                "url"
+            ].replace(R"\/", "/")
         except KeyError:
             pass
 
         try:
             # Prefer header image over first screenshot
-            result.image_url = data[str(appid)]["data"]["screenshots"][0]["path_full"].replace(R"\/", "/")
-            result.image_url = data[str(appid)]["data"]["header_image"].replace(R"\/", "/")
+            result.image_url = data[str(appid)]["data"]["screenshots"][0][
+                "path_full"
+            ].replace(R"\/", "/")
+            result.image_url = data[str(appid)]["data"]["header_image"].replace(
+                R"\/", "/"
+            )
         except KeyError:
             pass
 
-    # We do not save prices in any other currency than EUR
-    if (
-        result.recommended_price
-        and not result.recommended_price.endswith("EUR")
-        or result.recommended_price == "Free"
-    ):
-        result.recommended_price = None
+    logging.debug(f"Steam: Now also checking the store details page for app id {appid}")
 
-    logging.debug(f"Now also checking the Steam store details page for app id {appid}")
-
-    result.shop_url = STEAM_DETAILS_STORE + str(appid)
+    result.steam_url = STEAM_DETAILS_STORE + str(appid)
     driver.get(STEAM_DETAILS_STORE + str(appid))
 
     try:
@@ -257,7 +218,7 @@ def get_steam_info(driver: WebDriver, title: str | int) -> Gameinfo | None:
     try:
         element: WebElement = driver.find_element(By.XPATH, STEAM_DETAILS_REVIEW_SCORE)
         rating_str: str = element.get_attribute("data-tooltip-html")  # type: ignore
-        result.rating_percent = int(rating_str.split("%")[0].strip())
+        result.steam_percent = int(rating_str.split("%")[0].strip())
 
     except WebDriverException:
         logging.error(f"No Steam percentage found for {appid}!")
@@ -271,7 +232,7 @@ def get_steam_info(driver: WebDriver, title: str | int) -> Gameinfo | None:
         )
         rating2_str: str = element2.get_attribute("content")  # type: ignore
         try:
-            result.rating_score = int(rating2_str)
+            result.steam_score = int(rating2_str)
         except ValueError:
             pass
 
@@ -281,15 +242,16 @@ def get_steam_info(driver: WebDriver, title: str | int) -> Gameinfo | None:
     except ValueError:
         logging.error(f"Invalid Steam rating {rating2_str} for {appid}!")
 
-    if result.recommended_price is None:
+    if result.recommended_price_eur is None:
         try:
             element3: WebElement = driver.find_element(
                 By.XPATH, STEAM_PRICE_DISCOUNTED_ORIGINAL
             )
             price_str: str = element3.text
             try:
-                price = float(price_str.replace("€", "").replace(",", ".").strip())
-                result.recommended_price = str(price) + " EUR"
+                result.recommended_price_eur = float(
+                    price_str.replace("€", "").replace(",", ".").strip()
+                )
             except ValueError:
                 pass
 
@@ -298,23 +260,70 @@ def get_steam_info(driver: WebDriver, title: str | int) -> Gameinfo | None:
                 f"No Steam discounted original price found on shop page for {appid}"
             )
 
-    if result.recommended_price is None:
+    if result.recommended_price_eur is None:
         try:
             element4: WebElement = driver.find_element(By.XPATH, STEAM_PRICE_FULL)
             price2_str: str = element4.text.replace("€", "").strip()
-            if price2_str.lower() == "free to play":
-                result.recommended_price = "Free"
+            if "free" in price2_str.lower():
+                result.recommended_price_eur = 0
             else:
                 try:
-                    price = float(price2_str)
-                    result.recommended_price = str(price) + " EUR"
+                    result.recommended_price_eur = float(price2_str)
                 except ValueError:
                     pass
 
         except WebDriverException:
             logging.debug(f"No Steam full price found on shop page for {appid}")
 
-    if result.recommended_price is None:
+    if result.recommended_price_eur is None:
         logging.error(f"No Steam price found for {appid}")
 
     return result
+
+
+def get_match_score(search: str, result: str) -> float:
+    cleaned_search = (
+        search.replace("™", "")
+        .replace("©", "")
+        .replace("®", "")
+        .replace(":", "")
+        .replace("  ", " ")
+    ).lower()
+
+    cleaned_result = (
+        result.replace("™", "")
+        .replace("©", "")
+        .replace("®", "")
+        .replace(":", "")
+        .replace("  ", " ")
+    ).lower()
+
+    score = difflib.SequenceMatcher(a=cleaned_search, b=cleaned_result).ratio()
+
+    if score < RESULT_MATCH_THRESHOLD:
+        # If it is no match, look for a partial match instead. Look at the first x or last x words from the
+        # result because the result often includes additional text (e.g. a prepended "Tom Clancy's ...") or
+        # an appended " - Ultimate edition". x is the number of words the search term has.
+
+        words_result = cleaned_result.split(" ")
+        words_searchstring = cleaned_search.split(" ")
+
+        score = max(
+            score,
+            difflib.SequenceMatcher(
+                a=cleaned_search,
+                b=" ".join(words_result[: len(words_searchstring)]).lower(),
+            ).ratio(),
+        )
+        score = max(
+            score,
+            difflib.SequenceMatcher(
+                a=cleaned_search,
+                b=" ".join(words_result[-len(words_searchstring) :]).lower(),
+            ).ratio(),
+        )
+
+        # This score needed some help, there is a penalty for it
+        score -= 0.1
+
+    return score

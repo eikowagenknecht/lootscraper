@@ -101,7 +101,7 @@ def generate_feed(
                 content += "<p>About the game:</p>"
             content += "<ul>"
             if offer.gameinfo.name:
-                content += f'<li><b>Name:</b> <a href="{offer.gameinfo.shop_url}">{offer.gameinfo.name}</a></li>'
+                content += f'<li><b>Name:</b> <a href="{offer.gameinfo.steam_url}">{offer.gameinfo.name}</a></li>'
             if offer.gameinfo.short_description:
                 content += (
                     f"<li><b>Description:</b> {offer.gameinfo.short_description}</li>"
@@ -112,24 +112,24 @@ def generate_feed(
                 content += (
                     f"<li><b>Release date:</b> {offer.gameinfo.release_date}</li>"
                 )
-            if offer.gameinfo.recommended_price:
-                content += f"<li><b>Recommended price:</b> {offer.gameinfo.recommended_price}</li>"
+            if offer.gameinfo.recommended_price_eur:
+                content += f"<li><b>Recommended price:</b> {offer.gameinfo.recommended_price_eur}</li>"
             if offer.gameinfo.metacritic_score and offer.gameinfo.metacritic_url:
                 content += f'<li><b>Metacritic:</b> <a href="{offer.gameinfo.metacritic_url}">{offer.gameinfo.metacritic_score} %</a></li>'
             elif offer.gameinfo.metacritic_score:
                 content += (
                     f"<li><b>Metacritic:</b> {offer.gameinfo.metacritic_score}%</li>"
                 )
-            if offer.gameinfo.rating_percent:
+            if offer.gameinfo.steam_percent:
                 content += (
-                    f"<li><b>Steam rating:</b> {offer.gameinfo.rating_percent} %</li>"
+                    f"<li><b>Steam rating:</b> {offer.gameinfo.steam_percent} %</li>"
                 )
-            if offer.gameinfo.rating_score:
+            if offer.gameinfo.steam_score:
                 content += (
-                    f"<li><b>Steam score:</b> {offer.gameinfo.rating_score} / 10</li>"
+                    f"<li><b>Steam score:</b> {offer.gameinfo.steam_score} / 10</li>"
                 )
-            if offer.gameinfo.recommendations:
-                content += f"<li><b>Steam recommendations:</b> {offer.gameinfo.recommendations}</li>"
+            if offer.gameinfo.steam_recommendations:
+                content += f"<li><b>Steam recommendations:</b> {offer.gameinfo.steam_recommendations}</li>"
             content += "</ul>"
 
         content += f"<p><small>Source: {html.escape(offer.source.value)}, Seen first: {offer.seen_first.strftime(TIMESTAMP_LONG)}</small></p>"
