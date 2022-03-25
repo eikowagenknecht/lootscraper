@@ -39,9 +39,11 @@ class SteamScraper(Scraper):
         if options and not options[OfferType.GAME.name]:
             return {}
 
-        logging.info(f"Analyzing {ROOT_URL} for {OfferType.GAME.value} offers")
         driver.get(ROOT_URL)
+
         offers = {}
+
+        logging.info(f"Analyzing {ROOT_URL} for {OfferType.GAME.value} offers")
         offers[OfferType.GAME.name] = SteamScraper.read_offers_from_page(driver)
 
         return offers
