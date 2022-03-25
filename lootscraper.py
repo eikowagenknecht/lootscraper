@@ -78,9 +78,9 @@ def job() -> None:
         db.initialize_or_update()
         scraped_offers: dict[str, dict[str, list[LootOffer]]] = {}
 
-        cfg_amazon: bool = Config.config().getboolean("actions", "ScrapeAmazon")  # type: ignore
-        cfg_epic: bool = Config.config().getboolean("actions", "ScrapeEpic")  # type: ignore
-        cfg_steam: bool = Config.config().getboolean("actions", "ScrapeSteam")  # type: ignore
+        cfg_amazon: bool = Config.config().getboolean("sources_loot", "Amazon")  # type: ignore
+        cfg_epic: bool = Config.config().getboolean("sources_loot", "Epic")  # type: ignore
+        cfg_steam: bool = Config.config().getboolean("sources_loot", "Steam")  # type: ignore
 
         cfg_games: bool = Config.config().getboolean("actions", "ScrapeGames")  # type: ignore
         cfg_loot: bool = Config.config().getboolean("actions", "ScrapeLoot")  # type: ignore
@@ -134,7 +134,7 @@ def job() -> None:
                     # but update their "last seen" date instead
                     if id > 0:
                         scraper_offer.id = id
-                        if Config.config().getboolean("common", "ForceUpdate"):  # type: ignore
+                        if Config.config().getboolean("expert", "ForceUpdate"):  # type: ignore
                             db.update_offer(scraper_offer)
                         else:
                             db.touch_offer(scraper_offer)
@@ -175,7 +175,7 @@ def job() -> None:
         db_offers = db.read_offers()
 
         # Get Steam game information if ForceUpdate is set
-        if Config.config().getboolean("common", "ForceUpdate"):
+        if Config.config().getboolean("expert", "ForceUpdate"):
             for scraper_source in db_offers:
                 for scraper_type in db_offers[scraper_source]:
                     for db_offer in db_offers[scraper_source][scraper_type]:
