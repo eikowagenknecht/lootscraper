@@ -1,6 +1,7 @@
 import difflib
 import json
 import logging
+import re
 import urllib.parse
 import urllib.request
 from datetime import datetime, timezone
@@ -282,21 +283,12 @@ def get_steam_details(driver: WebDriver, title: str | int) -> Gameinfo | None:
 
 
 def get_match_score(search: str, result: str) -> float:
-    cleaned_search = (
-        search.replace("™", "")
-        .replace("©", "")
-        .replace("®", "")
-        .replace(":", "")
-        .replace("  ", " ")
-    ).lower()
+    # Only keep alphanimeric characters and condense spaces to one
+    cleaned_search = re.sub(r"[^a-zA-Z0-9]", "", search)
+    cleaned_search = re.sub(" +", " ", cleaned_search).lower()
 
-    cleaned_result = (
-        result.replace("™", "")
-        .replace("©", "")
-        .replace("®", "")
-        .replace(":", "")
-        .replace("  ", " ")
-    ).lower()
+    cleaned_result = re.sub(r"[^a-zA-Z0-9]", "", result)
+    cleaned_result = re.sub(" +", " ", cleaned_result).lower()
 
     score = difflib.SequenceMatcher(a=cleaned_search, b=cleaned_result).ratio()
 
