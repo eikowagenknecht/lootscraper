@@ -1,5 +1,4 @@
 # type: ignore
-import difflib
 import unittest
 
 from selenium.webdriver.chrome.webdriver import WebDriver
@@ -8,38 +7,22 @@ from app.pagedriver import get_pagedriver
 from app.scraper.info.gameinfo import Gameinfo
 from app.scraper.info.igdb import get_igdb_details, get_possible_igdb_id
 from app.scraper.info.steam import get_possible_steam_appid, get_steam_details
+from app.scraper.info.utils import get_match_score
 
 
 class TestUtils(unittest.TestCase):
     def test_similarity(self) -> None:
+        search = "Rainbow Six Siege"
         result = "Tom Clancy's Rainbow Six® Siege"
-        searchstring = "Rainbow Six Siege"
 
-        words_result = result.split(" ")
-        words_searchstring = searchstring.split(" ")
+        score = get_match_score(search, result)
+        self.assertEquals(score, 0.99)
 
-        score = difflib.SequenceMatcher(
-            a=searchstring.lower(), b=result.lower()
-        ).ratio()
-        threshold = 0.85
+        search = "Fall Guys"
+        result = "Fall Guy"
 
-        if score < threshold and len(words_result) != len(words_searchstring):
-            score = max(
-                score,
-                difflib.SequenceMatcher(
-                    a=searchstring.lower(),
-                    b=" ".join(words_result[: len(words_searchstring)]).lower(),
-                ).ratio(),
-            )
-            score = max(
-                score,
-                difflib.SequenceMatcher(
-                    a=searchstring.lower(),
-                    b=" ".join(words_result[-len(words_searchstring) :]).lower(),
-                ).ratio(),
-            )
-
-        self.assertGreater(score, 0.97)
+        score = get_match_score(search, result)
+        self.assertLess(score, 0.99)
 
     def test_pagedriver(self) -> None:
         driver = get_pagedriver()
