@@ -1,8 +1,8 @@
 from __future__ import annotations
-from copy import copy
-import dataclasses
 
+import dataclasses
 import json
+from copy import copy
 from dataclasses import dataclass
 from datetime import datetime
 
