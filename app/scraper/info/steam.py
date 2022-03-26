@@ -1,7 +1,5 @@
-import difflib
 import json
 import logging
-import re
 import urllib.parse
 import urllib.request
 from datetime import datetime, timezone
@@ -14,6 +12,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import Select, WebDriverWait
 
 from app.scraper.info.gameinfo import Gameinfo
+from app.scraper.info.utils import RESULT_MATCH_THRESHOLD, get_match_score
 
 STEAM_SEARCH_URL = "https://store.steampowered.com/search/?term="
 STEAM_SEARCH_OPTIONS = "&category1=998"  # Games only
@@ -31,8 +30,6 @@ STEAM_DETAILS_LOADED = '//div[contains(concat(" ", normalize-space(@class), " ")
 STEAM_PRICE_FULL = '(//div[contains(concat(" ", normalize-space(@class), " "), " game_area_purchase_game ")])[1]//div[contains(concat(" ", normalize-space(@class), " "), " game_purchase_action")]//div[contains(concat(" ", normalize-space(@class), " "), " game_purchase_price")]'  # text=" 27,99€ "
 STEAM_PRICE_DISCOUNTED_ORIGINAL = '(//div[contains(concat(" ", normalize-space(@class), " "), " game_area_purchase_game ")])[1]//div[contains(concat(" ", normalize-space(@class), " "), " game_purchase_action")]//div[contains(concat(" ", normalize-space(@class), " "), " discount_original_price")]'  # text=" 27,99€ "
 MAX_WAIT_SECONDS = 30  # Needs to be quite high in Docker for first run
-
-RESULT_MATCH_THRESHOLD = 0.85
 
 
 def get_possible_steam_appid(driver: WebDriver, search_string: str) -> int:
@@ -280,42 +277,3 @@ def get_steam_details(driver: WebDriver, title: str | int) -> Gameinfo | None:
         logging.error(f"No Steam price found for {appid}")
 
     return result
-
-
-def get_match_score(search: str, result: str) -> float:
-    # Only keep alphanimeric characters and condense spaces to one
-    cleaned_search = re.sub(r"[^a-zA-Z0-9]", "", search)
-    cleaned_search = re.sub(" +", " ", cleaned_search).lower()
-
-    cleaned_result = re.sub(r"[^a-zA-Z0-9]", "", result)
-    cleaned_result = re.sub(" +", " ", cleaned_result).lower()
-
-    score = difflib.SequenceMatcher(a=cleaned_search, b=cleaned_result).ratio()
-
-    if score < RESULT_MATCH_THRESHOLD:
-        # If it is no match, look for a partial match instead. Look at the first x or last x words from the
-        # result because the result often includes additional text (e.g. a prepended "Tom Clancy's ...") or
-        # an appended " - Ultimate edition". x is the number of words the search term has.
-
-        words_result = cleaned_result.split(" ")
-        words_searchstring = cleaned_search.split(" ")
-
-        score = max(
-            score,
-            difflib.SequenceMatcher(
-                a=cleaned_search,
-                b=" ".join(words_result[: len(words_searchstring)]).lower(),
-            ).ratio(),
-        )
-        score = max(
-            score,
-            difflib.SequenceMatcher(
-                a=cleaned_search,
-                b=" ".join(words_result[-len(words_searchstring) :]).lower(),
-            ).ratio(),
-        )
-
-        # This score needed some help, there is a penalty for it
-        score -= 0.1
-
-    return score

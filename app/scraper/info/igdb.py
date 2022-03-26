@@ -1,7 +1,5 @@
-import difflib
 import json
 import logging
-import re
 from datetime import datetime, timezone
 
 import requests
@@ -9,8 +7,7 @@ from igdb.wrapper import IGDBWrapper
 
 from app.configparser import Config
 from app.scraper.info.gameinfo import Gameinfo
-
-RESULT_MATCH_THRESHOLD = 0.85
+from app.scraper.info.utils import RESULT_MATCH_THRESHOLD, get_match_score
 
 
 def get_possible_igdb_id(search_string: str) -> int:
@@ -148,42 +145,3 @@ def get_igdb_wrapper() -> IGDBWrapper | None:
     wrapper = IGDBWrapper(client_id, access_token)
 
     return wrapper
-
-
-def get_match_score(search: str, result: str) -> float:
-    # Only keep alphanimeric characters and condense spaces to one
-    cleaned_search = re.sub(r"[^a-zA-Z0-9]", "", search)
-    cleaned_search = re.sub(" +", " ", cleaned_search).lower()
-
-    cleaned_result = re.sub(r"[^a-zA-Z0-9]", "", result)
-    cleaned_result = re.sub(" +", " ", cleaned_result).lower()
-
-    score = difflib.SequenceMatcher(a=cleaned_search, b=cleaned_result).ratio()
-
-    if score < RESULT_MATCH_THRESHOLD:
-        # If it is no match, look for a partial match instead. Look at the first x or last x words from the
-        # result because the result often includes additional text (e.g. a prepended "Tom Clancy's ...") or
-        # an appended " - Ultimate edition". x is the number of words the search term has.
-
-        words_result = cleaned_result.split(" ")
-        words_searchstring = cleaned_search.split(" ")
-
-        score = max(
-            score,
-            difflib.SequenceMatcher(
-                a=cleaned_search,
-                b=" ".join(words_result[: len(words_searchstring)]).lower(),
-            ).ratio(),
-        )
-        score = max(
-            score,
-            difflib.SequenceMatcher(
-                a=cleaned_search,
-                b=" ".join(words_result[-len(words_searchstring) :]).lower(),
-            ).ratio(),
-        )
-
-        # This score needed some help, there is a penalty for it
-        score -= 0.1
-
-    return score
