@@ -85,37 +85,41 @@ def generate_feed(
         content += "</p>"
         content += "<ul>"
         if offer.valid_from:
-            content += f"<li><b>Valid from:</b> {html.escape(offer.valid_from.strftime(TIMESTAMP_READABLE_WITH_HOUR))}</li>"
+            content += f"<li><b>Valid from:</b> {offer.valid_from.strftime(TIMESTAMP_READABLE_WITH_HOUR)}</li>"
         else:
-            content += f"<li><b>Valid from:</b> {html.escape(offer.seen_first.strftime(TIMESTAMP_READABLE_WITH_HOUR))}</li>"
+            content += f"<li><b>Valid from:</b> {offer.seen_first.strftime(TIMESTAMP_READABLE_WITH_HOUR)}</li>"
         if offer.valid_to:
-            content += f"<li><b>Valid to:</b> {html.escape(offer.valid_to.strftime(TIMESTAMP_READABLE_WITH_HOUR))}</li>"
-        if offer.publisher:
-            content += f"<li><b>Publisher:</b> {html.escape(offer.publisher)}</li>"
+            content += f"<li><b>Valid to:</b> {offer.valid_to.strftime(TIMESTAMP_READABLE_WITH_HOUR)}</li>"
         content += "</ul>"
         if offer.gameinfo:
             if offer.type == OfferType.LOOT:
-                content += "<p>The following information is about the game this loot probably belongs to:</p>"
+                content += "<p>About the game this loot probably belongs to:</p>"
             elif offer.type == OfferType.GAME:
                 # Previous text: The following information results from a search based on the offer name. It *can* be wrong sometimes:
                 content += "<p>About the game:</p>"
             content += "<ul>"
             if offer.gameinfo.name:
-                content += f'<li><b>Name:</b> <a href="{offer.gameinfo.steam_url}">{offer.gameinfo.name}</a></li>'
+                content += f"<li><b>Name:</b> {html.escape(offer.gameinfo.name)}</li>"
+
+            # TODO: Add more game info
+            # offer.gameinfo.igdb_meta_ratings
+            # offer.gameinfo.igdb_meta_score
+            # offer.gameinfo.igdb_url
+            # offer.gameinfo.igdb_user_ratings
+            # offer.gameinfo.igdb_user_score
+
+            if offer.gameinfo.steam_url:
+                content += f'<li><b>Links:</b> <a href="{html.escape(offer.gameinfo.steam_url)}">Steam shop</a></li>'
             if offer.gameinfo.short_description:
-                content += (
-                    f"<li><b>Description:</b> {offer.gameinfo.short_description}</li>"
-                )
+                content += f"<li><b>Description:</b> {html.escape(offer.gameinfo.short_description)}</li>"
             if offer.gameinfo.genres:
-                content += f'<li><b>Genres:</b> {", ".join(offer.gameinfo.genres)}</li>'
+                content += f'<li><b>Genres:</b> {html.escape(", ".join(offer.gameinfo.genres))}</li>'
             if offer.gameinfo.release_date:
-                content += (
-                    f"<li><b>Release date:</b> {offer.gameinfo.release_date}</li>"
-                )
+                content += f"<li><b>Release date:</b> {html.escape(offer.gameinfo.release_date.strftime(TIMESTAMP_READABLE_WITH_HOUR))}</li>"
             if offer.gameinfo.recommended_price_eur:
-                content += f"<li><b>Recommended price:</b> {offer.gameinfo.recommended_price_eur}</li>"
+                content += f"<li><b>Recommended price:</b> {html.escape(offer.gameinfo.recommended_price_eur)} EUR</li>"
             if offer.gameinfo.metacritic_score and offer.gameinfo.metacritic_url:
-                content += f'<li><b>Metacritic:</b> <a href="{offer.gameinfo.metacritic_url}">{offer.gameinfo.metacritic_score} %</a></li>'
+                content += f'<li><b>Metacritic:</b> <a href="{html.escape(offer.gameinfo.metacritic_url)}">{offer.gameinfo.metacritic_score} %</a></li>'
             elif offer.gameinfo.metacritic_score:
                 content += (
                     f"<li><b>Metacritic:</b> {offer.gameinfo.metacritic_score}%</li>"
