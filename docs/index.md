@@ -1,37 +1,62 @@
-## Welcome to GitHub Pages
+## LootScraper
 
-You can use the [editor on GitHub](https://github.com/eikowagenknecht/lootscraper/edit/main/docs/index.md) to maintain and preview the content for your website in Markdown files.
+You enjoy getting games for free but you *don’t* enjoy having to keep track of the various sources (Amazon Prime, Epic Games, Steam, ...) for free offers? Also your F5 key starts to look a bit worn out? Then this is for you!
 
-Whenever you commit to this repository, GitHub Pages will run [Jekyll](https://jekyllrb.com/) to rebuild the pages in your site, from the content in your Markdown files.
+This Python (3.10+) application uses Selenium to automatically visit sites with free gaming related offers (currently Amazon Prime, Epic Games and Steam are supported, more will follow) and then neatly puts the gathered information into RSS feeds. So now you can track the offers using your favorite news reader like Feedly instead of manually visiting the sites.
 
-### Markdown
+## Usage
 
-Markdown is a lightweight and easy-to-use syntax for styling your writing. It includes conventions for
+You can either run this script locally on your computer or in any environment capable of running a Docker container.
 
-```markdown
-Syntax highlighted code block
+Just want the feeds? Sure. You can use the links below. They are updated every 20 minutes and contain offers for Amazon Prime (games and ingame loot), Epic Games (games only) and Steam (games only). Currently the following feeds are available:
 
-# Header 1
-## Header 2
-### Header 3
+- <https://feed.phenx.de/lootscraper.xml>: Everything
+- <https://feed.phenx.de/lootscraper_epic_game.xml>: Epic games only
+- <https://feed.phenx.de/lootscraper_amazon_game.xml>: Amazon Prime games only
+- <https://feed.phenx.de/lootscraper_amazon_loot.xml>: Amazon Prime ingame loot only
+- <https://feed.phenx.de/lootscraper_steam_game.xml>: Steam games only
 
-- Bulleted
-- List
+This is what it currently looks like in Feedly:
 
-1. Numbered
-2. List
+![image](https://user-images.githubusercontent.com/1475672/160145960-248c5cbf-3db1-4a64-ac8c-676b1ffb57b9.png)
 
-**Bold** and _Italic_ and `Code` text
+If you want to get the offers by email instead, you can use free services like <https://blogtrottr.com/> or <https://feedsub.com/>.
 
-[Link](url) and ![Image](src)
-```
+## State
 
-For more details see [Basic writing and formatting syntax](https://docs.github.com/en/github/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax).
+This project is still in ongoing development, so expect a few rough edges if you try to run it yourself. If you encounter any problems feel free to open an issue here and I'll try to help.
 
-### Jekyll Themes
+I have quite a few features on my mind that I'd like to implement. I also plan to extend this to more sources for free offers. All of this is tracked in the Github issues.
 
-Your Pages site will use the layout and styles from the Jekyll theme you have selected in your [repository settings](https://github.com/eikowagenknecht/lootscraper/settings/pages). The name of this theme is saved in the Jekyll `_config.yml` configuration file.
+### Settings
 
-### Support or Contact
+On the first startup, a default configuration file will be created in `./data/config.ini`. You can edit this file to change the settings (e.g. the sites to visit and the actions to perform).
 
-Having trouble with Pages? Check out our [documentation](https://docs.github.com/categories/github-pages-basics/) or [contact support](https://support.github.com/contact) and we’ll help you sort it out.
+## Howto
+
+### Run locally
+
+Needs an installed Python 3.10+ environment.
+
+- Download repository
+- Create virtual environment (`python -m venv .venv`)
+- Activate virtual environment (`./.venv/Scripts/Activate`)
+- Install the required packages (`pip install -r requirements.txt`)
+- Run (`python ./lootscraper.py`)
+
+### Build and run Docker container
+
+Docker needs to be installed first of course. If you want to skip the build step, you can use <https://hub.docker.com/r/eikowagenknecht/lootscraper> as the image. Use the "main" tag to get the latest build from this repository.
+
+- Download repository
+- In terminal go to directory
+- First run:
+  - Build: `docker build . -t eikowagenknecht/lootscraper:main`
+  - Start: `docker run --detach --volume /your/local/path:/data --name lootscraper eikowagenknecht/lootscraper:main`
+- Update:
+  - Stop: `docker stop lootscraper`
+  - Remove: `docker container rm lootscraper`
+  - Build without cache: `docker build . --no-cache -t eikowagenknecht/lootscraper:main`
+  - Start: `docker run --detach --volume /your/local/path:/data --name lootscraper eikowagenknecht/lootscraper:main`
+- Debug: `docker run -it --entrypoint /bin/bash --volume /your/local/path:/data --name lootscraper_debug eikowagenknecht/lootscraper:main`
+- To stop, run `docker stop lootscraper`
