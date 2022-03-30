@@ -116,7 +116,7 @@ def generate_feed(
             if offer.gameinfo.release_date:
                 content += f"<li><b>Release date:</b> {html.escape(offer.gameinfo.release_date.strftime(TIMESTAMP_READABLE_WITH_HOUR))}</li>"
             if offer.gameinfo.recommended_price_eur:
-                content += f"<li><b>Recommended price:</b> {html.escape(offer.gameinfo.recommended_price_eur)} EUR</li>"
+                content += f"<li><b>Recommended price:</b> {offer.gameinfo.recommended_price_eur} EUR</li>"
 
             ratings = []
             if offer.gameinfo.metacritic_score and offer.gameinfo.metacritic_url:
