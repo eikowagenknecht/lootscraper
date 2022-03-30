@@ -6,7 +6,7 @@ from app.scraper.info.gameinfo import Gameinfo
 
 TIMESTAMP_SHORT = "%Y-%m-%d"
 TIMESTAMP_LONG = "%Y-%m-%d %H:%M:%S"
-TIMESTAMP_READABLE_WITH_HOUR = "%a, %d %b %H:%M (UTC)"
+TIMESTAMP_READABLE_WITH_HOUR = "%Y-%m-%d - %H:%M (UTC)"
 
 
 class OfferType(Enum):

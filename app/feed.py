@@ -6,6 +6,7 @@ from pathlib import Path
 from feedgen.feed import FeedGenerator, FeedEntry
 
 from .common import (
+    TIMESTAMP_SHORT,
     TIMESTAMP_LONG,
     TIMESTAMP_READABLE_WITH_HOUR,
     LootOffer,
@@ -26,9 +27,11 @@ def generate_feed(
     source: Source = None,
     type: OfferType = None,
 ) -> None:
-    """Generates a feed using the ATOM standard, see
+    """
+    Generates a feed using the ATOM standard, see
     http://www.atomenabled.org/developers/syndication/#requiredFeedElements for
-    details."""
+    details.
+    """
 
     if len(offers) == 0:
         return
@@ -79,74 +82,74 @@ def generate_feed(
             content += f'<img src="{html.escape(offer.img_url)}" />'
         elif offer.gameinfo and offer.gameinfo.image_url:
             content += f'<img src="{html.escape(offer.gameinfo.image_url)}" />'
-        content += f"<p>{offer.type.value} found."
-        if offer.url:
-            content += f' Claim it on <a href="{html.escape(offer.url)}">{html.escape(offer.source.value)}</a>.'
-        content += "</p>"
         content += "<ul>"
-        if offer.valid_from:
-            content += f"<li><b>Valid from:</b> {offer.valid_from.strftime(TIMESTAMP_READABLE_WITH_HOUR)}</li>"
-        else:
-            content += f"<li><b>Valid from:</b> {offer.seen_first.strftime(TIMESTAMP_READABLE_WITH_HOUR)}</li>"
+        valid_from = (
+            offer.valid_from.strftime(TIMESTAMP_READABLE_WITH_HOUR)
+            if offer.valid_from
+            else offer.seen_first.strftime(TIMESTAMP_READABLE_WITH_HOUR)
+        )
+        content += f"<li><b>Offer valid from:</b> {valid_from}</li>"
         if offer.valid_to:
-            content += f"<li><b>Valid to:</b> {offer.valid_to.strftime(TIMESTAMP_READABLE_WITH_HOUR)}</li>"
+            content += f"<li><b>Offer valid to:</b> {offer.valid_to.strftime(TIMESTAMP_READABLE_WITH_HOUR)}</li>"
         content += "</ul>"
+        if offer.url:
+            content += f'<p>Claim it now on <a href="{html.escape(offer.url)}">{html.escape(offer.source.value)}</a>.</p>'
         if offer.gameinfo:
-            if offer.type == OfferType.GAME:
-                content += f"<p>About {html.escape(offer.gameinfo.name)}:</p>"
-            elif offer.type == OfferType.LOOT:
-                content += f"<p>This loot probably belongs to {html.escape(offer.gameinfo.name)}:</p>"
+            content += (
+                f"<p>About the game (<b>{html.escape(offer.gameinfo.name)}</b>*):</p>"
+            )
             content += "<ul>"
-            links = []
-            if offer.gameinfo.steam_url:
-                links.append(
-                    f'<a href="{html.escape(offer.gameinfo.steam_url)}">Steam shop</a>'
-                )
-            if offer.gameinfo.igdb_url:
-                links.append(
-                    f'<a href="{html.escape(offer.gameinfo.igdb_url)}">IGDB</a>'
-                )
-            if len(links) > 0:
-                content += f"<li><b>Links:</b> {' / '.join(links)}</li>"
-
-            if offer.gameinfo.short_description:
-                content += f"<li><b>Description:</b> {html.escape(offer.gameinfo.short_description)}</li>"
-            if offer.gameinfo.genres:
-                content += f'<li><b>Genres:</b> {html.escape(", ".join(offer.gameinfo.genres))}</li>'
-            if offer.gameinfo.release_date:
-                content += f"<li><b>Release date:</b> {html.escape(offer.gameinfo.release_date.strftime(TIMESTAMP_READABLE_WITH_HOUR))}</li>"
-            if offer.gameinfo.recommended_price_eur:
-                content += f"<li><b>Recommended price:</b> {offer.gameinfo.recommended_price_eur} EUR</li>"
 
             ratings = []
-            if offer.gameinfo.metacritic_score and offer.gameinfo.metacritic_url:
-                ratings.append(
-                    f'<a href="{html.escape(offer.gameinfo.metacritic_url)}">Metacritic {offer.gameinfo.metacritic_score} %</a>'
-                )
-            elif offer.gameinfo.metacritic_score:
-                ratings.append(f"Metacritic {offer.gameinfo.metacritic_score} %")
+            if offer.gameinfo.metacritic_score:
+                text = f"Metacritic {offer.gameinfo.metacritic_score} %"
+                if offer.gameinfo.metacritic_url:
+                    text = f'<a href="{html.escape(offer.gameinfo.metacritic_url)}">{text}</a>'
+                ratings.append(text)
+
             if offer.gameinfo.igdb_meta_ratings and offer.gameinfo.igdb_meta_score:
-                ratings.append(
-                    f"IGDB Meta {offer.gameinfo.igdb_meta_score} % ({offer.gameinfo.igdb_meta_ratings} sources)"
-                )
+                text = f"IGDB Meta {offer.gameinfo.igdb_meta_score} % ({offer.gameinfo.igdb_meta_ratings} sources)"
+                if offer.gameinfo.igdb_url:
+                    text = (
+                        f'<a href="{html.escape(offer.gameinfo.igdb_url)}">{text}</a>'
+                    )
+                ratings.append(text)
             if offer.gameinfo.igdb_user_ratings and offer.gameinfo.igdb_user_score:
-                ratings.append(
-                    f"IGDB User {offer.gameinfo.igdb_user_score} % ({offer.gameinfo.igdb_user_ratings} sources)"
-                )
+                text = f"IGDB User {offer.gameinfo.igdb_user_score} % ({offer.gameinfo.igdb_user_ratings} sources)"
+                if offer.gameinfo.igdb_url:
+                    text = (
+                        f'<a href="{html.escape(offer.gameinfo.igdb_url)}">{text}</a>'
+                    )
+                ratings.append(text)
             if (
                 offer.gameinfo.steam_percent
                 and offer.gameinfo.steam_score
                 and offer.gameinfo.steam_recommendations
             ):
-                ratings.append(
-                    f"Steam {offer.gameinfo.steam_percent} % ({offer.gameinfo.steam_score}/10, {offer.gameinfo.steam_recommendations} recommendations)"
-                )
+                text = f"Steam {offer.gameinfo.steam_percent} % ({offer.gameinfo.steam_score}/10, {offer.gameinfo.steam_recommendations} recommendations)"
+
+                if offer.gameinfo.steam_url:
+                    text = (
+                        f'<a href="{html.escape(offer.gameinfo.steam_url)}">{text}</a>'
+                    )
+
+                ratings.append(text)
             if len(ratings) > 0:
                 content += f"<li><b>Ratings:</b> {' / '.join(ratings)}</li>"
 
+            if offer.gameinfo.release_date:
+                content += f"<li><b>Release date:</b> {html.escape(offer.gameinfo.release_date.strftime(TIMESTAMP_SHORT))}</li>"
+            if offer.gameinfo.recommended_price_eur:
+                content += f"<li><b>Recommended price (Steam):</b> {offer.gameinfo.recommended_price_eur} EUR</li>"
+            if offer.gameinfo.short_description:
+                content += f"<li><b>Description:</b> {html.escape(offer.gameinfo.short_description)}</li>"
+            if offer.gameinfo.genres:
+                content += f'<li><b>Genres:</b> {html.escape(", ".join(offer.gameinfo.genres))}</li>'
+
             content += "</ul>"
 
-        content += f"<p><small>Source: {html.escape(offer.source.value)}, Seen first: {offer.seen_first.strftime(TIMESTAMP_LONG)}</small></p>"
+        content += "<p>* Any information about the offer is automatically grabbed and may in rare cases not match the correct game.</p>"
+        content += f'<p><small>Source: {html.escape(offer.source.value)}, Seen first: {offer.seen_first.strftime(TIMESTAMP_LONG)}, Generated by <a href="https://github.com/eikowagenknecht/lootscraper">LootScraper</a></small></p>'
         feed_entry.content(content, type="xhtml")
         # - Link
         feed_entry.link(rel="alternate", href=offer.url)
