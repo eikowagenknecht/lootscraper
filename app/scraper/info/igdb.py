@@ -104,8 +104,8 @@ def get_igdb_details(search_string: str) -> Gameinfo | None:
         pass
 
     try:
-        result.igdb_user_score = response[0]["rating"]
-    except KeyError:
+        result.igdb_user_score = int(response[0]["rating"])
+    except (KeyError, ValueError):
         pass
 
     try:
@@ -114,8 +114,8 @@ def get_igdb_details(search_string: str) -> Gameinfo | None:
         pass
 
     try:
-        result.igdb_meta_score = response[0]["aggregated_rating"]
-    except KeyError:
+        result.igdb_meta_score = int(response[0]["aggregated_rating"])
+    except (KeyError, ValueError):
         pass
 
     try:

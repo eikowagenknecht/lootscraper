@@ -5,6 +5,7 @@ import json
 from copy import copy
 from dataclasses import dataclass
 from datetime import datetime
+from typing import Any
 
 
 @dataclass
@@ -48,12 +49,16 @@ class Gameinfo:
 
     def to_json(self) -> str:
         if self.release_date is None:
-            return json.dumps(dataclasses.asdict(self))
+            res_dict = clean_nones(dataclasses.asdict(self))
+            res_json = json.dumps(res_dict)
+            return res_json
 
         dumpcopy = copy(self)
         dumpcopy.release_date = self.release_date.isoformat()  # type: ignore
 
-        return json.dumps(dataclasses.asdict(dumpcopy))
+        res_dict = clean_nones(dataclasses.asdict(dumpcopy))
+        res_json = json.dumps(res_dict)
+        return res_json
 
     @classmethod
     def from_json(cls, json_str: str) -> Gameinfo:
@@ -86,7 +91,7 @@ class Gameinfo:
             pass
 
         try:
-            result.recommended_price_eur = input["recommended_price"]
+            result.recommended_price_eur = input["recommended_price_eur"]
         except KeyError:
             pass
 
@@ -111,6 +116,31 @@ class Gameinfo:
             pass
 
         try:
+            result.igdb_user_score = input["igdb_user_score"]
+        except KeyError:
+            pass
+
+        try:
+            result.igdb_user_ratings = input["igdb_user_ratings"]
+        except KeyError:
+            pass
+
+        try:
+            result.igdb_meta_score = input["igdb_meta_score"]
+        except KeyError:
+            pass
+
+        try:
+            result.igdb_meta_ratings = input["igdb_meta_ratings"]
+        except KeyError:
+            pass
+
+        try:
+            result.igdb_url = input["igdb_url"]
+        except KeyError:
+            pass
+
+        try:
             result.metacritic_score = input["metacritic_score"]
         except KeyError:
             pass
@@ -130,9 +160,17 @@ class Gameinfo:
         except KeyError:
             pass
 
-        try:
-            result.igdb_url = input["igdb_url"]
-        except KeyError:
-            pass
-
         return result
+
+
+def clean_nones(value: dict[str, Any]) -> dict[str, Any]:
+    """
+    Recursively remove all None values from dictionaries and lists, and returns
+    the result as a new dictionary or list.
+    """
+    if isinstance(value, list):
+        return [clean_nones(x) for x in value if x is not None]
+    elif isinstance(value, dict):
+        return {key: clean_nones(val) for key, val in value.items() if val is not None}
+    else:
+        return value
