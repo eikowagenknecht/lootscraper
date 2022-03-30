@@ -53,7 +53,12 @@ def main() -> None:
     run = 1
     while not exit.is_set():
         logging.info(f"Starting Run # {run}")
-        job()
+
+        try:
+            job()
+        except Exception as e:
+            # Something unexpected occurred, log it and continue with the next run as usual
+            logging.exception(e)
 
         time_between_runs = int(Config.config()["common"]["WaitBetweenRuns"])
         if time_between_runs == 0:
