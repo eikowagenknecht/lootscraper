@@ -22,7 +22,7 @@ If you want everything in one feed, use [this link](https://feed.phenx.de/lootsc
 
 This is what it currently looks like in Feedly:
 
-![image](https://user-images.githubusercontent.com/1475672/160145960-248c5cbf-3db1-4a64-ac8c-676b1ffb57b9.png)
+![image](https://user-images.githubusercontent.com/1475672/161056100-2fcf005f-19a9-4279-a2d3-5a90855426ff.png)
 
 ## State
 
