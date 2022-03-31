@@ -1,5 +1,5 @@
-import re
 import difflib
+import re
 
 RESULT_MATCH_THRESHOLD = 0.85
 

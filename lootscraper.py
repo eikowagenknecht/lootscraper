@@ -19,6 +19,7 @@ from app.scraper.info.igdb import get_igdb_details
 from app.scraper.info.steam import get_steam_details
 from app.scraper.loot.amazon_prime import AmazonScraper
 from app.scraper.loot.epic_games import EpicScraper
+from app.scraper.loot.gog import GogScraper
 from app.scraper.loot.steam import SteamScraper
 from app.upload import upload_to_server
 
@@ -88,6 +89,7 @@ def job() -> None:
         cfg_amazon: bool = Config.config().getboolean("sources_loot", "Amazon")
         cfg_epic: bool = Config.config().getboolean("sources_loot", "Epic")
         cfg_steam: bool = Config.config().getboolean("sources_loot", "Steam")
+        cfg_gog: bool = Config.config().getboolean("sources_loot", "Gog")
 
         cfg_games: bool = Config.config().getboolean("actions", "ScrapeGames")
         cfg_loot: bool = Config.config().getboolean("actions", "ScrapeLoot")
@@ -116,6 +118,13 @@ def job() -> None:
             )
         else:
             logging.info(f"Skipping {Source.STEAM.value}")
+
+        if cfg_gog:
+            scraped_offers[Source.GOG.name] = GogScraper.scrape(
+                webdriver, cfg_what_to_scrape
+            )
+        else:
+            logging.info(f"Skipping {Source.GOG.value}")
 
         # Check which offers are new and which are updated, then act accordingly:
         # - Offers that are neither new nor updated just get a new date

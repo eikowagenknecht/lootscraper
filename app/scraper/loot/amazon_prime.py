@@ -23,10 +23,10 @@ XPATH_LOOT = (
 XPATH_GAMES = (
     '//div[@data-a-target="offer-list-FGWP_FULL"]//div[@data-a-target="Offer"]'
 )
-SUBPATH_TITLE = './/div[contains(concat(" ", normalize-space(@class), " "), " offer__body__titles")]/h3'
-SUBPATH_PARAGRAPH = './/div[contains(concat(" ", normalize-space(@class), " "), " offer__body__titles")]/p'
+SUBPATH_TITLE = './/div[contains(concat(" ", normalize-space(@class), " "), " offer__body__titles ")]/h3'
+SUBPATH_PARAGRAPH = './/div[contains(concat(" ", normalize-space(@class), " "), " offer__body__titles ")]/p'
 SUBPATH_ENDDATE = (
-    './/div[contains(concat(" ", normalize-space(@class), " "), " claim-info")]//p/span'
+    './/div[contains(concat(" ", normalize-space(@class), " "), " claim-info ")]//p/span'
 )
 SUBPATH_LINK = './/a[@data-a-target="learn-more-card"]'
 SUBPATH_IMG = './/img[@class="tw-image"]'
