@@ -12,19 +12,17 @@ This Python (3.10+) application uses Selenium to automatically visit sites with 
 
 You can either run this script locally on your computer or in any environment capable of running a Docker container.
 
-Just want the feeds? Sure. You can use the links below. They are updated every 20 minutes and contain offers for Amazon Prime (games and ingame loot), Epic Games (games only) and Steam (games only). Currently the following feeds are available:
+Just want the feeds? Sure. You can use the links below. They are updated every 20 minutes.
+- Amazon Prime ([games](https://feed.phenx.de/lootscraper_amazon_game.xml) and [ingame loot](https://feed.phenx.de/lootscraper_amazon_loot.xml))
+- [Epic Games (games only)](https://feed.phenx.de/lootscraper_epic_game.xml)
+- [Gog (games only)](https://feed.phenx.de/lootscraper_gog_game.xml)
+- [Steam (games only)](https://feed.phenx.de/lootscraper_steam_game.xml)
 
-- <https://feed.phenx.de/lootscraper.xml>: Everything
-- <https://feed.phenx.de/lootscraper_epic_game.xml>: Epic games only
-- <https://feed.phenx.de/lootscraper_amazon_game.xml>: Amazon Prime games only
-- <https://feed.phenx.de/lootscraper_amazon_loot.xml>: Amazon Prime ingame loot only
-- <https://feed.phenx.de/lootscraper_steam_game.xml>: Steam games only
+If you want everything in one feed, use [this link](https://feed.phenx.de/lootscraper.xml). If you want to get the offers by email instead, you can use free services like <https://blogtrottr.com/> or <https://feedsub.com/> to convert from RSS to email.
 
 This is what it currently looks like in Feedly:
 
 ![image](https://user-images.githubusercontent.com/1475672/160145960-248c5cbf-3db1-4a64-ac8c-676b1ffb57b9.png)
-
-If you want to get the offers by email instead, you can use free services like <https://blogtrottr.com/> or <https://feedsub.com/>.
 
 ## State
 
