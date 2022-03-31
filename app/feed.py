@@ -3,12 +3,12 @@ import html
 from datetime import datetime
 from pathlib import Path
 
-from feedgen.feed import FeedGenerator, FeedEntry
+from feedgen.feed import FeedEntry, FeedGenerator
 
 from .common import (
-    TIMESTAMP_SHORT,
     TIMESTAMP_LONG,
     TIMESTAMP_READABLE_WITH_HOUR,
+    TIMESTAMP_SHORT,
     LootOffer,
     OfferType,
     Source,
