@@ -17,7 +17,7 @@ CURRENT_DB_VERSION = 0
 
 class LootDatabase:
     def __init__(self) -> None:
-        path = Config.data_path() / Path(Config.config()["common"]["DatabaseFile"])
+        path = Config.data_path() / Path(Config.get().database_file)
 
         self.connection = sqlite3.connect(path)
         self.cursor = self.connection.cursor()

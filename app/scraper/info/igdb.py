@@ -132,8 +132,8 @@ def get_igdb_details(search_string: str) -> Gameinfo | None:
 
 # TODO: Only use one connection, rate limit to < 4 per second
 def get_igdb_wrapper() -> IGDBWrapper | None:
-    client_id = Config.config()["igdb"]["ClientId"]
-    client_secret = Config.config()["igdb"]["ClientSecret"]
+    client_id = Config.get().igdb_client_id
+    client_secret = Config.get().igdb_client_secret
 
     r = requests.post(
         f"https://id.twitch.tv/oauth2/token?client_id={client_id}&client_secret={client_secret}&grant_type=client_credentials"
