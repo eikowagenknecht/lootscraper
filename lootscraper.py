@@ -26,18 +26,28 @@ from app.upload import upload_to_server
 exit = Event()
 
 
+EXAMPLE_CONFIG_FILE = "config.default.ini"
+
+
 def main() -> None:
     # First thing to do: Copy the config file to the data directory if there is
     # not yet a config file there!
     config_file = Config.config_file()
     if not config_file.is_file():
         print(f"Config file {config_file} not found, creating a new one")
-        example_config_file = "config.default.ini"
         config_file.parent.mkdir(exist_ok=True, parents=True)
-        shutil.copy(example_config_file, config_file)
+        shutil.copy(EXAMPLE_CONFIG_FILE, config_file)
 
-    filename = Config.data_path() / Path(Config.config()["common"]["LogFile"])
-    loglevel = Config.config()["common"]["Loglevel"]
+    # Now we can try to read the config file. In case anything goes wrong, we
+    # terminate because without a valid config continuing is useless.
+    try:
+        Config.get()
+    except KeyError as e:
+        print(f"Config could not be loaded, Keys not found: {e.args}")
+        sys.exit()
+
+    filename = Config.data_path() / Path(Config.get().log_file)
+    loglevel = Config.get().log_level
     logging.basicConfig(
         filename=filename,
         encoding="utf-8",
@@ -61,7 +71,7 @@ def main() -> None:
             # Something unexpected occurred, log it and continue with the next run as usual
             logging.exception(e)
 
-        time_between_runs = int(Config.config()["common"]["WaitBetweenRuns"])
+        time_between_runs = int(Config.get().wait_between_runs)
         if time_between_runs == 0:
             break
         next_execution = datetime.now() + timedelta(seconds=time_between_runs)
@@ -86,40 +96,32 @@ def job() -> None:
         db.initialize_or_update()
         scraped_offers: dict[str, dict[str, list[LootOffer]]] = {}
 
-        cfg_amazon: bool = Config.config().getboolean("sources_loot", "Amazon")
-        cfg_epic: bool = Config.config().getboolean("sources_loot", "Epic")
-        cfg_steam: bool = Config.config().getboolean("sources_loot", "Steam")
-        cfg_gog: bool = Config.config().getboolean("sources_loot", "Gog")
-
-        cfg_games: bool = Config.config().getboolean("actions", "ScrapeGames")
-        cfg_loot: bool = Config.config().getboolean("actions", "ScrapeLoot")
-
         cfg_what_to_scrape = {
-            OfferType.GAME.name: cfg_games,
-            OfferType.LOOT.name: cfg_loot,
+            OfferType.GAME.name: Config.get().scrape_games,
+            OfferType.LOOT.name: Config.get().scrape_loot,
         }
-        if cfg_amazon:
+        if Config.get().offers_amazon:
             scraped_offers[Source.AMAZON.name] = AmazonScraper.scrape(
                 webdriver, cfg_what_to_scrape
             )
         else:
             logging.info(f"Skipping {Source.AMAZON.value}")
 
-        if cfg_epic:
+        if Config.get().offers_epic:
             scraped_offers[Source.EPIC.name] = EpicScraper.scrape(
                 webdriver, cfg_what_to_scrape
             )
         else:
             logging.info(f"Skipping {Source.EPIC.value}")
 
-        if cfg_steam:
+        if Config.get().offers_steam:
             scraped_offers[Source.STEAM.name] = SteamScraper.scrape(
                 webdriver, cfg_what_to_scrape
             )
         else:
             logging.info(f"Skipping {Source.STEAM.value}")
 
-        if cfg_gog:
+        if Config.get().offers_gog:
             scraped_offers[Source.GOG.name] = GogScraper.scrape(
                 webdriver, cfg_what_to_scrape
             )
@@ -150,7 +152,7 @@ def job() -> None:
                     # but update their "last seen" date instead
                     if id > 0:
                         scraper_offer.id = id
-                        if Config.config().getboolean("expert", "ForceUpdate"):
+                        if Config.get().force_update:
                             db.update_offer(scraper_offer)
                         else:
                             db.touch_offer(scraper_offer)
@@ -189,7 +191,7 @@ def job() -> None:
         db_offers = db.read_offers()
 
         # Get Steam game information if ForceUpdate is set
-        if Config.config().getboolean("expert", "ForceUpdate"):
+        if Config.get().force_update:
             for scraper_source in db_offers:
                 for scraper_type in db_offers[scraper_source]:
                     for db_offer in db_offers[scraper_source][scraper_type]:
@@ -198,19 +200,9 @@ def job() -> None:
 
     logging.info(f"Found {new_offers} new offers")
 
-    cfg_generate_feed: bool = Config.config().getboolean("actions", "GenerateFeed")
-    cfg_upload: bool = Config.config().getboolean("actions", "UploadFtp")
-
-    cfg_author_name: str = Config.config()["feed"]["AuthorName"]
-    cfg_author_mail: str = Config.config()["feed"]["AuthorMail"]
-    cfg_author_web: str = Config.config()["feed"]["AuthorWeb"]
-    cfg_feed_url_prefix: str = Config.config()["feed"]["FeedUrlPrefix"]
-    cfg_feed_url_alternate: str = Config.config()["feed"]["FeedUrlAlternate"]
-    cfg_feed_id_prefix: str = Config.config()["feed"]["FeedIdPrefix"]
-
-    if cfg_generate_feed:
+    if Config.get().generate_feed:
         feed_file_base = Config.data_path() / Path(
-            Config.config()["common"]["FeedFilePrefix"] + ".xml"
+            Config.get().feed_file_prefix + ".xml"
         )
         # Generate and upload feeds split by source
         any_feed_changed = False
@@ -218,7 +210,7 @@ def job() -> None:
             for scraper_type in db_offers[scraper_source]:
                 feed_changed = False
                 feed_file = Config.data_path() / Path(
-                    Config.config()["common"]["FeedFilePrefix"]
+                    Config.get().feed_file_prefix
                     + f"_{Source[scraper_source].name.lower()}"
                     + f"_{OfferType[scraper_type].name.lower()}"
                     + ".xml"
@@ -227,12 +219,12 @@ def job() -> None:
                 generate_feed(
                     offers=db_offers[scraper_source][scraper_type],
                     feed_file_base=feed_file_base,
-                    author_name=cfg_author_name,
-                    author_web=cfg_author_web,
-                    author_mail=cfg_author_mail,
-                    feed_url_prefix=cfg_feed_url_prefix,
-                    feed_url_alternate=cfg_feed_url_alternate,
-                    feed_id_prefix=cfg_feed_id_prefix,
+                    author_name=Config.get().feed_author_name,
+                    author_web=Config.get().feed_author_web,
+                    author_mail=Config.get().feed_author_mail,
+                    feed_url_prefix=Config.get().feed_url_prefix,
+                    feed_url_alternate=Config.get().feed_url_alternate,
+                    feed_id_prefix=Config.get().feed_id_prefix,
                     source=Source[scraper_source],
                     type=OfferType[scraper_type],
                 )
@@ -241,7 +233,7 @@ def job() -> None:
                     feed_changed = True
                     any_feed_changed = True
 
-                if feed_changed and cfg_upload:
+                if feed_changed and Config.get().upload_feed:
                     upload_to_server(feed_file)
 
         # Generate and upload cumulated feed
@@ -254,14 +246,14 @@ def job() -> None:
             generate_feed(
                 offers=all_offers,
                 feed_file_base=feed_file_base,
-                author_name=cfg_author_name,
-                author_web=cfg_author_web,
-                author_mail=cfg_author_mail,
-                feed_url_prefix=cfg_feed_url_prefix,
-                feed_url_alternate=cfg_feed_url_alternate,
-                feed_id_prefix=cfg_feed_id_prefix,
+                author_name=Config.get().feed_author_name,
+                author_web=Config.get().feed_author_web,
+                author_mail=Config.get().feed_author_mail,
+                feed_url_prefix=Config.get().feed_url_prefix,
+                feed_url_alternate=Config.get().feed_url_alternate,
+                feed_id_prefix=Config.get().feed_id_prefix,
             )
-            if cfg_upload:
+            if Config.get().upload_feed:
                 upload_to_server(feed_file_base)
             else:
                 logging.info("Skipping upload, disabled")
@@ -271,14 +263,12 @@ def job() -> None:
 
 
 def add_game_info(webdriver: WebDriver, scraper_offer: LootOffer) -> None:
-    cfg_steam_info: bool = Config.config().getboolean("sources_info", "Steam")
-    cfg_igdb_info: bool = Config.config().getboolean("sources_info", "IGDB")
 
-    if scraper_offer.title and (cfg_steam_info or cfg_igdb_info):
+    if scraper_offer.title and (Config.get().info_igdb or Config.get().info_steam):
         gameinfo: Gameinfo | None = Gameinfo()
-        if cfg_igdb_info:
+        if Config.get().info_igdb:
             gameinfo = get_igdb_details(scraper_offer.title)
-        if cfg_steam_info:
+        if Config.get().info_steam:
             gameinfo_steam = get_steam_details(webdriver, scraper_offer.title)
             scraper_offer.gameinfo = Gameinfo.merge(gameinfo, gameinfo_steam)
 
