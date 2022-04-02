@@ -6,9 +6,9 @@ from app.configparser import Config
 
 
 def upload_to_server(file: Path) -> None:
-    host = Config.config()["ftp"]["Host"]
-    user = Config.config()["ftp"]["User"]
-    password = Config.config()["ftp"]["Password"]
+    host = Config.get().ftp_host
+    user = Config.get().ftp_username
+    password = Config.get().ftp_password
 
     logging.info(f"Uploading {file.name} to host {host} as user {user}")
     with FTP_TLS(host) as session:
