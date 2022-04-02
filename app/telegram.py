@@ -1,22 +1,16 @@
-import re
 from time import sleep
 
 import telegram
 from app.configparser import Config
 from telegram.ext import Updater
 import logging
-from telegram import InlineKeyboardMarkup, Update, InlineKeyboardButton
+from telegram import Update
 from telegram.ext import (
     MessageHandler,
     Filters,
     CommandHandler,
     CallbackContext,
-    ConversationHandler,
-    CallbackQueryHandler,
 )
-
-FIRST = 1
-SECOND = 2
 
 
 def run_telegram_bot() -> None:
@@ -42,16 +36,6 @@ def run_telegram_bot() -> None:
     dispatcher.add_handler(CommandHandler("help", help_command))
     dispatcher.add_handler(CommandHandler("subscribe", subscribe_command))
     dispatcher.add_handler(CommandHandler("unsubscribe", unsubscribe_command))
-
-    subscribe_conversation = ConversationHandler(
-        entry_points=[CommandHandler("edit", edit)],
-        states={
-            FIRST: [CallbackQueryHandler(first_step)],
-            SECOND: [CallbackQueryHandler(second_step)],
-        },
-        fallbacks=[CommandHandler("edit", edit)],
-    )
-    dispatcher.add_handler(subscribe_conversation)
     dispatcher.add_handler(MessageHandler(Filters.command, unknown))
 
     # dispatcher.add_error_handler
@@ -60,50 +44,6 @@ def run_telegram_bot() -> None:
     sleep(10)  # For testing only
     logging.info("Telegram Bot: Stopping polling")
     updater.stop()
-
-
-def edit(update: Update, context: CallbackContext) -> int:  # type: ignore
-    if update.message is None:
-        return 0
-    keyboard = [[InlineKeyboardButton("Next", callback_data=str(FIRST))]]
-    reply_markup = InlineKeyboardMarkup(keyboard)
-    update.message.reply_text(
-        "Start handler, Press next",
-        reply_markup=reply_markup,
-    )
-    return FIRST
-
-
-def first_step(update: Update, context: CallbackContext) -> int:  # type: ignore
-    if update.callback_query is None or update.callback_query.message is None:
-        return 0
-    keyboard = [[InlineKeyboardButton("Next", callback_data=str(SECOND))]]
-    reply_markup = InlineKeyboardMarkup(keyboard)
-    context.bot.edit_message_text(
-        chat_id=update.callback_query.message.chat_id,
-        message_id=update.callback_query.message.message_id,
-        text="First CallbackQueryHandler, Press next",
-    )
-
-    reply_markup = InlineKeyboardMarkup(keyboard)
-
-    context.bot.edit_message_reply_markup(
-        chat_id=update.callback_query.message.chat_id,
-        message_id=update.callback_query.message.message_id,
-        reply_markup=reply_markup,
-    )
-    return SECOND
-
-
-def second_step(update: Update, context: CallbackContext) -> None:  # type: ignore
-    if update.callback_query is None or update.callback_query.message is None:
-        return
-    context.bot.edit_message_text(
-        chat_id=update.callback_query.message.chat_id,
-        message_id=update.callback_query.message.message_id,
-        text="Second CallbackQueryHandler",
-    )
-    return
 
 
 def start_command(update: Update, context: CallbackContext) -> None:  # type: ignore
@@ -129,7 +69,6 @@ def start_command(update: Update, context: CallbackContext) -> None:  # type: ig
                 R"It will also send you a message every time a new offer is added\. "
                 R"To see the commands you can use to talk to the bot, type /help now\."
             ),
-            # reply_markup=ForceReply(selective=True, input_field_placeholder="/help"),
         )
     except Exception as e:
         logging.error(f"Error in start: {e}")
@@ -148,8 +87,6 @@ def help_command(update: Update, context: CallbackContext) -> None:  # type: ign
                 R"/start \- Start the bot \(you already did that\)"
                 "\n"
                 R"/help \- Show this help message"
-                "\n"
-                R"/edit \- Edit your subscriptions"
                 "\n"
                 R"/subscribe _type_ \- Start receiving offers for _type_"
                 "\n"
@@ -178,57 +115,6 @@ def subscribe_command(update: Update, context: CallbackContext) -> None:  # type
     subscription_type = update.message.text.removeprefix("/subscribe").lower().strip()
 
     if subscription_type == "":
-
-        # # some_strings = ["col1", "col2", "row2"]
-        # # button_list = [[InlineKeyboardButton(s)] for s in some_strings]
-
-        # button_list = [
-        #     [
-        #         InlineKeyboardButton("All", callback_data="/subscribe all"),
-        #         InlineKeyboardButton(
-        #             "Amazon Games", callback_data="/subscribe amazon game"
-        #         ),
-        #         InlineKeyboardButton(
-        #             "Amazon Loot", callback_data="/subscribe amazon loot"
-        #         ),
-        #     ]
-        # ]
-
-        # reply_markup = telegram.InlineKeyboardMarkup(button_list)
-
-        # context.bot.send_message(
-        #     chat_id=update.effective_chat.id,
-        #     text="Inline  Keyboard",
-        #     reply_markup=reply_markup,
-        # )
-
-        # # custom_keyboard = [
-        # #     ["/subscribe all", "top-right"],
-        # #     ["bottom-left", "bottom-right"],
-        # # ]
-        # # context.bot.send_message(
-        # #     chat_id=update.effective_chat.id,
-        # #     text="Please choose:",
-        # #     reply_markup=telegram.ReplyKeyboardMarkup(
-        # #         custom_keyboard, one_time_keyboard=True
-        # #     ),
-        # # )
-
-        # # Remove keyboard
-        # # context.bot.send_message(
-        # #     chat_id=update.effective_chat.id,
-        # #     text="Removing Keyboard",
-        # #     reply_markup=telegram.ReplyKeyboardRemove(),
-        # # )
-
-        # # Replace the ... in below snippet by an appropriate argument, as indicated in the InlineKeyboardButton documentation. If you want to use KeyboardButtons, use ReplyKeyboardMarkup instead of InlineKeyboardMarkup.
-        # # button_list = [
-        # #     InlineKeyboardButton("col1", callback_data=...),
-        # #     InlineKeyboardButton("col2", callback_data=...),
-        # #     InlineKeyboardButton("row 2", callback_data=...),
-        # # ]
-        # # reply_markup = InlineKeyboardMarkup(build_menu(button_list, n_cols=2))
-        # # bot.send_message(..., "A two-column menu", reply_markup=reply_markup)
         update.message.reply_markdown_v2(
             R"Sorry, this command needs a type to work is not a valid subscription type\. Type /help to see all available commands\."
         )
@@ -275,26 +161,3 @@ def unknown(update: Update, context: CallbackContext) -> None:  # type: ignore
             chat_id=update.effective_chat.id,
             text="Sorry, I didn't understand that command. Type /help to see all commands.",
         )
-
-
-# def send_message_to_user(user_id: int, context: CallbackContext) -> None:
-#     context: CallbackContext
-#         context.bot.send_message(chat_id=chat.id, text="I'm a bot, please talk to me!")
-
-
-def build_menu(
-    buttons: list[InlineKeyboardButton],
-    n_cols: int,
-    header_buttons: InlineKeyboardButton | list[InlineKeyboardButton] | None = None,
-    footer_buttons: InlineKeyboardButton | list[InlineKeyboardButton] | None = None,
-) -> list[list[InlineKeyboardButton]]:
-    menu = [buttons[i : i + n_cols] for i in range(0, len(buttons), n_cols)]
-    if header_buttons:
-        menu.insert(
-            0, header_buttons if isinstance(header_buttons, list) else [header_buttons]
-        )
-    if footer_buttons:
-        menu.append(
-            footer_buttons if isinstance(footer_buttons, list) else [footer_buttons]
-        )
-    return menu
