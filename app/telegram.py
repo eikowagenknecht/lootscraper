@@ -17,15 +17,12 @@ from telegram.ext import (
 from app.configparser import Config
 
 logger = logging.getLogger(__name__)
-cfg_developer_chat: str = Config.config()["telegram"]["DeveloperChatID"]
 
 
 def run_telegram_bot() -> None:
     """Start the bot."""
-    cfg_telegram_token: str = Config.config()["telegram"]["AccessToken"]
-
     # Register commands
-    bot = telegram.Bot(token=cfg_telegram_token)
+    bot = telegram.Bot(token=Config.get().telegram_access_token)
     bot.set_my_commands(
         [
             telegram.BotCommand("start", "Start the bot"),
@@ -36,7 +33,7 @@ def run_telegram_bot() -> None:
         ]
     )
 
-    updater = Updater(token=cfg_telegram_token)
+    updater = Updater(token=Config.get().telegram_access_token)
     dispatcher = updater.dispatcher
     logging.info("Telegram Bot: Initialized")
 
@@ -87,7 +84,7 @@ def error_handler(update: object, context: CallbackContext) -> None:  # type: ig
 
     # Finally, send the message
     context.bot.send_message(
-        chat_id=cfg_developer_chat,
+        chat_id=Config.get().telegram_developer_chat_id,
         text=message,
         parse_mode=ParseMode.HTML,
     )
