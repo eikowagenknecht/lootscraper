@@ -1,16 +1,18 @@
 # type: ignore
 import logging
 import unittest
+from time import sleep
 
 from selenium.webdriver.chrome.webdriver import WebDriver
 
 from app.common import TIMESTAMP_LONG
+from app.configparser import Config
 from app.pagedriver import get_pagedriver
 from app.scraper.info.gameinfo import Gameinfo
 from app.scraper.info.igdb import get_igdb_details, get_possible_igdb_id
 from app.scraper.info.steam import get_possible_steam_appid, get_steam_details
 from app.scraper.info.utils import get_match_score
-from app.telegram import run_telegram_bot
+from app.telegram import TelegramBot
 
 logging.basicConfig(
     level=logging.INFO,
@@ -21,7 +23,10 @@ logging.basicConfig(
 
 class VariousTests(unittest.TestCase):
     def test_telegram(self) -> None:
-        run_telegram_bot()
+        bot = TelegramBot(Config.get())
+        bot.start()
+        sleep(1)
+        bot.stop()
         self.assertEqual(1, 1)
 
     def test_similarity(self) -> None:
