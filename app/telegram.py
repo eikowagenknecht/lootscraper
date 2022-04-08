@@ -140,7 +140,7 @@ class TelegramBot:
             (
                 Rf"Hi {update.effective_user.mention_markdown_v2()}, welcome to the LootScraper Telegram Bot\!"
                 "\n\n"
-                R"This bot belongs to the [LootScraper](https://github\.com/eikowagenknecht/lootscraper) project\. "
+                R"I belong to the [LootScraper](https://github\.com/eikowagenknecht/lootscraper) project\. "
                 R"If you have any issues or feature request, please use the "
                 R"[issues](https://github\.com/eikowagenknecht/lootscraper/issues) to report them\. "
                 R"And if you like it, please consider "
@@ -149,16 +149,17 @@ class TelegramBot:
                 "\n\n"
                 R"*How this works*"
                 "\n"
-                R"You tell the bot what kind of offers you want to see\. "
-                R"The bot will then send you a message with all current offers of that kind\. "
-                R"It will also send you a message every time a new offer is added\. "
-                R"To see the commands you can use to talk to the bot, type /help now\."
+                R"You tell me what kind of offers you want to see\. "
+                R"I will then send you a message with all current offers of that kind\. "
+                R"I will also send you a message every time a new offer is added\. "
+                R"To see the commands you can use to talk to me, type /help now\."
                 "\n\n"
                 R"*Privacy*"
                 "\n"
-                R"The bot needs to store some user data \(e\.g\. your Telegram user ID\ and your subscriptions) to work\. "
+                R"I need to store some user data \(e\.g\. your Telegram user ID\ and your subscriptions) to work\. "
                 R"You can leave any time by typing /leave\. "
                 R"This instantly deletes all data about you\."
+                R"Also I will be sad to see you go\."
             ),
         )
 
@@ -220,7 +221,9 @@ class TelegramBot:
     def subscribe_command(self, update: Update, context: CallbackContext) -> None:  # type: ignore
         if not update.effective_chat or not update.message or not update.message.text:
             return
-        # Check if user is registered, otherwise return
+
+        # TODO: Check if user is registered, otherwise return error message
+
         subscription_type = (
             update.message.text.lower().removeprefix("/subscribe").strip()
         )
@@ -262,7 +265,9 @@ class TelegramBot:
     def unsubscribe_command(self, update: Update, context: CallbackContext) -> None:  # type: ignore
         if not update.effective_chat or not update.message or not update.message.text:
             return
-        # Check if user is registered, otherwise return
+
+        # TODO: Check if user is registered, otherwise return error message
+
         subscription_type = (
             update.message.text.lower().removeprefix("/unsubscribe").strip()
         )
@@ -271,20 +276,24 @@ class TelegramBot:
     def status_command(self, update: Update, context: CallbackContext) -> None:  # type: ignore
         if not update.effective_chat:
             return
-        # Check if user is registered, then display some stats:
+
+        # TODO: Check if user is registered, then display some stats:
         # - Active subscriptions
         # - Total saved EUR
         # - Number of offers received
+
         if update.effective_chat:
             text_caps = " ".join(context.args).upper()  # type: ignore
             context.bot.send_message(chat_id=update.effective_chat.id, text=text_caps)
 
     def unknown(self, update: Update, context: CallbackContext) -> None:  # type: ignore
-        if update.effective_chat:
-            context.bot.send_message(
-                chat_id=update.effective_chat.id,
-                text="Sorry, I didn't understand that command. Type /help to see all commands.",
-            )
+        if not update.effective_chat:
+            return
+
+        context.bot.send_message(
+            chat_id=update.effective_chat.id,
+            text="Sorry, I didn't understand that command. Type /help to see all commands.",
+        )
 
 
 def markdown_json_formatted(input: str) -> str:
