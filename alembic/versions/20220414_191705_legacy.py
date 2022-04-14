@@ -35,9 +35,7 @@ def upgrade() -> None:
         sa.Column("gameinfo", sa.String(), nullable=True),
         sa.PrimaryKeyConstraint("id"),
     )
-    # ### end Alembic commands ###
 
 
 def downgrade() -> None:
     op.drop_table("loot")
-    # ### end Alembic commands ###
