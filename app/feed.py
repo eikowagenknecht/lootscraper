@@ -47,17 +47,24 @@ def generate_feed(
     latest_date: datetime = None
 
     for offer in offers:
-        if not latest_date or offer.seen_first > latest_date:
-            latest_date = offer.seen_first
-
-        if offer.valid_from and offer.valid_from > offer.seen_last:
-            # Skip future entries and entries that are no longer seen on valid_from date
+        # Skip entries without any dates, they are probably not valid
+        if not offer.seen_first and not offer.seen_last:
             continue
 
+        # Skip future entries and entries that are no longer seen before they ever were valid
+        if offer.valid_from and offer.valid_from > offer.seen_last:
+            continue
+
+        # Determine the date to use for updated. Preferred is valid_from,
+        # but seen_first is used if valid_from is not known.
         if offer.valid_from and offer.valid_from > offer.seen_first:
             updated = offer.valid_from
         else:
             updated = offer.seen_first
+
+        # Remember the newest entry date for the whole feed date
+        if not latest_date or updated > latest_date:
+            latest_date = updated
 
         feed_entry: FeedEntry = feed_generator.add_entry()
         # Atom Needed
