@@ -13,6 +13,7 @@ from app.scraper.info.igdb import get_igdb_details, get_possible_igdb_id
 from app.scraper.info.steam import get_possible_steam_appid, get_steam_details
 from app.scraper.info.utils import get_match_score
 from app.telegram import TelegramBot
+from app.sqlalchemy import OldLootDatabase
 
 logging.basicConfig(
     level=logging.INFO,
@@ -22,11 +23,21 @@ logging.basicConfig(
 
 
 class VariousTests(unittest.TestCase):
+    def test_entity_framework(self) -> None:
+        with OldLootDatabase() as db:
+            db.initialize_or_update()
+            res = db.read_all()
+            print(res)
+        pass
+
     def test_telegram(self) -> None:
+        # Arrange
         bot = TelegramBot(Config.get())
+        # Act
         bot.start()
         sleep(1)
         bot.stop()
+        # Assert
         self.assertEqual(1, 1)
 
     def test_similarity(self) -> None:
