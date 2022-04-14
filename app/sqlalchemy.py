@@ -5,10 +5,7 @@ from pathlib import Path
 from types import TracebackType
 from typing import Any, Type
 
-# from sqlalchemy.orm import relationship
-# from sqlalchemy import insert
-# from sqlalchemy.future.engine import Connection
-from sqlalchemy import (  # , text; , Table
+from sqlalchemy import (
     Column,
     DateTime,
     Integer,
@@ -19,8 +16,6 @@ from sqlalchemy import (  # , text; , Table
     select,
 )
 
-# from sqlalchemy import and_, or_
-# from sqlalchemy import ForeignKey
 from sqlalchemy.orm import Session, registry
 
 from app.common import LootOffer, OfferType, Source
