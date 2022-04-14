@@ -1,6 +1,6 @@
 from __future__ import annotations
-from datetime import datetime, timezone
 
+from datetime import datetime, timezone
 from pathlib import Path
 from types import TracebackType
 from typing import Any, Type
@@ -8,14 +8,21 @@ from typing import Any, Type
 # from sqlalchemy.orm import relationship
 # from sqlalchemy import insert
 # from sqlalchemy.future.engine import Connection
-from sqlalchemy import and_, create_engine  # , text
-from sqlalchemy import Column, Integer, MetaData, String, select  # , Table
+from sqlalchemy import (  # , text; , Table
+    Column,
+    Integer,
+    MetaData,
+    String,
+    and_,
+    create_engine,
+    select,
+)
 
 # from sqlalchemy import and_, or_
 # from sqlalchemy import ForeignKey
 from sqlalchemy.orm import Session, registry
-from app.common import LootOffer, OfferType, Source
 
+from app.common import LootOffer, OfferType, Source
 from app.configparser import Config
 from app.scraper.info.gameinfo import Gameinfo
 
