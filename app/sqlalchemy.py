@@ -10,6 +10,7 @@ from typing import Any, Type
 # from sqlalchemy.future.engine import Connection
 from sqlalchemy import (  # , text; , Table
     Column,
+    DateTime,
     Integer,
     MetaData,
     String,
@@ -33,16 +34,16 @@ Base = mapper_registry.generate_base()  # type: Any
 class OldDbLoot(Base):
     __tablename__ = "loot"
     id = Column(Integer, primary_key=True)
-    seen_first = Column(String)
-    seen_last = Column(String)
+    seen_first = Column(DateTime)
+    seen_last = Column(DateTime)
     source = Column(String)
     type = Column(String)
     rawtext = Column(String)
     title = Column(String)
     subtitle = Column(String)
     publisher = Column(String)
-    valid_from = Column(String)
-    valid_to = Column(String)
+    valid_from = Column(DateTime)
+    valid_to = Column(DateTime)
     url = Column(String)
     img_url = Column(String)
     gameinfo = Column(String)
@@ -138,7 +139,7 @@ class OldLootDatabase:
                 OldDbLoot.source == source,
                 OldDbLoot.title == title,
                 OldDbLoot.subtitle == subtitle,
-                OldDbLoot.valid_to == valid_to.replace(tzinfo=timezone.utc).isoformat()
+                OldDbLoot.valid_to == valid_to.replace(tzinfo=timezone.utc)
                 if valid_to
                 else None,
             )
@@ -164,24 +165,16 @@ class OldLootDatabase:
             title=db_row.title,
             subtitle=db_row.subtitle,
             publisher=db_row.publisher,
-            valid_from=datetime.fromisoformat(db_row.valid_from).replace(
-                tzinfo=timezone.utc
-            )
+            valid_from=db_row.valid_from.replace(tzinfo=timezone.utc)
             if db_row.valid_from
             else None,
-            valid_to=datetime.fromisoformat(db_row.valid_to).replace(
-                tzinfo=timezone.utc
-            )
+            valid_to=db_row.valid_to.replace(tzinfo=timezone.utc)
             if db_row.valid_to
             else None,
-            seen_first=datetime.fromisoformat(db_row.seen_first).replace(
-                tzinfo=timezone.utc
-            )
+            seen_first=db_row.seen_first.replace(tzinfo=timezone.utc)
             if db_row.seen_first
             else None,
-            seen_last=datetime.fromisoformat(db_row.seen_last).replace(
-                tzinfo=timezone.utc
-            )
+            seen_last=db_row.seen_last.replace(tzinfo=timezone.utc)
             if db_row.seen_last
             else None,
             url=db_row.url,
@@ -192,7 +185,7 @@ class OldLootDatabase:
         return offer
 
     def touch_db_row(self, db_row: OldDbLoot) -> None:
-        db_row.seen_last = datetime.now().replace(tzinfo=timezone.utc).isoformat()
+        db_row.seen_last = datetime.now().replace(tzinfo=timezone.utc)
 
     def update_db_row_with_loot_offer(
         self, offer: LootOffer, db_row: OldDbLoot
@@ -204,25 +197,21 @@ class OldLootDatabase:
         db_row.subtitle = offer.subtitle or None
         db_row.publisher = offer.publisher or None
         db_row.valid_from = (
-            offer.valid_from.replace(tzinfo=timezone.utc).isoformat()
-            if offer.valid_from
-            else None
+            offer.valid_from.replace(tzinfo=timezone.utc) if offer.valid_from else None
         )
         db_row.valid_to = (
-            offer.valid_to.replace(tzinfo=timezone.utc).isoformat()
-            if offer.valid_to
-            else None
+            offer.valid_to.replace(tzinfo=timezone.utc) if offer.valid_to else None
         )
         db_row.url = offer.url or None
         db_row.img_url = offer.img_url or None
         db_row.gameinfo = offer.gameinfo.to_json() if offer.gameinfo else None
-        db_row.seen_last = datetime.now().replace(tzinfo=timezone.utc).isoformat()
+        db_row.seen_last = datetime.now().replace(tzinfo=timezone.utc)
 
     def add_loot_offer(self, offer: LootOffer) -> None:
         db_row = OldDbLoot()
         self.update_db_row_with_loot_offer(offer, db_row)
 
-        current_date = datetime.now().replace(tzinfo=timezone.utc).isoformat()
+        current_date = datetime.now().replace(tzinfo=timezone.utc)
         db_row.seen_first = current_date
         db_row.seen_last = current_date
 

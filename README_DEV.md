@@ -10,3 +10,10 @@ New database revisions are created in the following way:
 2. Create a candidate: `alembic revision --autogenerate -m "Fancy revision description"`
 3. Check and edit the candidate
 4. Upgrade the database: `alembic upgrade head`
+
+Some quick hints:
+
+- Downgrade 1 revision: `alembic downgrade -1`
+- Write custom scripts:
+<https://stackoverflow.com/questions/24612395/how-do-i-execute-inserts-and-updates-in-an-alembic-upgrade-script>
+- Run in program code: <https://stackoverflow.com/questions/24622170/using-alembic-api-from-inside-application-code>
