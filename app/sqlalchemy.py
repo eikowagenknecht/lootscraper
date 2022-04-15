@@ -1,23 +1,16 @@
 from __future__ import annotations
 
+import logging
 from datetime import datetime, timezone
 from pathlib import Path
 from types import TracebackType
 from typing import Any, Type
 
-from sqlalchemy import (
-    Column,
-    DateTime,
-    Integer,
-    MetaData,
-    String,
-    and_,
-    create_engine,
-    select,
-)
-
+from sqlalchemy import Column, DateTime, Integer, String, and_, create_engine, select
 from sqlalchemy.orm import Session, registry
 
+from alembic import command
+from alembic.config import Config as AlembicConfig
 from app.common import LootOffer, OfferType, Source
 from app.configparser import Config
 from app.scraper.info.gameinfo import Gameinfo
@@ -65,12 +58,14 @@ class OldDbLoot(Base):
 
 
 class OldLootDatabase:
-    def __init__(self) -> None:
-        db_file_path = Config.data_path() / Path(Config.get().database_file)
+    def __init__(self, echo: bool = False) -> None:
+        # Run Alembic migrations first before we open a session
+        self.initialize_or_update()
 
+        db_file_path = Config.data_path() / Path(Config.get().database_file)
         self.engine = create_engine(
             f"sqlite+pysqlite:///{db_file_path}",
-            echo=True,
+            echo=echo,
             future=True,
         )
 
@@ -93,11 +88,12 @@ class OldLootDatabase:
         pass
 
     def initialize_or_update(self) -> None:
-        metadata = MetaData()
-        metadata.reflect(bind=self.engine)
-
-        if "loot" not in metadata.tables:
-            metadata.create_all()
+        logging.info("Running database migrations")
+        alembic_cfg = AlembicConfig(
+            "alembic.ini",
+            attributes={"configure_logger": False},
+        )
+        command.upgrade(alembic_cfg, "head")
 
     def read_all(self) -> list[OldDbLoot]:
         result = self.session.execute(select(OldDbLoot)).scalars().all()
