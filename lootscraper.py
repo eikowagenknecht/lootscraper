@@ -8,6 +8,7 @@ from threading import Event
 from types import FrameType
 
 from selenium.webdriver.chrome.webdriver import WebDriver
+from sqlalchemy.exc import OperationalError
 
 from app.common import TIMESTAMP_LONG, LootOffer, OfferType, Source
 from app.configparser import Config
@@ -71,6 +72,10 @@ def main() -> None:
 
         try:
             job()
+        except OperationalError as oe:
+            logging.error(f"Database error: {oe}")
+            logging.error("Database error, exiting applications")
+            sys.exit()
         except Exception as e:
             # Something unexpected occurred, log it and continue with the next run as usual
             logging.exception(e)
