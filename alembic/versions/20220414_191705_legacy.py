@@ -6,6 +6,7 @@ Create Date: 2022-04-14 19:17:05.517698+00:00
 
 """
 import sqlalchemy as sa
+from sqlalchemy.exc import OperationalError
 
 from alembic import op
 
@@ -17,24 +18,38 @@ depends_on = None
 
 
 def upgrade() -> None:
-    op.create_table(
-        "loot",
-        sa.Column("id", sa.Integer(), nullable=False),
-        sa.Column("seen_first", sa.TEXT(), nullable=True),
-        sa.Column("seen_last", sa.TEXT(), nullable=True),
-        sa.Column("source", sa.TEXT(), nullable=True),
-        sa.Column("type", sa.TEXT(), nullable=True),
-        sa.Column("rawtext", sa.TEXT(), nullable=True),
-        sa.Column("title", sa.TEXT(), nullable=True),
-        sa.Column("subtitle", sa.TEXT(), nullable=True),
-        sa.Column("publisher", sa.TEXT(), nullable=True),
-        sa.Column("valid_from", sa.TEXT(), nullable=True),
-        sa.Column("valid_to", sa.TEXT(), nullable=True),
-        sa.Column("url", sa.TEXT(), nullable=True),
-        sa.Column("img_url", sa.TEXT(), nullable=True),
-        sa.Column("gameinfo", sa.TEXT(), nullable=True),
-        sa.PrimaryKeyConstraint("id"),
-    )
+    try:
+        op.create_table(
+            "loot",
+            sa.Column("id", sa.Integer(), nullable=False),
+            sa.Column("seen_first", sa.TEXT(), nullable=True),
+            sa.Column("seen_last", sa.TEXT(), nullable=True),
+            sa.Column("source", sa.TEXT(), nullable=True),
+            sa.Column("type", sa.TEXT(), nullable=True),
+            sa.Column("rawtext", sa.TEXT(), nullable=True),
+            sa.Column("title", sa.TEXT(), nullable=True),
+            sa.Column("subtitle", sa.TEXT(), nullable=True),
+            sa.Column("publisher", sa.TEXT(), nullable=True),
+            sa.Column("valid_from", sa.TEXT(), nullable=True),
+            sa.Column("valid_to", sa.TEXT(), nullable=True),
+            sa.Column("url", sa.TEXT(), nullable=True),
+            sa.Column("img_url", sa.TEXT(), nullable=True),
+            sa.Column("gameinfo", sa.TEXT(), nullable=True),
+            sa.PrimaryKeyConstraint("id"),
+        )
+    except OperationalError as e:
+        if e.orig.args[0] == "table loot already exists":
+            # Table already exists, we probably have a legacy database.
+            # Apply the relevant fixes only to get up to speed.
+            with op.batch_alter_table("loot", schema=None) as batch_op:  # type: ignore
+                batch_op.alter_column(
+                    "id",
+                    existing_type=sa.INTEGER(),
+                    nullable=False,
+                    autoincrement=True,
+                )
+        else:
+            raise
 
 
 def downgrade() -> None:
