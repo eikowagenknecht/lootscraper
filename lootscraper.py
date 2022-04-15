@@ -52,10 +52,14 @@ def main() -> None:
         filename=filename,
         encoding="utf-8",
         level=logging.getLevelName(loglevel),
-        format="%(asctime)s [%(levelname)-5s] %(message)s",
+        format="%(asctime)s %(name)s [%(levelname)-5s] %(message)s",
         datefmt=TIMESTAMP_LONG,
     )
-    logging.getLogger().addHandler(logging.StreamHandler(sys.stdout))
+    stream_handler = logging.StreamHandler(sys.stdout)
+    stream_handler.setFormatter(
+        logging.Formatter("%(asctime)s %(name)s [%(levelname)-5s] %(message)s")
+    )
+    logging.getLogger().addHandler(stream_handler)
     logging.info("Starting script")
 
     # Run the job every hour (or whatever is set in the config file). This is
@@ -93,7 +97,6 @@ def job() -> None:
     db: OldLootDatabase
     webdriver: WebDriver
     with (OldLootDatabase() as db, get_pagedriver() as webdriver):
-        db.initialize_or_update()
         scraped_offers: dict[str, dict[str, list[LootOffer]]] = {}
 
         cfg_what_to_scrape = {
