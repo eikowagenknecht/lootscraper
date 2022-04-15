@@ -34,7 +34,9 @@ RUN pip install -r requirements.txt
 # Add the script
 COPY lootscraper.py /app
 COPY config.default.ini /app
+COPY alembic.ini /app
 COPY app /app/app
+COPY alembic /app/alembic
 COPY js /app/js
 
 # Run the script
