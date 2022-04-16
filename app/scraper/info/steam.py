@@ -176,6 +176,11 @@ def get_steam_details(driver: WebDriver, title: str | int) -> Gameinfo | None:
         except KeyError:
             pass
 
+        try:
+            result.publishers = ", ".join(data[str(appid)]["data"]["publishers"])
+        except KeyError:
+            pass
+
     logging.debug(f"Steam: Now also checking the store details page for app id {appid}")
 
     result.steam_url = STEAM_DETAILS_STORE + str(appid)

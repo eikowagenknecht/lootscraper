@@ -124,6 +124,7 @@ def get_igdb_details(search_string: str) -> Gameinfo | None:
         pass
 
     # TODO:
+    # Publisher
     # genres = List of genres (ids only, have to be called separately)
     # cover = Cover image of the game (id only)
 

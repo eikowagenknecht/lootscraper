@@ -5,7 +5,8 @@ import json
 from copy import copy
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any
+
+from app.scraper.info.utils import clean_nones
 
 
 @dataclass
@@ -29,6 +30,7 @@ class Gameinfo:
     metacritic_url: str | None = None
     steam_url: str | None = None
     image_url: str | None = None
+    publishers: str | None = None
 
     @classmethod
     def merge(cls, prio: Gameinfo | None, other: Gameinfo | None) -> Gameinfo | None:
@@ -91,7 +93,7 @@ class Gameinfo:
             pass
 
         try:
-            result.recommended_price_eur = input["recommended_price_eur"]
+            result.recommended_price_eur = float(input["recommended_price_eur"])
         except KeyError:
             pass
 
@@ -160,17 +162,9 @@ class Gameinfo:
         except KeyError:
             pass
 
+        try:
+            result.publishers = input["publishers"]
+        except KeyError:
+            pass
+
         return result
-
-
-def clean_nones(value: dict[str, Any]) -> dict[str, Any]:
-    """
-    Recursively remove all None values from dictionaries and lists, and returns
-    the result as a new dictionary or list.
-    """
-    if isinstance(value, list):
-        return [clean_nones(x) for x in value if x is not None]
-    elif isinstance(value, dict):
-        return {key: clean_nones(val) for key, val in value.items() if val is not None}
-    else:
-        return value
