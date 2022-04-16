@@ -16,4 +16,3 @@ Some quick hints:
 - Downgrade 1 revision: `alembic downgrade -1`
 - Write custom scripts:
 <https://stackoverflow.com/questions/24612395/how-do-i-execute-inserts-and-updates-in-an-alembic-upgrade-script>
-- Run in program code: <https://stackoverflow.com/questions/24622170/using-alembic-api-from-inside-application-code>
