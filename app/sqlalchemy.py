@@ -6,8 +6,19 @@ from pathlib import Path
 from types import TracebackType
 from typing import Any, Type
 
-from sqlalchemy import Column, DateTime, Integer, String, and_, create_engine, select
-from sqlalchemy.orm import Session, registry
+from sqlalchemy import (
+    Column,
+    DateTime,
+    Enum,
+    Float,
+    ForeignKey,
+    Integer,
+    String,
+    and_,
+    create_engine,
+    select,
+)
+from sqlalchemy.orm import Session, registry, relationship
 
 from alembic import command
 from alembic.config import Config as AlembicConfig
@@ -19,7 +30,7 @@ mapper_registry = registry()
 Base = mapper_registry.generate_base()  # type: Any
 
 
-class OldDbLoot(Base):
+class OldLoot(Base):
     __tablename__ = "loot"
     id = Column(Integer, primary_key=True)
     seen_first = Column(DateTime)
@@ -53,7 +64,105 @@ class OldDbLoot(Base):
             f"url={self.url!r}, "
             f"img_url={self.img_url!r}, "
             f"gameinfo={self.gameinfo!r}"
-            f""
+        )
+
+
+class Game(Base):
+    __tablename__ = "games"
+
+    id = Column(Integer, primary_key=True, nullable=False)
+
+    # Steam scraped data
+    steam_id = Column(Integer)
+    steam_url = Column(String)
+    steam_recommendations = Column(Integer)
+    steam_percent = Column(Integer)
+    steam_score = Column(Integer)
+    metacritic_score = Column(Integer)
+    metacritic_url = Column(String)
+    recommended_price_eur = Column(Float)
+
+    # IGDB scraped data
+    igdb_id = Column(Integer)
+    igdb_url = Column(String)
+    igdb_user_score = Column(Integer)
+    igdb_user_rating = Column(Integer)
+    igdb_meta_score = Column(Integer)
+    igdb_meta_rating = Column(Integer)
+
+    # Could be from both
+    name = Column(String)
+    short_description = Column(String)
+    genres = Column(String)  # Currently Steam only
+    publishers = Column(String)  # Currently Steam only
+    release_date = Column(DateTime)
+    image_url = Column(String)  # Currently Steam only
+
+    offers = relationship("Offer", back_populates="game")
+
+    def __repr__(self) -> str:
+        return (
+            "Game("
+            f"id={self.id!r}, "
+            f"steam_id={self.steam_id!r}, "
+            f"steam_url={self.steam_url!r}, "
+            f"steam_recommendations={self.steam_recommendations!r}, "
+            f"steam_percent={self.steam_percent!r}, "
+            f"steam_score={self.steam_score!r}, "
+            f"metacritic_score={self.metacritic_score!r}, "
+            f"metacritic_url={self.metacritic_url!r}, "
+            f"recommended_price_eur={self.recommended_price_eur!r}, "
+            f"igdb_id={self.igdb_id!r}, "
+            f"igdb_url={self.igdb_url!r}, "
+            f"igdb_user_score={self.igdb_user_score!r}, "
+            f"igdb_user_rating={self.igdb_user_rating!r}, "
+            f"igdb_meta_score={self.igdb_meta_score!r}, "
+            f"igdb_meta_rating={self.igdb_meta_rating!r}, "
+            f"name={self.name!r}, "
+            f"short_description={self.short_description!r}, "
+            f"genres={self.genres!r}, "
+            f"publishers={self.publishers!r}, "
+            f"release_date={self.release_date!r}, "
+            f"image_url={self.image_url!r}, "
+            f"offers={self.offers!r}"
+        )
+
+
+class Offer(Base):
+    __tablename__ = "offers"
+
+    id = Column(Integer, primary_key=True)
+    source = Column(Enum(Source))
+    type = Column(Enum(OfferType))
+    title = Column(String)
+
+    seen_first = Column(DateTime)
+    seen_last = Column(DateTime)
+    valid_from = Column(DateTime)
+    valid_to = Column(DateTime)
+
+    rawtext = Column(String)
+    url = Column(String)
+    img_url = Column(String)
+
+    game_id = Column(Integer, ForeignKey("games.id"))
+    game = relationship("Game", back_populates="offers")
+
+    def __repr__(self) -> str:
+        return (
+            "Offer("
+            f"id={self.id!r}, "
+            f"game_id={self.game_id!r}, "
+            f"seen_first={self.seen_first!r}, "
+            f"seen_last={self.seen_last!r}, "
+            f"source={self.source!r}, "
+            f"type={self.type!r}, "
+            f"rawtext={self.rawtext!r}, "
+            f"title={self.title!r}, "
+            f"valid_from={self.valid_from!r}, "
+            f"valid_to={self.valid_to!r}, "
+            f"url={self.url!r}, "
+            f"img_url={self.img_url!r}, "
         )
 
 
@@ -95,8 +204,8 @@ class OldLootDatabase:
         )
         command.upgrade(alembic_cfg, "head")
 
-    def read_all(self) -> list[OldDbLoot]:
-        result = self.session.execute(select(OldDbLoot)).scalars().all()
+    def read_all(self) -> list[OldLoot]:
+        result = self.session.execute(select(OldLoot)).scalars().all()
         return result
 
     def read_all_segmented(self) -> dict[str, dict[str, list[LootOffer]]]:
@@ -124,13 +233,13 @@ class OldLootDatabase:
         title: str | None,
         subtitle: str | None,
         valid_to: datetime | None,
-    ) -> OldDbLoot:
-        statement = select(OldDbLoot).where(
+    ) -> OldLoot:
+        statement = select(OldLoot).where(
             and_(
-                OldDbLoot.source == source,
-                OldDbLoot.title == title,
-                OldDbLoot.subtitle == subtitle,
-                OldDbLoot.valid_to == valid_to.replace(tzinfo=timezone.utc)
+                OldLoot.source == source,
+                OldLoot.title == title,
+                OldLoot.subtitle == subtitle,
+                OldLoot.valid_to == valid_to.replace(tzinfo=timezone.utc)
                 if valid_to
                 else None,
             )
@@ -139,13 +248,13 @@ class OldLootDatabase:
 
         return result
 
-    def find_offer_by_id(self, id: int) -> OldDbLoot:
-        statement = select(OldDbLoot).where(OldDbLoot.id == id)
+    def find_offer_by_id(self, id: int) -> OldLoot:
+        statement = select(OldLoot).where(OldLoot.id == id)
         result = self.session.execute(statement).scalars().one_or_none()
 
         return result
 
-    def get_loot_offer_from_db_row(self, db_row: OldDbLoot) -> LootOffer:
+    def get_loot_offer_from_db_row(self, db_row: OldLoot) -> LootOffer:
         gameinfo: Gameinfo | None = (
             Gameinfo.from_json(db_row.gameinfo) if db_row.gameinfo else None
         )
@@ -175,11 +284,11 @@ class OldLootDatabase:
 
         return offer
 
-    def touch_db_row(self, db_row: OldDbLoot) -> None:
+    def touch_db_row(self, db_row: OldLoot) -> None:
         db_row.seen_last = datetime.now().replace(tzinfo=timezone.utc)
 
     def update_db_row_with_loot_offer(
-        self, offer: LootOffer, db_row: OldDbLoot
+        self, offer: LootOffer, db_row: OldLoot
     ) -> None:
         db_row.rawtext = offer.rawtext or None
         db_row.source = offer.source.value if offer.source else None
@@ -199,7 +308,7 @@ class OldLootDatabase:
         db_row.seen_last = datetime.now().replace(tzinfo=timezone.utc)
 
     def add_loot_offer(self, offer: LootOffer) -> None:
-        db_row = OldDbLoot()
+        db_row = OldLoot()
         self.update_db_row_with_loot_offer(offer, db_row)
 
         current_date = datetime.now().replace(tzinfo=timezone.utc)

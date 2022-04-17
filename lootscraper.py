@@ -21,7 +21,7 @@ from app.scraper.loot.amazon_prime import AmazonScraper
 from app.scraper.loot.epic_games import EpicScraper
 from app.scraper.loot.gog import GogScraper
 from app.scraper.loot.steam import SteamScraper
-from app.sqlalchemy import OldDbLoot, OldLootDatabase
+from app.sqlalchemy import OldLoot, OldLootDatabase
 from app.upload import upload_to_server
 
 exit = Event()
@@ -148,7 +148,7 @@ def job() -> None:
                 new_offer_titles: list[str] = []
                 for scraper_offer in scraped_offers[scraper_source][scraper_type]:
                     # Get the existing entry if there is one
-                    existing_entry: OldDbLoot = db.find_offer(
+                    existing_entry: OldLoot = db.find_offer(
                         scraper_offer.source.value,
                         scraper_offer.title,
                         scraper_offer.subtitle,

@@ -10,15 +10,11 @@ TIMESTAMP_READABLE_WITH_HOUR = "%Y-%m-%d - %H:%M (UTC)"
 
 
 class OfferType(Enum):
-    """TODO: The value is used in the database, switch to the name instead"""
-
     LOOT = "Loot"
     GAME = "Game"
 
 
 class Source(Enum):
-    """TODO: The value is used in the database, switch to the name instead"""
-
     AMAZON = "Amazon Prime"
     EPIC = "Epic Games"
     STEAM = "Steam"
