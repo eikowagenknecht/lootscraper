@@ -188,13 +188,14 @@ class EpicScraper(Scraper):
 
             nearest_url = raw_offer.url if raw_offer.url else ROOT_URL
             offer = Offer(
-                seen_last=datetime.now(timezone.utc),
                 source=Source.EPIC,
                 type=OfferType.GAME,
-                rawtext=rawtext,
                 title=title,
+                probable_game_name=title,
+                seen_last=datetime.now(timezone.utc),
                 valid_from=utc_valid_from,
                 valid_to=utc_valid_to,
+                rawtext=rawtext,
                 url=nearest_url,
                 img_url=raw_offer.img_url,
             )

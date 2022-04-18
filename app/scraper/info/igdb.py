@@ -4,16 +4,16 @@ from datetime import datetime, timezone
 
 import requests
 from igdb.wrapper import IGDBWrapper
+from sqlalchemy import select
+from sqlalchemy.orm import Session
 
 from app.configparser import Config
 from app.scraper.info.utils import RESULT_MATCH_THRESHOLD, get_match_score
-from app.sqlalchemy import Game
+from app.sqlalchemy import Game, Offer
 
 
 def get_possible_igdb_id(search_string: str) -> int:
     igdb = get_igdb_wrapper()
-    if igdb is None:
-        return 0
 
     raw_response: bytes = igdb.api_request(
         "games",
@@ -54,19 +54,32 @@ def get_possible_igdb_id(search_string: str) -> int:
     return 0
 
 
-def add_igdb_details(search_string: str) -> Game | None:
-    logging.info(f"IGDB: Reading details for {search_string}")
+def add_igdb_details(offer: Offer, session: Session) -> None:
+    igdb_game_id = get_possible_igdb_id(offer.probable_game_name)
+
+    if igdb_game_id == 0:
+        # No entry found, not adding any data
+        return
+
+    # Look for existing game
+    game: Game | None = session.execute(
+        select(Game).where(Game.igdb_id == igdb_game_id)
+    ).scalar_one_or_none()
+
+    if game is not None:
+        # Use existing game if it exists
+        offer.game_id = game.id
+        return
+
+    game = Game()
+    game.igdb_id = igdb_game_id
+
+    logging.info(f'IGDB: Reading details for offer "{offer.title}"')
+
     igdb = get_igdb_wrapper()
-    if igdb is None:
-        return None
-
-    game_id = get_possible_igdb_id(search_string)
-    if game_id == 0:
-        return None
-
     raw_response: bytes = igdb.api_request(
         "games",
-        f"fields *; where id = {game_id};",
+        f"fields *; where id = {igdb_game_id};",
     )
 
     response = json.loads(raw_response)
@@ -74,65 +87,55 @@ def add_igdb_details(search_string: str) -> Game | None:
     if len(response) == 0:
         return None
 
-    result: Game = Game()
-
     try:
-        result.name = response[0]["name"]
+        game.name = response[0]["name"]
     except KeyError:
         pass
 
     try:
-        result.igdb_url = response[0]["url"]
+        game.igdb_url = response[0]["url"]
     except KeyError:
         pass
 
     try:
-        result.short_description = response[0]["summary"]
-    except KeyError:
-        pass
-
-    try:
-        result.igdb_id = response[0]["id"]
+        game.short_description = response[0]["summary"]
     except KeyError:
         pass
 
     try:
         unix_releasedate = response[0]["first_release_date"]
         timestamp = datetime.utcfromtimestamp(unix_releasedate)
-        result.release_date = timestamp.replace(tzinfo=timezone.utc)
+        game.release_date = timestamp.replace(tzinfo=timezone.utc)
     except KeyError:
         pass
 
     try:
-        result.igdb_user_score = int(response[0]["rating"])
+        game.igdb_user_score = int(response[0]["rating"])
     except (KeyError, ValueError):
         pass
 
     try:
-        result.igdb_user_ratings = response[0]["rating_count"]
+        game.igdb_user_ratings = response[0]["rating_count"]
     except KeyError:
         pass
 
     try:
-        result.igdb_meta_score = int(response[0]["aggregated_rating"])
+        game.igdb_meta_score = int(response[0]["aggregated_rating"])
     except (KeyError, ValueError):
         pass
 
     try:
-        result.igdb_meta_ratings = response[0]["aggregated_rating_count"]
+        game.igdb_meta_ratings = response[0]["aggregated_rating_count"]
     except KeyError:
         pass
 
-    # TODO:
-    # Publisher
+    # TODO: Publisher, Genres, Cover
     # genres = List of genres (ids only, have to be called separately)
     # cover = Cover image of the game (id only)
 
-    return result
-
 
 # TODO: Only use one connection, rate limit to < 4 per second
-def get_igdb_wrapper() -> IGDBWrapper | None:
+def get_igdb_wrapper() -> IGDBWrapper:
     client_id = Config.get().igdb_client_id
     client_secret = Config.get().igdb_client_secret
 
@@ -144,5 +147,8 @@ def get_igdb_wrapper() -> IGDBWrapper | None:
     access_token = json.loads(r._content)["access_token"]
 
     wrapper = IGDBWrapper(client_id, access_token)
+
+    if wrapper is None:
+        raise Exception("Could not get IGDB wrapper")
 
     return wrapper

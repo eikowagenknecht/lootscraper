@@ -7,6 +7,7 @@ from pathlib import Path
 from threading import Event
 from types import FrameType
 
+from requests import Session
 from selenium.webdriver.chrome.webdriver import WebDriver
 from sqlalchemy.exc import OperationalError
 
@@ -178,7 +179,8 @@ def job() -> None:
                     # The enddate has been changed or it is a new offer,
                     # get information about it (if it's a game)
                     # and insert it into the database
-                    add_game_info(webdriver, scraper_offer)
+                    if Config.get().scrape_info:
+                        add_game_info(scraper_offer, db.session, webdriver)
                     db.add_offer(scraper_offer)
                     nr_of_new_offers += 1
 
@@ -193,14 +195,15 @@ def job() -> None:
 
         loot_offers_in_db = db.read_all_segmented()
 
-        # Get Steam game information if ForceUpdate is set
-        if Config.get().force_update:
+        logging.info(f"Found {nr_of_new_offers} new offers")
+
+        # Refresh game information if ForceUpdate is set
+        if Config.get().force_update and Config.get().scrape_info:
             for scraper_source in loot_offers_in_db:
                 for scraper_type in loot_offers_in_db[scraper_source]:
                     for db_offer in loot_offers_in_db[scraper_source][scraper_type]:
-                        add_game_info(webdriver, db_offer)
-
-        logging.info(f"Found {nr_of_new_offers} new offers")
+                        # TODO: Remove game info first
+                        add_game_info(db_offer, db.session, webdriver)
 
         if Config.get().generate_feed:
             feed_file_base = Config.data_path() / Path(
@@ -264,14 +267,14 @@ def job() -> None:
             logging.info("Skipping feed generation, disabled")
 
 
-def add_game_info(webdriver: WebDriver, scraper_offer: Offer) -> None:
+def add_game_info(offer: Offer, session: Session, webdriver: WebDriver) -> None:
 
-    if scraper_offer.title and (Config.get().info_igdb or Config.get().info_steam):
+    if offer.title and (Config.get().info_igdb or Config.get().info_steam):
         # IGDB has priority, Steam is used to fill in the gaps
         if Config.get().info_igdb:
-            add_igdb_details(scraper_offer)
+            add_igdb_details(offer, session)
         if Config.get().info_steam:
-            add_steam_details(scraper_offer, webdriver)
+            add_steam_details(offer, session, webdriver)
 
 
 def log_new_offer(offer: Offer) -> None:

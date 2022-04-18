@@ -1,4 +1,5 @@
 import logging
+import re
 from dataclasses import dataclass
 from datetime import date, datetime, time, timedelta, timezone
 from time import sleep
@@ -166,25 +167,48 @@ class AmazonScraper(Scraper):
 
         for raw_offer in raw_offers:
             # Raw text
-            rawtext = ""
-            if raw_offer.title:
-                rawtext += f"<title>{raw_offer.title}</title>"
+            if not raw_offer.title:
+                logging.error(f"Error with offer, has no title: {raw_offer}")
+                continue
+
+            rawtext = f"<title>{raw_offer.title}</title>"
 
             if raw_offer.paragraph:
                 rawtext += f"<paragraph>{raw_offer.paragraph}</paragraph>"
 
             # Title
-            title = None
-            subtitle = None
-            if raw_offer.title is not None:
-                parsed_heads = raw_offer.title.split(": ", 1)
-                title = parsed_heads[0]
-                subtitle = parsed_heads[1] if len(parsed_heads) == 2 else None
-
-            # Paragraph
-            publisher = None
-            if raw_offer.paragraph:
-                publisher = raw_offer.paragraph
+            # Unfortunately Amazon loot offers come in free text format, so we
+            # need to do some manual matching.
+            # - Most of the time, it is the part before the first ": ", e.g.
+            #   "Lords Mobile: Warlord Pack" -> Lords Mobile
+            # - When the title itself contains a ": ", it can also be the second, e.g.
+            #   "Mobile Legends: Bang Bang: Amazon Prime Chest" -> Mobile Legends: Bang Bang
+            # . Sometimes it also ist "Get ... in [Game]", e.g.
+            #   "Get up to GTA$400,000 this month in GTA Online" -> GTA Online
+            # So as a general rule, we try splitting by the second colon first,
+            # then the "Get ... in [Game] pattern" (to catch games with a colon in the
+            # name) and finally the ": " pattern.
+            # Fortunately we don't have to do this guessing for Amazon game offers or
+            # any other source (currently).
+            probable_game_name: str | None = None
+            if offer_type == OfferType.GAME:
+                probable_game_name = (
+                    raw_offer.title.removesuffix(" on Origin")
+                    .removesuffix(" Game of the Year Edition Deluxe")
+                    .removesuffix(" Game of the Year Edition")
+                )
+            else:
+                title_parts: list[str] = raw_offer.title.split(": ")
+                if len(title_parts) >= 3:
+                    probable_game_name = ": ".join(title_parts[:-1])
+                if probable_game_name is None:
+                    match = re.compile(r"Get .* in (.*)").match(raw_offer.title)
+                    if match and match.group(1):
+                        probable_game_name = match.group(1)
+                if probable_game_name is None and len(title_parts) == 2:
+                    probable_game_name = ": ".join(title_parts[:-1])
+                if probable_game_name is None:
+                    probable_game_name = raw_offer.title
 
             # Date
             # This is a little bit more complicated as only month and day are
@@ -218,21 +242,17 @@ class AmazonScraper(Scraper):
 
             nearest_url = raw_offer.url if raw_offer.url else ROOT_URL
             offer = Offer(
-                seen_last=datetime.now(timezone.utc),
                 source=Source.AMAZON,
                 type=offer_type,
-                rawtext=rawtext,
-                title=title,
-                subtitle=subtitle,
-                publisher=publisher,
+                title=raw_offer.title,
+                probable_game_name=probable_game_name,
+                seen_last=datetime.now(timezone.utc),
                 valid_to=end_date,
+                rawtext=rawtext,
                 url=nearest_url,
                 img_url=raw_offer.img_url,
             )
 
-            if not offer.title:
-                logging.error(f"Error with offer, has no title: {offer}")
-            else:
-                normalized_offers.append(offer)
+            normalized_offers.append(offer)
 
         return normalized_offers

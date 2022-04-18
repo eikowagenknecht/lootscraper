@@ -177,12 +177,13 @@ class GogScraper(Scraper):
 
             nearest_url = raw_offer.url if raw_offer.url else ROOT_URL
             offer = Offer(
-                seen_last=datetime.now(timezone.utc),
                 source=Source.GOG,
                 type=OfferType.GAME,
-                rawtext=rawtext,
                 title=title,
+                probable_game_name=title,
+                seen_last=datetime.now(timezone.utc),
                 valid_to=valid_to_stamp,
+                rawtext=rawtext,
                 url=nearest_url,
                 img_url=raw_offer.img_url,
             )

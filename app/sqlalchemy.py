@@ -114,6 +114,7 @@ class Offer(Base):
     source: Source = Column(Enum(Source), nullable=False)
     type: OfferType = Column(Enum(OfferType), nullable=False)
     title: str = Column(String, nullable=False)
+    probable_game_name: str = Column(String, nullable=False)
 
     seen_first: datetime | None = Column(AwareDateTime)
     seen_last: datetime | None = Column(AwareDateTime)
@@ -259,8 +260,6 @@ class LootDatabase:
             db_offer.game_id = new_data.game_id
 
     def add_offer(self, offer: Offer) -> None:
-        current_date = datetime.now().replace(tzinfo=timezone.utc)
-        offer.seen_first = current_date  # TODO: Not here
-        offer.seen_last = current_date  # TODO: Not here
+        offer.seen_first = offer.seen_last
 
         self.session.add(offer)

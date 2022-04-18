@@ -121,13 +121,14 @@ class SteamScraper(Scraper):
 
             nearest_url = raw_offer.url if raw_offer.url else ROOT_URL
             offer = Offer(
-                seen_last=datetime.now(timezone.utc),
                 source=Source.STEAM,
                 type=OfferType.GAME,
-                rawtext=rawtext,
                 title=title,
+                probable_game_name=title,
+                seen_last=datetime.now(timezone.utc),
                 valid_from=None,
                 valid_to=None,
+                rawtext=rawtext,
                 url=nearest_url,
                 img_url=None,
             )
