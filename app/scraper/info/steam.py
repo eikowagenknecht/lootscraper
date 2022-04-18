@@ -11,8 +11,8 @@ from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import Select, WebDriverWait
 
-from app.scraper.info.gameinfo import Gameinfo
 from app.scraper.info.utils import RESULT_MATCH_THRESHOLD, get_match_score
+from app.sqlalchemy import Game
 
 STEAM_SEARCH_URL = "https://store.steampowered.com/search/?term="
 STEAM_SEARCH_OPTIONS = "&category1=998"  # Games only
@@ -95,7 +95,7 @@ def get_possible_steam_appid(driver: WebDriver, search_string: str) -> int:
     return 0
 
 
-def get_steam_details(driver: WebDriver, title: str | int) -> Gameinfo | None:
+def add_steam_details(title: str | int, driver: WebDriver) -> Game | None:
     logging.info(f"Steam: Reading details for {title}")
     if isinstance(title, int):
         appid = title
@@ -105,7 +105,7 @@ def get_steam_details(driver: WebDriver, title: str | int) -> Gameinfo | None:
     if appid == 0:
         return None
 
-    result = Gameinfo(appid)
+    result = Game(appid)
 
     with urllib.request.urlopen(STEAM_DETAILS_JSON + str(appid)) as url:  # nosec
         data = json.loads(url.read().decode())

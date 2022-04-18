@@ -6,8 +6,8 @@ import requests
 from igdb.wrapper import IGDBWrapper
 
 from app.configparser import Config
-from app.scraper.info.gameinfo import Gameinfo
 from app.scraper.info.utils import RESULT_MATCH_THRESHOLD, get_match_score
+from app.sqlalchemy import Game
 
 
 def get_possible_igdb_id(search_string: str) -> int:
@@ -54,7 +54,7 @@ def get_possible_igdb_id(search_string: str) -> int:
     return 0
 
 
-def get_igdb_details(search_string: str) -> Gameinfo | None:
+def add_igdb_details(search_string: str) -> Game | None:
     logging.info(f"IGDB: Reading details for {search_string}")
     igdb = get_igdb_wrapper()
     if igdb is None:
@@ -74,7 +74,7 @@ def get_igdb_details(search_string: str) -> Gameinfo | None:
     if len(response) == 0:
         return None
 
-    result: Gameinfo = Gameinfo()
+    result: Game = Game()
 
     try:
         result.name = response[0]["name"]
@@ -92,7 +92,7 @@ def get_igdb_details(search_string: str) -> Gameinfo | None:
         pass
 
     try:
-        result.idgb_id = response[0]["id"]
+        result.igdb_id = response[0]["id"]
     except KeyError:
         pass
 

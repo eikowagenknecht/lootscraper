@@ -10,8 +10,9 @@ from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
-from app.common import LootOffer, OfferType, Source
+from app.common import OfferType, Source
 from app.scraper.loot.scraper import Scraper
+from app.sqlalchemy import Offer
 
 SCRAPER_NAME = "Amazon Prime"
 ROOT_URL = "https://gaming.amazon.com/home"
@@ -25,9 +26,7 @@ XPATH_GAMES = (
 )
 SUBPATH_TITLE = './/div[contains(concat(" ", normalize-space(@class), " "), " offer__body__titles ")]/h3'
 SUBPATH_PARAGRAPH = './/div[contains(concat(" ", normalize-space(@class), " "), " offer__body__titles ")]/p'
-SUBPATH_ENDDATE = (
-    './/div[contains(concat(" ", normalize-space(@class), " "), " claim-info ")]//p/span'
-)
+SUBPATH_ENDDATE = './/div[contains(concat(" ", normalize-space(@class), " "), " claim-info ")]//p/span'
 SUBPATH_LINK = './/a[@data-a-target="learn-more-card"]'
 SUBPATH_IMG = './/img[@class="tw-image"]'
 
@@ -45,7 +44,7 @@ class AmazonScraper(Scraper):
     @staticmethod
     def scrape(
         driver: WebDriver, options: dict[str, bool] = None
-    ) -> dict[str, list[LootOffer]]:
+    ) -> dict[str, list[Offer]]:
         if (
             options
             and not options[OfferType.GAME.name]
@@ -72,9 +71,7 @@ class AmazonScraper(Scraper):
         return offers
 
     @staticmethod
-    def read_offers_from_page(
-        offer_type: OfferType, driver: WebDriver
-    ) -> list[LootOffer]:
+    def read_offers_from_page(offer_type: OfferType, driver: WebDriver) -> list[Offer]:
         try:
             # Wait until the page loaded
             WebDriverWait(driver, MAX_WAIT_SECONDS).until(
@@ -163,31 +160,31 @@ class AmazonScraper(Scraper):
 
     @staticmethod
     def normalize_offers(
-        offer_type: OfferType, offers: list[RawOffer]
-    ) -> list[LootOffer]:
-        normalized_offers: list[LootOffer] = []
+        offer_type: OfferType, raw_offers: list[RawOffer]
+    ) -> list[Offer]:
+        normalized_offers: list[Offer] = []
 
-        for offer in offers:
+        for raw_offer in raw_offers:
             # Raw text
             rawtext = ""
-            if offer.title:
-                rawtext += f"<title>{offer.title}</title>"
+            if raw_offer.title:
+                rawtext += f"<title>{raw_offer.title}</title>"
 
-            if offer.paragraph:
-                rawtext += f"<paragraph>{offer.paragraph}</paragraph>"
+            if raw_offer.paragraph:
+                rawtext += f"<paragraph>{raw_offer.paragraph}</paragraph>"
 
             # Title
             title = None
             subtitle = None
-            if offer.title is not None:
-                parsed_heads = offer.title.split(": ", 1)
+            if raw_offer.title is not None:
+                parsed_heads = raw_offer.title.split(": ", 1)
                 title = parsed_heads[0]
                 subtitle = parsed_heads[1] if len(parsed_heads) == 2 else None
 
             # Paragraph
             publisher = None
-            if offer.paragraph:
-                publisher = offer.paragraph
+            if raw_offer.paragraph:
+                publisher = raw_offer.paragraph
 
             # Date
             # This is a little bit more complicated as only month and day are
@@ -198,9 +195,9 @@ class AmazonScraper(Scraper):
             # offer on that day but won't tell you when." I've seen real ending
             # times ranging from 02:00 to 19:00.
             end_date = None
-            if offer.valid_to:
+            if raw_offer.valid_to:
                 try:
-                    parsed_date = datetime.strptime(offer.valid_to, "%b %d").date()
+                    parsed_date = datetime.strptime(raw_offer.valid_to, "%b %d").date()
                     guessed_end_date = date(
                         date.today().year, parsed_date.month, parsed_date.day
                     )
@@ -219,8 +216,8 @@ class AmazonScraper(Scraper):
                 except ValueError:
                     pass
 
-            nearest_url = offer.url if offer.url else ROOT_URL
-            loot_offer = LootOffer(
+            nearest_url = raw_offer.url if raw_offer.url else ROOT_URL
+            offer = Offer(
                 seen_last=datetime.now(timezone.utc),
                 source=Source.AMAZON,
                 type=offer_type,
@@ -230,12 +227,12 @@ class AmazonScraper(Scraper):
                 publisher=publisher,
                 valid_to=end_date,
                 url=nearest_url,
-                img_url=offer.img_url,
+                img_url=raw_offer.img_url,
             )
 
-            if not loot_offer.title:
-                logging.error(f"Error with offer, has no title: {loot_offer}")
+            if not offer.title:
+                logging.error(f"Error with offer, has no title: {offer}")
             else:
-                normalized_offers.append(loot_offer)
+                normalized_offers.append(offer)
 
         return normalized_offers

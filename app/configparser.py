@@ -33,7 +33,7 @@ class ParsedConfig:
     # Actions
     scrape_games: bool = True
     scrape_loot: bool = True
-    scrape_info: bool = True
+    scrape_info: bool = True  # Not used anywhere yet
     generate_feed: bool = True
     upload_feed: bool = False
 

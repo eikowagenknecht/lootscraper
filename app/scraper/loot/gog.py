@@ -10,8 +10,9 @@ from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
-from app.common import LootOffer, OfferType, Source
+from app.common import OfferType, Source
 from app.scraper.loot.scraper import Scraper
+from app.sqlalchemy import Offer
 
 SCRAPER_NAME = "GOG"
 ROOT_URL = "https://www.gog.com/#giveaway"
@@ -37,7 +38,7 @@ class GogScraper(Scraper):
     @staticmethod
     def scrape(
         driver: WebDriver, options: dict[str, bool] = None
-    ) -> dict[str, list[LootOffer]]:
+    ) -> dict[str, list[Offer]]:
         if options and not options[OfferType.GAME.name]:
             return {}
 
@@ -51,7 +52,7 @@ class GogScraper(Scraper):
         return offers
 
     @staticmethod
-    def read_offers_from_page(driver: WebDriver) -> list[LootOffer]:
+    def read_offers_from_page(driver: WebDriver) -> list[Offer]:
         try:
             # Wait until the page loaded
             WebDriverWait(driver, MAX_WAIT_SECONDS).until(
@@ -147,35 +148,35 @@ class GogScraper(Scraper):
         )
 
     @staticmethod
-    def normalize_offers(raw_offers: list[RawOffer]) -> list[LootOffer]:
-        normalized_offers: list[LootOffer] = []
+    def normalize_offers(raw_offers: list[RawOffer]) -> list[Offer]:
+        normalized_offers: list[Offer] = []
 
-        for offer in raw_offers:
+        for raw_offer in raw_offers:
             # Raw text
             rawtext = ""
-            if offer.title:
-                rawtext += f"<title>{offer.title}</title>"
+            if raw_offer.title:
+                rawtext += f"<title>{raw_offer.title}</title>"
 
-            if offer.valid_to:
-                rawtext += f"<enddate>{offer.valid_to}</enddate>"
+            if raw_offer.valid_to:
+                rawtext += f"<enddate>{raw_offer.valid_to}</enddate>"
 
             # Title
             # Contains additional text that needs to be stripped
-            title = offer.title
+            title = raw_offer.title
 
             # Valid to
             valid_to_stamp = None
-            if offer.valid_to:
+            if raw_offer.valid_to:
                 try:
-                    valid_to_unix = int(offer.valid_to) / 1000
+                    valid_to_unix = int(raw_offer.valid_to) / 1000
                     valid_to_stamp = datetime.utcfromtimestamp(valid_to_unix).replace(
                         tzinfo=timezone.utc
                     )
                 except ValueError:
                     valid_to_stamp = None
 
-            nearest_url = offer.url if offer.url else ROOT_URL
-            loot_offer = LootOffer(
+            nearest_url = raw_offer.url if raw_offer.url else ROOT_URL
+            offer = Offer(
                 seen_last=datetime.now(timezone.utc),
                 source=Source.GOG,
                 type=OfferType.GAME,
@@ -183,9 +184,9 @@ class GogScraper(Scraper):
                 title=title,
                 valid_to=valid_to_stamp,
                 url=nearest_url,
-                img_url=offer.img_url,
+                img_url=raw_offer.img_url,
             )
 
             if title is not None and len(title) > 0:
-                normalized_offers.append(loot_offer)
+                normalized_offers.append(offer)
         return normalized_offers

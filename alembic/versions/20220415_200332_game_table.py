@@ -67,9 +67,9 @@ class Game(Base):
     igdb_id = sa.Column(sa.Integer)
     igdb_url = sa.Column(sa.String)
     igdb_user_score = sa.Column(sa.Integer)
-    igdb_user_rating = sa.Column(sa.Integer)
+    igdb_user_ratings = sa.Column(sa.Integer)
     igdb_meta_score = sa.Column(sa.Integer)
-    igdb_meta_rating = sa.Column(sa.Integer)
+    igdb_meta_ratings = sa.Column(sa.Integer)
 
     # Could be from both
     name = sa.Column(sa.String)
@@ -213,9 +213,9 @@ def upgrade() -> None:
                         steam_percent=gameinfo.steam_percent,
                         steam_score=gameinfo.steam_score,
                         igdb_user_score=gameinfo.igdb_user_score,
-                        igdb_user_rating=gameinfo.igdb_user_ratings,
+                        igdb_user_ratings=gameinfo.igdb_user_ratings,
                         igdb_meta_score=gameinfo.igdb_meta_score,
-                        igdb_meta_rating=gameinfo.igdb_meta_ratings,
+                        igdb_meta_ratings=gameinfo.igdb_meta_ratings,
                         igdb_url=gameinfo.igdb_url,
                         metacritic_score=gameinfo.metacritic_score,
                         metacritic_url=gameinfo.metacritic_url,
@@ -282,9 +282,9 @@ def downgrade() -> None:
                     steam_percent=game.steam_percent,
                     steam_score=game.steam_score,
                     igdb_user_score=game.igdb_user_score,
-                    igdb_user_ratings=game.igdb_user_rating,
+                    igdb_user_ratings=game.igdb_user_ratings,
                     igdb_meta_score=game.igdb_meta_score,
-                    igdb_meta_ratings=game.igdb_meta_rating,
+                    igdb_meta_ratings=game.igdb_meta_ratings,
                     igdb_url=game.igdb_url,
                     metacritic_score=game.metacritic_score,
                     metacritic_url=game.metacritic_url,
