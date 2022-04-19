@@ -6,58 +6,183 @@ from pathlib import Path
 from types import TracebackType
 from typing import Any, Type
 
-from sqlalchemy import Column, DateTime, Integer, String, and_, create_engine, select
-from sqlalchemy.orm import Session, registry
+from sqlalchemy import (
+    Column,
+    DateTime,
+    Enum,
+    Float,
+    ForeignKey,
+    Integer,
+    String,
+    TypeDecorator,
+    and_,
+    create_engine,
+    select,
+)
+from sqlalchemy.engine.interfaces import Dialect
+from sqlalchemy.orm import Session, registry, relationship
 
 from alembic import command
 from alembic.config import Config as AlembicConfig
-from app.common import LootOffer, OfferType, Source
+from app.common import OfferType, Source
 from app.configparser import Config
-from app.scraper.info.gameinfo import Gameinfo
 
 mapper_registry = registry()
 Base = mapper_registry.generate_base()  # type: Any
 
 
-class OldDbLoot(Base):
-    __tablename__ = "loot"
-    id = Column(Integer, primary_key=True)
-    seen_first = Column(DateTime)
-    seen_last = Column(DateTime)
-    source = Column(String)
-    type = Column(String)
-    rawtext = Column(String)
-    title = Column(String)
-    subtitle = Column(String)
-    publisher = Column(String)
-    valid_from = Column(DateTime)
-    valid_to = Column(DateTime)
-    url = Column(String)
-    img_url = Column(String)
-    gameinfo = Column(String)
+class AwareDateTime(TypeDecorator):
+    """Results returned as aware datetimes, not naive ones."""
+
+    impl = DateTime
+    cache_ok = True
+
+    def process_result_value(
+        self, value: datetime | None, dialect: Dialect
+    ) -> datetime | None:
+        if value is not None:
+            return value.replace(tzinfo=timezone.utc)
+        else:
+            return None
+
+
+class Game(Base):
+    __tablename__ = "games"
+
+    id: int = Column(Integer, primary_key=True, nullable=False)
+
+    igdb_id: int | None = Column(Integer, ForeignKey("igdb_info.id"))
+    steam_id: int | None = Column(Integer, ForeignKey("steam_info.id"))
+
+    igdb_info: IgdbInfo | None = relationship("IgdbInfo", back_populates="game")
+    steam_info: SteamInfo | None = relationship("SteamInfo", back_populates="game")
+
+    offers: list[Offer] = relationship("Offer", back_populates="game")
 
     def __repr__(self) -> str:
         return (
-            "OldLoot("
+            "Game("
             f"id={self.id!r}, "
+            f"igdb_id={self.igdb_id!r}, "
+            f"steam_id={self.steam_id!r})"
+        )
+
+
+class IgdbInfo(Base):
+    __tablename__ = "igdb_info"
+
+    id: int = Column(Integer, primary_key=True, nullable=False)
+    url: str | None = Column(String, nullable=False)
+
+    name: str | None = Column(String, nullable=False)
+    short_description: str | None = Column(String)
+    release_date: datetime | None = Column(AwareDateTime)
+
+    user_score: int | None = Column(Integer)
+    user_ratings: int | None = Column(Integer)
+    meta_score: int | None = Column(Integer)
+    meta_ratings: int | None = Column(Integer)
+
+    def __repr__(self) -> str:
+        return (
+            "IgdbInfo("
+            f"id={self.id!r}, "
+            f"url={self.url!r}, "
+            f"name={self.name!r}, "
+            f"short_description={self.short_description!r}, "
+            f"user_score={self.user_score!r}, "
+            f"user_rating={self.user_ratings!r}, "
+            f"meta_score={self.meta_score!r}, "
+            f"meta_rating={self.meta_ratings!r}, "
+            f"release_date={self.release_date!r})"
+        )
+
+    game: Game = relationship("Game", back_populates="igdb_info")
+
+
+class SteamInfo(Base):
+    __tablename__ = "steam_info"
+
+    id: int = Column(Integer, primary_key=True, nullable=False)
+    url: str | None = Column(String, nullable=False)
+
+    name: str | None = Column(String, nullable=False)
+    short_description: str | None = Column(String)
+    release_date: datetime | None = Column(AwareDateTime)
+    genres: str | None = Column(String)
+    publishers: str | None = Column(String)
+    image_url: str | None = Column(String)
+
+    recommendations: int | None = Column(Integer)
+    percent: int | None = Column(Integer)
+    score: int | None = Column(Integer)
+    metacritic_score: int | None = Column(Integer)
+    metacritic_url: str | None = Column(String)
+
+    recommended_price_eur: float | None = Column(Float)
+
+    def __repr__(self) -> str:
+        return (
+            "SteamInfo("
+            f"id={self.id!r}, "
+            f"url={self.url!r}, "
+            f"name={self.name!r}, "
+            f"short_description={self.short_description!r}, "
+            f"release_date={self.release_date!r}, "
+            f"genres={self.genres!r}, "
+            f"publishers={self.publishers!r}, "
+            f"image_url={self.image_url!r}, "
+            f"recommendations={self.recommendations!r}, "
+            f"percent={self.percent!r}, "
+            f"score={self.score!r}, "
+            f"metacritic_score={self.metacritic_score!r}, "
+            f"metacritic_url={self.metacritic_url!r}, "
+            f"recommended_price_eur={self.recommended_price_eur!r})"
+        )
+
+    game: Game = relationship("Game", back_populates="steam_info")
+
+
+class Offer(Base):
+    __tablename__ = "offers"
+
+    id: int = Column(Integer, primary_key=True, nullable=False)
+    source: Source = Column(Enum(Source), nullable=False)
+    type: OfferType = Column(Enum(OfferType), nullable=False)
+    title: str = Column(String, nullable=False)
+    probable_game_name: str = Column(String, nullable=False)
+
+    seen_first: datetime | None = Column(AwareDateTime)
+    seen_last: datetime | None = Column(AwareDateTime)
+    valid_from: datetime | None = Column(AwareDateTime)
+    valid_to: datetime | None = Column(AwareDateTime)
+
+    rawtext: str | None = Column(String)
+    url: str | None = Column(String)
+    img_url: str | None = Column(String)
+
+    game_id: int | None = Column(Integer, ForeignKey("games.id"))
+    game: Game | None = relationship("Game", back_populates="offers")
+
+    def __repr__(self) -> str:
+        return (
+            "Offer("
+            f"id={self.id!r}, "
+            f"game_id={self.game_id!r}, "
             f"seen_first={self.seen_first!r}, "
             f"seen_last={self.seen_last!r}, "
             f"source={self.source!r}, "
             f"type={self.type!r}, "
             f"rawtext={self.rawtext!r}, "
             f"title={self.title!r}, "
-            f"subtitle={self.subtitle!r}, "
-            f"publisher={self.publisher!r}, "
             f"valid_from={self.valid_from!r}, "
             f"valid_to={self.valid_to!r}, "
             f"url={self.url!r}, "
             f"img_url={self.img_url!r}, "
-            f"gameinfo={self.gameinfo!r}"
-            f""
         )
 
 
-class OldLootDatabase:
+class LootDatabase:
     def __init__(self, echo: bool = False) -> None:
         # Run Alembic migrations first before we open a session
         self.initialize_or_update()
@@ -71,7 +196,7 @@ class OldLootDatabase:
 
         self.session = Session(self.engine)
 
-    def __enter__(self) -> OldLootDatabase:
+    def __enter__(self) -> LootDatabase:
         return self
 
     def __exit__(
@@ -95,20 +220,19 @@ class OldLootDatabase:
         )
         command.upgrade(alembic_cfg, "head")
 
-    def read_all(self) -> list[OldDbLoot]:
-        result = self.session.execute(select(OldDbLoot)).scalars().all()
+    def read_all(self) -> list[Offer]:
+        result = self.session.execute(select(Offer)).scalars().all()
         return result
 
-    def read_all_segmented(self) -> dict[str, dict[str, list[LootOffer]]]:
+    def read_all_segmented(self) -> dict[str, dict[str, list[Offer]]]:
         result = self.read_all()
 
-        offers: dict[str, dict[str, list[LootOffer]]] = {}
+        offers: dict[str, dict[str, list[Offer]]] = {}
 
-        for row in result:
-            offer = self.get_loot_offer_from_db_row(row)
-
-            source: str = Source(row.source).name
-            type: str = OfferType(row.type).name
+        offer: Offer
+        for offer in result:
+            source: str = Source(offer.source).name
+            type: str = OfferType(offer.type).name
             if source not in offers:
                 offers[source] = {}
             if type not in offers[source]:
@@ -120,17 +244,16 @@ class OldLootDatabase:
 
     def find_offer(
         self,
-        source: str | None,
-        title: str | None,
-        subtitle: str | None,
+        source: Source,
+        type: OfferType,
+        title: str,
         valid_to: datetime | None,
-    ) -> OldDbLoot:
-        statement = select(OldDbLoot).where(
+    ) -> Offer:
+        statement = select(Offer).where(
             and_(
-                OldDbLoot.source == source,
-                OldDbLoot.title == title,
-                OldDbLoot.subtitle == subtitle,
-                OldDbLoot.valid_to == valid_to.replace(tzinfo=timezone.utc)
+                Offer.source == source,
+                Offer.title == title,
+                Offer.valid_to == valid_to.replace(tzinfo=timezone.utc)
                 if valid_to
                 else None,
             )
@@ -139,78 +262,40 @@ class OldLootDatabase:
 
         return result
 
-    def find_offer_by_id(self, id: int) -> OldDbLoot:
-        statement = select(OldDbLoot).where(OldDbLoot.id == id)
+    def find_offer_by_id(self, id: int) -> Offer:
+        statement = select(Offer).where(Offer.id == id)
         result = self.session.execute(statement).scalars().one_or_none()
 
         return result
 
-    def get_loot_offer_from_db_row(self, db_row: OldDbLoot) -> LootOffer:
-        gameinfo: Gameinfo | None = (
-            Gameinfo.from_json(db_row.gameinfo) if db_row.gameinfo else None
-        )
-        offer = LootOffer(
-            id=db_row.id,
-            source=Source(db_row.source),
-            type=OfferType(db_row.type),
-            title=db_row.title,
-            subtitle=db_row.subtitle,
-            publisher=db_row.publisher,
-            valid_from=db_row.valid_from.replace(tzinfo=timezone.utc)
-            if db_row.valid_from
-            else None,
-            valid_to=db_row.valid_to.replace(tzinfo=timezone.utc)
-            if db_row.valid_to
-            else None,
-            seen_first=db_row.seen_first.replace(tzinfo=timezone.utc)
-            if db_row.seen_first
-            else None,
-            seen_last=db_row.seen_last.replace(tzinfo=timezone.utc)
-            if db_row.seen_last
-            else None,
-            url=db_row.url,
-            img_url=db_row.img_url,
-            gameinfo=gameinfo,
-        )
+    def touch_db_offer(self, db_offer: Offer) -> None:
+        db_offer.seen_last = datetime.now().replace(tzinfo=timezone.utc)
 
-        return offer
+    def update_db_offer(self, db_offer: Offer, new_data: Offer) -> None:
+        db_offer.source = new_data.source
+        db_offer.type = new_data.type
+        db_offer.title = new_data.title
 
-    def touch_db_row(self, db_row: OldDbLoot) -> None:
-        db_row.seen_last = datetime.now().replace(tzinfo=timezone.utc)
+        if new_data.seen_first:
+            db_offer.seen_first = new_data.seen_first
+        if new_data.seen_last:
+            db_offer.seen_last = new_data.seen_last
+        if new_data.valid_from:
+            db_offer.valid_from = new_data.valid_from
+        if new_data.valid_to:
+            db_offer.valid_to = new_data.valid_to
 
-    def update_db_row_with_loot_offer(
-        self, offer: LootOffer, db_row: OldDbLoot
-    ) -> None:
-        db_row.rawtext = offer.rawtext or None
-        db_row.source = offer.source.value if offer.source else None
-        db_row.type = offer.type.value if offer.type else None
-        db_row.title = offer.title or None
-        db_row.subtitle = offer.subtitle or None
-        db_row.publisher = offer.publisher or None
-        db_row.valid_from = (
-            offer.valid_from.replace(tzinfo=timezone.utc) if offer.valid_from else None
-        )
-        db_row.valid_to = (
-            offer.valid_to.replace(tzinfo=timezone.utc) if offer.valid_to else None
-        )
-        db_row.url = offer.url or None
-        db_row.img_url = offer.img_url or None
-        db_row.gameinfo = offer.gameinfo.to_json() if offer.gameinfo else None
-        db_row.seen_last = datetime.now().replace(tzinfo=timezone.utc)
+        if new_data.rawtext:
+            db_offer.rawtext = new_data.rawtext
+        if new_data.url:
+            db_offer.url = new_data.url
+        if new_data.img_url:
+            db_offer.img_url = new_data.img_url
 
-    def add_loot_offer(self, offer: LootOffer) -> None:
-        db_row = OldDbLoot()
-        self.update_db_row_with_loot_offer(offer, db_row)
+        if new_data.game_id:
+            db_offer.game_id = new_data.game_id
 
-        current_date = datetime.now().replace(tzinfo=timezone.utc)
-        db_row.seen_first = current_date
-        db_row.seen_last = current_date
+    def add_offer(self, offer: Offer) -> None:
+        offer.seen_first = offer.seen_last
 
-        self.session.add(db_row)
-
-    def update_loot_offer(self, offer: LootOffer) -> None:
-        if offer.id is None:
-            return
-
-        db_row = self.find_offer_by_id(offer.id)
-        self.update_db_row_with_loot_offer(offer, db_row)
+        self.session.add(offer)
