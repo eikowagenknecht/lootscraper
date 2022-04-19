@@ -2,6 +2,7 @@ from logging.config import fileConfig
 from pathlib import Path
 
 from sqlalchemy import create_engine, pool
+from sqlalchemy.schema import SchemaItem
 
 from alembic import context
 from app.configparser import Config
@@ -31,6 +32,26 @@ target_metadata = Base.metadata
 # ... etc.
 
 
+IGNORE_TABLES = ["sqlite_sequence"]
+
+
+def include_object(
+    object: SchemaItem,
+    name: str,
+    type_: str,
+    reflected: bool,
+    compare_to: SchemaItem,
+) -> bool:
+    """
+    Should you include this table or not?
+    """
+
+    if type_ == "table" and (name in IGNORE_TABLES):
+        return False
+
+    return True
+
+
 def run_migrations_offline() -> None:
     """Run migrations in 'offline' mode.
 
@@ -53,6 +74,7 @@ def run_migrations_offline() -> None:
         dialect_opts={"paramstyle": "named"},
         compare_type=True,
         render_as_batch=True,
+        include_object=include_object,
     )
 
     with context.begin_transaction():
@@ -81,6 +103,7 @@ def run_migrations_online() -> None:
             target_metadata=target_metadata,
             compare_type=True,
             render_as_batch=True,
+            include_object=include_object,
         )
 
         with context.begin_transaction():
