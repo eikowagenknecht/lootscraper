@@ -19,6 +19,7 @@ class ParsedConfig:
 
     # Expert
     force_update: bool = False
+    db_echo: bool = False
 
     # Sources: Offers
     offers_amazon: bool = True
@@ -102,6 +103,7 @@ class Config:
             parsed_config.wait_between_runs = int(config["common"]["WaitBetweenRuns"])
 
             parsed_config.force_update = config.getboolean("expert", "ForceUpdate")
+            parsed_config.db_echo = config.getboolean("expert", "DbEcho")
 
             parsed_config.offers_amazon = config.getboolean("sources_loot", "Amazon")
             parsed_config.offers_epic = config.getboolean("sources_loot", "Epic")

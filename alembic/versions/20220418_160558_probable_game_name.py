@@ -8,7 +8,7 @@ Create Date: 2022-04-18 16:05:58.909502+00:00
 import re
 
 import sqlalchemy as sa
-from sqlalchemy import orm
+from sqlalchemy import orm, select
 
 from alembic import op
 from app.common import OfferType, Source
@@ -36,7 +36,7 @@ def upgrade() -> None:
     bind = op.get_bind()
     with orm.Session(bind=bind) as session:
         offer: Offer
-        for offer in session.query(Offer):
+        for offer in session.scalars(select(Offer)).all():
             probable_game_name: str | None = None
             if offer.type == OfferType.LOOT and offer.source == Source.AMAZON:
                 title_parts: list[str] = offer.title.split(": ")

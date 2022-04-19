@@ -1,7 +1,7 @@
 import json
 import logging
 from datetime import datetime, timezone
-
+import re
 import requests
 from igdb.wrapper import IGDBWrapper
 from sqlalchemy import select
@@ -12,12 +12,19 @@ from app.scraper.info.utils import RESULT_MATCH_THRESHOLD, get_match_score
 from app.sqlalchemy import Game, Offer
 
 
-def get_possible_igdb_id(search_string: str) -> int:
+def get_possible_igdb_id(search_string: str) -> int | None:
     igdb = get_igdb_wrapper()
 
+    logging.info(f"Getting id for {search_string}")
+
+    api_search_string = re.sub(
+        r"[^\x00-\x7F\x80-\xFF\u0100-\u017F\u0180-\u024F\u1E00-\u1EFF]",
+        "",
+        search_string,
+    )
     raw_response: bytes = igdb.api_request(
         "games",
-        f'search "{search_string}"; fields name; where version_parent = null; limit 50;',
+        f'search "{api_search_string}"; fields name; where version_parent = null; limit 50;',
     )
 
     response = json.loads(raw_response)
@@ -51,30 +58,26 @@ def get_possible_igdb_id(search_string: str) -> int:
 
     logging.info(f"IGDB: Search for {search_string} found no result")
 
-    return 0
+    return None
 
 
-def add_igdb_details(offer: Offer, session: Session) -> None:
-    igdb_game_id = get_possible_igdb_id(offer.probable_game_name)
+def get_igdb_details(id: int | None = None, title: str | None = None) -> Game | None:
+    igdb_game_id: int | None = None
 
-    if igdb_game_id == 0:
+    if id:
+        igdb_game_id = id
+
+    if not igdb_game_id and title:
+        igdb_game_id = get_possible_igdb_id(title)
+
+    if not igdb_game_id:
         # No entry found, not adding any data
-        return
+        return None
 
-    # Look for existing game
-    game: Game | None = session.execute(
-        select(Game).where(Game.igdb_id == igdb_game_id)
-    ).scalar_one_or_none()
-
-    if game is not None:
-        # Use existing game if it exists
-        offer.game_id = game.id
-        return
+    logging.info(f"IGDB: Reading details for IGDB id {id}")
 
     game = Game()
     game.igdb_id = igdb_game_id
-
-    logging.info(f'IGDB: Reading details for offer "{offer.title}"')
 
     igdb = get_igdb_wrapper()
     raw_response: bytes = igdb.api_request(
@@ -132,6 +135,41 @@ def add_igdb_details(offer: Offer, session: Session) -> None:
     # TODO: Publisher, Genres, Cover
     # genres = List of genres (ids only, have to be called separately)
     # cover = Cover image of the game (id only)
+
+    return game
+
+
+def add_igdb_details(offer: Offer, session: Session) -> None:
+    igdb_game_id = get_possible_igdb_id(offer.probable_game_name)
+
+    if not igdb_game_id:
+        # No entry found, not adding any data
+        return
+
+    if offer.game and offer.game.steam_id == igdb_game_id:
+        # Steam information for this game is already present
+        return
+
+    # Look for existing game
+    db_game: Game | None = session.execute(
+        select(Game).where(Game.steam_id == igdb_game_id)
+    ).scalar_one_or_none()
+
+    if not offer.game:
+        offer.game = db_game
+
+    new_game = get_igdb_details(igdb_game_id)
+
+    if new_game is None:
+        # No new information grabbed
+        return
+
+    if offer.game:
+        # Update existing game
+        offer.game.add_missing_data(new_game)
+    else:
+        # Create new game
+        offer.game = new_game
 
 
 # TODO: Only use one connection, rate limit to < 4 per second

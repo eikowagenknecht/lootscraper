@@ -8,9 +8,11 @@ from selenium.webdriver.chrome.webdriver import WebDriver
 from app.common import TIMESTAMP_LONG
 from app.configparser import Config
 from app.pagedriver import get_pagedriver
-from app.scraper.info.gameinfo import Gameinfo
-from app.scraper.info.igdb import add_igdb_details, get_possible_igdb_id
-from app.scraper.info.steam import add_steam_details, get_possible_steam_appid
+from app.scraper.info.igdb import get_possible_igdb_id
+from app.scraper.info.steam import (
+    get_possible_steam_appid,
+    get_steam_details,
+)
 from app.scraper.info.utils import get_match_score
 from app.sqlalchemy import LootDatabase
 from app.telegram import TelegramBot
@@ -64,10 +66,25 @@ class VariousTests(unittest.TestCase):
             scraped_id: int = get_possible_steam_appid(driver, "Rainbow Six Siege")
             self.assertEquals(expected_id, scraped_id)
 
+    def test_steam_appid_resolution_with_special_chars(self) -> None:
+        driver: WebDriver
+        with get_pagedriver() as driver:
+            expected_id: int = 32460
+            scraped_id: int = get_possible_steam_appid(
+                driver, "Monkey Island 2 Special Edition: LeChuck’s Revenge"
+            )
+            self.assertEquals(expected_id, scraped_id)
+
+    def test_igdb_id_resolution_with_special_chars(self) -> None:
+        searchstring = "Monkey Island 2 Special Edition: LeChuck’s Revenge"
+        expected_id: int = 66
+        scraped_id: int = get_possible_igdb_id(searchstring)
+        self.assertEquals(expected_id, scraped_id)
+
     def test_steam_appinfo(self) -> None:
         driver: WebDriver
         with get_pagedriver() as driver:
-            game: Gameinfo | None = add_steam_details(driver, "Counter-Strike")
+            game = get_steam_details(driver, title="Counter-Strike")
             self.assertIsNotNone(game)
             self.assertEquals(game.name, "Counter-Strike")
             self.assertIsNotNone(game.short_description)
@@ -75,7 +92,7 @@ class VariousTests(unittest.TestCase):
                 game.release_date.isoformat(), "2000-11-01T00:00:00+00:00"
             )
             self.assertEquals(game.recommended_price_eur, 8.19)
-            self.assertEquals(game.genres[0], "Action")
+            self.assertEquals(game.genres, "Action")
 
             self.assertGreater(game.steam_recommendations, 100000)
             self.assertEquals(game.steam_percent, 96)
@@ -89,7 +106,7 @@ class VariousTests(unittest.TestCase):
     def test_steam_appinfo2(self) -> None:
         driver: WebDriver
         with get_pagedriver() as driver:
-            game = add_steam_details(driver, "Rainbow Six Siege")
+            game = get_steam_details(driver, title="Rainbow Six Siege")
             self.assertIsNotNone(game)
             self.assertEquals(game.name, "Tom Clancy's Rainbow Six® Siege")
             self.assertIsNotNone(game.short_description)
@@ -97,7 +114,7 @@ class VariousTests(unittest.TestCase):
                 game.release_date.isoformat(), "2015-12-01T00:00:00+00:00"
             )
             self.assertEquals(game.recommended_price_eur, 19.99)
-            self.assertEquals(game.genres[0], "Action")
+            self.assertEquals(game.genres, "Action")
 
             self.assertGreater(game.steam_recommendations, 850000)
             self.assertEquals(game.steam_percent, 87)
@@ -110,7 +127,7 @@ class VariousTests(unittest.TestCase):
     def test_steam_appinfo_price(self) -> None:
         driver: WebDriver
         with get_pagedriver() as driver:
-            game = add_steam_details(driver, "Cities: Skylines")
+            game = get_steam_details(driver, title="Cities: Skylines")
             self.assertIsNotNone(game)
             self.assertEquals(game.name, "Cities: Skylines")
             self.assertEquals(game.recommended_price_eur, 27.99)
@@ -118,27 +135,26 @@ class VariousTests(unittest.TestCase):
     def test_steam_appinfo_ageverify(self) -> None:
         driver: WebDriver
         with get_pagedriver() as driver:
-            game = add_steam_details(driver, "Doom Eternal")
+            game = get_steam_details(driver, title="Doom Eternal")
             self.assertIsNotNone(game)
             self.assertEquals(game.name, "DOOM Eternal")
             self.assertEquals(game.steam_score, 9)
 
     def test_steam_json_multiple_genres(self) -> None:
         with get_pagedriver() as driver:
-            game = add_steam_details(driver, 1424910)
+            game = get_steam_details(driver, id=1424910)
             self.assertIsNotNone(game)
-            self.assertEquals(len(game.genres), 4)
-            self.assertEquals(game.genres[0], "Action")
+            self.assertEquals(game.genres, "Action, Indie, Racing, Early Access")
 
     def test_igdb_id(self) -> None:
         id = get_possible_igdb_id("Cities: Skylines")
         self.assertEquals(id, 9066)
 
-    def test_igdb_details(self) -> None:
-        game = add_igdb_details("Cities: Skylines")
-        self.assertEquals(game.name, "Cities: Skylines")
-        self.assertIsNotNone(game.release_date)
-        self.assertEquals(game.release_date.isoformat(), "2015-03-10T00:00:00+00:00")
+    # def test_igdb_details(self) -> None:
+    #     game = add_igdb_details("Cities: Skylines")
+    #     self.assertEquals(game.name, "Cities: Skylines")
+    #     self.assertIsNotNone(game.release_date)
+    #     self.assertEquals(game.release_date.isoformat(), "2015-03-10T00:00:00+00:00")
 
 
 if __name__ == "__main__":

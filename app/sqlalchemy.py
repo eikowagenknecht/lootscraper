@@ -106,6 +106,50 @@ class Game(Base):
             f"offers={self.offers!r}"
         )
 
+    def add_missing_data(self, other: Game) -> None:
+        if not self.steam_id:
+            self.steam_id = other.steam_id
+        if not self.steam_url:
+            self.steam_url = other.steam_url
+        if not self.steam_recommendations:
+            self.steam_recommendations = other.steam_recommendations
+        if not self.steam_percent:
+            self.steam_percent = other.steam_percent
+        if not self.steam_score:
+            self.steam_score = other.steam_score
+        if not self.metacritic_score:
+            self.metacritic_score = other.metacritic_score
+        if not self.metacritic_url:
+            self.metacritic_url = other.metacritic_url
+        if not self.recommended_price_eur:
+            self.recommended_price_eur = other.recommended_price_eur
+
+        if not self.igdb_id:
+            self.igdb_id = other.igdb_id
+        if not self.igdb_url:
+            self.igdb_url = other.igdb_url
+        if not self.igdb_user_score:
+            self.igdb_user_score = other.igdb_user_score
+        if not self.igdb_user_ratings:
+            self.igdb_user_ratings = other.igdb_user_ratings
+        if not self.igdb_meta_score:
+            self.igdb_meta_score = other.igdb_meta_score
+        if not self.igdb_meta_ratings:
+            self.igdb_meta_ratings = other.igdb_meta_ratings
+
+        if not self.name:
+            self.name = other.name
+        if not self.short_description:
+            self.short_description = other.short_description
+        if not self.genres:
+            self.genres = other.genres
+        if not self.publishers:
+            self.publishers = other.publishers
+        if not self.release_date:
+            self.release_date = other.release_date
+        if not self.image_url:
+            self.image_url = other.image_url
+
 
 class Offer(Base):
     __tablename__ = "offers"

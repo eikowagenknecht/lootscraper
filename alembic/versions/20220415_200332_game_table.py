@@ -12,7 +12,7 @@ import logging
 from typing import Any
 
 import sqlalchemy as sa
-from sqlalchemy import ForeignKey, orm
+from sqlalchemy import ForeignKey, orm, select
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 
@@ -113,7 +113,7 @@ def upgrade() -> None:
     # Migrate the old data (and fix missing rawtext in the process)
     with orm.Session(bind=bind) as session:
         loot: OldLoot
-        for loot in session.query(OldLoot):
+        for loot in session.scalars(select(OldLoot)).all():
             if loot.source == "Amazon Prime":
                 source = "AMAZON"
                 if loot.rawtext:
@@ -180,14 +180,18 @@ def upgrade() -> None:
                 existing_game = None
                 if gameinfo.steam_id:
                     existing_game = (
-                        session.query(Game)
-                        .filter(Game.steam_id == gameinfo.steam_id)
+                        session.execute(
+                            select(Game).where(Game.steam_id == gameinfo.steam_id)
+                        )
+                        .scalars()
                         .first()
                     )
                 if existing_game is None and gameinfo.idgb_id:
                     existing_game = (
-                        session.query(Game)
-                        .filter(Game.igdb_id == gameinfo.idgb_id)
+                        session.execute(
+                            select(Game).where(Game.igdb_id == gameinfo.idgb_id)
+                        )
+                        .scalars()
                         .first()
                     )
 
@@ -240,7 +244,7 @@ def downgrade() -> None:
     # Loop over all Offer objects and create OldLoot objects
     with orm.Session(bind=bind) as session:
         offer: Offer
-        for offer in session.query(Offer):
+        for offer in session.scalars(select(Offer)).all():
 
             if offer.source == "AMAZON":
                 source = "Amazon Prime"

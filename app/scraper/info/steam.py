@@ -34,7 +34,9 @@ STEAM_PRICE_DISCOUNTED_ORIGINAL = '(//div[contains(concat(" ", normalize-space(@
 MAX_WAIT_SECONDS = 30  # Needs to be quite high in Docker for first run
 
 
-def get_possible_steam_appid(driver: WebDriver, search_string: str) -> int:
+def get_possible_steam_appid(driver: WebDriver, search_string: str) -> int | None:
+    logging.info(f"Getting id for {search_string}")
+
     encoded_searchstring = urllib.parse.quote_plus(search_string, safe="")
 
     url = STEAM_SEARCH_URL + encoded_searchstring + STEAM_SEARCH_OPTIONS
@@ -94,27 +96,25 @@ def get_possible_steam_appid(driver: WebDriver, search_string: str) -> int:
 
     logging.info(f"Steam: Search for {search_string} found no result")
 
-    return 0
+    return None
 
 
-def add_steam_details(offer: Offer, session: Session, driver: WebDriver) -> None:
-    steam_app_id = get_possible_steam_appid(driver, offer.probable_game_name)
+def get_steam_details(
+    driver: WebDriver, id: int | None = None, title: str | None = None
+) -> Game | None:
+    steam_app_id: int | None = None
 
-    if steam_app_id == 0:
+    if id:
+        steam_app_id = id
+
+    if not steam_app_id and title:
+        steam_app_id = get_possible_steam_appid(driver, title)
+
+    if not steam_app_id:
         # No entry found, not adding any data
         return None
 
-    # Look for existing game
-    game: Game | None = session.execute(
-        select(Game).where(Game.steam_id == steam_app_id)
-    ).scalar_one_or_none()
-
-    if game is not None:
-        # Use existing game if it exists
-        offer.game_id = game.id
-        return
-
-    logging.info(f'IGDB: Reading details for offer "{offer.title}"')
+    logging.info(f"Steam: Reading details for app id {id}")
 
     game = Game()
     game.steam_id = steam_app_id
@@ -300,3 +300,38 @@ def add_steam_details(offer: Offer, session: Session, driver: WebDriver) -> None
 
     if game.recommended_price_eur is None:
         logging.error(f"No Steam price found for {steam_app_id}")
+
+    return game
+
+
+def add_steam_details(offer: Offer, session: Session, driver: WebDriver) -> None:
+    steam_app_id = get_possible_steam_appid(driver, offer.probable_game_name)
+
+    if not steam_app_id:
+        # No entry found, not adding any data
+        return None
+
+    if offer.game and offer.game.steam_id == steam_app_id:
+        # Steam information for this game is already present
+        return
+
+    # Look for existing game
+    db_game: Game | None = session.execute(
+        select(Game).where(Game.steam_id == steam_app_id)
+    ).scalar_one_or_none()
+
+    if not offer.game:
+        offer.game = db_game
+
+    new_game = get_steam_details(driver, steam_app_id)
+
+    if new_game is None:
+        # No new information grabbed
+        return
+
+    if offer.game:
+        # Update existing game
+        offer.game.add_missing_data(new_game)
+    else:
+        # Create new game
+        offer.game = new_game

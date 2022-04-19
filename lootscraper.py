@@ -21,7 +21,7 @@ from app.scraper.loot.amazon_prime import AmazonScraper
 from app.scraper.loot.epic_games import EpicScraper
 from app.scraper.loot.gog import GogScraper
 from app.scraper.loot.steam import SteamScraper
-from app.sqlalchemy import LootDatabase, Offer
+from app.sqlalchemy import Game, LootDatabase, Offer
 from app.upload import upload_to_server
 
 exit = Event()
@@ -101,7 +101,7 @@ def quit(signo: int, _frame: FrameType | None) -> None:
 def job() -> None:
     db: LootDatabase
     webdriver: WebDriver
-    with (LootDatabase() as db, get_pagedriver() as webdriver):
+    with (LootDatabase(echo=Config.get().db_echo) as db, get_pagedriver() as webdriver):
         scraped_offers: dict[str, dict[str, list[Offer]]] = {}
 
         cfg_what_to_scrape = {
@@ -199,10 +199,14 @@ def job() -> None:
 
         # Refresh game information if ForceUpdate is set
         if Config.get().force_update and Config.get().scrape_info:
+            # Remove all game info first
+            logging.info("Force update enabled - removing all game info")
+            for game in db.session.query(Game):
+                db.session.delete(game)
+            # Then add new game info
             for scraper_source in loot_offers_in_db:
                 for scraper_type in loot_offers_in_db[scraper_source]:
                     for db_offer in loot_offers_in_db[scraper_source][scraper_type]:
-                        # TODO: Remove game info first
                         add_game_info(db_offer, db.session, webdriver)
 
         if Config.get().generate_feed:
@@ -268,13 +272,11 @@ def job() -> None:
 
 
 def add_game_info(offer: Offer, session: Session, webdriver: WebDriver) -> None:
-
-    if offer.title and (Config.get().info_igdb or Config.get().info_steam):
-        # IGDB has priority, Steam is used to fill in the gaps
-        if Config.get().info_igdb:
-            add_igdb_details(offer, session)
-        if Config.get().info_steam:
-            add_steam_details(offer, session, webdriver)
+    # IGDB has priority, Steam is used to fill in the gaps
+    if Config.get().info_igdb:
+        add_igdb_details(offer, session)
+    if Config.get().info_steam:
+        add_steam_details(offer, session, webdriver)
 
 
 def log_new_offer(offer: Offer) -> None:
