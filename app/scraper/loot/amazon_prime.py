@@ -1,4 +1,5 @@
 import logging
+import re
 from dataclasses import dataclass
 from datetime import date, datetime, time, timedelta, timezone
 from time import sleep
@@ -10,8 +11,9 @@ from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
-from app.common import LootOffer, OfferType, Source
+from app.common import OfferType, Source
 from app.scraper.loot.scraper import Scraper
+from app.sqlalchemy import Offer
 
 SCRAPER_NAME = "Amazon Prime"
 ROOT_URL = "https://gaming.amazon.com/home"
@@ -25,9 +27,7 @@ XPATH_GAMES = (
 )
 SUBPATH_TITLE = './/div[contains(concat(" ", normalize-space(@class), " "), " offer__body__titles ")]/h3'
 SUBPATH_PARAGRAPH = './/div[contains(concat(" ", normalize-space(@class), " "), " offer__body__titles ")]/p'
-SUBPATH_ENDDATE = (
-    './/div[contains(concat(" ", normalize-space(@class), " "), " claim-info ")]//p/span'
-)
+SUBPATH_ENDDATE = './/div[contains(concat(" ", normalize-space(@class), " "), " claim-info ")]//p/span'
 SUBPATH_LINK = './/a[@data-a-target="learn-more-card"]'
 SUBPATH_IMG = './/img[@class="tw-image"]'
 
@@ -45,7 +45,7 @@ class AmazonScraper(Scraper):
     @staticmethod
     def scrape(
         driver: WebDriver, options: dict[str, bool] = None
-    ) -> dict[str, list[LootOffer]]:
+    ) -> dict[str, list[Offer]]:
         if (
             options
             and not options[OfferType.GAME.name]
@@ -72,9 +72,7 @@ class AmazonScraper(Scraper):
         return offers
 
     @staticmethod
-    def read_offers_from_page(
-        offer_type: OfferType, driver: WebDriver
-    ) -> list[LootOffer]:
+    def read_offers_from_page(offer_type: OfferType, driver: WebDriver) -> list[Offer]:
         try:
             # Wait until the page loaded
             WebDriverWait(driver, MAX_WAIT_SECONDS).until(
@@ -163,31 +161,54 @@ class AmazonScraper(Scraper):
 
     @staticmethod
     def normalize_offers(
-        offer_type: OfferType, offers: list[RawOffer]
-    ) -> list[LootOffer]:
-        normalized_offers: list[LootOffer] = []
+        offer_type: OfferType, raw_offers: list[RawOffer]
+    ) -> list[Offer]:
+        normalized_offers: list[Offer] = []
 
-        for offer in offers:
+        for raw_offer in raw_offers:
             # Raw text
-            rawtext = ""
-            if offer.title:
-                rawtext += f"<title>{offer.title}</title>"
+            if not raw_offer.title:
+                logging.error(f"Error with offer, has no title: {raw_offer}")
+                continue
 
-            if offer.paragraph:
-                rawtext += f"<paragraph>{offer.paragraph}</paragraph>"
+            rawtext = f"<title>{raw_offer.title}</title>"
+
+            if raw_offer.paragraph:
+                rawtext += f"<paragraph>{raw_offer.paragraph}</paragraph>"
 
             # Title
-            title = None
-            subtitle = None
-            if offer.title is not None:
-                parsed_heads = offer.title.split(": ", 1)
-                title = parsed_heads[0]
-                subtitle = parsed_heads[1] if len(parsed_heads) == 2 else None
-
-            # Paragraph
-            publisher = None
-            if offer.paragraph:
-                publisher = offer.paragraph
+            # Unfortunately Amazon loot offers come in free text format, so we
+            # need to do some manual matching.
+            # - Most of the time, it is the part before the first ": ", e.g.
+            #   "Lords Mobile: Warlord Pack" -> Lords Mobile
+            # - When the title itself contains a ": ", it can also be the second, e.g.
+            #   "Mobile Legends: Bang Bang: Amazon Prime Chest" -> Mobile Legends: Bang Bang
+            # . Sometimes it also ist "Get ... in [Game]", e.g.
+            #   "Get up to GTA$400,000 this month in GTA Online" -> GTA Online
+            # So as a general rule, we try splitting by the second colon first,
+            # then the "Get ... in [Game] pattern" (to catch games with a colon in the
+            # name) and finally the ": " pattern.
+            # Fortunately we don't have to do this guessing for Amazon game offers or
+            # any other source (currently).
+            probable_game_name: str | None = None
+            if offer_type == OfferType.GAME:
+                probable_game_name = (
+                    raw_offer.title.removesuffix(" on Origin")
+                    .removesuffix(" Game of the Year Edition Deluxe")
+                    .removesuffix(" Game of the Year Edition")
+                )
+            else:
+                title_parts: list[str] = raw_offer.title.split(": ")
+                if len(title_parts) >= 3:
+                    probable_game_name = ": ".join(title_parts[:-1])
+                if probable_game_name is None:
+                    match = re.compile(r"Get .* in (.*)").match(raw_offer.title)
+                    if match and match.group(1):
+                        probable_game_name = match.group(1)
+                if probable_game_name is None and len(title_parts) == 2:
+                    probable_game_name = ": ".join(title_parts[:-1])
+                if probable_game_name is None:
+                    probable_game_name = raw_offer.title
 
             # Date
             # This is a little bit more complicated as only month and day are
@@ -198,9 +219,9 @@ class AmazonScraper(Scraper):
             # offer on that day but won't tell you when." I've seen real ending
             # times ranging from 02:00 to 19:00.
             end_date = None
-            if offer.valid_to:
+            if raw_offer.valid_to:
                 try:
-                    parsed_date = datetime.strptime(offer.valid_to, "%b %d").date()
+                    parsed_date = datetime.strptime(raw_offer.valid_to, "%b %d").date()
                     guessed_end_date = date(
                         date.today().year, parsed_date.month, parsed_date.day
                     )
@@ -219,23 +240,19 @@ class AmazonScraper(Scraper):
                 except ValueError:
                     pass
 
-            nearest_url = offer.url if offer.url else ROOT_URL
-            loot_offer = LootOffer(
-                seen_last=datetime.now(timezone.utc),
+            nearest_url = raw_offer.url if raw_offer.url else ROOT_URL
+            offer = Offer(
                 source=Source.AMAZON,
                 type=offer_type,
-                rawtext=rawtext,
-                title=title,
-                subtitle=subtitle,
-                publisher=publisher,
+                title=raw_offer.title,
+                probable_game_name=probable_game_name,
+                seen_last=datetime.now(timezone.utc),
                 valid_to=end_date,
+                rawtext=rawtext,
                 url=nearest_url,
-                img_url=offer.img_url,
+                img_url=raw_offer.img_url,
             )
 
-            if not loot_offer.title:
-                logging.error(f"Error with offer, has no title: {loot_offer}")
-            else:
-                normalized_offers.append(loot_offer)
+            normalized_offers.append(offer)
 
         return normalized_offers

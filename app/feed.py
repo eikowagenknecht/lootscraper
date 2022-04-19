@@ -5,18 +5,19 @@ from pathlib import Path
 
 from feedgen.feed import FeedEntry, FeedGenerator
 
+from app.sqlalchemy import Game, Offer
+
 from .common import (
     TIMESTAMP_LONG,
     TIMESTAMP_READABLE_WITH_HOUR,
     TIMESTAMP_SHORT,
-    LootOffer,
     OfferType,
     Source,
 )
 
 
 def generate_feed(
-    offers: list[LootOffer],
+    offers: list[Offer],
     feed_file_base: Path,
     author_name: str,
     author_mail: str,
@@ -70,8 +71,6 @@ def generate_feed(
         # Atom Needed
         feed_entry.id(f"{feed_id_prefix}{int(offer.id)}")
         title = f"{offer.source.value} ({offer.type.value}) - {offer.title}"
-        if offer.subtitle:
-            title += f": {offer.subtitle}"
         feed_entry.title(title)
         feed_entry.updated(updated)
         # Atom Recommended
@@ -84,11 +83,12 @@ def generate_feed(
             }
         )
         # - Content
+        game: Game = offer.game
         content = ""
         if offer.img_url:
             content += f'<img src="{html.escape(offer.img_url)}" />'
-        elif offer.gameinfo and offer.gameinfo.image_url:
-            content += f'<img src="{html.escape(offer.gameinfo.image_url)}" />'
+        elif game and game.steam_info and game.steam_info.image_url:
+            content += f'<img src="{html.escape(game.steam_info.image_url)}" />'
         content += "<ul>"
         valid_from = (
             offer.valid_from.strftime(TIMESTAMP_READABLE_WITH_HOUR)
@@ -101,58 +101,63 @@ def generate_feed(
         content += "</ul>"
         if offer.url:
             content += f'<p>Claim it now on <a href="{html.escape(offer.url)}">{html.escape(offer.source.value)}</a>.</p>'
-        if offer.gameinfo:
-            content += (
-                f"<p>About the game (<b>{html.escape(offer.gameinfo.name)}</b>*):</p>"
-            )
+        if game:
+            content += "<p>About the game"
+            if game.igdb_info and game.igdb_info.name:
+                content += f" (<b>{html.escape(game.igdb_info.name)}</b>*)"
+            elif game.steam_info and game.steam_info.name:
+                content += f" (<b>{html.escape(game.steam_info.name)}</b>*)"
+            content += ":</p>"
+
             content += "<ul>"
-
             ratings = []
-            if offer.gameinfo.metacritic_score:
-                text = f"Metacritic {offer.gameinfo.metacritic_score} %"
-                if offer.gameinfo.metacritic_url:
-                    text = f'<a href="{html.escape(offer.gameinfo.metacritic_url)}">{text}</a>'
+            if game.steam_info and game.steam_info.metacritic_score:
+                text = f"Metacritic {game.steam_info.metacritic_score} %"
+                if game.steam_info.metacritic_url:
+                    text = f'<a href="{html.escape(game.steam_info.metacritic_url)}">{text}</a>'
                 ratings.append(text)
 
-            if offer.gameinfo.igdb_meta_ratings and offer.gameinfo.igdb_meta_score:
-                text = f"IGDB Meta {offer.gameinfo.igdb_meta_score} % ({offer.gameinfo.igdb_meta_ratings} sources)"
-                if offer.gameinfo.igdb_url:
-                    text = (
-                        f'<a href="{html.escape(offer.gameinfo.igdb_url)}">{text}</a>'
-                    )
-                ratings.append(text)
-            if offer.gameinfo.igdb_user_ratings and offer.gameinfo.igdb_user_score:
-                text = f"IGDB User {offer.gameinfo.igdb_user_score} % ({offer.gameinfo.igdb_user_ratings} sources)"
-                if offer.gameinfo.igdb_url:
-                    text = (
-                        f'<a href="{html.escape(offer.gameinfo.igdb_url)}">{text}</a>'
-                    )
+            if (
+                game.igdb_info
+                and game.igdb_info.meta_ratings
+                and game.igdb_info.meta_score
+            ):
+                text = f"IGDB Meta {game.igdb_info.meta_score} % ({game.igdb_info.meta_ratings} sources)"
+                text = f'<a href="{html.escape(game.igdb_info.url)}">{text}</a>'
                 ratings.append(text)
             if (
-                offer.gameinfo.steam_percent
-                and offer.gameinfo.steam_score
-                and offer.gameinfo.steam_recommendations
+                game.igdb_info
+                and game.igdb_info.user_ratings
+                and game.igdb_info.user_score
             ):
-                text = f"Steam {offer.gameinfo.steam_percent} % ({offer.gameinfo.steam_score}/10, {offer.gameinfo.steam_recommendations} recommendations)"
-
-                if offer.gameinfo.steam_url:
-                    text = (
-                        f'<a href="{html.escape(offer.gameinfo.steam_url)}">{text}</a>'
-                    )
-
+                text = f"IGDB User {game.igdb_info.user_score} % ({game.igdb_info.user_ratings} sources)"
+                text = f'<a href="{html.escape(game.igdb_info.url)}">{text}</a>'
+                ratings.append(text)
+            if (
+                game.steam_info
+                and game.steam_info.percent
+                and game.steam_info.score
+                and game.steam_info.recommendations
+            ):
+                text = f"Steam {game.steam_info.percent} % ({game.steam_info.score}/10, {game.steam_info.recommendations} recommendations)"
+                text = f'<a href="{html.escape(game.steam_info.url)}">{text}</a>'
                 ratings.append(text)
             if len(ratings) > 0:
                 content += f"<li><b>Ratings:</b> {' / '.join(ratings)}</li>"
-
-            if offer.gameinfo.release_date:
-                content += f"<li><b>Release date:</b> {html.escape(offer.gameinfo.release_date.strftime(TIMESTAMP_SHORT))}</li>"
-            if offer.gameinfo.recommended_price_eur:
-                content += f"<li><b>Recommended price (Steam):</b> {offer.gameinfo.recommended_price_eur} EUR</li>"
-            if offer.gameinfo.short_description:
-                content += f"<li><b>Description:</b> {html.escape(offer.gameinfo.short_description)}</li>"
-            if offer.gameinfo.genres:
-                content += f'<li><b>Genres:</b> {html.escape(", ".join(offer.gameinfo.genres))}</li>'
-
+            if game.igdb_info and game.igdb_info.release_date:
+                content += f"<li><b>Release date:</b> {html.escape(game.igdb_info.release_date.strftime(TIMESTAMP_SHORT))}</li>"
+            elif game.steam_info and game.steam_info.release_date:
+                content += f"<li><b>Release date:</b> {html.escape(game.steam_info.release_date.strftime(TIMESTAMP_SHORT))}</li>"
+            if game.steam_info and game.steam_info.recommended_price_eur:
+                content += f"<li><b>Recommended price (Steam):</b> {game.steam_info.recommended_price_eur} EUR</li>"
+            if game.igdb_info and game.igdb_info.short_description:
+                content += f"<li><b>Description:</b> {html.escape(game.igdb_info.short_description)}</li>"
+            elif game.steam_info and game.steam_info.short_description:
+                content += f"<li><b>Description:</b> {html.escape(game.steam_info.short_description)}</li>"
+            if game.steam_info and game.steam_info.genres:
+                content += (
+                    f"<li><b>Genres:</b> {html.escape(game.steam_info.genres)}</li>"
+                )
             content += "</ul>"
 
         content += "<p>* Any information about the offer is automatically grabbed and may in rare cases not match the correct game.</p>"

@@ -9,8 +9,9 @@ from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
-from app.common import LootOffer, OfferType, Source
+from app.common import OfferType, Source
 from app.scraper.loot.scraper import Scraper
+from app.sqlalchemy import Offer
 
 SCRAPER_NAME = "Steam"
 ROOT_URL = "https://store.steampowered.com/search/?maxprice=free&specials=1"
@@ -35,7 +36,7 @@ class SteamScraper(Scraper):
     @staticmethod
     def scrape(
         driver: WebDriver, options: dict[str, bool] = None
-    ) -> dict[str, list[LootOffer]]:
+    ) -> dict[str, list[Offer]]:
         if options and not options[OfferType.GAME.name]:
             return {}
 
@@ -49,7 +50,7 @@ class SteamScraper(Scraper):
         return offers
 
     @staticmethod
-    def read_offers_from_page(driver: WebDriver) -> list[LootOffer]:
+    def read_offers_from_page(driver: WebDriver) -> list[Offer]:
         try:
             # Wait until the page loaded
             WebDriverWait(driver, MAX_WAIT_SECONDS).until(
@@ -103,33 +104,34 @@ class SteamScraper(Scraper):
         )
 
     @staticmethod
-    def normalize_offers(raw_offers: list[RawOffer]) -> list[LootOffer]:
-        normalized_offers: list[LootOffer] = []
+    def normalize_offers(raw_offers: list[RawOffer]) -> list[Offer]:
+        normalized_offers: list[Offer] = []
 
-        for offer in raw_offers:
+        for raw_offer in raw_offers:
             # Raw text
             rawtext = ""
-            if offer.title:
-                rawtext += f"<title>{offer.title}</title>"
+            if raw_offer.title:
+                rawtext += f"<title>{raw_offer.title}</title>"
 
-            if offer.appid:
-                rawtext += f"<appid>{offer.appid}</appid>"
+            if raw_offer.appid:
+                rawtext += f"<appid>{raw_offer.appid}</appid>"
 
             # Title
-            title = offer.title
+            title = raw_offer.title
 
-            nearest_url = offer.url if offer.url else ROOT_URL
-            loot_offer = LootOffer(
-                seen_last=datetime.now(timezone.utc),
+            nearest_url = raw_offer.url if raw_offer.url else ROOT_URL
+            offer = Offer(
                 source=Source.STEAM,
                 type=OfferType.GAME,
-                rawtext=rawtext,
                 title=title,
+                probable_game_name=title,
+                seen_last=datetime.now(timezone.utc),
                 valid_from=None,
                 valid_to=None,
+                rawtext=rawtext,
                 url=nearest_url,
                 img_url=None,
             )
 
-            normalized_offers.append(loot_offer)
+            normalized_offers.append(offer)
         return normalized_offers
