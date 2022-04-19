@@ -8,9 +8,9 @@ from selenium.webdriver.chrome.webdriver import WebDriver
 from app.common import TIMESTAMP_LONG
 from app.configparser import Config
 from app.pagedriver import get_pagedriver
-from app.scraper.info.igdb import get_possible_igdb_id
+from app.scraper.info.igdb import get_igdb_id
 from app.scraper.info.steam import (
-    get_possible_steam_appid,
+    get_steam_id,
     get_steam_details,
 )
 from app.scraper.info.utils import get_match_score
@@ -63,14 +63,14 @@ class VariousTests(unittest.TestCase):
         driver: WebDriver
         with get_pagedriver() as driver:
             expected_id: int = 359550  # Tom Clancy's Rainbow Six® Siege
-            scraped_id: int = get_possible_steam_appid(driver, "Rainbow Six Siege")
+            scraped_id: int = get_steam_id(driver, "Rainbow Six Siege")
             self.assertEquals(expected_id, scraped_id)
 
     def test_steam_appid_resolution_with_special_chars(self) -> None:
         driver: WebDriver
         with get_pagedriver() as driver:
             expected_id: int = 32460
-            scraped_id: int = get_possible_steam_appid(
+            scraped_id: int = get_steam_id(
                 driver, "Monkey Island 2 Special Edition: LeChuck’s Revenge"
             )
             self.assertEquals(expected_id, scraped_id)
@@ -78,7 +78,7 @@ class VariousTests(unittest.TestCase):
     def test_igdb_id_resolution_with_special_chars(self) -> None:
         searchstring = "Monkey Island 2 Special Edition: LeChuck’s Revenge"
         expected_id: int = 66
-        scraped_id: int = get_possible_igdb_id(searchstring)
+        scraped_id: int = get_igdb_id(searchstring)
         self.assertEquals(expected_id, scraped_id)
 
     def test_steam_appinfo(self) -> None:
@@ -147,7 +147,7 @@ class VariousTests(unittest.TestCase):
             self.assertEquals(game.genres, "Action, Indie, Racing, Early Access")
 
     def test_igdb_id(self) -> None:
-        id = get_possible_igdb_id("Cities: Skylines")
+        id = get_igdb_id("Cities: Skylines")
         self.assertEquals(id, 9066)
 
     # def test_igdb_details(self) -> None:

@@ -87,8 +87,8 @@ def generate_feed(
         content = ""
         if offer.img_url:
             content += f'<img src="{html.escape(offer.img_url)}" />'
-        elif game and game.image_url:
-            content += f'<img src="{html.escape(game.image_url)}" />'
+        elif game and game.steam_info and game.steam_info.image_url:
+            content += f'<img src="{html.escape(game.steam_info.image_url)}" />'
         content += "<ul>"
         valid_from = (
             offer.valid_from.strftime(TIMESTAMP_READABLE_WITH_HOUR)
@@ -103,44 +103,60 @@ def generate_feed(
             content += f'<p>Claim it now on <a href="{html.escape(offer.url)}">{html.escape(offer.source.value)}</a>.</p>'
         if game:
             content += "<p>About the game"
-            if game.name:
-                content += f" (<b>{html.escape(game.name)}</b>*)"
+            if game.igdb_info and game.igdb_info.name:
+                content += f" (<b>{html.escape(game.igdb_info.name)}</b>*)"
+            elif game.steam_info and game.steam_info.name:
+                content += f" (<b>{html.escape(game.steam_info.name)}</b>*)"
             content += ":</p>"
 
             content += "<ul>"
             ratings = []
-            if game.metacritic_score:
-                text = f"Metacritic {game.metacritic_score} %"
-                if game.metacritic_url:
-                    text = f'<a href="{html.escape(game.metacritic_url)}">{text}</a>'
+            if game.steam_info and game.steam_info.metacritic_score:
+                text = f"Metacritic {game.steam_info.metacritic_score} %"
+                if game.steam_info.metacritic_url:
+                    text = f'<a href="{html.escape(game.steam_info.metacritic_url)}">{text}</a>'
                 ratings.append(text)
 
-            if game.igdb_meta_ratings and game.igdb_meta_score:
-                text = f"IGDB Meta {game.igdb_meta_score} % ({game.igdb_meta_ratings} sources)"
-                if game.igdb_url:
-                    text = f'<a href="{html.escape(game.igdb_url)}">{text}</a>'
+            if (
+                game.igdb_info
+                and game.igdb_info.meta_ratings
+                and game.igdb_info.meta_score
+            ):
+                text = f"IGDB Meta {game.igdb_info.meta_score} % ({game.igdb_info.meta_ratings} sources)"
+                text = f'<a href="{html.escape(game.igdb_info.url)}">{text}</a>'
                 ratings.append(text)
-            if game.igdb_user_ratings and game.igdb_user_score:
-                text = f"IGDB User {game.igdb_user_score} % ({game.igdb_user_ratings} sources)"
-                if game.igdb_url:
-                    text = f'<a href="{html.escape(game.igdb_url)}">{text}</a>'
+            if (
+                game.igdb_info
+                and game.igdb_info.user_ratings
+                and game.igdb_info.user_score
+            ):
+                text = f"IGDB User {game.igdb_info.user_score} % ({game.igdb_info.user_ratings} sources)"
+                text = f'<a href="{html.escape(game.igdb_info.url)}">{text}</a>'
                 ratings.append(text)
-            if game.steam_percent and game.steam_score and game.steam_recommendations:
-                text = f"Steam {game.steam_percent} % ({game.steam_score}/10, {game.steam_recommendations} recommendations)"
-                if game.steam_url:
-                    text = f'<a href="{html.escape(game.steam_url)}">{text}</a>'
+            if (
+                game.steam_info
+                and game.steam_info.percent
+                and game.steam_info.score
+                and game.steam_info.recommendations
+            ):
+                text = f"Steam {game.steam_info.percent} % ({game.steam_info.score}/10, {game.steam_info.recommendations} recommendations)"
+                text = f'<a href="{html.escape(game.steam_info.url)}">{text}</a>'
                 ratings.append(text)
             if len(ratings) > 0:
                 content += f"<li><b>Ratings:</b> {' / '.join(ratings)}</li>"
-            if game.release_date:
-                content += f"<li><b>Release date:</b> {html.escape(game.release_date.strftime(TIMESTAMP_SHORT))}</li>"
-            if game.recommended_price_eur:
-                content += f"<li><b>Recommended price (Steam):</b> {game.recommended_price_eur} EUR</li>"
-            if game.short_description:
-                content += f"<li><b>Description:</b> {html.escape(game.short_description)}</li>"
-            if game.genres:
+            if game.igdb_info and game.igdb_info.release_date:
+                content += f"<li><b>Release date:</b> {html.escape(game.igdb_info.release_date.strftime(TIMESTAMP_SHORT))}</li>"
+            elif game.steam_info and game.steam_info.release_date:
+                content += f"<li><b>Release date:</b> {html.escape(game.steam_info.release_date.strftime(TIMESTAMP_SHORT))}</li>"
+            if game.steam_info and game.steam_info.recommended_price_eur:
+                content += f"<li><b>Recommended price (Steam):</b> {game.steam_info.recommended_price_eur} EUR</li>"
+            if game.igdb_info and game.igdb_info.short_description:
+                content += f"<li><b>Description:</b> {html.escape(game.igdb_info.short_description)}</li>"
+            elif game.steam_info and game.steam_info.short_description:
+                content += f"<li><b>Description:</b> {html.escape(game.steam_info.short_description)}</li>"
+            if game.steam_info and game.steam_info.genres:
                 content += (
-                    f'<li><b>Genres:</b> {html.escape(", ".join(game.genres))}</li>'
+                    f"<li><b>Genres:</b> {html.escape(game.steam_info.genres)}</li>"
                 )
             content += "</ul>"
 

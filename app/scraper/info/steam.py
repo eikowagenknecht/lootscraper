@@ -10,11 +10,9 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import Select, WebDriverWait
-from sqlalchemy import select
-from sqlalchemy.orm import Session
 
 from app.scraper.info.utils import RESULT_MATCH_THRESHOLD, get_match_score
-from app.sqlalchemy import Game, Offer
+from app.sqlalchemy import SteamInfo
 
 STEAM_SEARCH_URL = "https://store.steampowered.com/search/?term="
 STEAM_SEARCH_OPTIONS = "&category1=998"  # Games only
@@ -34,7 +32,7 @@ STEAM_PRICE_DISCOUNTED_ORIGINAL = '(//div[contains(concat(" ", normalize-space(@
 MAX_WAIT_SECONDS = 30  # Needs to be quite high in Docker for first run
 
 
-def get_possible_steam_appid(driver: WebDriver, search_string: str) -> int | None:
+def get_steam_id(search_string: str, driver: WebDriver) -> int | None:
     logging.info(f"Getting id for {search_string}")
 
     encoded_searchstring = urllib.parse.quote_plus(search_string, safe="")
@@ -101,14 +99,14 @@ def get_possible_steam_appid(driver: WebDriver, search_string: str) -> int | Non
 
 def get_steam_details(
     driver: WebDriver, id: int | None = None, title: str | None = None
-) -> Game | None:
+) -> SteamInfo | None:
     steam_app_id: int | None = None
 
     if id:
         steam_app_id = id
 
     if not steam_app_id and title:
-        steam_app_id = get_possible_steam_appid(driver, title)
+        steam_app_id = get_steam_id(title, driver)
 
     if not steam_app_id:
         # No entry found, not adding any data
@@ -116,18 +114,18 @@ def get_steam_details(
 
     logging.info(f"Steam: Reading details for app id {id}")
 
-    game = Game()
-    game.steam_id = steam_app_id
+    steam_info = SteamInfo()
+    steam_info.id = steam_app_id
 
     with urllib.request.urlopen(STEAM_DETAILS_JSON + str(steam_app_id)) as url:  # nosec
         data = json.loads(url.read().decode())
         try:
-            game.name = data[str(steam_app_id)]["data"]["name"]
+            steam_info.name = data[str(steam_app_id)]["data"]["name"]
         except KeyError:
             pass
 
         try:
-            game.short_description = data[str(steam_app_id)]["data"][
+            steam_info.short_description = data[str(steam_app_id)]["data"][
                 "short_description"
             ]
         except KeyError:
@@ -137,14 +135,14 @@ def get_steam_details(
             genres: list[str] = []
             for genre in data[str(steam_app_id)]["data"]["genres"]:
                 genres.append(genre["description"])
-            game.genres = ", ".join(genres)
+            steam_info.genres = ", ".join(genres)
         except KeyError:
             pass
 
         try:
             date_string = data[str(steam_app_id)]["data"]["release_date"]["date"]
             timestamp = datetime.strptime(date_string, "%d %b, %Y")
-            game.release_date = timestamp.replace(tzinfo=timezone.utc)
+            steam_info.release_date = timestamp.replace(tzinfo=timezone.utc)
         except (KeyError, ValueError):
             pass
 
@@ -158,26 +156,26 @@ def get_steam_details(
                 or data[str(steam_app_id)]["data"]["price_overview"]["currency"]
                 == "EUR"
             ):
-                game.recommended_price_eur = recommended_price_value / 100
+                steam_info.recommended_price_eur = recommended_price_value / 100
         except (KeyError, ValueError):
             pass
 
         try:
-            game.steam_recommendations = data[str(steam_app_id)]["data"][
+            steam_info.recommendations = data[str(steam_app_id)]["data"][
                 "recommendations"
             ]["total"]
         except KeyError:
             pass
 
         try:
-            game.metacritic_score = data[str(steam_app_id)]["data"]["metacritic"][
+            steam_info.metacritic_score = data[str(steam_app_id)]["data"]["metacritic"][
                 "score"
             ]
         except KeyError:
             pass
 
         try:
-            game.metacritic_url = data[str(steam_app_id)]["data"]["metacritic"][
+            steam_info.metacritic_url = data[str(steam_app_id)]["data"]["metacritic"][
                 "url"
             ].replace(R"\/", "/")
         except KeyError:
@@ -185,17 +183,19 @@ def get_steam_details(
 
         try:
             # Prefer header image over first screenshot
-            game.image_url = data[str(steam_app_id)]["data"]["screenshots"][0][
+            steam_info.image_url = data[str(steam_app_id)]["data"]["screenshots"][0][
                 "path_full"
             ].replace(R"\/", "/")
-            game.image_url = data[str(steam_app_id)]["data"]["header_image"].replace(
-                R"\/", "/"
-            )
+            steam_info.image_url = data[str(steam_app_id)]["data"][
+                "header_image"
+            ].replace(R"\/", "/")
         except KeyError:
             pass
 
         try:
-            game.publishers = ", ".join(data[str(steam_app_id)]["data"]["publishers"])
+            steam_info.publishers = ", ".join(
+                data[str(steam_app_id)]["data"]["publishers"]
+            )
         except KeyError:
             pass
 
@@ -203,8 +203,8 @@ def get_steam_details(
         f"Steam: Now also checking the store details page for app id {steam_app_id}"
     )
 
-    game.steam_url = STEAM_DETAILS_STORE + str(steam_app_id)
-    driver.get(STEAM_DETAILS_STORE + str(steam_app_id))
+    steam_info.url = STEAM_DETAILS_STORE + str(steam_info.id)
+    driver.get(steam_info.url)
 
     try:
         # Wait until the page loaded
@@ -241,7 +241,7 @@ def get_steam_details(
     try:
         element: WebElement = driver.find_element(By.XPATH, STEAM_DETAILS_REVIEW_SCORE)
         rating_str: str = element.get_attribute("data-tooltip-html")  # type: ignore
-        game.steam_percent = int(rating_str.split("%")[0].strip())
+        steam_info.percent = int(rating_str.split("%")[0].strip())
 
     except WebDriverException:
         logging.error(f"No Steam percentage found for {steam_app_id}!")
@@ -255,7 +255,7 @@ def get_steam_details(
         )
         rating2_str: str = element2.get_attribute("content")  # type: ignore
         try:
-            game.steam_score = int(rating2_str)
+            steam_info.score = int(rating2_str)
         except ValueError:
             pass
 
@@ -265,14 +265,14 @@ def get_steam_details(
     except ValueError:
         logging.error(f"Invalid Steam rating {rating2_str} for {steam_app_id}!")
 
-    if game.recommended_price_eur is None:
+    if steam_info.recommended_price_eur is None:
         try:
             element3: WebElement = driver.find_element(
                 By.XPATH, STEAM_PRICE_DISCOUNTED_ORIGINAL
             )
             price_str: str = element3.text
             try:
-                game.recommended_price_eur = float(
+                steam_info.recommended_price_eur = float(
                     price_str.replace("€", "").replace(",", ".").strip()
                 )
             except ValueError:
@@ -283,55 +283,22 @@ def get_steam_details(
                 f"No Steam discounted original price found on shop page for {steam_app_id}"
             )
 
-    if game.recommended_price_eur is None:
+    if steam_info.recommended_price_eur is None:
         try:
             element4: WebElement = driver.find_element(By.XPATH, STEAM_PRICE_FULL)
             price2_str: str = element4.text.replace("€", "").strip()
             if "free" in price2_str.lower():
-                game.recommended_price_eur = 0
+                steam_info.recommended_price_eur = 0
             else:
                 try:
-                    game.recommended_price_eur = float(price2_str)
+                    steam_info.recommended_price_eur = float(price2_str)
                 except ValueError:
                     pass
 
         except WebDriverException:
             logging.debug(f"No Steam full price found on shop page for {steam_app_id}")
 
-    if game.recommended_price_eur is None:
+    if steam_info.recommended_price_eur is None:
         logging.error(f"No Steam price found for {steam_app_id}")
 
-    return game
-
-
-def add_steam_details(offer: Offer, session: Session, driver: WebDriver) -> None:
-    steam_app_id = get_possible_steam_appid(driver, offer.probable_game_name)
-
-    if not steam_app_id:
-        # No entry found, not adding any data
-        return None
-
-    if offer.game and offer.game.steam_id == steam_app_id:
-        # Steam information for this game is already present
-        return
-
-    # Look for existing game
-    db_game: Game | None = session.execute(
-        select(Game).where(Game.steam_id == steam_app_id)
-    ).scalar_one_or_none()
-
-    if not offer.game:
-        offer.game = db_game
-
-    new_game = get_steam_details(driver, steam_app_id)
-
-    if new_game is None:
-        # No new information grabbed
-        return
-
-    if offer.game:
-        # Update existing game
-        offer.game.add_missing_data(new_game)
-    else:
-        # Create new game
-        offer.game = new_game
+    return steam_info

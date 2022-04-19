@@ -4,15 +4,13 @@ from datetime import datetime, timezone
 import re
 import requests
 from igdb.wrapper import IGDBWrapper
-from sqlalchemy import select
-from sqlalchemy.orm import Session
 
 from app.configparser import Config
 from app.scraper.info.utils import RESULT_MATCH_THRESHOLD, get_match_score
-from app.sqlalchemy import Game, Offer
+from app.sqlalchemy import IgdbInfo
 
 
-def get_possible_igdb_id(search_string: str) -> int | None:
+def get_igdb_id(search_string: str) -> int | None:
     igdb = get_igdb_wrapper()
 
     logging.info(f"Getting id for {search_string}")
@@ -61,14 +59,16 @@ def get_possible_igdb_id(search_string: str) -> int | None:
     return None
 
 
-def get_igdb_details(id: int | None = None, title: str | None = None) -> Game | None:
+def get_igdb_details(
+    id: int | None = None, title: str | None = None
+) -> IgdbInfo | None:
     igdb_game_id: int | None = None
 
     if id:
         igdb_game_id = id
 
     if not igdb_game_id and title:
-        igdb_game_id = get_possible_igdb_id(title)
+        igdb_game_id = get_igdb_id(title)
 
     if not igdb_game_id:
         # No entry found, not adding any data
@@ -76,8 +76,8 @@ def get_igdb_details(id: int | None = None, title: str | None = None) -> Game | 
 
     logging.info(f"IGDB: Reading details for IGDB id {id}")
 
-    game = Game()
-    game.igdb_id = igdb_game_id
+    igdb_info = IgdbInfo()
+    igdb_info.id = igdb_game_id
 
     igdb = get_igdb_wrapper()
     raw_response: bytes = igdb.api_request(
@@ -91,44 +91,44 @@ def get_igdb_details(id: int | None = None, title: str | None = None) -> Game | 
         return None
 
     try:
-        game.name = response[0]["name"]
+        igdb_info.name = response[0]["name"]
     except KeyError:
         pass
 
     try:
-        game.igdb_url = response[0]["url"]
+        igdb_info.url = response[0]["url"]
     except KeyError:
         pass
 
     try:
-        game.short_description = response[0]["summary"]
+        igdb_info.short_description = response[0]["summary"]
     except KeyError:
         pass
 
     try:
         unix_releasedate = response[0]["first_release_date"]
         timestamp = datetime.utcfromtimestamp(unix_releasedate)
-        game.release_date = timestamp.replace(tzinfo=timezone.utc)
+        igdb_info.release_date = timestamp.replace(tzinfo=timezone.utc)
     except KeyError:
         pass
 
     try:
-        game.igdb_user_score = int(response[0]["rating"])
+        igdb_info.user_score = int(response[0]["rating"])
     except (KeyError, ValueError):
         pass
 
     try:
-        game.igdb_user_ratings = response[0]["rating_count"]
+        igdb_info.user_ratings = response[0]["rating_count"]
     except KeyError:
         pass
 
     try:
-        game.igdb_meta_score = int(response[0]["aggregated_rating"])
+        igdb_info.meta_score = int(response[0]["aggregated_rating"])
     except (KeyError, ValueError):
         pass
 
     try:
-        game.igdb_meta_ratings = response[0]["aggregated_rating_count"]
+        igdb_info.meta_ratings = response[0]["aggregated_rating_count"]
     except KeyError:
         pass
 
@@ -136,40 +136,7 @@ def get_igdb_details(id: int | None = None, title: str | None = None) -> Game | 
     # genres = List of genres (ids only, have to be called separately)
     # cover = Cover image of the game (id only)
 
-    return game
-
-
-def add_igdb_details(offer: Offer, session: Session) -> None:
-    igdb_game_id = get_possible_igdb_id(offer.probable_game_name)
-
-    if not igdb_game_id:
-        # No entry found, not adding any data
-        return
-
-    if offer.game and offer.game.steam_id == igdb_game_id:
-        # Steam information for this game is already present
-        return
-
-    # Look for existing game
-    db_game: Game | None = session.execute(
-        select(Game).where(Game.steam_id == igdb_game_id)
-    ).scalar_one_or_none()
-
-    if not offer.game:
-        offer.game = db_game
-
-    new_game = get_igdb_details(igdb_game_id)
-
-    if new_game is None:
-        # No new information grabbed
-        return
-
-    if offer.game:
-        # Update existing game
-        offer.game.add_missing_data(new_game)
-    else:
-        # Create new game
-        offer.game = new_game
+    return igdb_info
 
 
 # TODO: Only use one connection, rate limit to < 4 per second

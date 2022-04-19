@@ -7,21 +7,22 @@ from pathlib import Path
 from threading import Event
 from types import FrameType
 
-from requests import Session
 from selenium.webdriver.chrome.webdriver import WebDriver
+from sqlalchemy import select
 from sqlalchemy.exc import OperationalError
 
 from app.common import TIMESTAMP_LONG, OfferType, Source
 from app.configparser import Config
 from app.feed import generate_feed
 from app.pagedriver import get_pagedriver
-from app.scraper.info.igdb import add_igdb_details
-from app.scraper.info.steam import add_steam_details
+from app.scraper.info.igdb import get_igdb_details, get_igdb_id
+from app.scraper.info.steam import get_steam_details, get_steam_id
 from app.scraper.loot.amazon_prime import AmazonScraper
 from app.scraper.loot.epic_games import EpicScraper
 from app.scraper.loot.gog import GogScraper
 from app.scraper.loot.steam import SteamScraper
 from app.sqlalchemy import Game, LootDatabase, Offer
+from sqlalchemy.orm import Session
 from app.upload import upload_to_server
 
 exit = Event()
@@ -272,11 +273,55 @@ def job() -> None:
 
 
 def add_game_info(offer: Offer, session: Session, webdriver: WebDriver) -> None:
-    # IGDB has priority, Steam is used to fill in the gaps
-    if Config.get().info_igdb:
-        add_igdb_details(offer, session)
-    if Config.get().info_steam:
-        add_steam_details(offer, session, webdriver)
+    """Updated an offer with game information. If the offer already has some
+    information, just try to update the missing parts. Otherwise, create a new
+    Game and try to populate it with information."""
+
+    if offer.game:
+        # The offer already has a game attached, leave it alone
+        return
+
+    existing_game: Game | None = None
+
+    # Offer has no game, try to find a matching entry in our game database
+    # Prioritize IGDB
+    igdb_id = get_igdb_id(offer.probable_game_name)
+
+    if igdb_id is not None:
+        existing_game = (
+            session.execute(select(Game).where(Game.igdb_id == igdb_id))
+            .scalars()
+            .one_or_none()
+        )
+
+    if existing_game:
+        offer.game = existing_game
+        return
+
+    # No IGDB match, try to find a matching entry via Steam
+    steam_id = get_steam_id(offer.probable_game_name, driver=webdriver)
+    if steam_id is not None:
+        existing_game = (
+            session.execute(select(Game).where(Game.steam_id == steam_id))
+            .scalars()
+            .one_or_none()
+        )
+
+    if existing_game:
+        offer.game = existing_game
+        return
+
+    # Ok, we still got no match in our own database
+    if steam_id is None and igdb_id is None:
+        # No game found, nothing further to do
+        return
+
+    # We have some new match. Create a new game and attach it to the offer
+    offer.game = Game()
+    if igdb_id:
+        offer.game.igdb_info = get_igdb_details(id=igdb_id)
+    if steam_id:
+        offer.game.steam_info = get_steam_details(id=steam_id, driver=webdriver)
 
 
 def log_new_offer(offer: Offer) -> None:

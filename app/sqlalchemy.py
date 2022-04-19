@@ -51,31 +51,11 @@ class Game(Base):
 
     id: int = Column(Integer, primary_key=True, nullable=False)
 
-    # Steam scraped data
-    steam_id: int | None = Column(Integer)
-    steam_url: str | None = Column(String)
-    steam_recommendations: int | None = Column(Integer)
-    steam_percent: int | None = Column(Integer)
-    steam_score: int | None = Column(Integer)
-    metacritic_score: int | None = Column(Integer)
-    metacritic_url: str | None = Column(String)
-    recommended_price_eur: float | None = Column(Float)
+    igdb_id: int | None = Column(Integer, ForeignKey("igdb_info.id"))
+    steam_id: int | None = Column(Integer, ForeignKey("steam_info.id"))
 
-    # IGDB scraped data
-    igdb_id: int | None = Column(Integer)
-    igdb_url: str | None = Column(String)
-    igdb_user_score: int | None = Column(Integer)
-    igdb_user_ratings: int | None = Column(Integer)
-    igdb_meta_score: int | None = Column(Integer)
-    igdb_meta_ratings: int | None = Column(Integer)
-
-    # Could be from both
-    name: str | None = Column(String)
-    short_description: str | None = Column(String)
-    genres: str | None = Column(String)  # Currently Steam only
-    publishers: str | None = Column(String)  # Currently Steam only
-    release_date: datetime | None = Column(AwareDateTime)
-    image_url: str | None = Column(String)  # Currently Steam only
+    igdb_info: IgdbInfo | None = relationship("IgdbInfo", back_populates="game")
+    steam_info: SteamInfo | None = relationship("SteamInfo", back_populates="game")
 
     offers: list[Offer] = relationship("Offer", back_populates="game")
 
@@ -83,72 +63,84 @@ class Game(Base):
         return (
             "Game("
             f"id={self.id!r}, "
-            f"steam_id={self.steam_id!r}, "
-            f"steam_url={self.steam_url!r}, "
-            f"steam_recommendations={self.steam_recommendations!r}, "
-            f"steam_percent={self.steam_percent!r}, "
-            f"steam_score={self.steam_score!r}, "
-            f"metacritic_score={self.metacritic_score!r}, "
-            f"metacritic_url={self.metacritic_url!r}, "
-            f"recommended_price_eur={self.recommended_price_eur!r}, "
             f"igdb_id={self.igdb_id!r}, "
-            f"igdb_url={self.igdb_url!r}, "
-            f"igdb_user_score={self.igdb_user_score!r}, "
-            f"igdb_user_rating={self.igdb_user_ratings!r}, "
-            f"igdb_meta_score={self.igdb_meta_score!r}, "
-            f"igdb_meta_rating={self.igdb_meta_ratings!r}, "
-            f"name={self.name!r}, "
-            f"short_description={self.short_description!r}, "
-            f"genres={self.genres!r}, "
-            f"publishers={self.publishers!r}, "
-            f"release_date={self.release_date!r}, "
-            f"image_url={self.image_url!r}, "
-            f"offers={self.offers!r}"
+            f"steam_id={self.steam_id!r})"
         )
 
-    def add_missing_data(self, other: Game) -> None:
-        if not self.steam_id:
-            self.steam_id = other.steam_id
-        if not self.steam_url:
-            self.steam_url = other.steam_url
-        if not self.steam_recommendations:
-            self.steam_recommendations = other.steam_recommendations
-        if not self.steam_percent:
-            self.steam_percent = other.steam_percent
-        if not self.steam_score:
-            self.steam_score = other.steam_score
-        if not self.metacritic_score:
-            self.metacritic_score = other.metacritic_score
-        if not self.metacritic_url:
-            self.metacritic_url = other.metacritic_url
-        if not self.recommended_price_eur:
-            self.recommended_price_eur = other.recommended_price_eur
 
-        if not self.igdb_id:
-            self.igdb_id = other.igdb_id
-        if not self.igdb_url:
-            self.igdb_url = other.igdb_url
-        if not self.igdb_user_score:
-            self.igdb_user_score = other.igdb_user_score
-        if not self.igdb_user_ratings:
-            self.igdb_user_ratings = other.igdb_user_ratings
-        if not self.igdb_meta_score:
-            self.igdb_meta_score = other.igdb_meta_score
-        if not self.igdb_meta_ratings:
-            self.igdb_meta_ratings = other.igdb_meta_ratings
+class IgdbInfo(Base):
+    __tablename__ = "igdb_info"
 
-        if not self.name:
-            self.name = other.name
-        if not self.short_description:
-            self.short_description = other.short_description
-        if not self.genres:
-            self.genres = other.genres
-        if not self.publishers:
-            self.publishers = other.publishers
-        if not self.release_date:
-            self.release_date = other.release_date
-        if not self.image_url:
-            self.image_url = other.image_url
+    id: int = Column(Integer, primary_key=True, nullable=False)
+    url: str | None = Column(String, nullable=False)
+
+    name: str | None = Column(String, nullable=False)
+    short_description: str | None = Column(String)
+    release_date: datetime | None = Column(AwareDateTime)
+
+    user_score: int | None = Column(Integer)
+    user_ratings: int | None = Column(Integer)
+    meta_score: int | None = Column(Integer)
+    meta_ratings: int | None = Column(Integer)
+
+    def __repr__(self) -> str:
+        return (
+            "IgdbInfo("
+            f"id={self.id!r}, "
+            f"url={self.url!r}, "
+            f"name={self.name!r}, "
+            f"short_description={self.short_description!r}, "
+            f"user_score={self.user_score!r}, "
+            f"user_rating={self.user_ratings!r}, "
+            f"meta_score={self.meta_score!r}, "
+            f"meta_rating={self.meta_ratings!r}, "
+            f"release_date={self.release_date!r})"
+        )
+
+    game: Game = relationship("Game", back_populates="igdb_info")
+
+
+class SteamInfo(Base):
+    __tablename__ = "steam_info"
+
+    id: int = Column(Integer, primary_key=True, nullable=False)
+    url: str | None = Column(String, nullable=False)
+
+    name: str | None = Column(String, nullable=False)
+    short_description: str | None = Column(String)
+    release_date: datetime | None = Column(AwareDateTime)
+    genres: str | None = Column(String)
+    publishers: str | None = Column(String)
+    image_url: str | None = Column(String)
+
+    recommendations: int | None = Column(Integer)
+    percent: int | None = Column(Integer)
+    score: int | None = Column(Integer)
+    metacritic_score: int | None = Column(Integer)
+    metacritic_url: str | None = Column(String)
+
+    recommended_price_eur: float | None = Column(Float)
+
+    def __repr__(self) -> str:
+        return (
+            "SteamInfo("
+            f"id={self.id!r}, "
+            f"url={self.url!r}, "
+            f"name={self.name!r}, "
+            f"short_description={self.short_description!r}, "
+            f"release_date={self.release_date!r}, "
+            f"genres={self.genres!r}, "
+            f"publishers={self.publishers!r}, "
+            f"image_url={self.image_url!r}, "
+            f"recommendations={self.recommendations!r}, "
+            f"percent={self.percent!r}, "
+            f"score={self.score!r}, "
+            f"metacritic_score={self.metacritic_score!r}, "
+            f"metacritic_url={self.metacritic_url!r}, "
+            f"recommended_price_eur={self.recommended_price_eur!r})"
+        )
+
+    game: Game = relationship("Game", back_populates="steam_info")
 
 
 class Offer(Base):
