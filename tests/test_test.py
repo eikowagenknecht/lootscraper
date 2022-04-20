@@ -84,67 +84,94 @@ class VariousTests(unittest.TestCase):
     def test_steam_appinfo(self) -> None:
         driver: WebDriver
         with get_pagedriver() as driver:
-            game = get_steam_details(driver, title="Counter-Strike")
-            self.assertIsNotNone(game)
-            self.assertEquals(game.name, "Counter-Strike")
-            self.assertIsNotNone(game.short_description)
+            steam_info = get_steam_details(driver, title="Counter-Strike")
+            self.assertIsNotNone(steam_info)
+            self.assertEquals(steam_info.name, "Counter-Strike")
+            self.assertIsNotNone(steam_info.short_description)
             self.assertEquals(
-                game.release_date.isoformat(), "2000-11-01T00:00:00+00:00"
+                steam_info.release_date.isoformat(), "2000-11-01T00:00:00+00:00"
             )
-            self.assertEquals(game.recommended_price_eur, 8.19)
-            self.assertEquals(game.genres, "Action")
+            self.assertEquals(steam_info.recommended_price_eur, 8.19)
+            self.assertEquals(steam_info.genres, "Action")
 
-            self.assertGreater(game.steam_recommendations, 100000)
-            self.assertEquals(game.steam_percent, 96)
-            self.assertEquals(game.steam_score, 10)
-            self.assertEquals(game.metacritic_score, 88)
+            self.assertGreater(steam_info.recommendations, 100000)
+            self.assertEquals(steam_info.percent, 96)
+            self.assertEquals(steam_info.score, 10)
+            self.assertEquals(steam_info.metacritic_score, 88)
             self.assertEquals(
-                game.metacritic_url,
+                steam_info.metacritic_url,
                 """https://www.metacritic.com/game/pc/counter-strike?ftag=MCD-06-10aaa1f""",
             )
 
     def test_steam_appinfo2(self) -> None:
         driver: WebDriver
         with get_pagedriver() as driver:
-            game = get_steam_details(driver, title="Rainbow Six Siege")
-            self.assertIsNotNone(game)
-            self.assertEquals(game.name, "Tom Clancy's Rainbow Six® Siege")
-            self.assertIsNotNone(game.short_description)
+            steam_info = get_steam_details(driver, title="Rainbow Six Siege")
+            self.assertIsNotNone(steam_info)
+            self.assertEquals(steam_info.name, "Tom Clancy's Rainbow Six® Siege")
+            self.assertIsNotNone(steam_info.short_description)
             self.assertEquals(
-                game.release_date.isoformat(), "2015-12-01T00:00:00+00:00"
+                steam_info.release_date.isoformat(), "2015-12-01T00:00:00+00:00"
             )
-            self.assertEquals(game.recommended_price_eur, 19.99)
-            self.assertEquals(game.genres, "Action")
+            self.assertEquals(steam_info.recommended_price_eur, 19.99)
+            self.assertEquals(steam_info.genres, "Action")
 
-            self.assertGreater(game.steam_recommendations, 850000)
-            self.assertEquals(game.steam_percent, 87)
-            self.assertEquals(game.steam_score, 9)
-            self.assertEquals(game.metacritic_score, None)
-            self.assertEquals(game.metacritic_url, None)
+            self.assertGreater(steam_info.recommendations, 850000)
+            self.assertEquals(steam_info.percent, 87)
+            self.assertEquals(steam_info.score, 9)
+            self.assertEquals(steam_info.metacritic_score, None)
+            self.assertEquals(steam_info.metacritic_url, None)
+
+    def test_steam_appinfo_releasedate(self) -> None:
+        driver: WebDriver
+        with get_pagedriver() as driver:
+            steam_info = get_steam_details(driver, title="Guild Wars 2")
+            self.assertIsNotNone(steam_info)
+            self.assertEquals(steam_info.name, "Guild Wars 2")
+            self.assertIsNotNone(steam_info.release_date)
+            self.assertEquals(
+                steam_info.release_date.isoformat(), "2012-08-28T00:00:00+00:00"
+            )
+
+    def test_steam_appinfo_recommendations(self) -> None:
+        driver: WebDriver
+        with get_pagedriver() as driver:
+            steam_info = get_steam_details(driver, title="Riverbond")
+            self.assertIsNotNone(steam_info)
+            self.assertEquals(steam_info.name, "Riverbond")
+            self.assertIsNotNone(steam_info.recommendations)
 
     # This is a weird one where the price is shown in "KWR" in the JSON, so the
     # store page has to be used instead to get the price in EUR
     def test_steam_appinfo_price(self) -> None:
         driver: WebDriver
         with get_pagedriver() as driver:
-            game = get_steam_details(driver, title="Cities: Skylines")
-            self.assertIsNotNone(game)
-            self.assertEquals(game.name, "Cities: Skylines")
-            self.assertEquals(game.recommended_price_eur, 27.99)
+            steam_info = get_steam_details(driver, title="Cities: Skylines")
+            self.assertIsNotNone(steam_info)
+            self.assertEquals(steam_info.name, "Cities: Skylines")
+            self.assertEquals(steam_info.recommended_price_eur, 27.99)
+
+    def test_steam_appinfo_language(self) -> None:
+        driver: WebDriver
+        with get_pagedriver() as driver:
+            steam_info = get_steam_details(driver, title="Warframe")
+            self.assertIsNotNone(steam_info)
+            self.assertEquals(steam_info.name, "Warframe")
+            self.assertEquals(steam_info.short_description[0:6], "Awaken")
 
     def test_steam_appinfo_ageverify(self) -> None:
         driver: WebDriver
         with get_pagedriver() as driver:
-            game = get_steam_details(driver, title="Doom Eternal")
-            self.assertIsNotNone(game)
-            self.assertEquals(game.name, "DOOM Eternal")
-            self.assertEquals(game.steam_score, 9)
+            steam_info = get_steam_details(driver, title="Doom Eternal")
+            self.assertIsNotNone(steam_info)
+            self.assertEquals(steam_info.name, "DOOM Eternal")
+            self.assertEquals(steam_info.score, 9)
 
     def test_steam_json_multiple_genres(self) -> None:
         with get_pagedriver() as driver:
-            game = get_steam_details(driver, id=1424910)
-            self.assertIsNotNone(game)
-            self.assertEquals(game.genres, "Action, Indie, Racing, Early Access")
+            steam_info = get_steam_details(driver, id=1424910)
+            self.assertIsNotNone(steam_info)
+            self.assertEquals(steam_info.genres, "Action, Indie, Racing, Early Access")
 
     def test_igdb_id(self) -> None:
         id = get_igdb_id("Cities: Skylines")
