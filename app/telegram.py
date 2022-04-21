@@ -1,9 +1,12 @@
+from datetime import datetime, timezone
 import html
 import json
 import logging
 import traceback
 
 import telegram
+from sqlalchemy import select
+from sqlalchemy.orm import Session
 from telegram import ParseMode, Update
 from telegram.ext import (
     CallbackContext,
@@ -12,15 +15,18 @@ from telegram.ext import (
     MessageHandler,
     Updater,
 )
+from app.common import OfferType, Source
 
 from app.configparser import Config, ParsedConfig
+from app.sqlalchemy import TelegramSubscription, User, and_
 
 logger = logging.getLogger(__name__)
 
 
 class TelegramBot:
-    def __init__(self, config: ParsedConfig):
+    def __init__(self, config: ParsedConfig, session: Session):
         self.config = config
+        self.session = session
 
     def start(self) -> None:
         """Start the bot."""
@@ -42,8 +48,9 @@ class TelegramBot:
         logging.info("Telegram Bot: Initialized")
 
         dispatcher.add_handler(CommandHandler("start", self.start_command))
+        dispatcher.add_handler(CommandHandler("leave", self.leave_command))
         dispatcher.add_handler(CommandHandler("help", self.help_command))
-        dispatcher.add_handler(CommandHandler("status", self.help_command))
+        dispatcher.add_handler(CommandHandler("status", self.status_command))
         dispatcher.add_handler(CommandHandler("subscribe", self.subscribe_command))
         dispatcher.add_handler(CommandHandler("unsubscribe", self.unsubscribe_command))
         dispatcher.add_handler(CommandHandler("debug", self.debug_command))
@@ -60,7 +67,7 @@ class TelegramBot:
         self.updater.stop()
 
     def error_handler(self, update: object, context: CallbackContext) -> None:  # type: ignore
-        """Log the error and send a telegram message to notify the developer."""
+        """Log the error and send a telegram message to notify the developer chat."""
         # Log the error before we do anything else, so we can see it even if something breaks.
         logger.error(msg="Exception while handling an update:", exc_info=context.error)
 
@@ -106,7 +113,7 @@ class TelegramBot:
         context.bot.wrong_method_name()  # type: ignore[attr-defined]
 
     def debug_command(self, update: Update, context: CallbackContext) -> None:  # type: ignore
-        """Show some debug information."""
+        """Handle the /debug command: Show some debug information."""
         if update.message is None:
             return
 
@@ -125,60 +132,86 @@ class TelegramBot:
             )
 
     def start_command(self, update: Update, context: CallbackContext) -> None:  # type: ignore
-        """Handle the /start command."""
+        """Handle the /start command: Register the user and display guide."""
         if update.message is None or update.effective_user is None:
             return
 
-        # TODO: Register user (database) if not registered
-        # - Date of registration (=now)
-        # - Telegram user ID
-        # - Telegram user details
-        # - Telegram chat ID
-        # - Number of offers received
-        # - Total saved EUR
+        welcome_text = (
+            R"I belong to the [LootScraper](https://github\.com/eikowagenknecht/lootscraper) project\. "
+            R"If you have any issues or feature request, please use the "
+            R"[issues](https://github\.com/eikowagenknecht/lootscraper/issues) to report them\. "
+            R"And if you like it, please consider "
+            R"[starring it on GitHub](https://github\.com/eikowagenknecht/lootscraper/stargazers)\. "
+            R"Thanks\!"
+            "\n\n"
+            R"*How this works*"
+            "\n"
+            R"You tell me what kind of offers you want to see\. "
+            R"I will then send you a message with all current offers of that kind\. "
+            R"I will also send you a message every time a new offer is added\. "
+            R"To see the commands you can use to talk to me, type /help now\."
+            "\n\n"
+            R"*Privacy*"
+            "\n"
+            R"I need to store some user data \(e\.g\. your Telegram user ID and your subscriptions\) to work\. "
+            R"You can leave any time by typing /leave\. "
+            R"This instantly deletes all data about you\. "
+            R"Also I will be sad to see you go\."
+        )
+
+        db_user = self.get_user(update.effective_user.id)
+
+        if db_user is not None:
+            update.message.reply_markdown_v2(
+                Rf"Welcome back, {update.effective_user.mention_markdown_v2()}\. "
+                + R"You are already registered\. "
+                + R"In case you forgot, this was my initial message to you:"
+                + "\n\n"
+                + welcome_text,
+            )
+            return
+
+        # Register user if not registered yet
+        new_user = User(
+            telegram_id=update.effective_user.id,
+            telegram_chat_id=update.effective_chat.id
+            if update.effective_chat
+            else None,
+            telegram_user_details=update.effective_user.to_json(),
+            registration_date=datetime.now().replace(tzinfo=timezone.utc),
+        )
+        self.session.add(new_user)
+        self.session.commit()
+
         update.message.reply_markdown_v2(
-            (
-                Rf"Hi {update.effective_user.mention_markdown_v2()}, welcome to the LootScraper Telegram Bot\!"
-                "\n\n"
-                R"I belong to the [LootScraper](https://github\.com/eikowagenknecht/lootscraper) project\. "
-                R"If you have any issues or feature request, please use the "
-                R"[issues](https://github\.com/eikowagenknecht/lootscraper/issues) to report them\. "
-                R"And if you like it, please consider "
-                R"[starring it on GitHub](https://github\.com/eikowagenknecht/lootscraper/stargazers)\. "
-                R"Thanks\!"
-                "\n\n"
-                R"*How this works*"
-                "\n"
-                R"You tell me what kind of offers you want to see\. "
-                R"I will then send you a message with all current offers of that kind\. "
-                R"I will also send you a message every time a new offer is added\. "
-                R"To see the commands you can use to talk to me, type /help now\."
-                "\n\n"
-                R"*Privacy*"
-                "\n"
-                R"I need to store some user data \(e\.g\. your Telegram user ID\ and your subscriptions) to work\. "
-                R"You can leave any time by typing /leave\. "
-                R"This instantly deletes all data about you\."
-                R"Also I will be sad to see you go\."
-            ),
+            Rf"Hi {update.effective_user.mention_markdown_v2()}, welcome to the LootScraper Telegram Bot and thank you for registering\!"
+            + "\n\n"
+            + welcome_text,
         )
 
     def leave_command(self, update: Update, context: CallbackContext) -> None:  # type: ignore
-        """Handle the /leave command."""
+        """Handle the /leave command: Unregister the user."""
         if update.message is None or update.effective_user is None:
             return
 
-        # TODO: Delete user from database (if registered)
+        db_user = self.get_user(update.effective_user.id)
+
+        if db_user is None:
+            update.message.reply_markdown_v2(
+                (
+                    Rf"Hi {update.effective_user.mention_markdown_v2()}, you are currently not registered\. "
+                    R"So you can't leave ;\-\)"
+                ),
+            )
+            return
+
+        # Delete user from database (if registered)
+        self.session.delete(db_user)
+        self.session.commit()
+
         update.message.reply_markdown_v2(
             (
-                Rf"Hi {update.effective_user.mention_markdown_v2()}, I'm sad to see you go\. "
-                R"Your user data has been deleted\. "
-                R"If you want to come back at any time, just type /start to start again\!"
-            ),
-        )
-        update.message.reply_markdown_v2(
-            (
-                Rf"Hi {update.effective_user.mention_markdown_v2()}, you are currently not registered\. "
+                Rf"Bye {update.effective_user.mention_markdown_v2()}, I'm sad to see you go\. "
                 R"Your user data has been deleted\. "
                 R"If you want to come back at any time, just type /start to start again\!"
             ),
@@ -188,6 +221,7 @@ class TelegramBot:
         """Handle the /help command: Display all available commands to the user."""
         if update.message is None:
             return
+
         update.message.reply_markdown_v2(
             (
                 R"*Available commands*"
@@ -206,11 +240,9 @@ class TelegramBot:
                 "\n"
                 R"  \- _epic_ \- Free games from Epic Games"
                 "\n"
-                R"  \- _steam_ \- Free games from Steam"
-                "\n"
                 R"  \- _gog_ \- Free games from GOG"
                 "\n"
-                R"  \- _all_ \- All of the above"
+                R"  \- _steam_ \- Free games from Steam"
                 "\n"
                 R"/unsubscribe _type_ \- Stop receiving offers for _type_"
                 "\n"
@@ -219,10 +251,21 @@ class TelegramBot:
         )
 
     def subscribe_command(self, update: Update, context: CallbackContext) -> None:  # type: ignore
-        if not update.effective_chat or not update.message or not update.message.text:
+        if (
+            not update.effective_chat
+            or not update.message
+            or not update.message.text
+            or not update.effective_user
+        ):
             return
 
-        # TODO: Check if user is registered, otherwise return error message
+        db_user = self.get_user(update.effective_user.id)
+        if db_user is None:
+            update.message.reply_markdown_v2(
+                Rf"Hi {update.effective_user.mention_markdown_v2()}, you are currently not registered\. "
+                R"So you can't subscribe to offers\."
+            )
+            return
 
         subscription_type = (
             update.message.text.lower().removeprefix("/subscribe").strip()
@@ -230,61 +273,174 @@ class TelegramBot:
 
         if subscription_type == "":
             update.message.reply_markdown_v2(
-                R"Sorry, this command needs a type to work\. Type /help to see all available commands\."
+                R"Sorry, this command needs a subscription type to work\. Type /help to see all available commands\."
             )
         elif subscription_type == "gog":
-            update.message.reply_markdown_v2(
-                Rf"Sorry, '{subscription_type}' is not implemented yet\."
-            )
+            if not self.is_subscribed(db_user, OfferType.GAME, Source.GOG):
+                self.subscribe(db_user, OfferType.GAME, Source.GOG)
+                update.message.reply_markdown_v2(
+                    R"You are now subscribed to offers from GOG\."
+                )
+            else:
+                update.message.reply_markdown_v2(
+                    R"You are already subscribed to offers from GOG\."
+                )
         elif subscription_type == "steam":
-            update.message.reply_markdown_v2(
-                Rf"Sorry, '{subscription_type}' is not implemented yet\."
-            )
+            if not self.is_subscribed(db_user, OfferType.GAME, Source.STEAM):
+                self.subscribe(db_user, OfferType.GAME, Source.STEAM)
+                update.message.reply_markdown_v2(
+                    R"You are now subscribed to offers from Steam\."
+                )
+            else:
+                update.message.reply_markdown_v2(
+                    R"You are already subscribed to offers from Steam\."
+                )
         elif subscription_type == "epic":
-            update.message.reply_markdown_v2(
-                Rf"Sorry, '{subscription_type}' is not implemented yet\."
-            )
+            if not self.is_subscribed(db_user, OfferType.GAME, Source.EPIC):
+                self.subscribe(db_user, OfferType.GAME, Source.EPIC)
+                update.message.reply_markdown_v2(
+                    R"You are now subscribed to offers from Epic\."
+                )
+            else:
+                update.message.reply_markdown_v2(
+                    R"You are already subscribed to offers from Epic\."
+                )
         elif subscription_type == "amazon game":
-            update.message.reply_markdown_v2(
-                Rf"Sorry, '{subscription_type}' is not implemented yet\."
-            )
+            if not self.is_subscribed(db_user, OfferType.GAME, Source.AMAZON):
+                self.subscribe(db_user, OfferType.GAME, Source.AMAZON)
+                update.message.reply_markdown_v2(
+                    R"You are now subscribed to game offers from Amazon\."
+                )
+            else:
+                update.message.reply_markdown_v2(
+                    R"You are already subscribed to game offers from Amazon\."
+                )
         elif subscription_type == "amazon loot":
-            update.message.reply_markdown_v2(
-                Rf"Sorry, '{subscription_type}' is not implemented yet\."
-            )
-        elif subscription_type == "all":
-            update.message.reply_markdown_v2(
-                Rf"Sorry, '{subscription_type}' is not implemented yet\."
-            )
+            if not self.is_subscribed(db_user, OfferType.LOOT, Source.AMAZON):
+                self.subscribe(db_user, OfferType.LOOT, Source.AMAZON)
+                update.message.reply_markdown_v2(
+                    R"You are now subscribed to loot offers from Amazon\."
+                )
+            else:
+                update.message.reply_markdown_v2(
+                    R"You are already subscribed to loot offers from Amazon\."
+                )
         else:
             update.message.reply_markdown_v2(
                 Rf"Sorry, '{subscription_type}' is not a valid subscription type\. Type /help to see all available commands\."
             )
-        pass
 
     def unsubscribe_command(self, update: Update, context: CallbackContext) -> None:  # type: ignore
-        if not update.effective_chat or not update.message or not update.message.text:
+        if (
+            not update.effective_chat
+            or not update.message
+            or not update.message.text
+            or not update.effective_user
+        ):
             return
 
-        # TODO: Check if user is registered, otherwise return error message
+        db_user = self.get_user(update.effective_user.id)
+        if db_user is None:
+            update.message.reply_markdown_v2(
+                Rf"Hi {update.effective_user.mention_markdown_v2()}, you are currently not registered\. "
+                R"So you can't unsubscribe from offers\."
+            )
+            return
 
         subscription_type = (
             update.message.text.lower().removeprefix("/unsubscribe").strip()
         )
-        print(subscription_type)
+
+        if subscription_type == "":
+            update.message.reply_markdown_v2(
+                R"Sorry, this command needs a subscription type to work\. Type /help to see all available commands\."
+            )
+        elif subscription_type == "gog":
+            if self.is_subscribed(db_user, OfferType.GAME, Source.GOG):
+                self.unsubscribe(db_user, OfferType.GAME, Source.GOG)
+                update.message.reply_markdown_v2(
+                    R"You are not subscribed any longer to offers from GOG\."
+                )
+            else:
+                update.message.reply_markdown_v2(
+                    R"You are not subscribed to offers from GOG\. You can't unsubscribe from offers you are not subscribed to\."
+                )
+        elif subscription_type == "steam":
+            if self.is_subscribed(db_user, OfferType.GAME, Source.STEAM):
+                self.unsubscribe(db_user, OfferType.GAME, Source.STEAM)
+                update.message.reply_markdown_v2(
+                    R"You are not subscribed any longer to offers from Steam\."
+                )
+            else:
+                update.message.reply_markdown_v2(
+                    R"You are not subscribed to offers from Steam\. You can't unsubscribe from offers you are not subscribed to\."
+                )
+        elif subscription_type == "epic":
+            if self.is_subscribed(db_user, OfferType.GAME, Source.EPIC):
+                self.unsubscribe(db_user, OfferType.GAME, Source.EPIC)
+                update.message.reply_markdown_v2(
+                    R"You are not subscribed any longer to offers from Epic\."
+                )
+            else:
+                update.message.reply_markdown_v2(
+                    R"You are not subscribed to offers from Epic\. You can't unsubscribe from offers you are not subscribed to\."
+                )
+        elif subscription_type == "amazon game":
+            if self.is_subscribed(db_user, OfferType.GAME, Source.AMAZON):
+                self.unsubscribe(db_user, OfferType.GAME, Source.AMAZON)
+                update.message.reply_markdown_v2(
+                    R"You are not subscribed any longer to game offers from Amazon\."
+                )
+            else:
+                update.message.reply_markdown_v2(
+                    R"You are not subscribed to game offers from Amazon\. You can't unsubscribe from offers you are not subscribed to\."
+                )
+        elif subscription_type == "amazon loot":
+            if self.is_subscribed(db_user, OfferType.LOOT, Source.AMAZON):
+                self.unsubscribe(db_user, OfferType.LOOT, Source.AMAZON)
+                update.message.reply_markdown_v2(
+                    R"You are not subscribed any longer to loot offers from Amazon\."
+                )
+            else:
+                update.message.reply_markdown_v2(
+                    R"You are not subscribed to loot offers from Amazon\. You can't unsubscribe from offers you are not subscribed to\."
+                )
+        else:
+            update.message.reply_markdown_v2(
+                Rf"Sorry, '{subscription_type}' is not a valid subscription type\. Type /help to see all available commands\."
+            )
 
     def status_command(self, update: Update, context: CallbackContext) -> None:  # type: ignore
-        if not update.effective_chat:
+        if not update.effective_chat or not update.effective_user or not update.message:
             return
 
-        # TODO: Check if user is registered, then display some stats:
-        # - Active subscriptions
-        # - Total saved EUR
-        # - Number of offers received
+        db_user = self.get_user(update.effective_user.id)
+        if db_user is None:
+            update.message.reply_markdown_v2(
+                Rf"Hi {update.effective_user.mention_markdown_v2()}, you are currently not registered\. "
+                R"So there is no data stored about you\. "
+                R"But I'd be happy to see you register any time with the /start command\!"
+            )
+            return
 
-        if update.effective_chat:
-            text_caps = " ".join(context.args).upper()  # type: ignore
-            context.bot.send_message(chat_id=update.effective_chat.id, text=text_caps)
+        reg_date = db_user.registration_date.strftime("%Y-%m-%d %H:%M:%S").replace(
+            "-", "\\-"
+        )
+        update.message.reply_markdown_v2(
+            Rf"Hi {update.effective_user.mention_markdown_v2()}, you are currently registered\. "
+            R"But I'm not storing much user data, so this is all I know about you: "
+            "\n\n"
+            Rf"\- You registered on {reg_date} \(UTC\) with the /start command\."
+            "\n"
+            Rf"\- Your Telegram chat id is {db_user.telegram_chat_id}\. "
+            R"Didn't know that, huh? "
+            R"I use it to send you notifications\."
+            "\n"
+            Rf"\- You have {len(db_user.telegram_registrations) if db_user.telegram_registrations else 0} subscriptions\. "
+            R"You can unsubscribe from them any time with /unsubscribe\."
+            "\n"
+            Rf"\- You received {db_user.offers_received_count} offers so far\. "
+        )
 
     def unknown(self, update: Update, context: CallbackContext) -> None:  # type: ignore
         if not update.effective_chat:
@@ -294,6 +450,41 @@ class TelegramBot:
             chat_id=update.effective_chat.id,
             text="Sorry, I didn't understand that command. Type /help to see all commands.",
         )
+
+    def get_user(self, telegram_id: int) -> User | None:
+        db_user = (
+            self.session.execute(select(User).where(User.telegram_id == telegram_id))
+            .scalars()
+            .one_or_none()
+        )
+
+        return db_user
+
+    def is_subscribed(self, user: User, type: OfferType, source: Source) -> bool:
+        subscription = self.session.execute(
+            select(TelegramSubscription).where(
+                and_(
+                    TelegramSubscription.user_id == user.id,
+                    TelegramSubscription.type == type,
+                    TelegramSubscription.source == source,
+                )
+            )
+        ).scalar_one_or_none()
+        return subscription is not None
+
+    def subscribe(self, user: User, type: OfferType, source: Source) -> None:
+        self.session.add(TelegramSubscription(user=user, source=source, type=type))
+        self.session.commit()
+
+    def unsubscribe(self, user: User, type: OfferType, source: Source) -> None:
+        self.session.query(TelegramSubscription).filter(
+            and_(
+                TelegramSubscription.user_id == user.id,
+                TelegramSubscription.type == type,
+                TelegramSubscription.source == source,
+            )
+        ).delete()
+        self.session.commit()
 
 
 def markdown_json_formatted(input: str) -> str:
