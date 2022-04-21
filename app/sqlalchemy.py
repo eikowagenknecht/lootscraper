@@ -7,6 +7,7 @@ from types import TracebackType
 from typing import Any, Type
 
 from sqlalchemy import (
+    JSON,
     Column,
     DateTime,
     Enum,
@@ -20,7 +21,7 @@ from sqlalchemy import (
     select,
 )
 from sqlalchemy.engine.interfaces import Dialect
-from sqlalchemy.orm import Session, registry, relationship
+from sqlalchemy.orm import registry, relationship, scoped_session, sessionmaker
 
 from alembic import command
 from alembic.config import Config as AlembicConfig
@@ -182,6 +183,35 @@ class Offer(Base):
         )
 
 
+class User(Base):
+    __tablename__ = "users"
+
+    id: int = Column(Integer, primary_key=True, nullable=False)
+
+    registration_date: datetime = Column(AwareDateTime)
+    offers_received_count: int = Column(Integer, default=0)
+
+    telegram_id: int | None = Column(Integer)
+    telegram_chat_id: int | None = Column(Integer)
+    telegram_user_details: str | None = Column(JSON)
+
+    telegram_subscriptions: list[TelegramSubscription] = relationship(
+        "TelegramSubscription", back_populates="user"
+    )
+
+
+class TelegramSubscription(Base):
+    __tablename__ = "telegram_subscriptions"
+
+    id: int = Column(Integer, primary_key=True, nullable=False)
+
+    user_id: int = Column(Integer, ForeignKey("users.id"), nullable=False)
+    user: User = relationship("User", back_populates="telegram_subscriptions")
+
+    source: Source = Column(Enum(Source), nullable=False)
+    type: OfferType = Column(Enum(OfferType), nullable=False)
+
+
 class LootDatabase:
     def __init__(self, echo: bool = False) -> None:
         # Run Alembic migrations first before we open a session
@@ -193,8 +223,8 @@ class LootDatabase:
             echo=echo,
             future=True,
         )
-
-        self.session = Session(self.engine)
+        session_factory = sessionmaker(bind=self.engine)
+        self.session = scoped_session(session_factory)
 
     def __enter__(self) -> LootDatabase:
         return self

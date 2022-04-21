@@ -1,22 +1,23 @@
-from datetime import datetime, timezone
 import html
 import json
 import logging
 import traceback
+from datetime import datetime, timezone
 
 import telegram
 from sqlalchemy import select
 from sqlalchemy.orm import Session
-from telegram import ParseMode, Update
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ParseMode, Update
 from telegram.ext import (
     CallbackContext,
+    CallbackQueryHandler,
     CommandHandler,
     Filters,
     MessageHandler,
     Updater,
 )
-from app.common import OfferType, Source
 
+from app.common import OfferType, Source
 from app.configparser import Config, ParsedConfig
 from app.sqlalchemy import TelegramSubscription, User, and_
 
@@ -36,9 +37,8 @@ class TelegramBot:
             [
                 telegram.BotCommand("start", "Start the bot"),
                 telegram.BotCommand("help", "Show help"),
+                telegram.BotCommand("manage", "Edit your subscriptions"),
                 telegram.BotCommand("status", "Show your subscriptions"),
-                telegram.BotCommand("subscribe", "Subscribe to offers"),
-                telegram.BotCommand("unsubscribe", "Unsubscribe from offers"),
             ]
         )
 
@@ -50,11 +50,20 @@ class TelegramBot:
         dispatcher.add_handler(CommandHandler("start", self.start_command))
         dispatcher.add_handler(CommandHandler("leave", self.leave_command))
         dispatcher.add_handler(CommandHandler("help", self.help_command))
+        dispatcher.add_handler(CommandHandler("manage", self.manage_command))
         dispatcher.add_handler(CommandHandler("status", self.status_command))
         dispatcher.add_handler(CommandHandler("subscribe", self.subscribe_command))
         dispatcher.add_handler(CommandHandler("unsubscribe", self.unsubscribe_command))
         dispatcher.add_handler(CommandHandler("debug", self.debug_command))
         dispatcher.add_handler(CommandHandler("bad_command", self.bad_command))
+
+        dispatcher.add_handler(
+            CallbackQueryHandler(self.toggle_subscription_callback, pattern="toggle")
+        )
+        dispatcher.add_handler(
+            CallbackQueryHandler(self.close_menu_callback, pattern="close menu")
+        )
+
         dispatcher.add_handler(MessageHandler(Filters.command, self.unknown))
         dispatcher.add_error_handler(self.error_handler)
 
@@ -107,6 +116,22 @@ class TelegramBot:
             if context.error.message == "Unauthorized":
                 pass
             pass
+
+    def manage_command(self, update: Update, context: CallbackContext) -> None:  # type: ignore
+        """Handle the /manage command: Manage subscriptions."""
+        if update.message is None or update.effective_user is None:
+            return
+
+        db_user = self.get_user(update.effective_user.id)
+        if db_user is None:
+            update.message.reply_markdown_v2(
+                "You are not registered. Please, register with /start command."
+            )
+            return
+
+        update.message.reply_text(
+            self.manage_menu_message(), reply_markup=self.manage_menu_keyboard(db_user)
+        )
 
     def bad_command(self, update: Update, context: CallbackContext) -> None:  # type: ignore
         """Raise an error to trigger the error handler."""
@@ -275,7 +300,10 @@ class TelegramBot:
             update.message.reply_markdown_v2(
                 R"Sorry, this command needs a subscription type to work\. Type /help to see all available commands\."
             )
-        elif subscription_type == "gog":
+
+            return
+
+        if subscription_type == "gog":
             if not self.is_subscribed(db_user, OfferType.GAME, Source.GOG):
                 self.subscribe(db_user, OfferType.GAME, Source.GOG)
                 update.message.reply_markdown_v2(
@@ -436,7 +464,7 @@ class TelegramBot:
             R"Didn't know that, huh? "
             R"I use it to send you notifications\."
             "\n"
-            Rf"\- You have {len(db_user.telegram_registrations) if db_user.telegram_registrations else 0} subscriptions\. "
+            Rf"\- You have {len(db_user.telegram_subscriptions) if db_user.telegram_subscriptions else 0} subscriptions\. "
             R"You can unsubscribe from them any time with /unsubscribe\."
             "\n"
             Rf"\- You received {db_user.offers_received_count} offers so far\. "
@@ -486,6 +514,182 @@ class TelegramBot:
         ).delete()
         self.session.commit()
 
+    def manage_menu(self, update: Update, context: CallbackContext) -> None:  # type: ignore
+        if update.callback_query is None or update.effective_user is None:
+            return
+
+        db_user = self.get_user(update.effective_user.id)
+        if db_user is None:
+            update.callback_query.answer(
+                text="You are not registered. Please, register with /start command."
+            )
+            return
+
+        update.callback_query.answer()
+        update.callback_query.edit_message_text(
+            text=self.manage_menu_message(),
+            reply_markup=self.manage_menu_keyboard(db_user),
+        )
+
+    def manage_menu_message(self) -> str:
+        return (
+            "Manage your subscriptions. "
+            "\n\n"
+            "[X] means that you are subscribed and clicking the entry will unsubscribe you from that category. "
+            "\n\n"
+            "[_] means that you are not yet subscribed and clicking the entry will subscribe you to that category. "
+        )
+
+    def manage_menu_close_message(self) -> str:
+        return (
+            "Thank you for managing your subscriptions. "
+            "Forgot something? "
+            "You can continue any time with /manage."
+        )
+
+    def manage_menu_keyboard(self, user: User) -> InlineKeyboardMarkup:
+        keyboard: list[list[InlineKeyboardButton]] = []
+
+        if any(
+            x.source == Source.AMAZON and x.type == OfferType.GAME
+            for x in user.telegram_subscriptions
+        ):
+            keyboard.append(keyboard_button_row(True, Source.AMAZON, OfferType.GAME))
+        else:
+            keyboard.append(keyboard_button_row(False, Source.AMAZON, OfferType.GAME))
+
+        if any(
+            x.source == Source.AMAZON and x.type == OfferType.LOOT
+            for x in user.telegram_subscriptions
+        ):
+            keyboard.append(keyboard_button_row(True, Source.AMAZON, OfferType.LOOT))
+        else:
+            keyboard.append(keyboard_button_row(False, Source.AMAZON, OfferType.LOOT))
+
+        if any(
+            x.source == Source.EPIC and x.type == OfferType.GAME
+            for x in user.telegram_subscriptions
+        ):
+            keyboard.append(keyboard_button_row(True, Source.EPIC, OfferType.GAME))
+        else:
+            keyboard.append(keyboard_button_row(False, Source.EPIC, OfferType.GAME))
+
+        if any(
+            x.source == Source.GOG and x.type == OfferType.GAME
+            for x in user.telegram_subscriptions
+        ):
+            keyboard.append(keyboard_button_row(True, Source.GOG, OfferType.GAME))
+        else:
+            keyboard.append(keyboard_button_row(False, Source.GOG, OfferType.GAME))
+
+        if any(
+            x.source == Source.STEAM and x.type == OfferType.GAME
+            for x in user.telegram_subscriptions
+        ):
+            keyboard.append(keyboard_button_row(True, Source.STEAM, OfferType.GAME))
+        else:
+            keyboard.append(keyboard_button_row(False, Source.STEAM, OfferType.GAME))
+
+        keyboard.append(
+            [InlineKeyboardButton(text="Close", callback_data="close menu")]
+        )
+
+        return InlineKeyboardMarkup(keyboard)
+
+    def close_menu_callback(self, update: Update, context: CallbackContext) -> None:  # type: ignore
+        if update.callback_query is None or update.effective_user is None:
+            return
+
+        query = update.callback_query
+
+        if query.data != "close menu":
+            return
+
+        query.answer(text="Bye!")
+        query.edit_message_text(
+            text=self.manage_menu_close_message(),
+            reply_markup=None,
+        )
+
+    def toggle_subscription_callback(self, update: Update, context: CallbackContext) -> None:  # type: ignore
+        query = update.callback_query
+        if query is None or update.effective_user is None or query.data is None:
+            return
+
+        db_user = self.get_user(update.effective_user.id)
+        if db_user is None:
+            query.answer(
+                text="You are not registered. Please, register with /start command."
+            )
+            return
+
+        subscription_type = query.data.lower().removeprefix("toggle").strip()
+
+        answer_text = None
+
+        if subscription_type == "amazon game":
+            if not self.is_subscribed(db_user, OfferType.GAME, Source.AMAZON):
+                self.subscribe(db_user, OfferType.GAME, Source.AMAZON)
+                answer_text = answer(True, Source.AMAZON, OfferType.GAME)
+            else:
+                self.unsubscribe(db_user, OfferType.GAME, Source.AMAZON)
+                answer_text = answer(False, Source.AMAZON, OfferType.GAME)
+        elif subscription_type == "amazon loot":
+            if not self.is_subscribed(db_user, OfferType.LOOT, Source.AMAZON):
+                self.subscribe(db_user, OfferType.LOOT, Source.AMAZON)
+                answer_text = answer(True, Source.AMAZON, OfferType.LOOT)
+            else:
+                self.unsubscribe(db_user, OfferType.LOOT, Source.AMAZON)
+                answer_text = answer(False, Source.AMAZON, OfferType.LOOT)
+        elif subscription_type == "epic":
+            if not self.is_subscribed(db_user, OfferType.GAME, Source.EPIC):
+                self.subscribe(db_user, OfferType.GAME, Source.EPIC)
+                answer_text = answer(True, Source.EPIC, OfferType.GAME)
+            else:
+                self.unsubscribe(db_user, OfferType.GAME, Source.EPIC)
+                answer_text = answer(False, Source.EPIC, OfferType.GAME)
+        elif subscription_type == "gog":
+            if not self.is_subscribed(db_user, OfferType.GAME, Source.GOG):
+                self.subscribe(db_user, OfferType.GAME, Source.GOG)
+                answer_text = answer(True, Source.GOG, OfferType.GAME)
+            else:
+                self.unsubscribe(db_user, OfferType.GAME, Source.GOG)
+                answer_text = answer(False, Source.GOG, OfferType.GAME)
+        elif subscription_type == "steam":
+            if not self.is_subscribed(db_user, OfferType.GAME, Source.STEAM):
+                self.subscribe(db_user, OfferType.GAME, Source.STEAM)
+                answer_text = answer(True, Source.STEAM, OfferType.GAME)
+            else:
+                self.unsubscribe(db_user, OfferType.GAME, Source.STEAM)
+                answer_text = answer(False, Source.STEAM, OfferType.GAME)
+
+        query.answer(text=answer_text)
+        query.edit_message_text(
+            text=self.manage_menu_message(),
+            reply_markup=self.manage_menu_keyboard(db_user),
+        )
+
 
 def markdown_json_formatted(input: str) -> str:
     return f"```json\n{input}\n```"
+
+
+def keyboard_button_row(
+    active: bool,
+    source: Source,
+    offer_type: OfferType,
+) -> list[InlineKeyboardButton]:
+    button_state = "[X]" if active else "[_]"
+    source_str = f"{source.value} {offer_type.value}"
+    command = f"toggle {source.name} {offer_type.name}"
+
+    return [
+        InlineKeyboardButton(f"{button_state} ({source_str})", callback_data=command)
+    ]
+
+
+def answer(new_state: bool, source: Source, offer_type: OfferType) -> str:
+    if new_state:
+        return "Congratulations! You are now subscribed to {button_state} ({source_str}) offers."
+    else:
+        return "You are now unsubscribed from {button_state} ({source_str}) offers."

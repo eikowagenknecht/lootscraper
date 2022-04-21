@@ -9,10 +9,7 @@ from app.common import TIMESTAMP_LONG
 from app.configparser import Config
 from app.pagedriver import get_pagedriver
 from app.scraper.info.igdb import get_igdb_id
-from app.scraper.info.steam import (
-    get_steam_id,
-    get_steam_details,
-)
+from app.scraper.info.steam import get_steam_details, get_steam_id
 from app.scraper.info.utils import get_match_score
 from app.sqlalchemy import LootDatabase
 from app.telegram import TelegramBot
@@ -26,21 +23,20 @@ logging.basicConfig(
 
 class VariousTests(unittest.TestCase):
     def test_entity_framework(self) -> None:
-        with LootDatabase() as db:
+        with LootDatabase(echo=True) as db:
             db.initialize_or_update()
-            res = db.read_all()
-            print(res)
-        pass
+            self.assertTrue(True)
 
     def test_telegram(self) -> None:
-        # Arrange
-        bot = TelegramBot(Config.get())
-        # Act
-        bot.start()
-        sleep(1)
-        bot.stop()
-        # Assert
-        self.assertEqual(1, 1)
+        with LootDatabase(echo=True) as db:
+            # Arrange
+            bot = TelegramBot(Config.get(), db.session)
+            # Act
+            bot.start()
+            sleep(10)
+            bot.stop()
+            # Assert
+            self.assertEqual(1, 1)
 
     def test_similarity(self) -> None:
         search = "Rainbow Six Siege"

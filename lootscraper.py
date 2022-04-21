@@ -10,6 +10,7 @@ from types import FrameType
 from selenium.webdriver.chrome.webdriver import WebDriver
 from sqlalchemy import select
 from sqlalchemy.exc import OperationalError
+from sqlalchemy.orm import Session
 
 from app.common import TIMESTAMP_LONG, OfferType, Source
 from app.configparser import Config
@@ -22,7 +23,6 @@ from app.scraper.loot.epic_games import EpicScraper
 from app.scraper.loot.gog import GogScraper
 from app.scraper.loot.steam import SteamScraper
 from app.sqlalchemy import Game, LootDatabase, Offer, SteamInfo
-from sqlalchemy.orm import Session
 from app.upload import upload_to_server
 
 exit = Event()
