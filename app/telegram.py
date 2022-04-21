@@ -52,8 +52,6 @@ class TelegramBot:
         dispatcher.add_handler(CommandHandler("help", self.help_command))
         dispatcher.add_handler(CommandHandler("manage", self.manage_command))
         dispatcher.add_handler(CommandHandler("status", self.status_command))
-        dispatcher.add_handler(CommandHandler("subscribe", self.subscribe_command))
-        dispatcher.add_handler(CommandHandler("unsubscribe", self.unsubscribe_command))
         dispatcher.add_handler(CommandHandler("debug", self.debug_command))
         dispatcher.add_handler(CommandHandler("bad_command", self.bad_command))
 
@@ -171,8 +169,8 @@ class TelegramBot:
             "\n\n"
             R"*How this works*"
             "\n"
-            R"You tell me what kind of offers you want to see\. "
-            R"I will then send you a message with all current offers of that kind\. "
+            R"You tell me what kind of offers you want to see with the /manage command\. "
+            R"I will then send you a message with all current offers of that kind if you want\. "
             R"I will also send you a message every time a new offer is added\. "
             R"To see the commands you can use to talk to me, type /help now\."
             "\n\n"
@@ -188,7 +186,7 @@ class TelegramBot:
 
         if db_user is not None:
             update.message.reply_markdown_v2(
-                Rf"Welcome back, {update.effective_user.mention_markdown_v2()}\. "
+                Rf"Welcome back, {update.effective_user.mention_markdown_v2()} 👋\. "
                 + R"You are already registered\. "
                 + R"In case you forgot, this was my initial message to you:"
                 + "\n\n"
@@ -209,7 +207,7 @@ class TelegramBot:
         self.session.commit()
 
         update.message.reply_markdown_v2(
-            Rf"Hi {update.effective_user.mention_markdown_v2()}, welcome to the LootScraper Telegram Bot and thank you for registering\!"
+            Rf"Hi {update.effective_user.mention_markdown_v2()} 👋, welcome to the LootScraper Telegram Bot and thank you for registering\!"
             + "\n\n"
             + welcome_text,
         )
@@ -257,186 +255,11 @@ class TelegramBot:
                 "\n"
                 R"/status \- Show information about your subscriptions"
                 "\n"
-                R"/subscribe _type_ \- Start receiving offers for _type_"
-                "\n"
-                R"  \- _amazon game_ \- Free games from Amazon"
-                "\n"
-                R"  \- _amazon loot_ \- Free loot from Amazon"
-                "\n"
-                R"  \- _epic_ \- Free games from Epic Games"
-                "\n"
-                R"  \- _gog_ \- Free games from GOG"
-                "\n"
-                R"  \- _steam_ \- Free games from Steam"
-                "\n"
-                R"/unsubscribe _type_ \- Stop receiving offers for _type_"
+                R"/manage \- Manage your subscriptions"
                 "\n"
                 R"/leave \- Leave this bot and delete stored user data"
             )
         )
-
-    def subscribe_command(self, update: Update, context: CallbackContext) -> None:  # type: ignore
-        if (
-            not update.effective_chat
-            or not update.message
-            or not update.message.text
-            or not update.effective_user
-        ):
-            return
-
-        db_user = self.get_user(update.effective_user.id)
-        if db_user is None:
-            update.message.reply_markdown_v2(
-                Rf"Hi {update.effective_user.mention_markdown_v2()}, you are currently not registered\. "
-                R"So you can't subscribe to offers\."
-            )
-            return
-
-        subscription_type = (
-            update.message.text.lower().removeprefix("/subscribe").strip()
-        )
-
-        if subscription_type == "":
-            update.message.reply_markdown_v2(
-                R"Sorry, this command needs a subscription type to work\. Type /help to see all available commands\."
-            )
-
-            return
-
-        if subscription_type == "gog":
-            if not self.is_subscribed(db_user, OfferType.GAME, Source.GOG):
-                self.subscribe(db_user, OfferType.GAME, Source.GOG)
-                update.message.reply_markdown_v2(
-                    R"You are now subscribed to offers from GOG\."
-                )
-            else:
-                update.message.reply_markdown_v2(
-                    R"You are already subscribed to offers from GOG\."
-                )
-        elif subscription_type == "steam":
-            if not self.is_subscribed(db_user, OfferType.GAME, Source.STEAM):
-                self.subscribe(db_user, OfferType.GAME, Source.STEAM)
-                update.message.reply_markdown_v2(
-                    R"You are now subscribed to offers from Steam\."
-                )
-            else:
-                update.message.reply_markdown_v2(
-                    R"You are already subscribed to offers from Steam\."
-                )
-        elif subscription_type == "epic":
-            if not self.is_subscribed(db_user, OfferType.GAME, Source.EPIC):
-                self.subscribe(db_user, OfferType.GAME, Source.EPIC)
-                update.message.reply_markdown_v2(
-                    R"You are now subscribed to offers from Epic\."
-                )
-            else:
-                update.message.reply_markdown_v2(
-                    R"You are already subscribed to offers from Epic\."
-                )
-        elif subscription_type == "amazon game":
-            if not self.is_subscribed(db_user, OfferType.GAME, Source.AMAZON):
-                self.subscribe(db_user, OfferType.GAME, Source.AMAZON)
-                update.message.reply_markdown_v2(
-                    R"You are now subscribed to game offers from Amazon\."
-                )
-            else:
-                update.message.reply_markdown_v2(
-                    R"You are already subscribed to game offers from Amazon\."
-                )
-        elif subscription_type == "amazon loot":
-            if not self.is_subscribed(db_user, OfferType.LOOT, Source.AMAZON):
-                self.subscribe(db_user, OfferType.LOOT, Source.AMAZON)
-                update.message.reply_markdown_v2(
-                    R"You are now subscribed to loot offers from Amazon\."
-                )
-            else:
-                update.message.reply_markdown_v2(
-                    R"You are already subscribed to loot offers from Amazon\."
-                )
-        else:
-            update.message.reply_markdown_v2(
-                Rf"Sorry, '{subscription_type}' is not a valid subscription type\. Type /help to see all available commands\."
-            )
-
-    def unsubscribe_command(self, update: Update, context: CallbackContext) -> None:  # type: ignore
-        if (
-            not update.effective_chat
-            or not update.message
-            or not update.message.text
-            or not update.effective_user
-        ):
-            return
-
-        db_user = self.get_user(update.effective_user.id)
-        if db_user is None:
-            update.message.reply_markdown_v2(
-                Rf"Hi {update.effective_user.mention_markdown_v2()}, you are currently not registered\. "
-                R"So you can't unsubscribe from offers\."
-            )
-            return
-
-        subscription_type = (
-            update.message.text.lower().removeprefix("/unsubscribe").strip()
-        )
-
-        if subscription_type == "":
-            update.message.reply_markdown_v2(
-                R"Sorry, this command needs a subscription type to work\. Type /help to see all available commands\."
-            )
-        elif subscription_type == "gog":
-            if self.is_subscribed(db_user, OfferType.GAME, Source.GOG):
-                self.unsubscribe(db_user, OfferType.GAME, Source.GOG)
-                update.message.reply_markdown_v2(
-                    R"You are not subscribed any longer to offers from GOG\."
-                )
-            else:
-                update.message.reply_markdown_v2(
-                    R"You are not subscribed to offers from GOG\. You can't unsubscribe from offers you are not subscribed to\."
-                )
-        elif subscription_type == "steam":
-            if self.is_subscribed(db_user, OfferType.GAME, Source.STEAM):
-                self.unsubscribe(db_user, OfferType.GAME, Source.STEAM)
-                update.message.reply_markdown_v2(
-                    R"You are not subscribed any longer to offers from Steam\."
-                )
-            else:
-                update.message.reply_markdown_v2(
-                    R"You are not subscribed to offers from Steam\. You can't unsubscribe from offers you are not subscribed to\."
-                )
-        elif subscription_type == "epic":
-            if self.is_subscribed(db_user, OfferType.GAME, Source.EPIC):
-                self.unsubscribe(db_user, OfferType.GAME, Source.EPIC)
-                update.message.reply_markdown_v2(
-                    R"You are not subscribed any longer to offers from Epic\."
-                )
-            else:
-                update.message.reply_markdown_v2(
-                    R"You are not subscribed to offers from Epic\. You can't unsubscribe from offers you are not subscribed to\."
-                )
-        elif subscription_type == "amazon game":
-            if self.is_subscribed(db_user, OfferType.GAME, Source.AMAZON):
-                self.unsubscribe(db_user, OfferType.GAME, Source.AMAZON)
-                update.message.reply_markdown_v2(
-                    R"You are not subscribed any longer to game offers from Amazon\."
-                )
-            else:
-                update.message.reply_markdown_v2(
-                    R"You are not subscribed to game offers from Amazon\. You can't unsubscribe from offers you are not subscribed to\."
-                )
-        elif subscription_type == "amazon loot":
-            if self.is_subscribed(db_user, OfferType.LOOT, Source.AMAZON):
-                self.unsubscribe(db_user, OfferType.LOOT, Source.AMAZON)
-                update.message.reply_markdown_v2(
-                    R"You are not subscribed any longer to loot offers from Amazon\."
-                )
-            else:
-                update.message.reply_markdown_v2(
-                    R"You are not subscribed to loot offers from Amazon\. You can't unsubscribe from offers you are not subscribed to\."
-                )
-        else:
-            update.message.reply_markdown_v2(
-                Rf"Sorry, '{subscription_type}' is not a valid subscription type\. Type /help to see all available commands\."
-            )
 
     def status_command(self, update: Update, context: CallbackContext) -> None:  # type: ignore
         if not update.effective_chat or not update.effective_user or not update.message:
@@ -465,7 +288,7 @@ class TelegramBot:
             R"I use it to send you notifications\."
             "\n"
             Rf"\- You have {len(db_user.telegram_subscriptions) if db_user.telegram_subscriptions else 0} subscriptions\. "
-            R"You can unsubscribe from them any time with /unsubscribe\."
+            R"You can unsubscribe from them any time with /manage\."
             "\n"
             Rf"\- You received {db_user.offers_received_count} offers so far\. "
         )
@@ -533,18 +356,20 @@ class TelegramBot:
 
     def manage_menu_message(self) -> str:
         return (
-            "Manage your subscriptions. "
+            "Here you can manage your subscriptions. "
+            "To do so, just click the following buttons."
             "\n\n"
-            "[X] means that you are subscribed and clicking the entry will unsubscribe you from that category. "
+            "✅ means that you are subscribed and clicking the entry will unsubscribe you from that category. "
             "\n\n"
-            "[_] means that you are not yet subscribed and clicking the entry will subscribe you to that category. "
+            "❌ means that you are not yet subscribed and clicking the entry will subscribe you to that category. "
         )
 
     def manage_menu_close_message(self) -> str:
         return (
             "Thank you for managing your subscriptions. "
             "Forgot something? "
-            "You can continue any time with /manage."
+            "You can continue any time with /manage. "
+            # "If you want me to send you all current offers of your subscriptions, you can type /offers now or any time later."
         )
 
     def manage_menu_keyboard(self, user: User) -> InlineKeyboardMarkup:
@@ -641,21 +466,21 @@ class TelegramBot:
             else:
                 self.unsubscribe(db_user, OfferType.LOOT, Source.AMAZON)
                 answer_text = answer(False, Source.AMAZON, OfferType.LOOT)
-        elif subscription_type == "epic":
+        elif subscription_type == "epic game":
             if not self.is_subscribed(db_user, OfferType.GAME, Source.EPIC):
                 self.subscribe(db_user, OfferType.GAME, Source.EPIC)
                 answer_text = answer(True, Source.EPIC, OfferType.GAME)
             else:
                 self.unsubscribe(db_user, OfferType.GAME, Source.EPIC)
                 answer_text = answer(False, Source.EPIC, OfferType.GAME)
-        elif subscription_type == "gog":
+        elif subscription_type == "gog game":
             if not self.is_subscribed(db_user, OfferType.GAME, Source.GOG):
                 self.subscribe(db_user, OfferType.GAME, Source.GOG)
                 answer_text = answer(True, Source.GOG, OfferType.GAME)
             else:
                 self.unsubscribe(db_user, OfferType.GAME, Source.GOG)
                 answer_text = answer(False, Source.GOG, OfferType.GAME)
-        elif subscription_type == "steam":
+        elif subscription_type == "steam game":
             if not self.is_subscribed(db_user, OfferType.GAME, Source.STEAM):
                 self.subscribe(db_user, OfferType.GAME, Source.STEAM)
                 answer_text = answer(True, Source.STEAM, OfferType.GAME)
@@ -679,13 +504,11 @@ def keyboard_button_row(
     source: Source,
     offer_type: OfferType,
 ) -> list[InlineKeyboardButton]:
-    button_state = "[X]" if active else "[_]"
-    source_str = f"{source.value} {offer_type.value}"
+    button_state = "✅" if active else "❌"
+    source_str = f"{source.value} ({offer_type.value})"
     command = f"toggle {source.name} {offer_type.name}"
 
-    return [
-        InlineKeyboardButton(f"{button_state} ({source_str})", callback_data=command)
-    ]
+    return [InlineKeyboardButton(f"{button_state} {source_str}", callback_data=command)]
 
 
 def answer(new_state: bool, source: Source, offer_type: OfferType) -> str:

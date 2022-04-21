@@ -33,7 +33,7 @@ class VariousTests(unittest.TestCase):
             bot = TelegramBot(Config.get(), db.session)
             # Act
             bot.start()
-            sleep(10)
+            sleep(10000)
             bot.stop()
             # Assert
             self.assertEqual(1, 1)
