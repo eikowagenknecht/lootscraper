@@ -35,7 +35,8 @@ class TelegramBot:
         self.session = session
 
     def __enter__(self) -> TelegramBot:
-        self.start()
+        if self.config.telegram_bot:
+            self.start()
         return self
 
     def __exit__(
@@ -44,7 +45,8 @@ class TelegramBot:
         exc_value: BaseException | None,
         traceback: TracebackType | None,
     ) -> None:
-        self.stop()
+        if self.updater is not None:
+            self.stop()
 
     def start(self) -> None:
         """Start the bot."""

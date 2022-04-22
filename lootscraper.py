@@ -78,9 +78,10 @@ def main() -> None:
 
             try:
                 job(db)
-                session: Session = db.session
-                for user in session.execute(select(User)).scalars().all():
-                    bot.send_new_offers(user)
+                if Config.get().telegram_bot:
+                    session: Session = db.session
+                    for user in session.execute(select(User)).scalars().all():
+                        bot.send_new_offers(user)
             except OperationalError as oe:
                 logging.error(f"Database error: {oe}")
                 logging.error("Database error, exiting applications")
