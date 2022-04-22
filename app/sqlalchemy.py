@@ -73,9 +73,9 @@ class IgdbInfo(Base):
     __tablename__ = "igdb_info"
 
     id: int = Column(Integer, primary_key=True, nullable=False)
-    url: str | None = Column(String, nullable=False)
+    url: str = Column(String, nullable=False)
 
-    name: str | None = Column(String, nullable=False)
+    name: str = Column(String, nullable=False)
     short_description: str | None = Column(String)
     release_date: datetime | None = Column(AwareDateTime)
 
@@ -105,9 +105,9 @@ class SteamInfo(Base):
     __tablename__ = "steam_info"
 
     id: int = Column(Integer, primary_key=True, nullable=False)
-    url: str | None = Column(String, nullable=False)
+    url: str = Column(String, nullable=False)
 
-    name: str | None = Column(String, nullable=False)
+    name: str = Column(String, nullable=False)
     short_description: str | None = Column(String)
     release_date: datetime | None = Column(AwareDateTime)
     genres: str | None = Column(String)
@@ -153,8 +153,8 @@ class Offer(Base):
     title: str = Column(String, nullable=False)
     probable_game_name: str = Column(String, nullable=False)
 
-    seen_first: datetime | None = Column(AwareDateTime)
-    seen_last: datetime | None = Column(AwareDateTime)
+    seen_first: datetime = Column(AwareDateTime, nullable=False)
+    seen_last: datetime = Column(AwareDateTime, nullable=False)
     valid_from: datetime | None = Column(AwareDateTime)
     valid_to: datetime | None = Column(AwareDateTime)
 
@@ -210,6 +210,8 @@ class TelegramSubscription(Base):
 
     source: Source = Column(Enum(Source), nullable=False)
     type: OfferType = Column(Enum(OfferType), nullable=False)
+
+    last_offer_id: int = Column(Integer, nullable=False, default=0)
 
 
 class LootDatabase:

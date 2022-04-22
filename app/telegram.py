@@ -1,11 +1,16 @@
+from __future__ import annotations
+
 import html
 import json
 import logging
 import traceback
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
+from types import TracebackType
+from typing import Type
 
+import humanize
 import telegram
-from sqlalchemy import select
+from sqlalchemy import or_, select
 from sqlalchemy.orm import Session
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ParseMode, Update
 from telegram.ext import (
@@ -17,9 +22,9 @@ from telegram.ext import (
     Updater,
 )
 
-from app.common import OfferType, Source
+from app.common import TIMESTAMP_READABLE_WITH_HOUR, TIMESTAMP_SHORT, OfferType, Source
 from app.configparser import Config, ParsedConfig
-from app.sqlalchemy import TelegramSubscription, User, and_
+from app.sqlalchemy import Game, Offer, TelegramSubscription, User, and_
 
 logger = logging.getLogger(__name__)
 
@@ -28,6 +33,18 @@ class TelegramBot:
     def __init__(self, config: ParsedConfig, session: Session):
         self.config = config
         self.session = session
+
+    def __enter__(self) -> TelegramBot:
+        self.start()
+        return self
+
+    def __exit__(
+        self,
+        exc_type: Type[BaseException] | None,
+        exc_value: BaseException | None,
+        traceback: TracebackType | None,
+    ) -> None:
+        self.stop()
 
     def start(self) -> None:
         """Start the bot."""
@@ -52,8 +69,8 @@ class TelegramBot:
         dispatcher.add_handler(CommandHandler("help", self.help_command))
         dispatcher.add_handler(CommandHandler("manage", self.manage_command))
         dispatcher.add_handler(CommandHandler("status", self.status_command))
+        dispatcher.add_handler(CommandHandler("offers", self.offers_command))
         dispatcher.add_handler(CommandHandler("debug", self.debug_command))
-        dispatcher.add_handler(CommandHandler("bad_command", self.bad_command))
 
         dispatcher.add_handler(
             CallbackQueryHandler(self.toggle_subscription_callback, pattern="toggle")
@@ -131,9 +148,62 @@ class TelegramBot:
             self.manage_menu_message(), reply_markup=self.manage_menu_keyboard(db_user)
         )
 
-    def bad_command(self, update: Update, context: CallbackContext) -> None:  # type: ignore
-        """Raise an error to trigger the error handler."""
-        context.bot.wrong_method_name()  # type: ignore[attr-defined]
+    def offers_command(self, update: Update, context: CallbackContext) -> None:  # type: ignore
+        """Handle the /offers command: Send all subscriptions once."""
+        if update.message is None or update.effective_user is None:
+            return
+
+        db_user = self.get_user(update.effective_user.id)
+        if db_user is None:
+            update.message.reply_markdown_v2(
+                "You are not registered. Please, register with /start command."
+            )
+            return
+
+    def send_new_offers(self, user: User) -> None:
+        """Send all new offers for the user."""
+
+        subscriptions = user.telegram_subscriptions
+
+        subscription: TelegramSubscription
+        for subscription in subscriptions:
+            offers: list[Offer] = (
+                self.session.execute(
+                    select(Offer).where(
+                        and_(
+                            Offer.type == subscription.type,
+                            Offer.source == subscription.source,
+                            Offer.id > subscription.last_offer_id,
+                            or_(
+                                Offer.valid_from <= datetime.now().replace(tzinfo=None),  # type: ignore
+                                Offer.valid_from == None,  # noqa: E711
+                            ),
+                            or_(
+                                Offer.valid_to >= datetime.now().replace(tzinfo=None),  # type: ignore
+                                and_(
+                                    Offer.valid_from == None,  # noqa: E711
+                                    Offer.seen_first
+                                    >= datetime.now().replace(tzinfo=timezone.utc)
+                                    - timedelta(days=7),
+                                ),
+                            ),
+                        )
+                    )
+                )
+                .scalars()
+                .all()
+            )
+
+            if len(offers) == 0:
+                continue
+
+            # Send the offers
+            for offer in offers:
+                self.send_offer(offer, user)
+
+            # Update the last offer id
+            subscription.last_offer_id = offers[-1].id
+            self.session.commit()
 
     def debug_command(self, update: Update, context: CallbackContext) -> None:  # type: ignore
         """Handle the /debug command: Show some debug information."""
@@ -255,6 +325,8 @@ class TelegramBot:
                 "\n"
                 R"/status \- Show information about your subscriptions"
                 "\n"
+                R"/offers \- Send all current offers once \(only from the categories you are subscribed to\)"
+                "\n"
                 R"/manage \- Manage your subscriptions"
                 "\n"
                 R"/leave \- Leave this bot and delete stored user data"
@@ -357,11 +429,7 @@ class TelegramBot:
     def manage_menu_message(self) -> str:
         return (
             "Here you can manage your subscriptions. "
-            "To do so, just click the following buttons."
-            "\n\n"
-            "✅ means that you are subscribed and clicking the entry will unsubscribe you from that category. "
-            "\n\n"
-            "❌ means that you are not yet subscribed and clicking the entry will subscribe you to that category. "
+            "To do so, just click the following buttons to subscribe / unsubscribe. "
         )
 
     def manage_menu_close_message(self) -> str:
@@ -369,7 +437,7 @@ class TelegramBot:
             "Thank you for managing your subscriptions. "
             "Forgot something? "
             "You can continue any time with /manage. "
-            # "If you want me to send you all current offers of your subscriptions, you can type /offers now or any time later."
+            "If you want me to send you all current offers of your subscriptions, you can type /offers now or any time later."
         )
 
     def manage_menu_keyboard(self, user: User) -> InlineKeyboardMarkup:
@@ -494,6 +562,106 @@ class TelegramBot:
             reply_markup=self.manage_menu_keyboard(db_user),
         )
 
+    def send_offer(self, offer: Offer, user: User) -> None:
+        content = Rf"*{offer.source.value} \({offer.type.value}\) \- {markdown_escape(offer.title)}*"
+
+        if offer.img_url:
+            content += " " + markdown_url(offer.img_url, f"[{offer.id}]")
+        elif offer.game and offer.game.steam_info and offer.game.steam_info.image_url:
+            content += " " + markdown_url(
+                offer.game.steam_info.image_url, f"[{offer.id}]"
+            )
+        else:
+            content += f" [{offer.id}]"
+
+        if offer.valid_to:
+            time_to_end = humanize.naturaldelta(
+                datetime.now().replace(tzinfo=timezone.utc) - offer.valid_to
+            )
+            if datetime.now().replace(tzinfo=timezone.utc) > offer.valid_to:
+                content += f"\nOffer expired {markdown_escape(time_to_end)} ago"
+            else:
+                content += f"\nOffer expires in {markdown_escape(time_to_end)}"
+            content += f" \\({markdown_escape(offer.valid_to.strftime(TIMESTAMP_READABLE_WITH_HOUR))}\\)"
+
+        # TODO: Show game details after additional button click only
+        if offer.game:
+            game: Game = offer.game
+
+            content += "\n\nAbout the game"
+            if game.igdb_info and game.igdb_info.name:
+                content += Rf" \(*{markdown_escape(game.igdb_info.name)}*\)"
+            elif game.steam_info and game.steam_info.name:
+                content += Rf" \(*{markdown_escape(game.steam_info.name)}*\)"
+
+            content += ":\n"
+
+            ratings = []
+            if game.steam_info and game.steam_info.metacritic_score:
+                text = f"Metacritic {game.steam_info.metacritic_score} %"
+                if game.steam_info.metacritic_url:
+                    text = markdown_url(game.steam_info.metacritic_url, text)
+                ratings.append(text)
+            if (
+                game.steam_info
+                and game.steam_info.percent
+                and game.steam_info.score
+                and game.steam_info.recommendations
+            ):
+                text = Rf"Steam {game.steam_info.percent} % ({game.steam_info.score}/10, {game.steam_info.recommendations} recommendations)"
+                text = markdown_url(game.steam_info.url, text)
+                ratings.append(text)
+            if (
+                game.igdb_info
+                and game.igdb_info.meta_ratings
+                and game.igdb_info.meta_score
+            ):
+                text = Rf"IGDB Meta {game.igdb_info.meta_score} % ({game.igdb_info.meta_ratings} sources)"
+                text = markdown_url(game.igdb_info.url, text)
+                ratings.append(text)
+            if (
+                game.igdb_info
+                and game.igdb_info.user_ratings
+                and game.igdb_info.user_score
+            ):
+                text = Rf"IGDB User {game.igdb_info.user_score} % ({game.igdb_info.user_ratings} sources)"
+                text = markdown_url(game.igdb_info.url, text)
+                ratings.append(text)
+
+            if len(ratings) > 0:
+                ratings_str = f"*Ratings:* {' / '.join(ratings)}\n"
+                content += ratings_str
+            if game.igdb_info and game.igdb_info.release_date:
+                content += f"*Release date:* {markdown_escape(game.igdb_info.release_date.strftime(TIMESTAMP_SHORT))}\n"
+            elif game.steam_info and game.steam_info.release_date:
+                content += f"*Release date:* {markdown_escape(game.steam_info.release_date.strftime(TIMESTAMP_SHORT))}\n"
+            if game.steam_info and game.steam_info.recommended_price_eur:
+                content += (
+                    Rf"*Recommended price \(Steam\):* {markdown_escape(str(game.steam_info.recommended_price_eur))} EUR"
+                    + "\n"
+                )
+            if game.igdb_info and game.igdb_info.short_description:
+                content += f"*Description:* {markdown_escape(game.igdb_info.short_description)}\n"
+            elif game.steam_info and game.steam_info.short_description:
+                content += f"*Description:* {markdown_escape(game.steam_info.short_description)}\n"
+            if game.steam_info and game.steam_info.genres:
+                content += f"*Genres:* {markdown_escape(game.steam_info.genres)}\n"
+            content += R"\* Any information about the offer is automatically grabbed and may in rare cases not match the correct game\."
+
+        if offer.url:
+            content += "\n\n"
+            content += (
+                "Claim it now for free on "
+                + markdown_url(offer.url, offer.source.value)
+                + R"\!"
+            )
+
+        self.updater.bot.send_message(
+            chat_id=user.telegram_chat_id,
+            text=content,
+            parse_mode=ParseMode.MARKDOWN_V2,
+        )
+
 
 def markdown_json_formatted(input: str) -> str:
     return f"```json\n{input}\n```"
@@ -504,15 +672,43 @@ def keyboard_button_row(
     source: Source,
     offer_type: OfferType,
 ) -> list[InlineKeyboardButton]:
-    button_state = "✅" if active else "❌"
+    button_state = " - subscribed" if active else ""
     source_str = f"{source.value} ({offer_type.value})"
     command = f"toggle {source.name} {offer_type.name}"
 
-    return [InlineKeyboardButton(f"{button_state} {source_str}", callback_data=command)]
+    return [InlineKeyboardButton(f"{source_str}{button_state}", callback_data=command)]
 
 
 def answer(new_state: bool, source: Source, offer_type: OfferType) -> str:
+    source_str = f"{source.value} ({offer_type.value})"
     if new_state:
-        return "Congratulations! You are now subscribed to {button_state} ({source_str}) offers."
+        return f"Congratulations! You are now subscribed to {source_str} offers."
     else:
-        return "You are now unsubscribed from {button_state} ({source_str}) offers."
+        return f"You are now unsubscribed from {source_str} offers."
+
+
+def markdown_escape(input: str) -> str:
+    return (
+        input.replace("_", "\\_")
+        .replace("*", "\\*")
+        .replace("[", "\\[")
+        .replace("]", "\\]")
+        .replace("(", "\\(")
+        .replace(")", "\\)")
+        .replace("~", "\\~")
+        .replace("`", "\\`")
+        .replace(">", "\\>")
+        .replace("#", "\\#")
+        .replace("+", "\\+")
+        .replace("-", "\\-")
+        .replace("=", "\\=")
+        .replace("|", "\\|")
+        .replace("{", "\\{")
+        .replace("}", "\\}")
+        .replace(".", "\\.")
+        .replace("!", "\\!")
+    )
+
+
+def markdown_url(url: str, text: str) -> str:
+    return Rf"[{markdown_escape(text)}]({markdown_escape(url)})"

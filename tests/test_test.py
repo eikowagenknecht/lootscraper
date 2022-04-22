@@ -4,6 +4,8 @@ import unittest
 from time import sleep
 
 from selenium.webdriver.chrome.webdriver import WebDriver
+from sqlalchemy import select
+from sqlalchemy.orm import Session
 
 from app.common import TIMESTAMP_LONG
 from app.configparser import Config
@@ -11,7 +13,7 @@ from app.pagedriver import get_pagedriver
 from app.scraper.info.igdb import get_igdb_id
 from app.scraper.info.steam import get_steam_details, get_steam_id
 from app.scraper.info.utils import get_match_score
-from app.sqlalchemy import LootDatabase
+from app.sqlalchemy import LootDatabase, Offer, User
 from app.telegram import TelegramBot
 
 logging.basicConfig(
@@ -30,13 +32,39 @@ class VariousTests(unittest.TestCase):
     def test_telegram(self) -> None:
         with LootDatabase(echo=True) as db:
             # Arrange
-            bot = TelegramBot(Config.get(), db.session)
             # Act
-            bot.start()
-            sleep(10000)
-            bot.stop()
+            with TelegramBot(Config.get(), db.session):
+                sleep(10000)
             # Assert
-            self.assertEqual(1, 1)
+
+    def test_telegram_messagesend(self) -> None:
+        with (
+            LootDatabase(echo=True) as db,
+            TelegramBot(Config.get(), db.session) as bot,
+        ):
+            # Arrange
+            session: Session = db.session
+
+            # Act
+            offer: Offer = session.execute(select(Offer)).scalars().first()
+            user: User = session.execute(select(User)).scalars().first()
+            bot.send_offer(offer, user)
+
+            # Assert
+
+    def test_telegram_new_offers(self) -> None:
+        with (
+            LootDatabase(echo=True) as db,
+            TelegramBot(Config.get(), db.session) as bot,
+        ):
+            # Arrange
+            session: Session = db.session
+
+            # Act
+            user: User = session.execute(select(User)).scalars().first()
+            bot.send_new_offers(user)
+
+            # Assert
 
     def test_similarity(self) -> None:
         search = "Rainbow Six Siege"
