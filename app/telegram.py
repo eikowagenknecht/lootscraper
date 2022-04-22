@@ -78,6 +78,9 @@ class TelegramBot:
             CallbackQueryHandler(self.toggle_subscription_callback, pattern="toggle")
         )
         dispatcher.add_handler(
+            CallbackQueryHandler(self.offer_details_callback, pattern="details")
+        )
+        dispatcher.add_handler(
             CallbackQueryHandler(self.close_menu_callback, pattern="close menu")
         )
 
@@ -491,6 +494,35 @@ class TelegramBot:
 
         return InlineKeyboardMarkup(keyboard)
 
+    def offer_details_keyboard(self, offer: Offer) -> InlineKeyboardMarkup:
+        keyboard: list[list[InlineKeyboardButton]] = []
+        keyboard.append(
+            [
+                InlineKeyboardButton(
+                    text="Show details", callback_data=f"details {offer.id}"
+                )
+            ]
+        )
+        return InlineKeyboardMarkup(keyboard)
+
+    def offer_details_callback(self, update: Update, context: CallbackContext) -> None:  # type: ignore
+        if update.callback_query is None or update.effective_user is None:
+            return
+
+        query = update.callback_query
+        if query.data is None:
+            return
+
+        offer_id = int(query.data.split(" ")[1])
+        offer = self.session.execute(select(Offer).where(Offer.id == offer_id)).scalar()
+
+        query.answer()
+        query.edit_message_text(
+            text=self.offer_details_message(offer),
+            parse_mode=ParseMode.MARKDOWN_V2,
+            reply_markup=None,
+        )
+
     def close_menu_callback(self, update: Update, context: CallbackContext) -> None:  # type: ignore
         if update.callback_query is None or update.effective_user is None:
             return
@@ -565,6 +597,14 @@ class TelegramBot:
         )
 
     def send_offer(self, offer: Offer, user: User) -> None:
+        self.updater.bot.send_message(
+            chat_id=user.telegram_chat_id,
+            text=self.offer_message(offer),
+            parse_mode=ParseMode.MARKDOWN_V2,
+            reply_markup=self.offer_details_keyboard(offer),
+        )
+
+    def offer_message(self, offer: Offer) -> str:
         content = Rf"*{offer.source.value} \({offer.type.value}\) \- {markdown_escape(offer.title)}*"
 
         if offer.img_url:
@@ -586,17 +626,27 @@ class TelegramBot:
                 content += f"\nOffer expires in {markdown_escape(time_to_end)}"
             content += f" \\({markdown_escape(offer.valid_to.strftime(TIMESTAMP_READABLE_WITH_HOUR))}\\)"
 
-        # TODO: Show game details after additional button click only
+        if offer.url:
+            content += "\n\n"
+            content += (
+                "Claim it now for free on "
+                + markdown_url(offer.url, offer.source.value)
+                + R"\!"
+            )
+
+        return content
+
+    def offer_details_message(self, offer: Offer) -> str:
+        content = self.offer_message(offer)
+
         if offer.game:
             game: Game = offer.game
 
-            content += "\n\nAbout the game"
+            content += "\n\n__About the game__\n\n"
             if game.igdb_info and game.igdb_info.name:
-                content += Rf" \(*{markdown_escape(game.igdb_info.name)}*\)"
+                content += Rf"*Name:* {markdown_escape(game.igdb_info.name)}" + "\n\n"
             elif game.steam_info and game.steam_info.name:
-                content += Rf" \(*{markdown_escape(game.steam_info.name)}*\)"
-
-            content += ":\n"
+                content += Rf"*Name:* {markdown_escape(game.steam_info.name)}" + "\n\n"
 
             ratings = []
             if game.steam_info and game.steam_info.metacritic_score:
@@ -631,38 +681,26 @@ class TelegramBot:
                 ratings.append(text)
 
             if len(ratings) > 0:
-                ratings_str = f"*Ratings:* {' / '.join(ratings)}\n"
+                ratings_str = f"*Ratings:* {' / '.join(ratings)}\n\n"
                 content += ratings_str
             if game.igdb_info and game.igdb_info.release_date:
-                content += f"*Release date:* {markdown_escape(game.igdb_info.release_date.strftime(TIMESTAMP_SHORT))}\n"
+                content += f"*Release date:* {markdown_escape(game.igdb_info.release_date.strftime(TIMESTAMP_SHORT))}\n\n"
             elif game.steam_info and game.steam_info.release_date:
-                content += f"*Release date:* {markdown_escape(game.steam_info.release_date.strftime(TIMESTAMP_SHORT))}\n"
+                content += f"*Release date:* {markdown_escape(game.steam_info.release_date.strftime(TIMESTAMP_SHORT))}\n\n"
             if game.steam_info and game.steam_info.recommended_price_eur:
                 content += (
                     Rf"*Recommended price \(Steam\):* {markdown_escape(str(game.steam_info.recommended_price_eur))} EUR"
-                    + "\n"
+                    + "\n\n"
                 )
             if game.igdb_info and game.igdb_info.short_description:
-                content += f"*Description:* {markdown_escape(game.igdb_info.short_description)}\n"
+                content += f"*Description:* {markdown_escape(game.igdb_info.short_description)}\n\n"
             elif game.steam_info and game.steam_info.short_description:
-                content += f"*Description:* {markdown_escape(game.steam_info.short_description)}\n"
+                content += f"*Description:* {markdown_escape(game.steam_info.short_description)}\n\n"
             if game.steam_info and game.steam_info.genres:
-                content += f"*Genres:* {markdown_escape(game.steam_info.genres)}\n"
+                content += f"*Genres:* {markdown_escape(game.steam_info.genres)}\n\n"
             content += R"\* Any information about the offer is automatically grabbed and may in rare cases not match the correct game\."
 
-        if offer.url:
-            content += "\n\n"
-            content += (
-                "Claim it now for free on "
-                + markdown_url(offer.url, offer.source.value)
-                + R"\!"
-            )
-
-        self.updater.bot.send_message(
-            chat_id=user.telegram_chat_id,
-            text=content,
-            parse_mode=ParseMode.MARKDOWN_V2,
-        )
+        return content
 
 
 def markdown_json_formatted(input: str) -> str:
