@@ -113,7 +113,7 @@ def quit(signo: int, _frame: FrameType | None) -> None:
 def job(db: LootDatabase) -> None:
     webdriver: WebDriver
     with get_pagedriver() as webdriver:
-        refresh_all_steam_info(db.session, webdriver)
+        # refresh_all_steam_info(db.session, webdriver) # DEBUG ONLY
         scraped_offers: dict[str, dict[str, list[Offer]]] = {}
 
         cfg_what_to_scrape = {
