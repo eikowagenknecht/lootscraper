@@ -6,13 +6,13 @@ Create Date: 2022-04-19 12:47:03.252360+00:00
 
 """
 from typing import Any
-from alembic import op
-import sqlalchemy as sa
 
-from app.sqlalchemy import AwareDateTime
+import sqlalchemy as sa
 from sqlalchemy import orm
 from sqlalchemy.ext.declarative import declarative_base
 
+from alembic import op
+from app.sqlalchemy import AwareDateTime
 
 # revision identifiers, used by Alembic.
 revision = "038c26b62555"

@@ -6,13 +6,16 @@
 
 You enjoy getting games for free but you *don’t* enjoy having to keep track of the various sources (Amazon Prime, Epic Games, Steam, ...) for free offers? Also your F5 key starts to look a bit worn out? Then this is for you!
 
-This Python (3.10+) application uses Selenium to automatically visit sites with free gaming related offers (currently Amazon Prime, Epic Games and Steam are supported, more will follow) and then neatly puts the gathered information into RSS feeds. So now you can track the offers using your favorite news reader like Feedly instead of manually visiting the sites.
+This Python (3.10+) application uses Selenium to automatically visit sites with free gaming related offers (currently Amazon Prime, Epic Games and Steam are supported, more will follow) and then neatly puts the gathered information into RSS feeds and a Telegram bot. So now you can track the offers using your favorite news reader like Feedly instead of manually visiting the sites or get a message every time a new offer is available.
 
 ## Usage
 
 You can either run this script locally on your computer or in any environment capable of running a Docker container.
 
 Just want the feeds? Sure. You can use the links below. They are updated every 20 minutes.
+
+If you prefer Telegram, you can instead subscribe to the [Telegram LootScraperBot](https://t.me/LootScraperBot) to get push notifications for new offers.
+
 - Amazon Prime ([games](https://feed.phenx.de/lootscraper_amazon_game.xml) and [ingame loot](https://feed.phenx.de/lootscraper_amazon_loot.xml))
 - [Epic Games (games only)](https://feed.phenx.de/lootscraper_epic_game.xml)
 - [Gog (games only)](https://feed.phenx.de/lootscraper_gog_game.xml)
