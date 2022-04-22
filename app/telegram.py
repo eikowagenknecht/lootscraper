@@ -208,6 +208,7 @@ class TelegramBot:
 
             # Update the last offer id
             subscription.last_offer_id = offers[-1].id
+            user.offers_received_count = user.offers_received_count + len(offers)
             self.session.commit()
 
     def debug_command(self, update: Update, context: CallbackContext) -> None:  # type: ignore
