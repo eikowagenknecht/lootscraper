@@ -15,3 +15,7 @@ class Source(Enum):
     EPIC = "Epic Games"
     STEAM = "Steam"
     GOG = "GOG"
+
+
+def chunkstring(string: str, length: int) -> list[str]:
+    return list((string[0 + i : length + i] for i in range(0, len(string), length)))

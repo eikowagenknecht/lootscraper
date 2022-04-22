@@ -47,7 +47,11 @@ class VariousTests(unittest.TestCase):
 
             # Act
             offer: Offer = session.execute(select(Offer)).scalars().first()
-            user: User = session.execute(select(User)).scalars().first()
+            user: User = (
+                session.execute(select(User).where(User.telegram_id == 724039662))
+                .scalars()
+                .first()
+            )
             bot.send_offer(offer, user)
 
             # Assert
@@ -61,7 +65,11 @@ class VariousTests(unittest.TestCase):
             session: Session = db.session
 
             # Act
-            user: User = session.execute(select(User)).scalars().first()
+            user: User = (
+                session.execute(select(User).where(User.telegram_id == 724039662))
+                .scalars()
+                .first()
+            )
             bot.send_new_offers(user)
 
             # Assert

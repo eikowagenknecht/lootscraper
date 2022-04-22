@@ -22,7 +22,12 @@ from telegram.ext import (
     Updater,
 )
 
-from app.common import TIMESTAMP_READABLE_WITH_HOUR, TIMESTAMP_SHORT, OfferType, Source
+from app.common import (
+    TIMESTAMP_READABLE_WITH_HOUR,
+    TIMESTAMP_SHORT,
+    OfferType,
+    Source,
+)
 from app.configparser import Config, ParsedConfig
 from app.sqlalchemy import Game, Offer, TelegramSubscription, User, and_
 
@@ -114,23 +119,47 @@ class TelegramBot:
         # Build the message with some markup and additional information about what happened.
         # TODO: Might need to add some logic to deal with messages longer than the 4096 character limit.
         update_str = update.to_dict() if isinstance(update, Update) else str(update)
-        message = (
+        message_pt1 = (
             f"An exception was raised while handling an update:\n\n"
             f"<pre>update = {html.escape(json.dumps(update_str, indent=2, ensure_ascii=False))}"
             "</pre>\n\n"
             f"<pre>context.chat_data = {html.escape(str(context.chat_data))}</pre>\n\n"
             f"<pre>context.user_data = {html.escape(str(context.user_data))}</pre>\n\n"
-            f"<pre>{html.escape(tb_string)}</pre>"
         )
 
-        # Finally, send the message
-        context.bot.send_message(
-            chat_id=Config.get().telegram_developer_chat_id,
-            text=message,
-            parse_mode=ParseMode.HTML,
-        )
+        message_pt2 = f"<pre>{html.escape(tb_string)}</pre>"
 
-        # Do some more specific error handling here:
+        logging.error(message_pt1 + message_pt2)
+        if len(message_pt1) + len(message_pt2) < 4096:
+            message = message_pt1 + message_pt2
+            context.bot.send_message(
+                chat_id=Config.get().telegram_developer_chat_id,
+                text=message,
+                parse_mode=ParseMode.HTML,
+            )
+        else:
+            if len(message_pt1) < 4096:
+                # Finally, send the message
+                context.bot.send_message(
+                    chat_id=Config.get().telegram_developer_chat_id,
+                    text=message_pt1,
+                    parse_mode=ParseMode.HTML,
+                )
+            if len(message_pt2) < 4096:
+                context.bot.send_message(
+                    chat_id=Config.get().telegram_developer_chat_id,
+                    text=message_pt2,
+                    parse_mode=ParseMode.HTML,
+                )
+
+        if len(message_pt1) >= 4096 and len(message_pt2) >= 4096:
+            context.bot.send_message(
+                chat_id=Config.get().telegram_developer_chat_id,
+                text="There was an error, but the message is too long to send.",
+                parse_mode=ParseMode.HTML,
+            )
+
+        # TODO: Do some more specific error handling here:
         # - If the user blacked our bot, remove him from the database
         if isinstance(context.error, telegram.TelegramError):
             if context.error.message == "Unauthorized":
@@ -262,7 +291,7 @@ class TelegramBot:
             R"If you have any issues or feature request, please use the "
             R"[issues](https://github\.com/eikowagenknecht/lootscraper/issues) to report them\. "
             R"And if you like it, please consider "
-            R"[starring it on GitHub](https://github\.com/eikowagenknecht/lootscraper/stargazers)\. "
+            R"[⭐ starring it on GitHub](https://github\.com/eikowagenknecht/lootscraper/stargazers)\. "
             R"Thanks\!"
             "\n\n"
             R"*How this works*"
@@ -285,7 +314,7 @@ class TelegramBot:
         if db_user is not None:
             update.message.reply_markdown_v2(
                 Rf"Welcome back, {update.effective_user.mention_markdown_v2()} 👋\. "
-                + R"You are already registered\. "
+                + R"You are already registered ❤\. "
                 + R"In case you forgot, this was my initial message to you:"
                 + "\n\n"
                 + welcome_text,

@@ -196,7 +196,7 @@ class User(Base):
     telegram_user_details: str | None = Column(JSON)
 
     telegram_subscriptions: list[TelegramSubscription] = relationship(
-        "TelegramSubscription", back_populates="user"
+        "TelegramSubscription", back_populates="user", cascade="all, delete-orphan"
     )
 
 
