@@ -1,7 +1,8 @@
 import json
 import logging
-from datetime import datetime, timezone
 import re
+from datetime import datetime, timezone
+
 import requests
 from igdb.wrapper import IGDBWrapper
 

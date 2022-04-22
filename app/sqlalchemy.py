@@ -7,6 +7,7 @@ from types import TracebackType
 from typing import Any, Type
 
 from sqlalchemy import (
+    JSON,
     Column,
     DateTime,
     Enum,
@@ -20,7 +21,7 @@ from sqlalchemy import (
     select,
 )
 from sqlalchemy.engine.interfaces import Dialect
-from sqlalchemy.orm import Session, registry, relationship
+from sqlalchemy.orm import registry, relationship, scoped_session, sessionmaker
 
 from alembic import command
 from alembic.config import Config as AlembicConfig
@@ -72,9 +73,9 @@ class IgdbInfo(Base):
     __tablename__ = "igdb_info"
 
     id: int = Column(Integer, primary_key=True, nullable=False)
-    url: str | None = Column(String, nullable=False)
+    url: str = Column(String, nullable=False)
 
-    name: str | None = Column(String, nullable=False)
+    name: str = Column(String, nullable=False)
     short_description: str | None = Column(String)
     release_date: datetime | None = Column(AwareDateTime)
 
@@ -104,9 +105,9 @@ class SteamInfo(Base):
     __tablename__ = "steam_info"
 
     id: int = Column(Integer, primary_key=True, nullable=False)
-    url: str | None = Column(String, nullable=False)
+    url: str = Column(String, nullable=False)
 
-    name: str | None = Column(String, nullable=False)
+    name: str = Column(String, nullable=False)
     short_description: str | None = Column(String)
     release_date: datetime | None = Column(AwareDateTime)
     genres: str | None = Column(String)
@@ -152,8 +153,8 @@ class Offer(Base):
     title: str = Column(String, nullable=False)
     probable_game_name: str = Column(String, nullable=False)
 
-    seen_first: datetime | None = Column(AwareDateTime)
-    seen_last: datetime | None = Column(AwareDateTime)
+    seen_first: datetime = Column(AwareDateTime, nullable=False)
+    seen_last: datetime = Column(AwareDateTime, nullable=False)
     valid_from: datetime | None = Column(AwareDateTime)
     valid_to: datetime | None = Column(AwareDateTime)
 
@@ -182,6 +183,37 @@ class Offer(Base):
         )
 
 
+class User(Base):
+    __tablename__ = "users"
+
+    id: int = Column(Integer, primary_key=True, nullable=False)
+
+    registration_date: datetime = Column(AwareDateTime)
+    offers_received_count: int = Column(Integer, default=0)
+
+    telegram_id: int | None = Column(Integer)
+    telegram_chat_id: int | None = Column(Integer)
+    telegram_user_details: str | None = Column(JSON)
+
+    telegram_subscriptions: list[TelegramSubscription] = relationship(
+        "TelegramSubscription", back_populates="user", cascade="all, delete-orphan"
+    )
+
+
+class TelegramSubscription(Base):
+    __tablename__ = "telegram_subscriptions"
+
+    id: int = Column(Integer, primary_key=True, nullable=False)
+
+    user_id: int = Column(Integer, ForeignKey("users.id"), nullable=False)
+    user: User = relationship("User", back_populates="telegram_subscriptions")
+
+    source: Source = Column(Enum(Source), nullable=False)
+    type: OfferType = Column(Enum(OfferType), nullable=False)
+
+    last_offer_id: int = Column(Integer, nullable=False, default=0)
+
+
 class LootDatabase:
     def __init__(self, echo: bool = False) -> None:
         # Run Alembic migrations first before we open a session
@@ -193,8 +225,8 @@ class LootDatabase:
             echo=echo,
             future=True,
         )
-
-        self.session = Session(self.engine)
+        session_factory = sessionmaker(bind=self.engine)
+        self.session = scoped_session(session_factory)
 
     def __enter__(self) -> LootDatabase:
         return self

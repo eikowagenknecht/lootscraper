@@ -37,6 +37,7 @@ class ParsedConfig:
     scrape_info: bool = True  # Not used anywhere yet
     generate_feed: bool = True
     upload_feed: bool = False
+    telegram_bot: bool = False
 
     # Telegram
     telegram_access_token: str = ""
@@ -118,6 +119,7 @@ class Config:
             parsed_config.scrape_info = config.getboolean("actions", "ScrapeInfo")
             parsed_config.generate_feed = config.getboolean("actions", "GenerateFeed")
             parsed_config.upload_feed = config.getboolean("actions", "UploadFtp")
+            parsed_config.telegram_bot = config.getboolean("actions", "TelegramBot")
 
             parsed_config.telegram_access_token = config["telegram"]["AccessToken"]
             parsed_config.telegram_developer_chat_id = int(

@@ -10,6 +10,7 @@ from types import FrameType
 from selenium.webdriver.chrome.webdriver import WebDriver
 from sqlalchemy import select
 from sqlalchemy.exc import OperationalError
+from sqlalchemy.orm import Session
 
 from app.common import TIMESTAMP_LONG, OfferType, Source
 from app.configparser import Config
@@ -21,8 +22,8 @@ from app.scraper.loot.amazon_prime import AmazonScraper
 from app.scraper.loot.epic_games import EpicScraper
 from app.scraper.loot.gog import GogScraper
 from app.scraper.loot.steam import SteamScraper
-from app.sqlalchemy import Game, LootDatabase, Offer
-from sqlalchemy.orm import Session
+from app.sqlalchemy import Game, LootDatabase, Offer, SteamInfo, User
+from app.telegram import TelegramBot
 from app.upload import upload_to_server
 
 exit = Event()
@@ -64,32 +65,42 @@ def main() -> None:
     logging.getLogger().addHandler(stream_handler)
     logging.info("Starting script")
 
-    # Run the job every hour (or whatever is set in the config file). This is
-    # not exact because it does not account for the execution time, but that
-    # doesn't matter in our context.
-    run = 1
-    while not exit.is_set():
-        logging.info(f"Starting Run # {run}")
+    with (
+        LootDatabase(echo=Config.get().db_echo) as db,
+        TelegramBot(Config.get(), db.session) as bot,
+    ):
+        # Run the job every hour (or whatever is set in the config file). This is
+        # not exact because it does not account for the execution time, but that
+        # doesn't matter in our context.
+        run = 1
+        while not exit.is_set():
+            logging.info(f"Starting Run # {run}")
 
-        try:
-            job()
-        except OperationalError as oe:
-            logging.error(f"Database error: {oe}")
-            logging.error("Database error, exiting applications")
-            sys.exit()
-        except Exception as e:
-            # Something unexpected occurred, log it and continue with the next run as usual
-            logging.exception(e)
+            try:
+                job(db)
+                if Config.get().telegram_bot:
+                    session: Session = db.session
+                    for user in session.execute(select(User)).scalars().all():
+                        bot.send_new_offers(user)
+            except OperationalError as oe:
+                logging.error(f"Database error: {oe}")
+                logging.error("Database error, exiting applications")
+                sys.exit()
+            except Exception as e:
+                # Something unexpected occurred, log it and continue with the next run as usual
+                logging.exception(e)
 
-        time_between_runs = int(Config.get().wait_between_runs)
-        if time_between_runs == 0:
-            break
-        next_execution = datetime.now() + timedelta(seconds=time_between_runs)
+            time_between_runs = int(Config.get().wait_between_runs)
+            if time_between_runs == 0:
+                break
+            next_execution = datetime.now() + timedelta(seconds=time_between_runs)
 
-        logging.info(f"Waiting until {next_execution.isoformat()} for next execution")
+            logging.info(
+                f"Waiting until {next_execution.isoformat()} for next execution"
+            )
 
-        run += 1
-        exit.wait(time_between_runs)
+            run += 1
+            exit.wait(time_between_runs)
 
     logging.info(f"Exiting script after {run} runs")
 
@@ -99,10 +110,10 @@ def quit(signo: int, _frame: FrameType | None) -> None:
     exit.set()
 
 
-def job() -> None:
-    db: LootDatabase
+def job(db: LootDatabase) -> None:
     webdriver: WebDriver
-    with (LootDatabase(echo=Config.get().db_echo) as db, get_pagedriver() as webdriver):
+    with get_pagedriver() as webdriver:
+        # refresh_all_steam_info(db.session, webdriver) # DEBUG ONLY
         scraped_offers: dict[str, dict[str, list[Offer]]] = {}
 
         cfg_what_to_scrape = {
@@ -210,51 +221,24 @@ def job() -> None:
                     for db_offer in loot_offers_in_db[scraper_source][scraper_type]:
                         add_game_info(db_offer, db.session, webdriver)
 
-        if Config.get().generate_feed:
-            feed_file_base = Config.data_path() / Path(
-                Config.get().feed_file_prefix + ".xml"
-            )
-            # Generate and upload feeds split by source
-            any_feed_changed = False
-            for scraper_source in loot_offers_in_db:
-                for scraper_type in loot_offers_in_db[scraper_source]:
-                    feed_changed = False
-                    feed_file = Config.data_path() / Path(
-                        Config.get().feed_file_prefix
-                        + f"_{Source[scraper_source].name.lower()}"
-                        + f"_{OfferType[scraper_type].name.lower()}"
-                        + ".xml"
-                    )
-                    old_hash = hash_file(feed_file)
-                    generate_feed(
-                        offers=loot_offers_in_db[scraper_source][scraper_type],
-                        feed_file_base=feed_file_base,
-                        author_name=Config.get().feed_author_name,
-                        author_web=Config.get().feed_author_web,
-                        author_mail=Config.get().feed_author_mail,
-                        feed_url_prefix=Config.get().feed_url_prefix,
-                        feed_url_alternate=Config.get().feed_url_alternate,
-                        feed_id_prefix=Config.get().feed_id_prefix,
-                        source=Source[scraper_source],
-                        type=OfferType[scraper_type],
-                    )
-                    new_hash = hash_file(feed_file)
-                    if old_hash != new_hash:
-                        feed_changed = True
-                        any_feed_changed = True
-
-                    if feed_changed and Config.get().upload_feed:
-                        upload_to_server(feed_file)
-
-            # Generate and upload cumulated feed
-            all_offers = []
-            for scraper_source in loot_offers_in_db:
-                for scraper_type in loot_offers_in_db[scraper_source]:
-                    all_offers.extend(loot_offers_in_db[scraper_source][scraper_type])
-
-            if any_feed_changed:
+    if Config.get().generate_feed:
+        feed_file_base = Config.data_path() / Path(
+            Config.get().feed_file_prefix + ".xml"
+        )
+        # Generate and upload feeds split by source
+        any_feed_changed = False
+        for scraper_source in loot_offers_in_db:
+            for scraper_type in loot_offers_in_db[scraper_source]:
+                feed_changed = False
+                feed_file = Config.data_path() / Path(
+                    Config.get().feed_file_prefix
+                    + f"_{Source[scraper_source].name.lower()}"
+                    + f"_{OfferType[scraper_type].name.lower()}"
+                    + ".xml"
+                )
+                old_hash = hash_file(feed_file)
                 generate_feed(
-                    offers=all_offers,
+                    offers=loot_offers_in_db[scraper_source][scraper_type],
                     feed_file_base=feed_file_base,
                     author_name=Config.get().feed_author_name,
                     author_web=Config.get().feed_author_web,
@@ -262,14 +246,66 @@ def job() -> None:
                     feed_url_prefix=Config.get().feed_url_prefix,
                     feed_url_alternate=Config.get().feed_url_alternate,
                     feed_id_prefix=Config.get().feed_id_prefix,
+                    source=Source[scraper_source],
+                    type=OfferType[scraper_type],
                 )
-                if Config.get().upload_feed:
-                    upload_to_server(feed_file_base)
-                else:
-                    logging.info("Skipping upload, disabled")
+                new_hash = hash_file(feed_file)
+                if old_hash != new_hash:
+                    feed_changed = True
+                    any_feed_changed = True
 
-        else:
-            logging.info("Skipping feed generation, disabled")
+                if feed_changed and Config.get().upload_feed:
+                    upload_to_server(feed_file)
+
+        # Generate and upload cumulated feed
+        all_offers = []
+        for scraper_source in loot_offers_in_db:
+            for scraper_type in loot_offers_in_db[scraper_source]:
+                all_offers.extend(loot_offers_in_db[scraper_source][scraper_type])
+
+        if any_feed_changed:
+            generate_feed(
+                offers=all_offers,
+                feed_file_base=feed_file_base,
+                author_name=Config.get().feed_author_name,
+                author_web=Config.get().feed_author_web,
+                author_mail=Config.get().feed_author_mail,
+                feed_url_prefix=Config.get().feed_url_prefix,
+                feed_url_alternate=Config.get().feed_url_alternate,
+                feed_id_prefix=Config.get().feed_id_prefix,
+            )
+            if Config.get().upload_feed:
+                upload_to_server(feed_file_base)
+            else:
+                logging.info("Skipping upload, disabled")
+
+    else:
+        logging.info("Skipping feed generation, disabled")
+
+    db.session.commit()
+
+
+def refresh_all_steam_info(session: Session, webdriver: WebDriver) -> None:
+    """
+    Refresh Steam information for all games in the database
+    """
+    logging.info("Refreshing Steam information")
+    steam_info: SteamInfo
+    for steam_info in session.query(SteamInfo):
+        new_steam_info = get_steam_details(id=steam_info.id, driver=webdriver)
+        if new_steam_info is None:
+            return
+        steam_info.name = new_steam_info.name
+        steam_info.short_description = new_steam_info.short_description
+        steam_info.release_date = new_steam_info.release_date
+        steam_info.publishers = new_steam_info.publishers
+        steam_info.image_url = new_steam_info.image_url
+        steam_info.recommendations = new_steam_info.recommendations
+        steam_info.percent = new_steam_info.percent
+        steam_info.score = new_steam_info.score
+        steam_info.metacritic_score = new_steam_info.metacritic_score
+        steam_info.metacritic_url = new_steam_info.metacritic_url
+        steam_info.recommended_price_eur = new_steam_info.recommended_price_eur
 
 
 def add_game_info(offer: Offer, session: Session, webdriver: WebDriver) -> None:

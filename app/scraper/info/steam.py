@@ -26,9 +26,12 @@ STEAM_DETAILS_JSON = "https://store.steampowered.com/api/appdetails?appids="
 STEAM_DETAILS_STORE = "https://store.steampowered.com/app/"
 STEAM_DETAILS_REVIEW_SCORE = '//div[@id="userReviews"]/div[@itemprop="aggregateRating"]'  # data-tooltip-html attribute
 STEAM_DETAILS_REVIEW_SCORE_VALUE = '//div[@id="userReviews"]/div[@itemprop="aggregateRating"]//meta[@itemprop="ratingValue"]'  # content attribute
+STEAM_DETAILS_REVIEW_COUNT = '//div[@id="userReviews"]/div[@itemprop="aggregateRating"]//meta[@itemprop="reviewCount"]'  # content attribute
 STEAM_DETAILS_LOADED = '//div[contains(concat(" ", normalize-space(@class), " "), " game_page_background ")]'
 STEAM_PRICE_FULL = '(//div[contains(concat(" ", normalize-space(@class), " "), " game_area_purchase_game ")])[1]//div[contains(concat(" ", normalize-space(@class), " "), " game_purchase_action")]//div[contains(concat(" ", normalize-space(@class), " "), " game_purchase_price")]'  # text=" 27,99€ "
 STEAM_PRICE_DISCOUNTED_ORIGINAL = '(//div[contains(concat(" ", normalize-space(@class), " "), " game_area_purchase_game ")])[1]//div[contains(concat(" ", normalize-space(@class), " "), " game_purchase_action")]//div[contains(concat(" ", normalize-space(@class), " "), " discount_original_price")]'  # text=" 27,99€ "
+STEAM_RELEASE_DATE = '//div[@id="genresAndManufacturer"]'
+
 MAX_WAIT_SECONDS = 30  # Needs to be quite high in Docker for first run
 
 
@@ -112,7 +115,7 @@ def get_steam_details(
         # No entry found, not adding any data
         return None
 
-    logging.info(f"Steam: Reading details for app id {id}")
+    logging.info(f"Steam: Reading details for app id {steam_app_id}")
 
     steam_info = SteamInfo()
     steam_info.id = steam_app_id
@@ -242,10 +245,8 @@ def get_steam_details(
         element: WebElement = driver.find_element(By.XPATH, STEAM_DETAILS_REVIEW_SCORE)
         rating_str: str = element.get_attribute("data-tooltip-html")  # type: ignore
         steam_info.percent = int(rating_str.split("%")[0].strip())
-
     except WebDriverException:
         logging.error(f"No Steam percentage found for {steam_app_id}!")
-
     except ValueError:
         logging.error(f"Invalid Steam percentage {rating_str} for {steam_app_id}!")
 
@@ -254,16 +255,23 @@ def get_steam_details(
             By.XPATH, STEAM_DETAILS_REVIEW_SCORE_VALUE
         )
         rating2_str: str = element2.get_attribute("content")  # type: ignore
-        try:
-            steam_info.score = int(rating2_str)
-        except ValueError:
-            pass
-
+        steam_info.score = int(rating2_str)
     except WebDriverException:
         logging.error(f"No Steam rating found for {steam_app_id}!")
-
     except ValueError:
         logging.error(f"Invalid Steam rating {rating2_str} for {steam_app_id}!")
+
+    if steam_info.recommendations is None:
+        try:
+            element6: WebElement = driver.find_element(
+                By.XPATH, STEAM_DETAILS_REVIEW_COUNT
+            )
+            recommendations_str: str = element6.get_attribute("content")  # type: ignore
+            steam_info.recommendations = int(recommendations_str)
+        except WebDriverException:
+            logging.error(f"No Steam rating found for {steam_app_id}!")
+        except ValueError:
+            logging.error(f"Invalid Steam rating {recommendations_str} for {steam_app_id}!")
 
     if steam_info.recommended_price_eur is None:
         try:
@@ -271,34 +279,50 @@ def get_steam_details(
                 By.XPATH, STEAM_PRICE_DISCOUNTED_ORIGINAL
             )
             price_str: str = element3.text
-            try:
-                steam_info.recommended_price_eur = float(
-                    price_str.replace("€", "").replace(",", ".").strip()
-                )
-            except ValueError:
-                pass
-
+            steam_info.recommended_price_eur = float(
+                price_str.replace("€", "").replace(",", ".").strip()
+            )
         except WebDriverException:
             logging.debug(
                 f"No Steam discounted original price found on shop page for {steam_app_id}"
+            )
+        except ValueError:
+            logging.debug(
+                f"Steam discounted original price has wrong format for {steam_app_id}"
             )
 
     if steam_info.recommended_price_eur is None:
         try:
             element4: WebElement = driver.find_element(By.XPATH, STEAM_PRICE_FULL)
-            price2_str: str = element4.text.replace("€", "").strip()
+            price2_str: str = element4.text
             if "free" in price2_str.lower():
                 steam_info.recommended_price_eur = 0
             else:
-                try:
-                    steam_info.recommended_price_eur = float(price2_str)
-                except ValueError:
-                    pass
-
+                steam_info.recommended_price_eur = float(
+                    price2_str.replace("€", "").replace(",", ".").strip()
+                )
         except WebDriverException:
             logging.debug(f"No Steam full price found on shop page for {steam_app_id}")
+        except ValueError:
+            logging.debug(f"Steam full price has wrong format for {steam_app_id}")
 
     if steam_info.recommended_price_eur is None:
         logging.error(f"No Steam price found for {steam_app_id}")
 
+    if steam_info.release_date is None:
+        try:
+            element5: WebElement = driver.find_element(By.XPATH, STEAM_RELEASE_DATE)
+            release_date_str: str = element5.text
+            release_date_str = release_date_str.split("RELEASE DATE:")[1].strip()
+            release_date: datetime = datetime.strptime(
+                release_date_str, "%d %b, %Y"
+            ).replace(tzinfo=timezone.utc)
+            steam_info.release_date = release_date
+
+        except WebDriverException:
+            logging.debug(f"No release date found on shop page for {steam_app_id}")
+        except (IndexError, ValueError):
+            logging.debug(
+                f"Release date in wrong format on shop page for {steam_app_id}"
+            )
     return steam_info
