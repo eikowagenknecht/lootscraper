@@ -165,11 +165,26 @@ class TelegramBot:
             )
             return
 
-    def send_new_offers(self, user: User) -> None:
+        if (
+            db_user.telegram_subscriptions is None
+            or len(db_user.telegram_subscriptions) == 0
+        ):
+            update.message.reply_markdown_v2(
+                "You have no subscriptions\\. Change that with /manage\\."
+            )
+            return
+
+        if not self.send_new_offers(db_user):
+            update.message.reply_markdown_v2(
+                "No new offers available\\. I will write you as soon as there are new offers, I promise\\!"
+            )
+
+    def send_new_offers(self, user: User) -> bool:
         """Send all new offers for the user."""
 
         subscriptions = user.telegram_subscriptions
 
+        offers_sent = 0
         subscription: TelegramSubscription
         for subscription in subscriptions:
             offers: list[Offer] = (
@@ -202,6 +217,8 @@ class TelegramBot:
             if len(offers) == 0:
                 continue
 
+            offers_sent += len(offers)
+
             # Send the offers
             for offer in offers:
                 self.send_offer(offer, user)
@@ -210,6 +227,11 @@ class TelegramBot:
             subscription.last_offer_id = offers[-1].id
             user.offers_received_count = user.offers_received_count + len(offers)
             self.session.commit()
+
+        if offers_sent:
+            return True
+        else:
+            return False
 
     def debug_command(self, update: Update, context: CallbackContext) -> None:  # type: ignore
         """Handle the /debug command: Show some debug information."""
@@ -340,6 +362,7 @@ class TelegramBot:
         )
 
     def status_command(self, update: Update, context: CallbackContext) -> None:  # type: ignore
+        """Handle the /status command: Display some statistics about the user."""
         if not update.effective_chat or not update.effective_user or not update.message:
             return
 
@@ -352,21 +375,39 @@ class TelegramBot:
             )
             return
 
-        reg_date = db_user.registration_date.strftime("%Y-%m-%d %H:%M:%S").replace(
-            "-", "\\-"
-        )
+        subscriptions_text: str
+        if len(db_user.telegram_subscriptions) > 0:
+            subscriptions_text = (
+                Rf"\- You have {len(db_user.telegram_subscriptions)} subscriptions\. "
+            )
+            subscriptions_text += (
+                R"Here are the categories you are subscribed to: " + "\n"
+            )
+            for subscription in db_user.telegram_subscriptions:
+                subscriptions_text += (
+                    Rf"\* {subscription.source.value} \({subscription.type.value}\)"
+                    + "\n"
+                )
+            subscriptions_text += (
+                R"You can unsubscribe from them any time with /manage\."
+            )
+        else:
+            subscriptions_text = (
+                R"\- You are currently not subscribed to any categories\."
+                R"\- You can change that with the /manage command if you wish\."
+            )
+
         update.message.reply_markdown_v2(
             Rf"Hi {update.effective_user.mention_markdown_v2()}, you are currently registered\. "
             R"But I'm not storing much user data, so this is all I know about you: "
             "\n\n"
-            Rf"\- You registered on {reg_date} \(UTC\) with the /start command\."
+            Rf"\- You registered on {markdown_escape(db_user.registration_date.strftime(TIMESTAMP_READABLE_WITH_HOUR))} with the /start command\."
             "\n"
             Rf"\- Your Telegram chat id is {db_user.telegram_chat_id}\. "
-            R"Didn't know that, huh? "
+            R"Neat, huh? "
             R"I use it to send you notifications\."
             "\n"
-            Rf"\- You have {len(db_user.telegram_subscriptions) if db_user.telegram_subscriptions else 0} subscriptions\. "
-            R"You can unsubscribe from them any time with /manage\."
+            f"{subscriptions_text}"
             "\n"
             Rf"\- You received {db_user.offers_received_count} offers so far\. "
         )
@@ -625,10 +666,11 @@ class TelegramBot:
                 content += f"\nOffer expired {markdown_escape(time_to_end)} ago"
             else:
                 content += f"\nOffer expires in {markdown_escape(time_to_end)}"
-            content += f" \\({markdown_escape(offer.valid_to.strftime(TIMESTAMP_READABLE_WITH_HOUR))}\\)"
+            content += f" \\({markdown_escape(offer.valid_to.strftime(TIMESTAMP_READABLE_WITH_HOUR))}\\)\\."
+        else:
+            content += "\nOffer is valid forever\\.\\. just kidding, we just don't know when it will end, so grab it now\\!"
 
         if offer.url:
-            content += "\n\n"
             content += (
                 "Claim it now for free on "
                 + markdown_url(offer.url, offer.source.value)
