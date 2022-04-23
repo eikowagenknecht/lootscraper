@@ -10,7 +10,7 @@ from typing import Type
 
 import humanize
 import telegram
-from sqlalchemy import or_, select
+from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ParseMode, Update
 from telegram.ext import (
@@ -25,11 +25,12 @@ from telegram.ext import (
 from app.common import (
     TIMESTAMP_READABLE_WITH_HOUR,
     TIMESTAMP_SHORT,
+    Channel,
     OfferType,
     Source,
 )
 from app.configparser import Config, ParsedConfig
-from app.sqlalchemy import Game, Offer, TelegramSubscription, User, and_
+from app.sqlalchemy import Announcement, Game, Offer, TelegramSubscription, User, and_
 
 logger = logging.getLogger(__name__)
 
@@ -262,6 +263,33 @@ class TelegramBot:
         else:
             return False
 
+    def send_new_announcements(self, user: User) -> None:
+        announcements: list[Announcement] = (
+            self.session.execute(
+                select(Announcement).where(
+                    and_(
+                        or_(
+                            Announcement.channel == Channel.ALL,
+                            Announcement.channel == Channel.TELEGRAM,
+                        ),
+                        Announcement.id > user.last_announcement_id,
+                    )
+                )
+            )
+            .scalars()
+            .all()
+        )
+
+        if len(announcements) == 0:
+            return
+
+        # Send the offers
+        for announcement in announcements:
+            self.send_announcement(announcement, user)
+
+        user.last_announcement_id = announcements[-1].id
+        self.session.commit()
+
     def debug_command(self, update: Update, context: CallbackContext) -> None:  # type: ignore
         """Handle the /debug command: Show some debug information."""
         if update.message is None:
@@ -322,6 +350,9 @@ class TelegramBot:
             return
 
         # Register user if not registered yet
+        latest_announcement = self.session.execute(
+            select(func.max(Announcement.id)).scalar()
+        )
         new_user = User(
             telegram_id=update.effective_user.id,
             telegram_chat_id=update.effective_chat.id
@@ -329,6 +360,7 @@ class TelegramBot:
             else None,
             telegram_user_details=update.effective_user.to_json(),
             registration_date=datetime.now().replace(tzinfo=timezone.utc),
+            last_announcement_id=latest_announcement,
         )
         self.session.add(new_user)
         self.session.commit()
@@ -673,6 +705,14 @@ class TelegramBot:
             text=self.offer_message(offer),
             parse_mode=ParseMode.MARKDOWN_V2,
             reply_markup=self.offer_details_keyboard(offer),
+        )
+
+    def send_announcement(self, announcement: Announcement, user: User) -> None:
+        self.updater.bot.send_message(
+            chat_id=user.telegram_chat_id,
+            text=announcement.text_markdown,
+            parse_mode=ParseMode.MARKDOWN_V2,
+            reply_markup=None,
         )
 
     def offer_message(self, offer: Offer) -> str:

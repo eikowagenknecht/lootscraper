@@ -25,7 +25,7 @@ from sqlalchemy.orm import registry, relationship, scoped_session, sessionmaker
 
 from alembic import command
 from alembic.config import Config as AlembicConfig
-from app.common import OfferType, Source
+from app.common import Channel, OfferType, Source
 from app.configparser import Config
 
 mapper_registry = registry()
@@ -47,7 +47,19 @@ class AwareDateTime(TypeDecorator):
             return None
 
 
+class Announcement(Base):
+    __tablename__ = "announcements"
+
+    id: int = Column(Integer, primary_key=True, nullable=False)
+
+    channel: Channel = Column(Enum(Channel), nullable=False)
+    date: datetime = Column(AwareDateTime, nullable=False)
+    text_markdown: str = Column(String, nullable=False)
+
+
 class Game(Base):
+    """A game (e.g. "The Witcher 3")."""
+
     __tablename__ = "games"
 
     id: int = Column(Integer, primary_key=True, nullable=False)
@@ -70,6 +82,8 @@ class Game(Base):
 
 
 class IgdbInfo(Base):
+    """Information about a Game, gathered from IDGB."""
+
     __tablename__ = "igdb_info"
 
     id: int = Column(Integer, primary_key=True, nullable=False)
@@ -102,6 +116,8 @@ class IgdbInfo(Base):
 
 
 class SteamInfo(Base):
+    """Information about a Game, gathered from Steam."""
+
     __tablename__ = "steam_info"
 
     id: int = Column(Integer, primary_key=True, nullable=False)
@@ -145,6 +161,8 @@ class SteamInfo(Base):
 
 
 class Offer(Base):
+    """An offer, can be for a game or soem other game related content (loot)."""
+
     __tablename__ = "offers"
 
     id: int = Column(Integer, primary_key=True, nullable=False)
@@ -184,6 +202,8 @@ class Offer(Base):
 
 
 class User(Base):
+    """A user of the website."""
+
     __tablename__ = "users"
 
     id: int = Column(Integer, primary_key=True, nullable=False)
@@ -199,8 +219,12 @@ class User(Base):
         "TelegramSubscription", back_populates="user", cascade="all, delete-orphan"
     )
 
+    last_announcement_id: int = Column(Integer, nullable=False, default=0)
+
 
 class TelegramSubscription(Base):
+    """Subscription of a user to a category for Telegram notifications."""
+
     __tablename__ = "telegram_subscriptions"
 
     id: int = Column(Integer, primary_key=True, nullable=False)

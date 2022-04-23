@@ -81,6 +81,7 @@ def main() -> None:
                 if Config.get().telegram_bot:
                     session: Session = db.session
                     for user in session.execute(select(User)).scalars().all():
+                        bot.send_new_announcements(user)
                         bot.send_new_offers(user)
             except OperationalError as oe:
                 logging.error(f"Database error: {oe}")
