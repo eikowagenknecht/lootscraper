@@ -667,38 +667,38 @@ class TelegramBot:
         if subscription_type == "amazon game":
             if not self.is_subscribed(db_user, OfferType.GAME, Source.AMAZON):
                 self.subscribe(db_user, OfferType.GAME, Source.AMAZON)
-                answer_text = answer(True, Source.AMAZON, OfferType.GAME)
+                answer_text = subscribe_answer(True)
             else:
                 self.unsubscribe(db_user, OfferType.GAME, Source.AMAZON)
-                answer_text = answer(False, Source.AMAZON, OfferType.GAME)
+                answer_text = subscribe_answer(False)
         elif subscription_type == "amazon loot":
             if not self.is_subscribed(db_user, OfferType.LOOT, Source.AMAZON):
                 self.subscribe(db_user, OfferType.LOOT, Source.AMAZON)
-                answer_text = answer(True, Source.AMAZON, OfferType.LOOT)
+                answer_text = subscribe_answer(True)
             else:
                 self.unsubscribe(db_user, OfferType.LOOT, Source.AMAZON)
-                answer_text = answer(False, Source.AMAZON, OfferType.LOOT)
+                answer_text = subscribe_answer(False)
         elif subscription_type == "epic game":
             if not self.is_subscribed(db_user, OfferType.GAME, Source.EPIC):
                 self.subscribe(db_user, OfferType.GAME, Source.EPIC)
-                answer_text = answer(True, Source.EPIC, OfferType.GAME)
+                answer_text = subscribe_answer(True)
             else:
                 self.unsubscribe(db_user, OfferType.GAME, Source.EPIC)
-                answer_text = answer(False, Source.EPIC, OfferType.GAME)
+                answer_text = subscribe_answer(False)
         elif subscription_type == "gog game":
             if not self.is_subscribed(db_user, OfferType.GAME, Source.GOG):
                 self.subscribe(db_user, OfferType.GAME, Source.GOG)
-                answer_text = answer(True, Source.GOG, OfferType.GAME)
+                answer_text = subscribe_answer(True)
             else:
                 self.unsubscribe(db_user, OfferType.GAME, Source.GOG)
-                answer_text = answer(False, Source.GOG, OfferType.GAME)
+                answer_text = subscribe_answer(False)
         elif subscription_type == "steam game":
             if not self.is_subscribed(db_user, OfferType.GAME, Source.STEAM):
                 self.subscribe(db_user, OfferType.GAME, Source.STEAM)
-                answer_text = answer(True, Source.STEAM, OfferType.GAME)
+                answer_text = subscribe_answer(True)
             else:
                 self.unsubscribe(db_user, OfferType.GAME, Source.STEAM)
-                answer_text = answer(False, Source.STEAM, OfferType.GAME)
+                answer_text = subscribe_answer(False)
 
         query.answer(text=answer_text)
         query.edit_message_text(
@@ -719,6 +719,7 @@ class TelegramBot:
             return None
 
     def send_offer(self, offer: Offer, user: User) -> bool:
+        logger.debug(f"Sending offer {offer.title} to Telegram user {user.telegram_id}")
         return (
             self.send_message(
                 chat_id=user.telegram_chat_id,
@@ -730,6 +731,9 @@ class TelegramBot:
         )
 
     def send_announcement(self, announcement: Announcement, user: User) -> None:
+        logger.debug(
+            f"Sending announcement {announcement.id} to Telegram user {user.telegram_id}"
+        )
         self.send_message(
             chat_id=user.telegram_chat_id,
             text=announcement.text_markdown,
@@ -763,7 +767,7 @@ class TelegramBot:
 
         if offer.url:
             content += " " + markdown_url(
-                offer.url, f"Claim it now for free on {offer.source.value}\\!"
+                offer.url, f"Claim it now for free on {offer.source.value}!"
             )
 
         return content
@@ -851,12 +855,11 @@ def keyboard_button_row(
     return [InlineKeyboardButton(f"{source_str}{button_state}", callback_data=command)]
 
 
-def answer(new_state: bool, source: Source, offer_type: OfferType) -> str:
-    source_str = f"{source.value} ({offer_type.value})"
+def subscribe_answer(new_state: bool) -> str:
     if new_state:
-        return f"Congratulations! You are now subscribed to {source_str} offers."
+        return "You are now subscribed."
     else:
-        return f"You are now unsubscribed from {source_str} offers."
+        return "You are now unsubscribed."
 
 
 def markdown_escape(input: str) -> str:
