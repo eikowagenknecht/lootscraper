@@ -18,24 +18,22 @@ from app.sqlalchemy import Offer
 SCRAPER_NAME = "Amazon Prime"
 ROOT_URL = "https://gaming.amazon.com/home"
 MAX_WAIT_SECONDS = 60  # Needs to be quite high in Docker for first run
-XPATH_WAIT = '//div[@data-a-target="Offer"]'
+XPATH_WAIT = '//div[@data-a-target="offer-section-FGWP_FULL"]'
 XPATH_LOOT = (
-    '//div[@data-a-target="offer-list-IN_GAME_LOOT"]//div[@data-a-target="Offer"]'
+    '//div[@data-a-target="offer-list-IN_GAME_LOOT"]//div[@class="item-card__action"]'
 )
 XPATH_GAMES = (
-    '//div[@data-a-target="offer-list-FGWP_FULL"]//div[@data-a-target="Offer"]'
+    '//div[@data-a-target="offer-list-FGWP_FULL"]//div[@class="item-card__action"]'
 )
-SUBPATH_TITLE = './/div[contains(concat(" ", normalize-space(@class), " "), " offer__body__titles ")]/h3'
-SUBPATH_PARAGRAPH = './/div[contains(concat(" ", normalize-space(@class), " "), " offer__body__titles ")]/p'
-SUBPATH_ENDDATE = './/div[contains(concat(" ", normalize-space(@class), " "), " claim-info ")]//p/span'
-SUBPATH_LINK = './/a[@data-a-target="learn-more-card"]'
-SUBPATH_IMG = './/img[@class="tw-image"]'
+SUBPATH_TITLE = './/div[contains(concat(" ", normalize-space(@class), " "), " item-card-details__body__primary ")]//p'
+SUBPATH_ENDDATE = './/div[contains(concat(" ", normalize-space(@class), " "), " item-card__availability-date ")]//p'
+SUBPATH_LINK = './a[@data-a-target="learn-more-card"]'
+SUBPATH_IMG = './/div[@data-a-target="card-image"]//img'
 
 
 @dataclass
 class RawOffer:
     title: str | None = None
-    paragraph: str | None = None
     valid_to: str | None = None
     url: str | None = None
     img_url: str | None = None
@@ -99,7 +97,6 @@ class AmazonScraper(Scraper):
 
         raw_offers: list[RawOffer] = []
         title_str: str | None
-        paragraph_str: str | None
         valid_to_str: str | None
         url_str: str | None
 
@@ -110,15 +107,6 @@ class AmazonScraper(Scraper):
             except WebDriverException:
                 # Nothing to do here, string stays empty
                 title_str = None
-
-            try:
-                paragraph: WebElement = element.find_element(
-                    By.XPATH, SUBPATH_PARAGRAPH
-                )
-                paragraph_str = paragraph.text
-            except WebDriverException:
-                # Nothing to do here, string stays empty
-                paragraph_str = None
 
             try:
                 enddate: WebElement = element.find_element(By.XPATH, SUBPATH_ENDDATE)
@@ -148,7 +136,6 @@ class AmazonScraper(Scraper):
             raw_offers.append(
                 RawOffer(
                     title=title_str,
-                    paragraph=paragraph_str,
                     valid_to=valid_to_str,
                     url=url_str,
                     img_url=img_url_str,
@@ -172,9 +159,6 @@ class AmazonScraper(Scraper):
                 continue
 
             rawtext = f"<title>{raw_offer.title}</title>"
-
-            if raw_offer.paragraph:
-                rawtext += f"<paragraph>{raw_offer.paragraph}</paragraph>"
 
             # Title
             # Unfortunately Amazon loot offers come in free text format, so we
@@ -211,17 +195,37 @@ class AmazonScraper(Scraper):
                     probable_game_name = raw_offer.title
 
             # Date
-            # This is a little bit more complicated as only month and day are
-            # displayed on the site. The year is guessed assuming that old
-            # offers are not shown any more. "Old" means older than yesterday
-            # to avoid time zone problems.
-            # Side note: Valid to 01 Jan 2022 seems to mean "We will end this
-            # offer on that day but won't tell you when." I've seen real ending
-            # times ranging from 02:00 to 19:00.
+            # This is a bit more complicated as only the relative end is
+            # displayed ("Ends in ...").
+            # The year is guessed assuming that old offers are not shown any
+            # more. "Old" means older than yesterday to avoid time zone problems.
+            # The actual day is more complicated. The seen values are:
+            # "Ends in x days", "Ends tomorrow", "Ends today". But no time is given.
+            # So for now to have something, we will assume that it means
+            # "the end of the day in UTC". This is probably not exactly correct
+            # since even when the dates were shown as actual dates, I've seen
+            # real ending times ranging from 02:00 to 19:00.
+            # So we will just log that for now and see what to make of it later.
             end_date = None
             if raw_offer.valid_to:
+                # TODO: Excessive logging for now to see what's going on
+                logging.info(f"Found date: {raw_offer.valid_to} for {raw_offer.title}")
                 try:
-                    parsed_date = datetime.strptime(raw_offer.valid_to, "%b %d").date()
+                    raw_date = raw_offer.valid_to.removeprefix("Ends ").lower()
+                    if raw_date == "today":
+                        parsed_date = datetime.now().replace(
+                            tzinfo=timezone.utc, hour=0, minute=0, second=0
+                        )
+                    elif raw_date == "tomorrow":
+                        parsed_date = datetime.now().replace(
+                            tzinfo=timezone.utc, hour=0, minute=0, second=0
+                        ) + timedelta(days=1)
+                    else:
+                        parsed_date = datetime.now().replace(
+                            tzinfo=timezone.utc, hour=0, minute=0, second=0
+                        ) + timedelta(days=int(raw_date.split(" ")[1]))
+
+                    # Correct the year
                     guessed_end_date = date(
                         date.today().year, parsed_date.month, parsed_date.day
                     )
@@ -232,12 +236,13 @@ class AmazonScraper(Scraper):
                         )
 
                     # Add 1 day because of the notation
-                    # ("Valid to 01 Jan 2022" means "Valid to 2022-01-02 00:00:00")
+                    # ("Ends today" means "Ends at 00:00:00 the next day")
                     end_date = datetime.combine(
                         guessed_end_date + timedelta(days=1),
                         time.min,
                     ).replace(tzinfo=timezone.utc)
-                except ValueError:
+                except (ValueError, IndexError):
+                    logging.warning(f"Date parsing failed for {raw_offer.title}")
                     pass
 
             nearest_url = raw_offer.url if raw_offer.url else ROOT_URL
