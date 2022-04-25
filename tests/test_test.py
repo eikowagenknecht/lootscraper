@@ -1,7 +1,6 @@
 # type: ignore
 import logging
 import unittest
-from time import sleep
 
 from selenium.webdriver.chrome.webdriver import WebDriver
 from sqlalchemy import select
@@ -33,8 +32,8 @@ class VariousTests(unittest.TestCase):
         with LootDatabase(echo=True) as db:
             # Arrange
             # Act
-            with TelegramBot(Config.get(), db.session):
-                sleep(10000)
+            with TelegramBot(Config.get(), db.session) as bot:
+                bot.updater.idle()
             # Assert
 
     def test_telegram_messagesend_registered_user(self) -> None:
