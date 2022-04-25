@@ -4,7 +4,7 @@ import html
 import json
 import logging
 import traceback
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timedelta, timezone
 from types import TracebackType
 from typing import Type
 
@@ -12,7 +12,14 @@ import humanize
 import telegram
 from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ParseMode, Update
+from telegram import (
+    InlineKeyboardButton,
+    InlineKeyboardMarkup,
+    Message,
+    ParseMode,
+    TelegramError,
+    Update,
+)
 from telegram.ext import (
     CallbackContext,
     CallbackQueryHandler,
@@ -70,7 +77,7 @@ class TelegramBot:
         self.updater = Updater(token=self.config.telegram_access_token)
         dispatcher = self.updater.dispatcher
 
-        logging.info("Telegram Bot: Initialized")
+        logger.info("Telegram Bot: Initialized")
 
         dispatcher.add_handler(CommandHandler("start", self.start_command))
         dispatcher.add_handler(CommandHandler("leave", self.leave_command))
@@ -93,12 +100,12 @@ class TelegramBot:
         dispatcher.add_handler(MessageHandler(Filters.command, self.unknown))
         dispatcher.add_error_handler(self.error_handler)
 
-        logging.info("Telegram Bot: Starting polling")
+        logger.info("Telegram Bot: Starting polling")
         self.updater.start_polling()  # Starts in a different thread
 
     def stop(self) -> None:
         """Stop the bot."""
-        logging.info("Telegram Bot: Stopping polling")
+        logger.info("Telegram Bot: Stopping polling")
         self.updater.stop()
 
     def error_handler(self, update: object, context: CallbackContext) -> None:  # type: ignore
@@ -130,10 +137,10 @@ class TelegramBot:
 
         message_pt2 = f"<pre>{html.escape(tb_string)}</pre>"
 
-        logging.error(message_pt1 + message_pt2)
+        logger.error(message_pt1 + message_pt2)
         if len(message_pt1) + len(message_pt2) < 4096:
             message = message_pt1 + message_pt2
-            context.bot.send_message(
+            self.send_message(
                 chat_id=Config.get().telegram_developer_chat_id,
                 text=message,
                 parse_mode=ParseMode.HTML,
@@ -141,20 +148,20 @@ class TelegramBot:
         else:
             if len(message_pt1) < 4096:
                 # Finally, send the message
-                context.bot.send_message(
+                self.send_message(
                     chat_id=Config.get().telegram_developer_chat_id,
                     text=message_pt1,
                     parse_mode=ParseMode.HTML,
                 )
             if len(message_pt2) < 4096:
-                context.bot.send_message(
+                self.send_message(
                     chat_id=Config.get().telegram_developer_chat_id,
                     text=message_pt2,
                     parse_mode=ParseMode.HTML,
                 )
 
         if len(message_pt1) >= 4096 and len(message_pt2) >= 4096:
-            context.bot.send_message(
+            self.send_message(
                 chat_id=Config.get().telegram_developer_chat_id,
                 text="There was an error, but the message is too long to send.",
                 parse_mode=ParseMode.HTML,
@@ -477,7 +484,7 @@ class TelegramBot:
         if not update.effective_chat:
             return
 
-        context.bot.send_message(
+        self.send_message(
             chat_id=update.effective_chat.id,
             text="Sorry, I didn't understand that command. Type /help to see all commands.",
         )
@@ -699,16 +706,31 @@ class TelegramBot:
             reply_markup=self.manage_menu_keyboard(db_user),
         )
 
-    def send_offer(self, offer: Offer, user: User) -> None:
-        self.updater.bot.send_message(
-            chat_id=user.telegram_chat_id,
-            text=self.offer_message(offer),
-            parse_mode=ParseMode.MARKDOWN_V2,
-            reply_markup=self.offer_details_keyboard(offer),
+    def send_message(self, *args, **kwargs) -> Message | None:  # type: ignore
+        """Wrapper around the message sending to handle exceptions."""
+        try:
+            return self.updater.bot.send_message(*args, **kwargs)
+        except TelegramError as e:
+            if e.message == "Chat not found":
+                # TODO: The user has probably closed the chat. Remove the user from the database.
+                pass
+            else:
+                logger.error(e)
+            return None
+
+    def send_offer(self, offer: Offer, user: User) -> bool:
+        return (
+            self.send_message(
+                chat_id=user.telegram_chat_id,
+                text=self.offer_message(offer),
+                parse_mode=ParseMode.MARKDOWN_V2,
+                reply_markup=self.offer_details_keyboard(offer),
+            )
+            is not None
         )
 
     def send_announcement(self, announcement: Announcement, user: User) -> None:
-        self.updater.bot.send_message(
+        self.send_message(
             chat_id=user.telegram_chat_id,
             text=announcement.text_markdown,
             parse_mode=ParseMode.MARKDOWN_V2,
@@ -737,13 +759,11 @@ class TelegramBot:
                 content += f"\nOffer expires in {markdown_escape(time_to_end)}"
             content += f" \\({markdown_escape(offer.valid_to.strftime(TIMESTAMP_READABLE_WITH_HOUR))}\\)\\."
         else:
-            content += "\nOffer is valid forever\\.\\. just kidding, we just don't know when it will end, so grab it now\\!"
+            content += "\nOffer is valid forever\\.\\. just kidding, I just don't know when it will end, so grab it now\\!"
 
         if offer.url:
-            content += (
-                "Claim it now for free on "
-                + markdown_url(offer.url, offer.source.value)
-                + R"\!"
+            content += " " + markdown_url(
+                offer.url, f"Claim it now for free on {offer.source.value}\\!"
             )
 
         return content

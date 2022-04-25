@@ -5,11 +5,10 @@ Revises: 52ea632ee417
 Create Date: 2022-04-23 17:57:07.548114+00:00
 
 """
-from alembic import op
 import sqlalchemy as sa
 
+from alembic import op
 from app.sqlalchemy import AwareDateTime
-
 
 # revision identifiers, used by Alembic.
 revision = "fc43de437432"
@@ -33,7 +32,12 @@ def upgrade() -> None:
     )
     with op.batch_alter_table("users", schema=None) as batch_op:  # type: ignore
         batch_op.add_column(
-            sa.Column("last_announcement_id", sa.Integer(), nullable=False)
+            sa.Column("last_announcement_id", sa.Integer(), nullable=True)
+        )
+    op.execute("UPDATE users SET last_announcement_id = 0")
+    with op.batch_alter_table("users", schema=None) as batch_op:  # type: ignore
+        batch_op.alter_column(
+            "last_announcement_id", existing_type=sa.Integer(), nullable=False
         )
 
 
