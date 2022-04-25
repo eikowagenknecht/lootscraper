@@ -304,7 +304,7 @@ class LootDatabase:
         type: OfferType,
         title: str,
         valid_to: datetime | None,
-    ) -> Offer:
+    ) -> Offer | None:
         """Find an offer by its title and valid_to date. Valid_to is interpreded as
         "at most 1 day older or 1 day newer" to avoid getting duplicates for offers
         where the exact end date is not clear (looking at you, Amazon!)"""
@@ -326,9 +326,17 @@ class LootDatabase:
                 date_filter,
             )
         )
-        result = self.session.execute(statement).scalars().one_or_none()
+        result: list[Offer] = self.session.execute(statement).scalars().all()
 
-        return result
+        if len(result) == 0:
+            return None
+
+        if len(result) > 1:
+            logging.warning(
+                f"Found multiple offers for {title} {valid_to}. Returning the first match."
+            )
+
+        return result[0]
 
     def find_offer_by_id(self, id: int) -> Offer:
         statement = select(Offer).where(Offer.id == id)
