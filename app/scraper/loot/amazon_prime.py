@@ -15,6 +15,8 @@ from app.common import OfferType, Source
 from app.scraper.loot.scraper import Scraper
 from app.sqlalchemy import Offer
 
+logger = logging.getLogger(__name__)
+
 SCRAPER_NAME = "Amazon Prime"
 ROOT_URL = "https://gaming.amazon.com/home"
 MAX_WAIT_SECONDS = 60  # Needs to be quite high in Docker for first run
@@ -56,13 +58,13 @@ class AmazonScraper(Scraper):
         offers = {}
 
         if not options or options[OfferType.GAME.name]:
-            logging.info(f"Analyzing {ROOT_URL} for {OfferType.GAME.value} offers")
+            logger.info(f"Analyzing {ROOT_URL} for {OfferType.GAME.value} offers")
             offers[OfferType.GAME.name] = AmazonScraper.read_offers_from_page(
                 OfferType.GAME, driver
             )
 
         if not options or options[OfferType.LOOT.name]:
-            logging.info(f"Analyzing {ROOT_URL} for {OfferType.LOOT.value} offers")
+            logger.info(f"Analyzing {ROOT_URL} for {OfferType.LOOT.value} offers")
             offers[OfferType.LOOT.name] = AmazonScraper.read_offers_from_page(
                 OfferType.LOOT, driver
             )
@@ -78,7 +80,7 @@ class AmazonScraper(Scraper):
             )
             sleep(1)  # Otherwise the first element sometimes is not correctly evaluated
         except WebDriverException:
-            logging.error(f"Page took longer than {MAX_WAIT_SECONDS} to load")
+            logger.error(f"Page took longer than {MAX_WAIT_SECONDS} to load")
             return []
 
         match offer_type:
@@ -92,7 +94,7 @@ class AmazonScraper(Scraper):
         try:
             elements: list[WebElement] = driver.find_elements(By.XPATH, search_xpath)
         except WebDriverException:
-            logging.error("Root element not found, could not scrape!")
+            logger.error("Root element not found, could not scrape!")
             return []
 
         raw_offers: list[RawOffer] = []
@@ -155,7 +157,7 @@ class AmazonScraper(Scraper):
         for raw_offer in raw_offers:
             # Raw text
             if not raw_offer.title:
-                logging.error(f"Error with offer, has no title: {raw_offer}")
+                logger.error(f"Error with offer, has no title: {raw_offer}")
                 continue
 
             rawtext = f"<title>{raw_offer.title}</title>"
@@ -209,7 +211,7 @@ class AmazonScraper(Scraper):
             end_date = None
             if raw_offer.valid_to:
                 # TODO: Excessive logging for now to see what's going on
-                logging.info(f"Found date: {raw_offer.valid_to} for {raw_offer.title}")
+                logger.info(f"Found date: {raw_offer.valid_to} for {raw_offer.title}")
                 try:
                     raw_date = raw_offer.valid_to.removeprefix("Ends ").lower()
                     if raw_date == "today":
@@ -242,7 +244,7 @@ class AmazonScraper(Scraper):
                         time.min,
                     ).replace(tzinfo=timezone.utc)
                 except (ValueError, IndexError):
-                    logging.warning(f"Date parsing failed for {raw_offer.title}")
+                    logger.warning(f"Date parsing failed for {raw_offer.title}")
                     pass
 
             nearest_url = raw_offer.url if raw_offer.url else ROOT_URL

@@ -13,6 +13,8 @@ from app.common import OfferType, Source
 from app.scraper.loot.scraper import Scraper
 from app.sqlalchemy import Offer
 
+logger = logging.getLogger(__name__)
+
 SCRAPER_NAME = "Steam"
 ROOT_URL = "https://store.steampowered.com/search/?maxprice=free&specials=1"
 MAX_WAIT_SECONDS = 30  # Needs to be quite high in Docker for first run
@@ -44,7 +46,7 @@ class SteamScraper(Scraper):
 
         offers = {}
 
-        logging.info(f"Analyzing {ROOT_URL} for {OfferType.GAME.value} offers")
+        logger.info(f"Analyzing {ROOT_URL} for {OfferType.GAME.value} offers")
         offers[OfferType.GAME.name] = SteamScraper.read_offers_from_page(driver)
 
         return offers
@@ -59,14 +61,14 @@ class SteamScraper(Scraper):
                 )
             )
         except WebDriverException:
-            logging.error(f"Page took longer than {MAX_WAIT_SECONDS} to load")
+            logger.error(f"Page took longer than {MAX_WAIT_SECONDS} to load")
             return []
 
         elements: list[WebElement] = []
         try:
             elements.extend(driver.find_elements(By.XPATH, STEAM_SEARCH_RESULTS))
         except WebDriverException:
-            logging.info("No current offer found.")
+            logger.info("No current offer found.")
             pass
 
         raw_offers: list[RawOffer] = []

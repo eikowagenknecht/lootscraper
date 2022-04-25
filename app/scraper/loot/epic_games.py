@@ -13,6 +13,8 @@ from app.common import OfferType, Source
 from app.scraper.loot.scraper import Scraper
 from app.sqlalchemy import Offer
 
+logger = logging.getLogger(__name__)
+
 SCRAPER_NAME = "Epic Games"
 ROOT_URL = "https://www.epicgames.com/store/en-US/"
 MAX_WAIT_SECONDS = 60  # Needs to be quite high in Docker for first run
@@ -48,7 +50,7 @@ class EpicScraper(Scraper):
 
         offers = {}
 
-        logging.info(f"Analyzing {ROOT_URL} for {OfferType.GAME.value} offers")
+        logger.info(f"Analyzing {ROOT_URL} for {OfferType.GAME.value} offers")
         offers[OfferType.GAME.name] = EpicScraper.read_offers_from_page(driver)
 
         return offers
@@ -61,20 +63,20 @@ class EpicScraper(Scraper):
                 EC.presence_of_element_located((By.XPATH, XPATH_OFFER_HEADER))
             )
         except WebDriverException:
-            logging.error(f"Page took longer than {MAX_WAIT_SECONDS} to load")
+            logger.error(f"Page took longer than {MAX_WAIT_SECONDS} to load")
             return []
 
         elements: list[WebElement] = []
         try:
             elements.extend(driver.find_elements(By.XPATH, XPATH_CURRENT))
         except WebDriverException:
-            logging.warning("No current offer found.")
+            logger.warning("No current offer found.")
             pass
 
         try:
             elements.extend(driver.find_elements(By.XPATH, XPATH_COMING_SOON))
         except WebDriverException:
-            logging.warning("No coming offer found.")
+            logger.warning("No coming offer found.")
             pass
 
         raw_offers: list[RawOffer] = []
