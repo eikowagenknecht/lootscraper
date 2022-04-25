@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import logging
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from types import TracebackType
 from typing import Any, Type
@@ -305,13 +305,25 @@ class LootDatabase:
         title: str,
         valid_to: datetime | None,
     ) -> Offer:
+        """Find an offer by its title and valid_to date. Valid_to is interpreded as
+        "at most 1 day older or 1 day newer" to avoid getting duplicates for offers
+        where the exact end date is not clear (looking at you, Amazon!)"""
+        if valid_to:
+            earliest_date = valid_to.replace(tzinfo=timezone.utc) - timedelta(days=1)
+            latest_date = valid_to.replace(tzinfo=timezone.utc) + timedelta(days=1)
+            date_filter = and_(
+                Offer.valid_to >= earliest_date,  # type: ignore
+                Offer.valid_to <= latest_date,  # type: ignore
+            )
+        else:
+            date_filter = None
+
         statement = select(Offer).where(
             and_(
                 Offer.source == source,
+                Offer.type == type,
                 Offer.title == title,
-                Offer.valid_to == valid_to.replace(tzinfo=timezone.utc)
-                if valid_to
-                else None,
+                date_filter,
             )
         )
         result = self.session.execute(statement).scalars().one_or_none()
