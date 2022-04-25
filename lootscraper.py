@@ -26,6 +26,7 @@ from app.sqlalchemy import Game, LootDatabase, Offer, User
 from app.telegram import TelegramBot
 from app.upload import upload_to_server
 
+
 exit = Event()
 
 
@@ -160,7 +161,7 @@ def job(db: LootDatabase) -> None:
                 new_offer_titles: list[str] = []
                 for scraper_offer in scraped_offers[scraper_source][scraper_type]:
                     # Get the existing entry if there is one
-                    existing_entry: Offer = db.find_offer(
+                    existing_entry: Offer | None = db.find_offer(
                         scraper_offer.source,
                         scraper_offer.type,
                         scraper_offer.title,

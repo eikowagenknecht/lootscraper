@@ -10,11 +10,13 @@ from app.configparser import Config
 from app.scraper.info.utils import RESULT_MATCH_THRESHOLD, get_match_score
 from app.sqlalchemy import IgdbInfo
 
+logger = logging.getLogger(__name__)
+
 
 def get_igdb_id(search_string: str) -> int | None:
     igdb = get_igdb_wrapper()
 
-    logging.info(f"Getting id for {search_string}")
+    logger.info(f"Getting id for {search_string}")
 
     api_search_string = re.sub(
         r"[^\x00-\x7F\x80-\xFF\u0100-\u017F\u0180-\u024F\u1E00-\u1EFF]",
@@ -41,21 +43,21 @@ def get_igdb_id(search_string: str) -> int | None:
             best_id = entry["id"]
             best_score = score
             best_title = result_name
-            logging.debug(
+            logger.debug(
                 f"IGDB: Found match {result_name} with a score of {(score*100):.0f} %"
             )
         else:
-            logging.debug(
+            logger.debug(
                 f"IGDB: Ignoring {result_name} as it's score of {(score*100):.0f} % is too low"
             )
 
     if best_id is not None:
-        logging.info(
+        logger.info(
             f"IGDB: Search for {search_string} resulted in {best_title} ({best_id}) as the best match with a score of {(best_score*100):.0f} %"
         )
         return best_id
 
-    logging.info(f"IGDB: Search for {search_string} found no result")
+    logger.info(f"IGDB: Search for {search_string} found no result")
 
     return None
 
@@ -75,7 +77,7 @@ def get_igdb_details(
         # No entry found, not adding any data
         return None
 
-    logging.info(f"IGDB: Reading details for IGDB id {id}")
+    logger.info(f"IGDB: Reading details for IGDB id {id}")
 
     igdb_info = IgdbInfo()
     igdb_info.id = igdb_game_id

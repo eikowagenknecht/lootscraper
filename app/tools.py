@@ -10,11 +10,14 @@ from app.sqlalchemy import Announcement, SteamInfo
 from app.telegram import markdown_escape
 
 
+logger = logging.getLogger(__name__)
+
+
 def refresh_all_steam_info(session: Session, webdriver: WebDriver) -> None:
     """
     Refresh Steam information for all games in the database
     """
-    logging.info("Refreshing Steam information")
+    logger.info("Refreshing Steam information")
     steam_info: SteamInfo
     for steam_info in session.query(SteamInfo):
         new_steam_info = get_steam_details(id=steam_info.id, driver=webdriver)

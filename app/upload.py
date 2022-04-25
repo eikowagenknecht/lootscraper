@@ -4,13 +4,15 @@ from pathlib import Path
 
 from app.configparser import Config
 
+logger = logging.getLogger(__name__)
+
 
 def upload_to_server(file: Path) -> None:
     host = Config.get().ftp_host
     user = Config.get().ftp_username
     password = Config.get().ftp_password
 
-    logging.info(f"Uploading {file.name} to host {host} as user {user}")
+    logger.info(f"Uploading {file.name} to host {host} as user {user}")
     with FTP_TLS(host) as session:
         session.auth()
         session.prot_p()
@@ -19,4 +21,4 @@ def upload_to_server(file: Path) -> None:
         with open(file, "rb") as binary_file:
             session.storbinary("STOR " + file.name, binary_file)
 
-    logging.debug("Finished uploading")
+    logger.debug("Finished uploading")

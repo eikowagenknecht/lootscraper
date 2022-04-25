@@ -14,6 +14,8 @@ from selenium.webdriver.support.ui import Select, WebDriverWait
 from app.scraper.info.utils import RESULT_MATCH_THRESHOLD, get_match_score
 from app.sqlalchemy import SteamInfo
 
+logger = logging.getLogger(__name__)
+
 STEAM_SEARCH_URL = "https://store.steampowered.com/search/?term="
 STEAM_SEARCH_OPTIONS = "&category1=998"  # Games only
 STEAM_SEARCH_RESULTS_CONTAINER = '//div[@id = "search_results"]'
@@ -36,7 +38,7 @@ MAX_WAIT_SECONDS = 30  # Needs to be quite high in Docker for first run
 
 
 def get_steam_id(search_string: str, driver: WebDriver) -> int | None:
-    logging.info(f"Getting id for {search_string}")
+    logger.info(f"Getting id for {search_string}")
 
     encoded_searchstring = urllib.parse.quote_plus(search_string, safe="")
 
@@ -50,7 +52,7 @@ def get_steam_id(search_string: str, driver: WebDriver) -> int | None:
         )
 
     except WebDriverException:
-        logging.error(
+        logger.error(
             f"Problem loading search results for {search_string} after waiting {MAX_WAIT_SECONDS}s"
         )
         return 0
@@ -74,11 +76,11 @@ def get_steam_id(search_string: str, driver: WebDriver) -> int | None:
                     best_appid = int(element.get_attribute("data-ds-appid"))  # type: ignore
                     best_score = score
                     best_title = result
-                    logging.debug(
+                    logger.debug(
                         f"Steam: Found match {result} with a score of {(score*100):.0f} %"
                     )
                 else:
-                    logging.debug(
+                    logger.debug(
                         f"Steam: Ignoring {result} as it's score of {(score*100):.0f} % is too low"
                     )
             except WebDriverException:
@@ -87,15 +89,15 @@ def get_steam_id(search_string: str, driver: WebDriver) -> int | None:
                 continue
 
     except WebDriverException:
-        logging.info("Steam: No search results found for {title}!")
+        logger.info("Steam: No search results found for {title}!")
 
     if best_appid is not None:
-        logging.info(
+        logger.info(
             f"Steam: Search for {search_string} resulted in {best_title} ({best_appid}) as the best match with a score of {(best_score*100):.0f} %"
         )
         return best_appid
 
-    logging.info(f"Steam: Search for {search_string} found no result")
+    logger.info(f"Steam: Search for {search_string} found no result")
 
     return None
 
@@ -115,7 +117,7 @@ def get_steam_details(
         # No entry found, not adding any data
         return None
 
-    logging.info(f"Steam: Reading details for app id {steam_app_id}")
+    logger.info(f"Steam: Reading details for app id {steam_app_id}")
 
     steam_info = SteamInfo()
     steam_info.id = steam_app_id
@@ -202,7 +204,7 @@ def get_steam_details(
         except KeyError:
             pass
 
-    logging.debug(
+    logger.debug(
         f"Steam: Now also checking the store details page for app id {steam_app_id}"
     )
 
@@ -216,7 +218,7 @@ def get_steam_details(
         )
 
     except WebDriverException:
-        logging.error(
+        logger.error(
             f"Steam store page for {steam_app_id} didn't load after waiting for {MAX_WAIT_SECONDS}s"
         )
         pass
@@ -225,7 +227,7 @@ def get_steam_details(
     # the interesting parts. So enter a valid date and then move on.
     # (use e.g. 12 July 1990), then move on to the actual shop page
     if "agecheck" in driver.current_url:
-        logging.debug(f"Trying to pass age verification for {steam_app_id}")
+        logger.debug(f"Trying to pass age verification for {steam_app_id}")
         try:
             select_field = Select(driver.find_element_by_id("ageDay"))
             select_field.select_by_value("12")
@@ -237,18 +239,18 @@ def get_steam_details(
             WebDriverWait(driver, MAX_WAIT_SECONDS).until(
                 EC.presence_of_element_located((By.XPATH, STEAM_DETAILS_REVIEW_SCORE))
             )
-            logging.debug(f"Passed age verification for {steam_app_id}")
+            logger.debug(f"Passed age verification for {steam_app_id}")
         except WebDriverException:
-            logging.error("Something went wrong trying to pass the age verification")
+            logger.error("Something went wrong trying to pass the age verification")
 
     try:
         element: WebElement = driver.find_element(By.XPATH, STEAM_DETAILS_REVIEW_SCORE)
         rating_str: str = element.get_attribute("data-tooltip-html")  # type: ignore
         steam_info.percent = int(rating_str.split("%")[0].strip())
     except WebDriverException:
-        logging.error(f"No Steam percentage found for {steam_app_id}!")
+        logger.error(f"No Steam percentage found for {steam_app_id}!")
     except ValueError:
-        logging.error(f"Invalid Steam percentage {rating_str} for {steam_app_id}!")
+        logger.error(f"Invalid Steam percentage {rating_str} for {steam_app_id}!")
 
     try:
         element2: WebElement = driver.find_element(
@@ -257,9 +259,9 @@ def get_steam_details(
         rating2_str: str = element2.get_attribute("content")  # type: ignore
         steam_info.score = int(rating2_str)
     except WebDriverException:
-        logging.error(f"No Steam rating found for {steam_app_id}!")
+        logger.error(f"No Steam rating found for {steam_app_id}!")
     except ValueError:
-        logging.error(f"Invalid Steam rating {rating2_str} for {steam_app_id}!")
+        logger.error(f"Invalid Steam rating {rating2_str} for {steam_app_id}!")
 
     if steam_info.recommendations is None:
         try:
@@ -269,9 +271,11 @@ def get_steam_details(
             recommendations_str: str = element6.get_attribute("content")  # type: ignore
             steam_info.recommendations = int(recommendations_str)
         except WebDriverException:
-            logging.error(f"No Steam rating found for {steam_app_id}!")
+            logger.error(f"No Steam rating found for {steam_app_id}!")
         except ValueError:
-            logging.error(f"Invalid Steam rating {recommendations_str} for {steam_app_id}!")
+            logger.error(
+                f"Invalid Steam rating {recommendations_str} for {steam_app_id}!"
+            )
 
     if steam_info.recommended_price_eur is None:
         try:
@@ -283,11 +287,11 @@ def get_steam_details(
                 price_str.replace("€", "").replace(",", ".").strip()
             )
         except WebDriverException:
-            logging.debug(
+            logger.debug(
                 f"No Steam discounted original price found on shop page for {steam_app_id}"
             )
         except ValueError:
-            logging.debug(
+            logger.debug(
                 f"Steam discounted original price has wrong format for {steam_app_id}"
             )
 
@@ -302,12 +306,12 @@ def get_steam_details(
                     price2_str.replace("€", "").replace(",", ".").strip()
                 )
         except WebDriverException:
-            logging.debug(f"No Steam full price found on shop page for {steam_app_id}")
+            logger.debug(f"No Steam full price found on shop page for {steam_app_id}")
         except ValueError:
-            logging.debug(f"Steam full price has wrong format for {steam_app_id}")
+            logger.debug(f"Steam full price has wrong format for {steam_app_id}")
 
     if steam_info.recommended_price_eur is None:
-        logging.error(f"No Steam price found for {steam_app_id}")
+        logger.error(f"No Steam price found for {steam_app_id}")
 
     if steam_info.release_date is None:
         try:
@@ -320,9 +324,9 @@ def get_steam_details(
             steam_info.release_date = release_date
 
         except WebDriverException:
-            logging.debug(f"No release date found on shop page for {steam_app_id}")
+            logger.debug(f"No release date found on shop page for {steam_app_id}")
         except (IndexError, ValueError):
-            logging.debug(
+            logger.debug(
                 f"Release date in wrong format on shop page for {steam_app_id}"
             )
     return steam_info
