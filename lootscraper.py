@@ -22,7 +22,7 @@ from app.scraper.loot.amazon_prime import AmazonScraper
 from app.scraper.loot.epic_games import EpicScraper
 from app.scraper.loot.gog import GogScraper
 from app.scraper.loot.steam import SteamScraper
-from app.sqlalchemy import Game, LootDatabase, Offer, SteamInfo, User
+from app.sqlalchemy import Game, LootDatabase, Offer, User
 from app.telegram import TelegramBot
 from app.upload import upload_to_server
 
@@ -81,6 +81,7 @@ def main() -> None:
                 if Config.get().telegram_bot:
                     session: Session = db.session
                     for user in session.execute(select(User)).scalars().all():
+                        bot.send_new_announcements(user)
                         bot.send_new_offers(user)
             except OperationalError as oe:
                 logging.error(f"Database error: {oe}")
@@ -113,7 +114,6 @@ def quit(signo: int, _frame: FrameType | None) -> None:
 def job(db: LootDatabase) -> None:
     webdriver: WebDriver
     with get_pagedriver() as webdriver:
-        # refresh_all_steam_info(db.session, webdriver) # DEBUG ONLY
         scraped_offers: dict[str, dict[str, list[Offer]]] = {}
 
         cfg_what_to_scrape = {
@@ -283,29 +283,6 @@ def job(db: LootDatabase) -> None:
         logging.info("Skipping feed generation, disabled")
 
     db.session.commit()
-
-
-def refresh_all_steam_info(session: Session, webdriver: WebDriver) -> None:
-    """
-    Refresh Steam information for all games in the database
-    """
-    logging.info("Refreshing Steam information")
-    steam_info: SteamInfo
-    for steam_info in session.query(SteamInfo):
-        new_steam_info = get_steam_details(id=steam_info.id, driver=webdriver)
-        if new_steam_info is None:
-            return
-        steam_info.name = new_steam_info.name
-        steam_info.short_description = new_steam_info.short_description
-        steam_info.release_date = new_steam_info.release_date
-        steam_info.publishers = new_steam_info.publishers
-        steam_info.image_url = new_steam_info.image_url
-        steam_info.recommendations = new_steam_info.recommendations
-        steam_info.percent = new_steam_info.percent
-        steam_info.score = new_steam_info.score
-        steam_info.metacritic_score = new_steam_info.metacritic_score
-        steam_info.metacritic_url = new_steam_info.metacritic_url
-        steam_info.recommended_price_eur = new_steam_info.recommended_price_eur
 
 
 def add_game_info(offer: Offer, session: Session, webdriver: WebDriver) -> None:

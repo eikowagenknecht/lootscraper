@@ -6,7 +6,7 @@ TIMESTAMP_READABLE_WITH_HOUR = "%Y-%m-%d - %H:%M UTC"
 
 
 class OfferType(Enum):
-    LOOT = "Loot"
+    LOOT = "Loot"  # DLC, Ingame cash, etc.
     GAME = "Game"
 
 
@@ -17,5 +17,13 @@ class Source(Enum):
     GOG = "GOG"
 
 
+class Channel(Enum):
+    ALL = "All"
+    FEED = "Feed"
+    TELEGRAM = "Telegram"
+
+
 def chunkstring(string: str, length: int) -> list[str]:
-    return list((string[0 + i : length + i] for i in range(0, len(string), length)))
+    """Split a string into chunks of the given length (last chunk may be shorter)."""
+    chunk_iterator = (string[0 + i : length + i] for i in range(0, len(string), length))
+    return list(chunk_iterator)

@@ -37,7 +37,7 @@ class VariousTests(unittest.TestCase):
                 sleep(10000)
             # Assert
 
-    def test_telegram_messagesend(self) -> None:
+    def test_telegram_messagesend_registered_user(self) -> None:
         with (
             LootDatabase(echo=True) as db,
             TelegramBot(Config.get(), db.session) as bot,
@@ -48,13 +48,40 @@ class VariousTests(unittest.TestCase):
             # Act
             offer: Offer = session.execute(select(Offer)).scalars().first()
             user: User = (
-                session.execute(select(User).where(User.telegram_id == 724039662))
+                session.execute(
+                    select(User).where(User.telegram_id == 724039662)
+                )  # Eiko
                 .scalars()
                 .first()
             )
-            bot.send_offer(offer, user)
+
+            message = bot.send_offer(offer, user)
 
             # Assert
+            self.assertTrue(message)
+
+    def test_telegram_messagesend_unregistered_user(self) -> None:
+        with (
+            LootDatabase(echo=True) as db,
+            TelegramBot(Config.get(), db.session) as bot,
+        ):
+            # Arrange
+            session: Session = db.session
+
+            # Act
+            offer: Offer = session.execute(select(Offer)).scalars().first()
+            user: User = (
+                session.execute(
+                    select(User).where(User.telegram_id == 99921143)
+                )  # Martin
+                .scalars()
+                .first()
+            )
+
+            message = bot.send_offer(offer, user)
+
+            # Assert
+            self.assertFalse(message)
 
     def test_telegram_new_offers(self) -> None:
         with (
