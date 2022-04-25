@@ -14,6 +14,8 @@ from app.common import OfferType, Source
 from app.scraper.loot.scraper import Scraper
 from app.sqlalchemy import Offer
 
+logger = logging.getLogger(__name__)
+
 SCRAPER_NAME = "GOG"
 ROOT_URL = "https://www.gog.com/#giveaway"
 MAX_WAIT_SECONDS = 60  # Needs to be quite high in Docker for first run
@@ -46,7 +48,7 @@ class GogScraper(Scraper):
 
         offers = {}
 
-        logging.info(f"Analyzing {ROOT_URL} for {OfferType.GAME.value} offers")
+        logger.info(f"Analyzing {ROOT_URL} for {OfferType.GAME.value} offers")
         offers[OfferType.GAME.name] = GogScraper.read_offers_from_page(driver)
 
         return offers
@@ -59,7 +61,7 @@ class GogScraper(Scraper):
                 EC.presence_of_element_located((By.XPATH, XPATH_PAGE_LOADED))
             )
         except WebDriverException:
-            logging.error(f"Page took longer than {MAX_WAIT_SECONDS} to load")
+            logger.error(f"Page took longer than {MAX_WAIT_SECONDS} to load")
             return []
 
         try:
@@ -68,7 +70,7 @@ class GogScraper(Scraper):
             en.click()
             sleep(1)  # Wait for the language switching to begin
         except WebDriverException:
-            logging.error("Couldn't switch to English")
+            logger.error("Couldn't switch to English")
             return []
 
         try:
@@ -77,7 +79,7 @@ class GogScraper(Scraper):
                 EC.presence_of_element_located((By.XPATH, XPATH_GIVEAWAY))
             )
         except WebDriverException:
-            logging.info(
+            logger.info(
                 f"Giveaways took longer than {MAX_WAIT_SECONDS} to load, probably there are none"
             )
             return []

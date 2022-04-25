@@ -28,6 +28,8 @@ from alembic.config import Config as AlembicConfig
 from app.common import Channel, OfferType, Source
 from app.configparser import Config
 
+logger = logging.getLogger(__name__)
+
 mapper_registry = registry()
 Base = mapper_registry.generate_base()  # type: Any
 
@@ -269,7 +271,7 @@ class LootDatabase:
         pass
 
     def initialize_or_update(self) -> None:
-        logging.info("Running database migrations")
+        logger.info("Running database migrations")
         alembic_cfg = AlembicConfig(
             "alembic.ini",
             attributes={"configure_logger": False},
@@ -332,7 +334,7 @@ class LootDatabase:
             return None
 
         if len(result) > 1:
-            logging.warning(
+            logger.warning(
                 f"Found multiple offers for {title} {valid_to}. Returning the first match."
             )
 
