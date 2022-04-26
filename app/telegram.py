@@ -171,6 +171,7 @@ class TelegramBot:
                 # Properly stop the bot.. and the whole application with it.
                 # Do *not* call self.updater.stop() here as it doesn't persist.
                 # See https://github.com/python-telegram-bot/python-telegram-bot/issues/801#issuecomment-570945590
+                # TODO: Restart the bot instead of exiting the application.
                 bot_pid = os.getpid()
                 os.kill(bot_pid, signal.SIGINT)
                 return
@@ -390,8 +391,9 @@ class TelegramBot:
 
         # Register user if not registered yet
         latest_announcement = self.session.execute(
-            select(func.max(Announcement.id)).scalar()
-        )
+            select(func.max(Announcement.id))
+        ).scalar()
+
         new_user = User(
             telegram_id=update.effective_user.id,
             telegram_chat_id=update.effective_chat.id
