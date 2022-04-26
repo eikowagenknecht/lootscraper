@@ -9,7 +9,6 @@ from app.scraper.info.steam import get_steam_details
 from app.sqlalchemy import Announcement, SteamInfo
 from app.telegram import markdown_escape
 
-
 logger = logging.getLogger(__name__)
 
 

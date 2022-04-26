@@ -84,7 +84,7 @@ logger = logging.getLogger(__name__)
 class TelegramBot:
     def __init__(self, config: ParsedConfig, session: Session):
         self.config = config
-        self.session = session
+        self.Session = session
 
     def __enter__(self) -> TelegramBot:
         if self.config.telegram_bot:
@@ -256,9 +256,10 @@ class TelegramBot:
 
         offers_sent = 0
         subscription: TelegramSubscription
+        session: Session = self.Session()
         for subscription in subscriptions:
             offers: list[Offer] = (
-                self.session.execute(
+                session.execute(
                     select(Offer).where(
                         and_(
                             Offer.type == subscription.type,
@@ -296,7 +297,7 @@ class TelegramBot:
             # Update the last offer id
             subscription.last_offer_id = offers[-1].id
             user.offers_received_count = user.offers_received_count + len(offers)
-            self.session.commit()
+            session.commit()
 
         if offers_sent:
             return True
@@ -304,8 +305,9 @@ class TelegramBot:
             return False
 
     def send_new_announcements(self, user: User) -> None:
+        session: Session = self.Session()
         announcements: list[Announcement] = (
-            self.session.execute(
+            session.execute(
                 select(Announcement).where(
                     and_(
                         or_(
@@ -328,7 +330,7 @@ class TelegramBot:
             self.send_announcement(announcement, user)
 
         user.last_announcement_id = announcements[-1].id
-        self.session.commit()
+        session.commit()
 
     def debug_command(self, update: Update, context: CallbackContext) -> None:  # type: ignore
         """Handle the /debug command: Show some debug information."""
@@ -390,7 +392,8 @@ class TelegramBot:
             return
 
         # Register user if not registered yet
-        latest_announcement = self.session.execute(
+        session: Session = self.Session()
+        latest_announcement = session.execute(
             select(func.max(Announcement.id))
         ).scalar()
 
@@ -403,8 +406,8 @@ class TelegramBot:
             registration_date=datetime.now().replace(tzinfo=timezone.utc),
             last_announcement_id=latest_announcement,
         )
-        self.session.add(new_user)
-        self.session.commit()
+        session.add(new_user)
+        session.commit()
 
         update.message.reply_markdown_v2(
             Rf"Hi {update.effective_user.mention_markdown_v2()} 👋, welcome to the LootScraper Telegram Bot and thank you for registering\!"
@@ -429,8 +432,9 @@ class TelegramBot:
             return
 
         # Delete user from database (if registered)
-        self.session.delete(db_user)
-        self.session.commit()
+        session: Session = self.Session()
+        session.delete(db_user)
+        session.commit()
 
         update.message.reply_markdown_v2(
             (
@@ -509,8 +513,9 @@ class TelegramBot:
         )
 
     def get_user(self, telegram_id: int) -> User | None:
+        session: Session = self.Session()
         db_user = (
-            self.session.execute(select(User).where(User.telegram_id == telegram_id))
+            session.execute(select(User).where(User.telegram_id == telegram_id))
             .scalars()
             .one_or_none()
         )
@@ -518,7 +523,8 @@ class TelegramBot:
         return db_user
 
     def is_subscribed(self, user: User, type: OfferType, source: Source) -> bool:
-        subscription = self.session.execute(
+        session: Session = self.Session()
+        subscription = session.execute(
             select(TelegramSubscription).where(
                 and_(
                     TelegramSubscription.user_id == user.id,
@@ -530,18 +536,20 @@ class TelegramBot:
         return subscription is not None
 
     def subscribe(self, user: User, type: OfferType, source: Source) -> None:
-        self.session.add(TelegramSubscription(user=user, source=source, type=type))
-        self.session.commit()
+        session: Session = self.Session()
+        session.add(TelegramSubscription(user=user, source=source, type=type))
+        session.commit()
 
     def unsubscribe(self, user: User, type: OfferType, source: Source) -> None:
-        self.session.query(TelegramSubscription).filter(
+        session: Session = self.Session()
+        session.query(TelegramSubscription).filter(
             and_(
                 TelegramSubscription.user_id == user.id,
                 TelegramSubscription.type == type,
                 TelegramSubscription.source == source,
             )
         ).delete()
-        self.session.commit()
+        session.commit()
 
     def manage_menu(self, update: Update, context: CallbackContext) -> None:  # type: ignore
         if update.callback_query is None or update.effective_user is None:
@@ -639,7 +647,8 @@ class TelegramBot:
             return
 
         offer_id = int(query.data.split(" ")[2])
-        offer = self.session.execute(select(Offer).where(Offer.id == offer_id)).scalar()
+        session: Session = self.Session()
+        offer = session.execute(select(Offer).where(Offer.id == offer_id)).scalar()
 
         if query.data.startswith("details show"):
             query.answer()

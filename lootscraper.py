@@ -26,7 +26,6 @@ from app.sqlalchemy import Game, LootDatabase, Offer, User
 from app.telegram import TelegramBot
 from app.upload import upload_to_server
 
-
 exit = Event()
 
 
@@ -68,7 +67,7 @@ def main() -> None:
 
     with (
         LootDatabase(echo=Config.get().db_echo) as db,
-        TelegramBot(Config.get(), db.session) as bot,
+        TelegramBot(Config.get(), db.Session) as bot,
     ):
         # Run the job every hour (or whatever is set in the config file). This is
         # not exact because it does not account for the execution time, but that
@@ -80,7 +79,7 @@ def main() -> None:
             try:
                 job(db)
                 if Config.get().telegram_bot:
-                    session: Session = db.session
+                    session: Session = db.Session()
                     for user in session.execute(select(User)).scalars().all():
                         bot.send_new_announcements(user)
                         bot.send_new_offers(user)
@@ -114,6 +113,7 @@ def quit(signo: int, _frame: FrameType | None) -> None:
 
 def job(db: LootDatabase) -> None:
     webdriver: WebDriver
+    session: Session = db.Session()
     with get_pagedriver() as webdriver:
         scraped_offers: dict[str, dict[str, list[Offer]]] = {}
 
@@ -193,7 +193,7 @@ def job(db: LootDatabase) -> None:
                     # get information about it (if it's a game)
                     # and insert it into the database
                     if Config.get().scrape_info:
-                        add_game_info(scraper_offer, db.session, webdriver)
+                        add_game_info(scraper_offer, session, webdriver)
                     db.add_offer(scraper_offer)
                     nr_of_new_offers += 1
 
@@ -214,13 +214,13 @@ def job(db: LootDatabase) -> None:
         if Config.get().force_update and Config.get().scrape_info:
             # Remove all game info first
             logging.info("Force update enabled - removing all game info")
-            for game in db.session.query(Game):
-                db.session.delete(game)
+            for game in session.query(Game):
+                session.delete(game)
             # Then add new game info
             for scraper_source in loot_offers_in_db:
                 for scraper_type in loot_offers_in_db[scraper_source]:
                     for db_offer in loot_offers_in_db[scraper_source][scraper_type]:
-                        add_game_info(db_offer, db.session, webdriver)
+                        add_game_info(db_offer, session, webdriver)
 
     if Config.get().generate_feed:
         feed_file_base = Config.data_path() / Path(
@@ -283,7 +283,7 @@ def job(db: LootDatabase) -> None:
     else:
         logging.info("Skipping feed generation, disabled")
 
-    db.session.commit()
+    session.commit()
 
 
 def add_game_info(offer: Offer, session: Session, webdriver: WebDriver) -> None:

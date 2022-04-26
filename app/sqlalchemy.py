@@ -21,7 +21,7 @@ from sqlalchemy import (
     select,
 )
 from sqlalchemy.engine.interfaces import Dialect
-from sqlalchemy.orm import registry, relationship, scoped_session, sessionmaker
+from sqlalchemy.orm import Session, registry, relationship, scoped_session, sessionmaker
 
 from alembic import command
 from alembic.config import Config as AlembicConfig
@@ -252,7 +252,7 @@ class LootDatabase:
             future=True,
         )
         session_factory = sessionmaker(bind=self.engine)
-        self.session = scoped_session(session_factory)
+        self.Session = scoped_session(session_factory)
 
     def __enter__(self) -> LootDatabase:
         return self
@@ -263,11 +263,12 @@ class LootDatabase:
         exc_value: BaseException | None,
         traceback: TracebackType | None,
     ) -> None:
+        session: Session = self.Session()
         if isinstance(exc_value, Exception):
-            self.session.rollback()
+            session.rollback()
         else:
-            self.session.commit()
-        self.session.close()
+            session.commit()
+        session.close()
         pass
 
     def initialize_or_update(self) -> None:
@@ -279,7 +280,8 @@ class LootDatabase:
         command.upgrade(alembic_cfg, "head")
 
     def read_all(self) -> list[Offer]:
-        result = self.session.execute(select(Offer)).scalars().all()
+        session: Session = self.Session()
+        result = session.execute(select(Offer)).scalars().all()
         return result
 
     def read_all_segmented(self) -> dict[str, dict[str, list[Offer]]]:
@@ -328,7 +330,8 @@ class LootDatabase:
                 date_filter,
             )
         )
-        result: list[Offer] = self.session.execute(statement).scalars().all()
+        session: Session = self.Session()
+        result: list[Offer] = session.execute(statement).scalars().all()
 
         if len(result) == 0:
             return None
@@ -342,12 +345,15 @@ class LootDatabase:
 
     def find_offer_by_id(self, id: int) -> Offer:
         statement = select(Offer).where(Offer.id == id)
-        result = self.session.execute(statement).scalars().one_or_none()
+        session: Session = self.Session()
+        result = session.execute(statement).scalars().one_or_none()
 
         return result
 
     def touch_db_offer(self, db_offer: Offer) -> None:
         db_offer.seen_last = datetime.now().replace(tzinfo=timezone.utc)
+        session: Session = self.Session()
+        session.commit()
 
     def update_db_offer(self, db_offer: Offer, new_data: Offer) -> None:
         db_offer.source = new_data.source
@@ -373,7 +379,11 @@ class LootDatabase:
         if new_data.game_id:
             db_offer.game_id = new_data.game_id
 
+        session: Session = self.Session()
+        session.commit()
+
     def add_offer(self, offer: Offer) -> None:
         offer.seen_first = offer.seen_last
-
-        self.session.add(offer)
+        session: Session = self.Session()
+        session.add(offer)
+        session.commit()
