@@ -32,17 +32,17 @@ class VariousTests(unittest.TestCase):
         with LootDatabase(echo=True) as db:
             # Arrange
             # Act
-            with TelegramBot(Config.get(), db.session) as bot:
+            with TelegramBot(Config.get(), db.Session) as bot:
                 bot.updater.idle()
             # Assert
 
     def test_telegram_messagesend_registered_user(self) -> None:
         with (
             LootDatabase(echo=True) as db,
-            TelegramBot(Config.get(), db.session) as bot,
+            TelegramBot(Config.get(), db.Session) as bot,
         ):
             # Arrange
-            session: Session = db.session
+            session: Session = db.Session()
 
             # Act
             offer: Offer = session.execute(select(Offer)).scalars().first()
@@ -62,10 +62,10 @@ class VariousTests(unittest.TestCase):
     def test_telegram_messagesend_unregistered_user(self) -> None:
         with (
             LootDatabase(echo=True) as db,
-            TelegramBot(Config.get(), db.session) as bot,
+            TelegramBot(Config.get(), db.Session) as bot,
         ):
             # Arrange
-            session: Session = db.session
+            session: Session = db.Session()
 
             # Act
             offer: Offer = session.execute(select(Offer)).scalars().first()
@@ -85,10 +85,10 @@ class VariousTests(unittest.TestCase):
     def test_telegram_new_offers(self) -> None:
         with (
             LootDatabase(echo=True) as db,
-            TelegramBot(Config.get(), db.session) as bot,
+            TelegramBot(Config.get(), db.Session) as bot,
         ):
             # Arrange
-            session: Session = db.session
+            session: Session = db.Session()
 
             # Act
             user: User = (
