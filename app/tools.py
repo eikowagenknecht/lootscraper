@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 
 from app.common import Channel
 from app.scraper.info.steam import get_steam_details
-from app.sqlalchemy import Announcement, SteamInfo
+from app.sqlalchemy import Announcement, LootDatabase, SteamInfo
 from app.telegram import markdown_escape
 
 logger = logging.getLogger(__name__)
@@ -40,7 +40,7 @@ def add_announcement(session: Session) -> None:
     Add an announcement to the database
     """
 
-    announcement_header = "2022-04-23 - Announcing: Announcements!"
+    announcement_header = "2022-04-29 - Announcing: Announcements!"
     announcement_text = (
         "Yes, that's right. This is an announcement to announce announcements! "
         "From now on, every time there is something new to announce, you will get a message from me. "
@@ -61,5 +61,11 @@ def add_announcement(session: Session) -> None:
         date=datetime.now().replace(tzinfo=timezone.utc),
         text_markdown=announcement_full,
     )
-    session.add(announcement)
-    session.commit()
+    try:
+        session.add(announcement)
+        session.commit()
+    except NameError:
+        # No session given
+        with LootDatabase(False) as db:
+            db.Session().add(announcement)
+            db.Session().commit()
