@@ -32,6 +32,7 @@ class RawOffer:
     title: str | None
     appid: int | None
     url: str | None
+    text: str | None = None
 
 
 class SteamScraper(Scraper):
@@ -73,7 +74,22 @@ class SteamScraper(Scraper):
 
         raw_offers: list[RawOffer] = []
         for element in elements:
-            raw_offers.append(SteamScraper.read_raw_offer(element))
+            raw_offer = SteamScraper.read_raw_offer(element)
+            try:
+                element.click()  # Open details
+                WebDriverWait(driver, MAX_WAIT_SECONDS).until(
+                    EC.presence_of_element_located(
+                        (By.CLASS_NAME, "game_purchase_discount_quantity")
+                    )
+                )
+                element = driver.find_element(
+                    By.CLASS_NAME, "game_purchase_discount_quantity"
+                )
+                raw_offer.text = element.text
+            except WebDriverException:
+                # Text is optional, continue away
+                pass
+            raw_offers.append(raw_offer)
 
         normalized_offers = SteamScraper.normalize_offers(raw_offers)
 
@@ -117,6 +133,9 @@ class SteamScraper(Scraper):
 
             if raw_offer.appid:
                 rawtext += f"<appid>{raw_offer.appid}</appid>"
+
+            if raw_offer.text:
+                rawtext += f"<text>{raw_offer.text}</text>"
 
             # Title
             title = raw_offer.title
