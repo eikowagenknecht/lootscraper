@@ -312,24 +312,23 @@ class LootDatabase:
         """Find an offer by its title and valid_to date. Valid_to is interpreded as
         "at most 1 day older or 1 day newer" to avoid getting duplicates for offers
         where the exact end date is not clear (looking at you, Amazon!)"""
+        statement = (
+            select(Offer)
+            .where(Offer.source == source)
+            .where(Offer.type == type)
+            .where(Offer.title == title)
+        )
+
         if valid_to:
             earliest_date = valid_to.replace(tzinfo=timezone.utc) - timedelta(days=1)
             latest_date = valid_to.replace(tzinfo=timezone.utc) + timedelta(days=1)
-            date_filter = and_(
-                Offer.valid_to >= earliest_date,  # type: ignore
-                Offer.valid_to <= latest_date,  # type: ignore
+            statement = statement.where(
+                and_(
+                    Offer.valid_to >= earliest_date,  # type: ignore
+                    Offer.valid_to <= latest_date,  # type: ignore
+                )
             )
-        else:
-            date_filter = None
 
-        statement = select(Offer).where(
-            and_(
-                Offer.source == source,
-                Offer.type == type,
-                Offer.title == title,
-                date_filter,
-            )
-        )
         session: Session = self.Session()
         result: list[Offer] = session.execute(statement).scalars().all()
 
