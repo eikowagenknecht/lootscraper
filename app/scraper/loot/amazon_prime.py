@@ -198,20 +198,34 @@ class AmazonScraper(Scraper):
 
             # Date
             # This is a bit more complicated as only the relative end is
-            # displayed ("Ends in ...").
-            # The year is guessed assuming that old offers are not shown any
+            # displayed ("Ends in ..."). So we have to guess the real date:
+            #
+            # The *year* is guessed assuming that old offers are not shown any
             # more. "Old" means older than yesterday to avoid time zone problems.
-            # The actual day is more complicated. The seen values are:
-            # "Ends in x days", "Ends tomorrow", "Ends today". But no time is given.
+            #
+            # The *day* is more complicated. The seen values are:
+            # "Ends in x days", "Ends tomorrow", "Ends today", no time given.
+            # I've been watching this for some days now for multiple offers and
+            # it is quite inconsistent. The x "Ends in x days" mostly counts
+            # down by 1 at about 17:00 UTC. But sometimes (for a single offer!)
+            # it can also be about an hour later, suggesting that there is some
+            # caching in place on Amazon's side. For other offers, it is another
+            # time of day entirely. The offers also don't seem to be valid for
+            # a timespan that is a multiple of 24 hours, making it even harder
+            # to guess.
+            #
+            # The most accurate approach I can think of would be to track when
+            # the "Ends in x days" first counts down by one and then use the
+            # new x times 24 hours to calculate the end date. Unfortunately that
+            # means having to wait for up to 24 hours after the offer shows up,
+            # so I think the more accurate end time is not really worth the delay.
+            #
             # So for now to have something, we will assume that it means
-            # "the end of the day in UTC". This is probably not exactly correct
-            # since even when the dates were shown as actual dates, I've seen
-            # real ending times ranging from 02:00 to 19:00.
-            # So we will just log that for now and see what to make of it later.
+            # "the end of the day in UTC". This is probably up to 1 day wrong,
+            # but at least we have a rough indication of when the offer ends.
             end_date = None
             if raw_offer.valid_to:
-                # TODO: Excessive logging for now to see what's going on
-                logger.info(f"Found date: {raw_offer.valid_to} for {raw_offer.title}")
+                logger.debug(f"Found date: {raw_offer.valid_to} for {raw_offer.title}")
                 try:
                     raw_date = raw_offer.valid_to.removeprefix("Ends ").lower()
                     if raw_date == "today":
