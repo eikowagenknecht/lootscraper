@@ -10,6 +10,9 @@ RUN sh -c 'echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable 
 RUN apt-get -y update
 RUN apt-get install -y google-chrome-stable
 
+# Install xvfb (virtual desktop) so Chrome can run in non-headless mode
+RUN apt-get install -y xvfb
+
 # Install Unzip
 #RUN apt-get install -yqq unzip
 
