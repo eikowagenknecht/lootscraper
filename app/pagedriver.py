@@ -6,6 +6,8 @@ from selenium.webdriver import Chrome
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.webdriver import WebDriver
 
+from app.configparser import Config
+
 INJECTION_FILE = Path("js/inject.js")
 
 
@@ -18,7 +20,8 @@ def get_pagedriver() -> WebDriver:
     # https://stackoverflow.com/a/43840128/1689770
     options.add_argument("enable-automation")
     # only if you are ACTUALLY running headless
-    options.add_argument("--headless")
+    if Config.get().headless_chrome:
+        options.add_argument("--headless")
     # https://stackoverflow.com/a/50725918/1689770
     options.add_argument("--no-sandbox")
     # https://stackoverflow.com/a/43840128/1689770

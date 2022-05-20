@@ -20,6 +20,8 @@ class ParsedConfig:
     # Expert
     force_update: bool = False
     db_echo: bool = False
+    headless_chrome: bool = True
+    virtual_linux_display: bool = False
 
     # Sources: Offers
     offers_amazon: bool = True
@@ -105,6 +107,12 @@ class Config:
 
             parsed_config.force_update = config.getboolean("expert", "ForceUpdate")
             parsed_config.db_echo = config.getboolean("expert", "DbEcho")
+            parsed_config.headless_chrome = config.getboolean(
+                "expert", "HeadlessChrome"
+            )
+            parsed_config.virtual_linux_display = config.getboolean(
+                "expert", "VirtualLinuxDisplay"
+            )
 
             parsed_config.offers_amazon = config.getboolean("sources_loot", "Amazon")
             parsed_config.offers_epic = config.getboolean("sources_loot", "Epic")

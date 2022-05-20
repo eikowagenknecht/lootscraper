@@ -16,12 +16,14 @@ from app.sqlalchemy import Offer
 logger = logging.getLogger(__name__)
 
 SCRAPER_NAME = "Epic Games"
-ROOT_URL = "https://www.epicgames.com/store/en-US/"
-MAX_WAIT_SECONDS = 60  # Needs to be quite high in Docker for first run
+ROOT_URL = "https://store.epicgames.com/en-US/"
+MAX_WAIT_SECONDS = 10  # Needs to be quite high in Docker for first run
 
-XPATH_OFFER_HEADER = """//div//*[contains(text(), "Free Games")]"""
-XPATH_CURRENT = """//a[contains(@aria-label, "Free Games") and contains(@aria-label, "Free Now")]"""  # xpath href attr is the link
-XPATH_COMING_SOON = """//a[contains(@aria-label, "Free Games") and contains(@aria-label, "Coming Soon")]"""
+XPATH_OFFER_BOX = """//h2[text()="Free Games"]//ancestor::div[@data-component="CardGroupHighlightDesktop"]"""
+XPATH_CURRENT = (
+    XPATH_OFFER_BOX + """//section//a[*//text()="Free Now"]"""
+)  # xpath href attr is the link
+# XPATH_COMING_SOON = XPATH_OFFER_BOX + """//section//a[not(*//text()="Free Now")]"""
 
 SUBPATH_TITLE = """.//span[@data-testid="offer-title-info-title"]/div"""  # /text()
 SUBPATH_TIME_FROM = """.//span[@data-testid="offer-title-info-subtitle"]//time[1]"""  # /@datetime  # format 2022-02-24T16:00:00.000Z
@@ -60,10 +62,14 @@ class EpicScraper(Scraper):
         try:
             # Wait until the page loaded
             WebDriverWait(driver, MAX_WAIT_SECONDS).until(
-                EC.presence_of_element_located((By.XPATH, XPATH_OFFER_HEADER))
+                EC.presence_of_element_located(
+                    (By.XPATH, """//h2[text()="Free Games"]""")
+                )
             )
         except WebDriverException:
-            logger.error(f"Page took longer than {MAX_WAIT_SECONDS} to load")
+            filename = f'data/error{datetime.now().isoformat().replace(".", "_").replace(":", "_")}.png'
+            logger.error(f"Page took longer than {MAX_WAIT_SECONDS} to load. Saving Screenshot to {filename}.")
+            driver.save_screenshot(filename)
             return []
 
         elements: list[WebElement] = []
@@ -73,11 +79,11 @@ class EpicScraper(Scraper):
             logger.warning("No current offer found.")
             pass
 
-        try:
-            elements.extend(driver.find_elements(By.XPATH, XPATH_COMING_SOON))
-        except WebDriverException:
-            logger.warning("No coming offer found.")
-            pass
+        # try:
+        #     elements.extend(driver.find_elements(By.XPATH, XPATH_COMING_SOON))
+        # except WebDriverException:
+        #     logger.warning("No coming offer found.")
+        #     pass
 
         raw_offers: list[RawOffer] = []
         for element in elements:

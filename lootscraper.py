@@ -1,3 +1,4 @@
+from contextlib import nullcontext
 import hashlib
 import logging
 import shutil
@@ -65,9 +66,16 @@ def main() -> None:
     logging.getLogger().addHandler(stream_handler)
     logging.info("Starting script")
 
+    if Config.get().virtual_linux_display:
+        from xvfbwrapper import Xvfb
+
+        vdisplay = Xvfb()
+        vdisplay.start()
+
     with (
         LootDatabase(echo=Config.get().db_echo) as db,
         TelegramBot(Config.get(), db.Session) as bot,
+        Xvfb() if Config.get().virtual_linux_display else nullcontext(),
     ):
         # Run the job every hour (or whatever is set in the config file). This is
         # not exact because it does not account for the execution time, but that
@@ -102,6 +110,9 @@ def main() -> None:
 
             run += 1
             exit.wait(time_between_runs)
+
+    if Config.get().virtual_linux_display:
+        vdisplay.stop()
 
     logging.info(f"Exiting script after {run} runs")
 
