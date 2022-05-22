@@ -6,6 +6,7 @@ import os
 import signal
 import traceback
 from datetime import datetime, timedelta, timezone
+from http.client import RemoteDisconnected
 from types import TracebackType
 from typing import Type
 
@@ -157,9 +158,21 @@ class TelegramBot:
         if context.error is None:
             return
 
-        # TODO: Do some more specific error handling here:
-        # - If the user blocked our bot, remove him from the database
-        if isinstance(context.error, telegram.TelegramError):
+        # Handle some common cases here that usually fix themselves
+        if isinstance(context.error, RemoteDisconnected) or isinstance(
+            context.error, telegram.error.NetworkError
+        ):
+            logger.error(str(context.error))
+            try:
+                self.send_message(
+                    chat_id=Config.get().telegram_developer_chat_id,
+                    text="```\n" + markdown_escape(str(context.error)) + "\n```",
+                    parse_mode=telegram.ParseMode.MARKDOWN_V2,
+                )
+            except (RemoteDisconnected, TelegramError):
+                logger.error("Failed to send message to developer chat.")
+        # Handle everything else
+        elif isinstance(context.error, telegram.TelegramError):
             if context.error.message.startswith("Conflict: "):
                 error_text = "Multiple instances of the same bot running, shutting down myself to avoid further conflicts."
                 logger.error(error_text)
@@ -175,9 +188,10 @@ class TelegramBot:
                 bot_pid = os.getpid()
                 os.kill(bot_pid, signal.SIGINT)
                 return
-            if context.error.message == "Unauthorized":
+            elif context.error.message == "Unauthorized":
+                # This happens when the bot is removed from the group chat.
+                # TODO: Remove the user from the database.
                 pass
-            pass
 
         # Build the exception string from the exception
         traceback_string = "".join(
