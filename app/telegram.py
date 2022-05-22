@@ -429,6 +429,13 @@ class TelegramBot:
             + welcome_text,
         )
 
+        # Notify about the new registration
+        self.send_message(
+            chat_id=Config.get().telegram_developer_chat_id,
+            text=Rf"New user {update.effective_user.mention_markdown_v2()} registered\.",
+            parse_mode=telegram.ParseMode.MARKDOWN_V2,
+        )
+
     def leave_command(self, update: Update, context: CallbackContext) -> None:  # type: ignore
         """Handle the /leave command: Unregister the user."""
         if update.message is None or update.effective_user is None:
