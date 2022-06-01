@@ -102,6 +102,28 @@ def get_steam_id(search_string: str, driver: WebDriver) -> int | None:
     return None
 
 
+def skip_age_verification(driver: WebDriver, steam_app_id: int) -> None:
+    # For some games an age verification is needed. We have to skip that to see
+    # the interesting parts. So enter a valid date and then move on.
+    # (use e.g. 12 July 1990), then move on to the actual shop page
+    if "agecheck" in driver.current_url:
+        logger.debug(f"Trying to pass age verification for {steam_app_id}")
+        try:
+            select_field = Select(driver.find_element_by_id("ageDay"))
+            select_field.select_by_value("12")
+            select_field = Select(driver.find_element_by_id("ageMonth"))
+            select_field.select_by_value("March")
+            select_field = Select(driver.find_element_by_id("ageYear"))
+            select_field.select_by_value("1990")
+            driver.find_element(By.ID, "view_product_page_btn").click()
+            WebDriverWait(driver, MAX_WAIT_SECONDS).until(
+                EC.presence_of_element_located((By.XPATH, STEAM_DETAILS_REVIEW_SCORE))
+            )
+            logger.debug(f"Passed age verification for {steam_app_id}")
+        except WebDriverException:
+            logger.error("Something went wrong trying to pass the age verification")
+
+
 def get_steam_details(
     driver: WebDriver, id: int | None = None, title: str | None = None
 ) -> SteamInfo | None:
@@ -223,25 +245,7 @@ def get_steam_details(
         )
         pass
 
-    # For some games an age verification is needed. We have to skip that to see
-    # the interesting parts. So enter a valid date and then move on.
-    # (use e.g. 12 July 1990), then move on to the actual shop page
-    if "agecheck" in driver.current_url:
-        logger.debug(f"Trying to pass age verification for {steam_app_id}")
-        try:
-            select_field = Select(driver.find_element_by_id("ageDay"))
-            select_field.select_by_value("12")
-            select_field = Select(driver.find_element_by_id("ageMonth"))
-            select_field.select_by_value("March")
-            select_field = Select(driver.find_element_by_id("ageYear"))
-            select_field.select_by_value("1990")
-            driver.find_element(By.ID, "view_product_page_btn").click()
-            WebDriverWait(driver, MAX_WAIT_SECONDS).until(
-                EC.presence_of_element_located((By.XPATH, STEAM_DETAILS_REVIEW_SCORE))
-            )
-            logger.debug(f"Passed age verification for {steam_app_id}")
-        except WebDriverException:
-            logger.error("Something went wrong trying to pass the age verification")
+    skip_age_verification(driver, steam_app_id)
 
     try:
         element: WebElement = driver.find_element(By.XPATH, STEAM_DETAILS_REVIEW_SCORE)

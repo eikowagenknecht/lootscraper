@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 SCRAPER_NAME = "Amazon Prime"
 ROOT_URL = "https://gaming.amazon.com/home"
-MAX_WAIT_SECONDS = 60  # Needs to be quite high in Docker for first run
+MAX_WAIT_SECONDS = 15  # Needs to be quite high in Docker for first run
 XPATH_WAIT = '//div[@data-a-target="offer-section-FGWP_FULL"]'
 XPATH_LOOT = (
     '//div[@data-a-target="offer-list-IN_GAME_LOOT"]//div[@class="item-card__action"]'
