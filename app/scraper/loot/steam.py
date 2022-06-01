@@ -10,6 +10,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
 from app.common import OfferType, Source
+from app.scraper.info.steam import skip_age_verification
 from app.scraper.loot.scraper import Scraper
 from app.sqlalchemy import Offer
 
@@ -17,7 +18,7 @@ logger = logging.getLogger(__name__)
 
 SCRAPER_NAME = "Steam"
 ROOT_URL = "https://store.steampowered.com/search/?maxprice=free&specials=1"
-MAX_WAIT_SECONDS = 30  # Needs to be quite high in Docker for first run
+MAX_WAIT_SECONDS = 15  # Needs to be quite high in Docker for first run
 
 DETAILS_URL = "https://store.steampowered.com/app/"
 
@@ -75,8 +76,12 @@ class SteamScraper(Scraper):
         raw_offers: list[RawOffer] = []
         for element in elements:
             raw_offer = SteamScraper.read_raw_offer(element)
+            raw_offers.append(raw_offer)
+
+        for raw_offer in raw_offers:
             try:
-                element.click()  # Open details
+                driver.get(raw_offer.url)
+                skip_age_verification(driver, raw_offer.appid if raw_offer.appid else 0)
                 WebDriverWait(driver, MAX_WAIT_SECONDS).until(
                     EC.presence_of_element_located(
                         (By.CLASS_NAME, "game_purchase_discount_quantity")
@@ -89,7 +94,6 @@ class SteamScraper(Scraper):
             except WebDriverException:
                 # Text is optional, continue away
                 pass
-            raw_offers.append(raw_offer)
 
         normalized_offers = SteamScraper.normalize_offers(raw_offers)
 

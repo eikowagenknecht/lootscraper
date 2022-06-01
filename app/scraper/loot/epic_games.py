@@ -10,6 +10,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
 from app.common import OfferType, Source
+from app.configparser import Config
 from app.scraper.loot.scraper import Scraper
 from app.sqlalchemy import Offer
 
@@ -17,7 +18,7 @@ logger = logging.getLogger(__name__)
 
 SCRAPER_NAME = "Epic Games"
 ROOT_URL = "https://store.epicgames.com/en-US/"
-MAX_WAIT_SECONDS = 10  # Needs to be quite high in Docker for first run
+MAX_WAIT_SECONDS = 15  # Needs to be quite high in Docker for first run
 
 XPATH_OFFER_BOX = """//h2[text()="Free Games"]//ancestor::div[@data-component="CardGroupHighlightDesktop"]"""
 XPATH_CURRENT = (
@@ -67,9 +68,14 @@ class EpicScraper(Scraper):
                 )
             )
         except WebDriverException:
-            filename = f'data/error{datetime.now().isoformat().replace(".", "_").replace(":", "_")}.png'
-            logger.error(f"Page took longer than {MAX_WAIT_SECONDS} to load. Saving Screenshot to {filename}.")
-            driver.save_screenshot(filename)
+            filename = (
+                Config.data_path()
+                / f'screenshot_error_{datetime.now().isoformat().replace(".", "_").replace(":", "_")}.png'
+            )
+            logger.error(
+                f"Page took longer than {MAX_WAIT_SECONDS} to load. Saving Screenshot to {filename}."
+            )
+            driver.save_screenshot(str(filename.resolve()))
             return []
 
         elements: list[WebElement] = []

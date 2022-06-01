@@ -1,8 +1,8 @@
-from contextlib import nullcontext
 import hashlib
 import logging
 import shutil
 import sys
+from contextlib import nullcontext
 from datetime import datetime, timedelta
 from pathlib import Path
 from threading import Event
@@ -306,10 +306,15 @@ def add_game_info(offer: Offer, session: Session, webdriver: WebDriver) -> None:
         # The offer already has a game attached, leave it alone
         return
 
+    # Offer hast no game name, so we can't add any game related information
+    if offer.probable_game_name is None:
+        logging.warning(f"Offer {offer} has no game name")
+        return
+
     existing_game: Game | None = None
 
-    # Offer has no game, try to find a matching entry in our game database
-    # Prioritize IGDB
+    # Offer has a name but no game, try to find a matching entry in our game
+    # database (prioritize IGDB)
     igdb_id = get_igdb_id(offer.probable_game_name)
 
     if igdb_id is not None:

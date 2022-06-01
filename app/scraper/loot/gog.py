@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 
 SCRAPER_NAME = "GOG"
 ROOT_URL = "https://www.gog.com/#giveaway"
-MAX_WAIT_SECONDS = 60  # Needs to be quite high in Docker for first run
+MAX_WAIT_SECONDS = 15  # Needs to be quite high in Docker for first run
 
 XPATH_PAGE_LOADED = """//div[@class="content cf"]"""
 XPATH_GIVEAWAY = """//a[contains(concat(" ", normalize-space(@class), " "), " giveaway-banner ")]"""  # URL: Attribute href
