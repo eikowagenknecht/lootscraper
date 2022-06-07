@@ -22,7 +22,8 @@ MAX_WAIT_SECONDS = 15  # Needs to be quite high in Docker for first run
 
 XPATH_PAGE_LOADED = """//div[@class="content cf"]"""
 XPATH_GIVEAWAY = """//a[contains(concat(" ", normalize-space(@class), " "), " giveaway-banner ")]"""  # URL: Attribute href
-XPATH_SWITCH_TO_ENGLISH = """//li[@class="footer-microservice-language__item"][1]"""
+XPATH_SWITCH_TO_ENGLISH = """//li[contains(concat(" ", normalize-space(@class), " "), " footer-microservice-language__item ")][1]"""
+XPATH_SELECTED_LANGUAGE = """//li[contains(concat(" ", normalize-space(@class), " "), " footer-microservice-language__item is-selected ")]"""
 SUBPATH_TITLE = """.//span[contains(concat(" ", normalize-space(@class), " "), " giveaway-banner__title ")]"""
 SUBPATH_IMAGE = """.//div[contains(concat(" ", normalize-space(@class), " "), " giveaway-banner__image ")]//source[@type="image/png" and not(@media)]"""  # Attribute srcset, first entry without the "2x text + root url"
 SUBPATH_VALID_TO = """.//gog-countdown-timer"""  # Attr "end-date" without the last 3 digits (000) is the timestamp in unixtime
@@ -68,7 +69,14 @@ class GogScraper(Scraper):
             # Switch to english version
             en = driver.find_element(By.XPATH, XPATH_SWITCH_TO_ENGLISH)
             en.click()
-            sleep(1)  # Wait for the language switching to begin
+            sleep(2)  # Wait for the language switching to begin
+            # Check if it's really english now
+            en_test = driver.find_element(By.XPATH, XPATH_SELECTED_LANGUAGE)
+            if en_test.text != "English":
+                logger.error(
+                    f"Tried switching to English, but {en_test.text} is active instead"
+                )
+                return []
         except WebDriverException:
             logger.error("Couldn't switch to English")
             return []
