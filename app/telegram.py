@@ -279,14 +279,19 @@ class TelegramBot:
                             Offer.type == subscription.type,
                             Offer.source == subscription.source,
                             Offer.id > subscription.last_offer_id,
+                            # Only send offers that are already active
                             or_(
                                 Offer.valid_from <= datetime.now().replace(tzinfo=None),  # type: ignore
                                 Offer.valid_from == None,  # noqa: E711
                             ),
+                            # Only send offers that are either:
+                            # - valid at this point of time
+                            # - have no start and end date and have been first seen in the last 7 days
                             or_(
                                 Offer.valid_to >= datetime.now().replace(tzinfo=None),  # type: ignore
                                 and_(
                                     Offer.valid_from == None,  # noqa: E711
+                                    Offer.valid_to == None,  # noqa: E711
                                     Offer.seen_first
                                     >= datetime.now().replace(tzinfo=timezone.utc)
                                     - timedelta(days=7),
