@@ -9,6 +9,7 @@ from datetime import datetime, timedelta, timezone
 from http.client import RemoteDisconnected
 from types import TracebackType
 from typing import Type
+from urllib.error import HTTPError
 
 import humanize
 import telegram
@@ -169,7 +170,12 @@ class TelegramBot:
                     text="```\n" + markdown_escape(str(context.error)) + "\n```",
                     parse_mode=telegram.ParseMode.MARKDOWN_V2,
                 )
-            except (RemoteDisconnected, TelegramError):
+            except (
+                RemoteDisconnected,
+                TelegramError,
+                telegram.error.NetworkError,
+                HTTPError,
+            ):
                 logger.error("Failed to send message to developer chat.")
         # Handle everything else
         elif isinstance(context.error, telegram.TelegramError):
