@@ -225,8 +225,8 @@ class TelegramBot:
             )
 
     def error_command(self, update: Update, context: CallbackContext) -> None:  # type: ignore
-        """Trigger an error with /error to send to the dev"""
-        raise Exception("This is a test error")
+        """Handle the /error command: Trigger an error to send to the dev chat."""
+        raise Exception("This is a test error triggered by the /error command.")
 
     def manage_command(self, update: Update, context: CallbackContext) -> None:  # type: ignore
         """Handle the /manage command: Manage subscriptions."""
@@ -401,13 +401,15 @@ class TelegramBot:
         db_user = self.get_user(update.effective_user.id)
 
         if db_user is not None:
-            update.message.reply_markdown_v2(
+            message = (
                 Rf"Welcome back, {update.effective_user.mention_markdown_v2()} 👋\. "
                 + R"You are already registered ❤\. "
                 + R"In case you forgot, this was my initial message to you:"
                 + "\n\n"
-                + welcome_text,
+                + welcome_text
             )
+            logger.debug(f"Sending /start reply: {message}")
+            update.message.reply_markdown_v2(message)
             return
 
         # Register user if not registered yet
@@ -428,16 +430,22 @@ class TelegramBot:
         session.add(new_user)
         session.commit()
 
-        update.message.reply_markdown_v2(
+        message = (
             Rf"Hi {update.effective_user.mention_markdown_v2()} 👋, welcome to the LootScraper Telegram Bot and thank you for registering\!"
             + "\n\n"
-            + welcome_text,
+            + welcome_text
         )
+        logger.debug(f"Sending /start reply: {message}")
+        update.message.reply_markdown_v2(message)
 
         # Notify about the new registration
+        message = (
+            Rf"New user {update.effective_user.mention_markdown_v2()} registered\."
+        )
+        logger.debug(f"Sending user registered message: {message}")
         self.send_message(
             chat_id=Config.get().telegram_developer_chat_id,
-            text=Rf"New user {update.effective_user.mention_markdown_v2()} registered\.",
+            text=message,
             parse_mode=telegram.ParseMode.MARKDOWN_V2,
         )
 
@@ -449,12 +457,12 @@ class TelegramBot:
         db_user = self.get_user(update.effective_user.id)
 
         if db_user is None:
-            update.message.reply_markdown_v2(
-                (
-                    Rf"Hi {update.effective_user.mention_markdown_v2()}, you are currently not registered\. "
-                    R"So you can't leave ;\-\)"
-                ),
+            message = (
+                Rf"Hi {update.effective_user.mention_markdown_v2()}, you are currently not registered\. "
+                R"So you can't leave ;\-\)"
             )
+            logger.debug(f"Sending /leave reply: {message}")
+            update.message.reply_markdown_v2(message)
             return
 
         # Delete user from database (if registered)
@@ -462,13 +470,13 @@ class TelegramBot:
         session.delete(db_user)
         session.commit()
 
-        update.message.reply_markdown_v2(
-            (
-                Rf"Bye {update.effective_user.mention_markdown_v2()}, I'm sad to see you go\. "
-                R"Your user data has been deleted\. "
-                R"If you want to come back at any time, just type /start\!"
-            ),
+        message = (
+            Rf"Bye {update.effective_user.mention_markdown_v2()}, I'm sad to see you go\. "
+            R"Your user data has been deleted\. "
+            R"If you want to come back at any time, just type /start\!"
         )
+        logger.debug(f"Sending /leave reply: {message}")
+        update.message.reply_markdown_v2(message)
 
     def help_command(self, update: Update, context: CallbackContext) -> None:  # type: ignore
         """Handle the /help command: Display all available commands to the user."""
@@ -484,11 +492,13 @@ class TelegramBot:
 
         db_user = self.get_user(update.effective_user.id)
         if db_user is None:
-            update.message.reply_markdown_v2(
+            message = (
                 Rf"Hi {update.effective_user.mention_markdown_v2()}, you are currently not registered\. "
                 R"So there is no data stored about you\. "
                 R"But I'd be happy to see you register any time with the /start command\!"
             )
+            logger.debug(f"Sending /status reply: {message}")
+            update.message.reply_markdown_v2(message)
             return
 
         subscriptions_text: str
@@ -509,24 +519,25 @@ class TelegramBot:
             )
         else:
             subscriptions_text = (
-                R"\- You are currently not subscribed to any categories\."
-                R"\- You can change that with the /manage command if you wish\."
+                R"\- You are currently not subscribed to any categories\. "
+                R"You can change that with the /manage command if you wish\."
             )
 
-        update.message.reply_markdown_v2(
+        message = (
             Rf"Hi {update.effective_user.mention_markdown_v2()}, you are currently registered\. "
             R"But I'm not storing much user data, so this is all I know about you: "
             "\n\n"
             Rf"\- You registered on {markdown_escape(db_user.registration_date.strftime(TIMESTAMP_READABLE_WITH_HOUR))} with the /start command\."
             "\n"
             Rf"\- Your Telegram chat id is {db_user.telegram_chat_id}\. "
-            R"Neat, huh? "
-            R"I use it to send you notifications\."
+            R"Neat, huh? I use it to send you notifications\."
             "\n"
             f"{subscriptions_text}"
             "\n"
             Rf"\- You received {db_user.offers_received_count} offers so far\. "
         )
+        logger.debug(f"Sending /status reply: {message}")
+        update.message.reply_markdown_v2(message)
 
     def unknown(self, update: Update, context: CallbackContext) -> None:  # type: ignore
         if not update.effective_chat:
@@ -776,7 +787,9 @@ class TelegramBot:
             return None
 
     def send_offer(self, offer: Offer, user: User) -> bool:
-        logger.debug(f"Sending offer {offer.title} to Telegram user {user.telegram_id}")
+        logger.debug(
+            f"Sending offer {offer.title} to Telegram user {user.telegram_id}. Markdown: {self.offer_message(offer)}"
+        )
         return (
             self.send_message(
                 chat_id=user.telegram_chat_id,
@@ -789,7 +802,7 @@ class TelegramBot:
 
     def send_announcement(self, announcement: Announcement, user: User) -> None:
         logger.debug(
-            f"Sending announcement {announcement.id} to Telegram user {user.telegram_id}"
+            f"Sending announcement {announcement.id} to Telegram user {user.telegram_id}. Markdown: {announcement.text_markdown}"
         )
         self.send_message(
             chat_id=user.telegram_chat_id,
