@@ -88,7 +88,9 @@ def clean_loot_title(title: str) -> str:
     # be seperated in the same fashion.
     probable_game_name: str | None = None
 
-    title = title.replace("：", ": ")  # Replace unicode colon with normal colon (Steam)
+    # First replace some very special characters that Steam uses to seperate
+    # the game name from the loot name.
+    title = title.replace("：", ": ").replace(" — ", ": ").replace(" - ", ": ")
     title_parts: list[str] = title.split(": ")
     if len(title_parts) >= 3:
         probable_game_name = ": ".join(title_parts[:-1])
