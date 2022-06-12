@@ -66,6 +66,11 @@ def clean_game_title(title: str) -> str:
         title.removesuffix(" on Origin")
         .removesuffix(" Game of the Year Edition Deluxe")
         .removesuffix(" Game of the Year Edition")
+        .removesuffix(" Definitive Edition")
+        .strip()
+        .removesuffix(":")
+        .removesuffix("-")
+        .strip()
     )
 
     return probable_game_name
@@ -103,4 +108,4 @@ def clean_loot_title(title: str) -> str:
     if probable_game_name is None:
         probable_game_name = title
 
-    return probable_game_name
+    return clean_game_title(probable_game_name)
