@@ -11,6 +11,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 
 from app.common import OfferType, Source
 from app.scraper.info.steam import skip_age_verification
+from app.scraper.info.utils import clean_game_title, clean_loot_title
 from app.scraper.loot.scraper import Scraper
 from app.sqlalchemy import Offer
 
@@ -34,6 +35,7 @@ class RawOffer:
     appid: int | None
     url: str | None
     text: str | None = None
+    dlc: bool = False
 
 
 class SteamScraper(Scraper):
@@ -87,6 +89,10 @@ class SteamScraper(Scraper):
                         (By.CLASS_NAME, "game_area_purchase")
                     )
                 )
+
+                if driver.find_elements(By.CLASS_NAME, "game_area_dlc_bubble"):
+                    # This seems to be a DLC, not a game
+                    raw_offer.dlc = True
 
                 element = driver.find_element(
                     By.CLASS_NAME, "game_purchase_discount_quantity"
@@ -163,15 +169,21 @@ class SteamScraper(Scraper):
                 except ValueError:
                     logger.warning(f"Couldn't parse date {maybe_date}")
 
-            # Title
-            title = raw_offer.title
+            # Probable game name
+            if not raw_offer.title:
+                probable_game_name = None
+            elif raw_offer.dlc:
+                probable_game_name = clean_loot_title(raw_offer.title)
+            else:
+                probable_game_name = clean_game_title(raw_offer.title)
 
             nearest_url = raw_offer.url if raw_offer.url else ROOT_URL
+            type = OfferType.GAME if not raw_offer.dlc else OfferType.LOOT
             offer = Offer(
                 source=Source.STEAM,
-                type=OfferType.GAME,
-                title=title,
-                probable_game_name=title,
+                type=type,
+                title=raw_offer.title,
+                probable_game_name=probable_game_name,
                 seen_last=now,
                 valid_from=None,
                 valid_to=valid_to,

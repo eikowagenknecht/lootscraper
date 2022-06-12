@@ -1,5 +1,4 @@
 import logging
-import re
 from dataclasses import dataclass
 from datetime import date, datetime, time, timedelta, timezone
 from time import sleep
@@ -12,6 +11,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
 from app.common import OfferType, Source
+from app.scraper.info.utils import clean_game_title, clean_loot_title
 from app.scraper.loot.scraper import Scraper
 from app.sqlalchemy import Offer
 
@@ -163,38 +163,11 @@ class AmazonScraper(Scraper):
             rawtext = f"<title>{raw_offer.title}</title>"
 
             # Title
-            # Unfortunately Amazon loot offers come in free text format, so we
-            # need to do some manual matching.
-            # - Most of the time, it is the part before the first ": ", e.g.
-            #   "Lords Mobile: Warlord Pack" -> Lords Mobile
-            # - When the title itself contains a ": ", it can also be the second, e.g.
-            #   "Mobile Legends: Bang Bang: Amazon Prime Chest" -> Mobile Legends: Bang Bang
-            # . Sometimes it also ist "Get ... in [Game]", e.g.
-            #   "Get up to GTA$400,000 this month in GTA Online" -> GTA Online
-            # So as a general rule, we try splitting by the second colon first,
-            # then the "Get ... in [Game] pattern" (to catch games with a colon in the
-            # name) and finally the ": " pattern.
-            # Fortunately we don't have to do this guessing for Amazon game offers or
-            # any other source (currently).
             probable_game_name: str | None = None
             if offer_type == OfferType.GAME:
-                probable_game_name = (
-                    raw_offer.title.removesuffix(" on Origin")
-                    .removesuffix(" Game of the Year Edition Deluxe")
-                    .removesuffix(" Game of the Year Edition")
-                )
+                probable_game_name = clean_game_title(raw_offer.title)
             else:
-                title_parts: list[str] = raw_offer.title.split(": ")
-                if len(title_parts) >= 3:
-                    probable_game_name = ": ".join(title_parts[:-1])
-                if probable_game_name is None:
-                    match = re.compile(r"Get .* in (.*)").match(raw_offer.title)
-                    if match and match.group(1):
-                        probable_game_name = match.group(1)
-                if probable_game_name is None and len(title_parts) == 2:
-                    probable_game_name = ": ".join(title_parts[:-1])
-                if probable_game_name is None:
-                    probable_game_name = raw_offer.title
+                probable_game_name = clean_loot_title(raw_offer.title)
 
             # Date
             # This is a bit more complicated as only the relative end is

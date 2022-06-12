@@ -652,6 +652,14 @@ class TelegramBot:
         else:
             keyboard.append(keyboard_button_row(False, Source.STEAM, OfferType.GAME))
 
+        if any(
+            x.source == Source.STEAM and x.type == OfferType.LOOT
+            for x in user.telegram_subscriptions
+        ):
+            keyboard.append(keyboard_button_row(True, Source.STEAM, OfferType.LOOT))
+        else:
+            keyboard.append(keyboard_button_row(False, Source.STEAM, OfferType.LOOT))
+
         keyboard.append(
             [InlineKeyboardButton(text=BUTTON_CLOSE, callback_data="close menu")]
         )
@@ -771,6 +779,13 @@ class TelegramBot:
                 answer_text = POPUP_SUBSCRIBED
             else:
                 self.unsubscribe(db_user, OfferType.GAME, Source.STEAM)
+                answer_text = POPUP_UNSUBSCRIBED
+        elif subscription_type == "steam loot":
+            if not self.is_subscribed(db_user, OfferType.LOOT, Source.STEAM):
+                self.subscribe(db_user, OfferType.LOOT, Source.STEAM)
+                answer_text = POPUP_SUBSCRIBED
+            else:
+                self.unsubscribe(db_user, OfferType.LOOT, Source.STEAM)
                 answer_text = POPUP_UNSUBSCRIBED
 
         query.answer(text=answer_text)
