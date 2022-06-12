@@ -1,6 +1,6 @@
 import logging
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 from selenium.common.exceptions import WebDriverException
 from selenium.webdriver.chrome.webdriver import WebDriver
@@ -84,9 +84,10 @@ class SteamScraper(Scraper):
                 skip_age_verification(driver, raw_offer.appid if raw_offer.appid else 0)
                 WebDriverWait(driver, MAX_WAIT_SECONDS).until(
                     EC.presence_of_element_located(
-                        (By.CLASS_NAME, "game_purchase_discount_quantity")
+                        (By.CLASS_NAME, "game_area_purchase")
                     )
                 )
+
                 element = driver.find_element(
                     By.CLASS_NAME, "game_purchase_discount_quantity"
                 )
@@ -129,6 +130,8 @@ class SteamScraper(Scraper):
     def normalize_offers(raw_offers: list[RawOffer]) -> list[Offer]:
         normalized_offers: list[Offer] = []
 
+        now = datetime.now(timezone.utc)
+
         for raw_offer in raw_offers:
             # Raw text
             rawtext = ""
@@ -141,6 +144,25 @@ class SteamScraper(Scraper):
             if raw_offer.text:
                 rawtext += f"<text>{raw_offer.text}</text>"
 
+            # Valid from date
+            valid_to: datetime | None = None
+            if raw_offer.text:
+                maybe_date = raw_offer.text.removeprefix(
+                    "Free to keep when you get it before "
+                ).removesuffix(". Some limitations apply. (?)")
+                try:
+                    valid_to = (
+                        datetime.strptime(maybe_date, "%d %b @ %I:%M%p")
+                        .replace(tzinfo=timezone.utc)
+                        .replace(year=now.year)
+                    )
+                    # Date has to be in the future, adjust the year accordingly
+                    yesterday = now - timedelta(days=1)
+                    if valid_to < yesterday:
+                        valid_to = valid_to.replace(year=valid_to.year + 1)
+                except ValueError:
+                    logger.warning(f"Couldn't parse date {maybe_date}")
+
             # Title
             title = raw_offer.title
 
@@ -150,9 +172,9 @@ class SteamScraper(Scraper):
                 type=OfferType.GAME,
                 title=title,
                 probable_game_name=title,
-                seen_last=datetime.now(timezone.utc),
+                seen_last=now,
                 valid_from=None,
-                valid_to=None,
+                valid_to=valid_to,
                 rawtext=rawtext,
                 url=nearest_url,
                 img_url=None,
