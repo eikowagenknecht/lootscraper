@@ -811,12 +811,17 @@ class TelegramBot:
         logger.debug(
             f"Sending offer {offer.title} to Telegram user {user.telegram_id}. Markdown: {self.offer_message(offer)}"
         )
+
+        markup = None
+        if offer.game and (offer.game.igdb_info or offer.game.steam_info):
+            markup = self.offer_details_show_keyboard(offer)
+
         return (
             self.send_message(
                 chat_id=user.telegram_chat_id,
                 text=self.offer_message(offer),
                 parse_mode=ParseMode.MARKDOWN_V2,
-                reply_markup=self.offer_details_show_keyboard(offer),
+                reply_markup=markup,
             )
             is not None
         )
