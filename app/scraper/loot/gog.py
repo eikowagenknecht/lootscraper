@@ -21,20 +21,27 @@ ROOT_URL = "https://www.gog.com/#giveaway"
 MAX_WAIT_SECONDS = 15  # Needs to be quite high in Docker for first run
 
 XPATH_PAGE_LOADED = """//div[@class="content cf"]"""
-XPATH_GIVEAWAY = """//a[contains(concat(" ", normalize-space(@class), " "), " giveaway-banner ")]"""  # URL: Attribute href
+
 XPATH_SWITCH_TO_ENGLISH = """//li[contains(concat(" ", normalize-space(@class), " "), " footer-microservice-language__item ")][1]"""
 XPATH_SELECTED_LANGUAGE = """//li[contains(concat(" ", normalize-space(@class), " "), " footer-microservice-language__item is-selected ")]"""
+
+# Variant 1
+XPATH_GIVEAWAY = """//a[contains(concat(" ", normalize-space(@class), " "), " giveaway-banner ")]"""  # URL: Attribute href
 SUBPATH_TITLE = """.//span[contains(concat(" ", normalize-space(@class), " "), " giveaway-banner__title ")]"""
 SUBPATH_IMAGE = """.//div[contains(concat(" ", normalize-space(@class), " "), " giveaway-banner__image ")]//source[@type="image/png" and not(@media)]"""  # Attribute srcset, first entry without the "2x text + root url"
 SUBPATH_VALID_TO = """.//gog-countdown-timer"""  # Attr "end-date" without the last 3 digits (000) is the timestamp in unixtime
+
+# Variant 2 ("Big Box")
+XPATH_BB_GIVEAWAY = """//a[contains(concat(" ", normalize-space(@class), " "), " big-spot ")]"""  # URL: Attribute href
+SUBPATH_BB_PRICE = """.//*[contains(concat(" ", normalize-space(@ng-if), " "), " tile.isFreeVisible ")]"""  # Price
 
 
 @dataclass
 class RawOffer:
     title: str | None
-    valid_to: str | None
     url: str | None
     img_url: str | None
+    valid_to: str | None = None
 
 
 class GogScraper(Scraper):
@@ -81,21 +88,52 @@ class GogScraper(Scraper):
             logger.error("Couldn't switch to English")
             return []
 
+        raw_offers: list[RawOffer] = []
+
+        # Check giveaway variant 1
         try:
             # Wait until the page loaded
             WebDriverWait(driver, MAX_WAIT_SECONDS).until(
                 EC.presence_of_element_located((By.XPATH, XPATH_GIVEAWAY))
             )
+
+            offer_element = driver.find_element(By.XPATH, XPATH_GIVEAWAY)
+            raw_offers.append(GogScraper.read_raw_offer(offer_element))
         except WebDriverException:
             logger.info(
                 f"Giveaways took longer than {MAX_WAIT_SECONDS} to load, probably there are none"
             )
-            return []
 
-        offer_element = driver.find_element(By.XPATH, XPATH_GIVEAWAY)
+        # Check giveaway variant 2
+        try:
+            # Wait until the page loaded
+            WebDriverWait(driver, MAX_WAIT_SECONDS).until(
+                EC.presence_of_element_located((By.XPATH, XPATH_BB_GIVEAWAY))
+            )
 
-        raw_offers: list[RawOffer] = []
-        raw_offers.append(GogScraper.read_raw_offer(offer_element))
+            offer_elements = driver.find_elements(By.XPATH, XPATH_BB_GIVEAWAY)
+            offer_urls: list[str] = []
+            for el in offer_elements:
+                try:
+                    price = el.find_element(By.XPATH, SUBPATH_BB_PRICE)
+                except WebDriverException:
+                    continue
+                value = price.text
+                if "free" not in value:
+                    continue
+                try:
+                    url = str(el.get_attribute("href"))  # type: ignore
+                    offer_urls.append(url)
+                except WebDriverException:
+                    logger.warning("Could not read Url for GOG variant 2")
+                    continue
+            for url in offer_urls:
+                raw_offers.append(GogScraper.read_offer_from_details_page(url, driver))
+
+        except WebDriverException:
+            logger.info(
+                f"Giveaways (Bigbox) took longer than {MAX_WAIT_SECONDS} to load, probably there are none"
+            )
 
         normalized_offers = GogScraper.normalize_offers(raw_offers)
 
@@ -154,6 +192,45 @@ class GogScraper(Scraper):
             title=title_str,
             valid_to=valid_to_str,
             url=url_str,
+            img_url=img_url_str,
+        )
+
+    @staticmethod
+    def read_offer_from_details_page(url: str, driver: WebDriver) -> RawOffer:
+        title_str = None
+        img_url_str = None
+
+        driver.get(url)
+
+        try:
+            title_str = str(
+                driver.find_element(By.CLASS_NAME, "productcard-basics__title").text
+            )
+        except WebDriverException:
+            # Nothing to do here, string stays empty
+            pass
+
+        try:
+            img_url_str = str(
+                driver.find_element(
+                    By.CLASS_NAME, "productcard-player__logo"
+                ).get_attribute(
+                    "srcset"
+                )  # type: ignore
+            )
+            img_url_str = (
+                img_url_str.split(",")[0]
+                .strip()
+                .removesuffix(" 2x")
+                .removesuffix(" 1x")
+            )
+        except WebDriverException:
+            # Nothing to do here, string stays empty
+            pass
+
+        return RawOffer(
+            url=url,
+            title=title_str,
             img_url=img_url_str,
         )
 
