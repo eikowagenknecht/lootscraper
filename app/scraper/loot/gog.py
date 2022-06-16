@@ -101,7 +101,7 @@ class GogScraper(Scraper):
             raw_offers.append(GogScraper.read_raw_offer(offer_element))
         except WebDriverException:
             logger.info(
-                f"Giveaways took longer than {MAX_WAIT_SECONDS} to load, probably there are none"
+                f"Giveaways (v1) took longer than {MAX_WAIT_SECONDS} to load, probably there are none"
             )
 
         # Check giveaway variant 2
@@ -132,7 +132,7 @@ class GogScraper(Scraper):
 
         except WebDriverException:
             logger.info(
-                f"Giveaways (Bigbox) took longer than {MAX_WAIT_SECONDS} to load, probably there are none"
+                f"Giveaways (v2) took longer than {MAX_WAIT_SECONDS} to load, probably there are none"
             )
 
         normalized_offers = GogScraper.normalize_offers(raw_offers)
