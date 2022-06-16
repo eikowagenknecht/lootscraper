@@ -159,45 +159,80 @@ class TelegramBot:
         if context.error is None:
             return
 
-        # Handle some common cases here that usually fix themselves
+        exception_type = str(type(context.error))
+
+        # Common case when a user clicks too fast on the "show details" button.
+        # Nothing to do here, not an actual error.
+        if isinstance(
+            context.error, telegram.error.BadRequest
+        ) and context.error.message.startswith("Message is not modified: "):
+            return
+
+        # Network instability causes that probably fix themselves.
         if isinstance(context.error, RemoteDisconnected) or isinstance(
             context.error, telegram.error.NetworkError
         ):
             logger.error(str(context.error))
             try:
+                message = (
+                    markdown_escape(
+                        "Common error encountered, probably will fix itself. See log file for details."
+                    )
+                    + "\n"
+                    + "```\n"
+                    + markdown_escape(exception_type + ": " + str(context.error))
+                    + "\n```"
+                )
                 self.send_message(
                     chat_id=Config.get().telegram_developer_chat_id,
-                    text="```\n" + markdown_escape(str(context.error)) + "\n```",
+                    text=message,
                     parse_mode=telegram.ParseMode.MARKDOWN_V2,
                 )
+                return
             except (
                 RemoteDisconnected,
                 TelegramError,
                 telegram.error.NetworkError,
                 HTTPError,
             ):
-                logger.error("Failed to send message to developer chat.")
-        # Handle everything else
-        elif isinstance(context.error, telegram.TelegramError):
-            if context.error.message.startswith("Conflict: "):
-                error_text = "Multiple instances of the same bot running, shutting down myself to avoid further conflicts."
-                logger.error(error_text)
-                self.send_message(
-                    chat_id=Config.get().telegram_developer_chat_id,
-                    text=error_text,
-                    parse_mode=None,
+                logger.error(
+                    "Failed to send message to developer chat (probably network or Telegram is down)."
                 )
-                # Properly stop the bot.. and the whole application with it.
-                # Do *not* call self.updater.stop() here as it doesn't persist.
-                # See https://github.com/python-telegram-bot/python-telegram-bot/issues/801#issuecomment-570945590
-                # TODO: Restart the bot instead of exiting the application.
-                bot_pid = os.getpid()
-                os.kill(bot_pid, signal.SIGINT)
                 return
-            elif context.error.message == "Unauthorized":
-                # This happens when the bot is removed from the group chat.
-                # TODO: Remove the user from the database.
-                pass
+
+        # Multiple bot instances, abort to avoid Telegram punishing API key misuse!
+        if isinstance(
+            context.error, telegram.TelegramError
+        ) and context.error.message.startswith("Conflict: "):
+            error_text = "Multiple instances of the same bot running, shutting down myself to avoid further conflicts."
+            logger.error(error_text)
+            self.send_message(
+                chat_id=Config.get().telegram_developer_chat_id,
+                text=error_text,
+                parse_mode=None,
+            )
+            # Stop the bot.. and the whole application with it.
+            # Do *not* call self.updater.stop() here as it doesn't persist.
+            # See https://github.com/python-telegram-bot/python-telegram-bot/issues/801#issuecomment-570945590
+            # TODO: Restart the bot instead of exiting the application.
+            bot_pid = os.getpid()
+            os.kill(bot_pid, signal.SIGINT)
+            return
+
+        # This happens when the bot is removed from the group chat.
+        # TODO: Also remove the user from the database.
+        if (
+            isinstance(context.error, telegram.TelegramError)
+            and context.error.message == "Unauthorized"
+        ):
+            error_text = "Could not send to chat, unauthorized."
+            logger.error(error_text)
+            self.send_message(
+                chat_id=Config.get().telegram_developer_chat_id,
+                text=error_text,
+                parse_mode=None,
+            )
+            return
 
         # Build the exception string from the exception
         traceback_string = "".join(
@@ -211,10 +246,12 @@ class TelegramBot:
         full_debug_message = (
             f"An exception was raised while handling an update:\n\n"
             f"update = {json.dumps(update_str, indent=2, ensure_ascii=False)}\n\n"
-            f"context.chat_data = {str(context.chat_data)}\n\n"
-            f"context.user_data = {str(context.user_data)}\n\n"
-            f"traceback = {traceback_string}"
         )
+        if context.chat_data:
+            full_debug_message += f"context.chat_data = {str(context.chat_data)}\n\n"
+        if context.user_data:
+            full_debug_message += f"context.user_data = {str(context.user_data)}\n\n"
+        full_debug_message += f"traceback = {traceback_string}"
 
         logger.error(full_debug_message)
 
