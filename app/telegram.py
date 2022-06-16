@@ -834,7 +834,7 @@ class TelegramBot:
 
     def offer_message(self, offer: Offer) -> str:
         content = markdown_bold(
-            f"{offer.source.value} ({offer.type.value}) - {markdown_escape(offer.title)}"
+            f"{offer.source.value} ({offer.type.value}) - {offer.title}"
         )
 
         if offer.img_url:
