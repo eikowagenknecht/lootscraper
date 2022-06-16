@@ -20,11 +20,10 @@ SCRAPER_NAME = "Epic Games"
 ROOT_URL = "https://store.epicgames.com/en-US/"
 MAX_WAIT_SECONDS = 15  # Needs to be quite high in Docker for first run
 
-XPATH_OFFER_BOX = """//h2[text()="Free Games"]//ancestor::div[@data-component="CardGroupHighlightDesktop"]"""
 XPATH_CURRENT = (
-    XPATH_OFFER_BOX + """//section//a[*//text()="Free Now"]"""
-)  # xpath href attr is the link
-# XPATH_COMING_SOON = XPATH_OFFER_BOX + """//section//a[not(*//text()="Free Now")]"""
+    """//span[text()="Free Now"]//ancestor::a"""  # xpath href attr is the link
+)
+# XPATH_COMING_SOON = """//span[text()="Coming Soon"]//ancestor::a"""
 
 SUBPATH_TITLE = """.//span[@data-testid="offer-title-info-title"]/div"""  # /text()
 SUBPATH_TIME_FROM = """.//span[@data-testid="offer-title-info-subtitle"]//time[1]"""  # /@datetime  # format 2022-02-24T16:00:00.000Z
