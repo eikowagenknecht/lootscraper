@@ -118,14 +118,14 @@ class GogScraper(Scraper):
                     price = el.find_element(By.XPATH, SUBPATH_BB_PRICE)
                 except WebDriverException:
                     continue
-                value = price.text
+                value = price.get_attribute("textContent")
                 if "free" not in value:
                     continue
                 try:
                     url = str(el.get_attribute("href"))  # type: ignore
                     offer_urls.append(url)
                 except WebDriverException:
-                    logger.warning("Could not read Url for GOG variant 2")
+                    logger.warning("Could not read url for GOG variant 2")
                     continue
             for url in offer_urls:
                 raw_offers.append(GogScraper.read_offer_from_details_page(url, driver))
