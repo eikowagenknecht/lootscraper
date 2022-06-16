@@ -30,6 +30,7 @@ from app.upload import upload_to_server
 exit = Event()
 
 
+CURRENT_VERSION = "0.3.4"
 EXAMPLE_CONFIG_FILE = "config.default.ini"
 
 
@@ -64,7 +65,7 @@ def main() -> None:
         logging.Formatter("%(asctime)s %(name)s [%(levelname)-5s] %(message)s")
     )
     logging.getLogger().addHandler(stream_handler)
-    logging.info("Starting script")
+    logging.info(f"Starting LootScraper v{CURRENT_VERSION}")
 
     if Config.get().virtual_linux_display:
         from xvfbwrapper import Xvfb
