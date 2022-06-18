@@ -11,6 +11,7 @@ from .common import (
     TIMESTAMP_LONG,
     TIMESTAMP_READABLE_WITH_HOUR,
     TIMESTAMP_SHORT,
+    OfferDuration,
     OfferType,
     Source,
 )
@@ -18,7 +19,7 @@ from .common import (
 
 def generate_feed(
     offers: list[Offer],
-    feed_file_base: Path,
+    file: Path,
     author_name: str,
     author_mail: str,
     author_web: str,
@@ -27,6 +28,7 @@ def generate_feed(
     feed_id_prefix: str,
     source: Source = None,
     type: OfferType = None,
+    duration: OfferDuration = None,
 ) -> None:
     """
     Generates a feed using the ATOM standard, see
@@ -36,13 +38,6 @@ def generate_feed(
 
     if len(offers) == 0:
         return
-
-    if source is not None and type is not None:
-        file = feed_file_base.with_stem(
-            f"{feed_file_base.stem}_{source.name.lower()}_{type.name.lower()}"
-        )
-    else:
-        file = feed_file_base
 
     feed_generator = FeedGenerator()
     latest_date: datetime = None
@@ -70,7 +65,11 @@ def generate_feed(
         feed_entry: FeedEntry = feed_generator.add_entry()
         # Atom Needed
         feed_entry.id(f"{feed_id_prefix}{int(offer.id)}")
-        title = f"{offer.source.value} ({offer.type.value}) - {offer.title}"
+        additional_info = offer.type.value
+        if offer.duration != OfferDuration.PERMANENT_CLAIMABLE:
+            additional_info += f", {offer.duration.value}"
+
+        title = f"{offer.source.value} ({additional_info}) - {offer.title}"
         feed_entry.title(title)
         feed_entry.updated(updated)
         # Atom Recommended
@@ -100,7 +99,7 @@ def generate_feed(
             content += f"<li><b>Offer valid to:</b> {offer.valid_to.strftime(TIMESTAMP_READABLE_WITH_HOUR)}</li>"
         content += "</ul>"
         if offer.url:
-            content += f'<p>Claim it now on <a href="{html.escape(offer.url)}">{html.escape(offer.source.value)}</a>.</p>'
+            content += f'<p>Claim it now for free on <a href="{html.escape(offer.url)}">{html.escape(offer.source.value)}</a>.</p>'
         if game:
             content += "<p>About the game"
             if game.igdb_info and game.igdb_info.name:
@@ -176,9 +175,9 @@ def generate_feed(
     # XML
     feed_generator.language("en")
     # Atom Needed
-    feed_id = get_feed_id(file.name) if file.name != feed_file_base.name else ""
+    feed_id = get_feed_id(file.name)
     feed_generator.id(feed_id_prefix + feed_id)
-    feed_generator.title(get_feed_title(source, type))
+    feed_generator.title(get_feed_title(source, type, duration))
     feed_generator.updated(latest_date)
     # Atom Recommended
     feed_generator.link(rel="self", href=f"{feed_url_prefix}{file.name}")
@@ -208,22 +207,29 @@ def generate_feed(
 
 def get_feed_id(filename: str) -> str:
     # Use the part between "<base_filename>_" and ".xml" as the feed id
-    subfeed = filename.split("_", 1)[1][0:-4]
+    parts = filename.split("_", 1)
+    if len(parts) == 1:
+        return ""  # Main feed
+
+    subfeed = parts[1][0:-4]
     return subfeed
 
 
-def get_feed_title(source: Source | None, type: OfferType | None):
-    if source is None and type is None:
+def get_feed_title(
+    source: Source | None, type: OfferType | None, duration: OfferDuration | None
+) -> str:
+    if source is None and type is None and duration is None:
         return "Free Games and Loot"
 
     title = "Free"
+
     if source is not None:
         title += " " + source.value
+
     if type is not None:
-        match type:
-            case OfferType.GAME:
-                title += " games"
-            case OfferType.LOOT:
-                title += " loot"
+        title += " " + type.value
+
+    if duration is not None and duration != OfferDuration.PERMANENT_CLAIMABLE:
+        title += f" ({duration.value})"
 
     return title

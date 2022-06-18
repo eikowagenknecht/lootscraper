@@ -10,15 +10,13 @@ from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
-from app.common import OfferType, Source
+from app.common import OfferDuration, OfferType, Source
 from app.scraper.loot.scraper import Scraper
 from app.sqlalchemy import Offer
 
 logger = logging.getLogger(__name__)
 
-SCRAPER_NAME = "GOG"
 ROOT_URL = "https://www.gog.com/#giveaway"
-MAX_WAIT_SECONDS = 15  # Needs to be quite high in Docker for first run
 
 XPATH_PAGE_LOADED = """//div[@class="content cf"]"""
 
@@ -44,32 +42,35 @@ class RawOffer:
     valid_to: str | None = None
 
 
-class GogScraper(Scraper):
+class GogGamesScraper(Scraper):
     @staticmethod
-    def scrape(
-        driver: WebDriver, options: dict[str, bool] = None
-    ) -> dict[str, list[Offer]]:
-        if options and not options[OfferType.GAME.name]:
-            return {}
+    def get_source() -> Source:
+        return Source.GOG
 
-        driver.get(ROOT_URL)
+    @staticmethod
+    def get_type() -> OfferType:
+        return OfferType.GAME
 
-        offers = {}
+    @staticmethod
+    def get_duration() -> OfferDuration:
+        return OfferDuration.PERMANENT_CLAIMABLE
 
-        logger.info(f"Analyzing {ROOT_URL} for {OfferType.GAME.value} offers")
-        offers[OfferType.GAME.name] = GogScraper.read_offers_from_page(driver)
-
-        return offers
+    @staticmethod
+    def scrape(driver: WebDriver) -> list[Offer]:
+        return GogGamesScraper.read_offers_from_page(driver)
 
     @staticmethod
     def read_offers_from_page(driver: WebDriver) -> list[Offer]:
+        driver.get(ROOT_URL)
         try:
             # Wait until the page loaded
-            WebDriverWait(driver, MAX_WAIT_SECONDS).until(
+            WebDriverWait(driver, Scraper.get_max_wait_seconds()).until(
                 EC.presence_of_element_located((By.XPATH, XPATH_PAGE_LOADED))
             )
         except WebDriverException:
-            logger.error(f"Page took longer than {MAX_WAIT_SECONDS} to load")
+            logger.error(
+                f"Page took longer than {Scraper.get_max_wait_seconds()} to load"
+            )
             return []
 
         try:
@@ -93,21 +94,21 @@ class GogScraper(Scraper):
         # Check giveaway variant 1
         try:
             # Wait until the page loaded
-            WebDriverWait(driver, MAX_WAIT_SECONDS).until(
+            WebDriverWait(driver, Scraper.get_max_wait_seconds()).until(
                 EC.presence_of_element_located((By.XPATH, XPATH_GIVEAWAY))
             )
 
             offer_element = driver.find_element(By.XPATH, XPATH_GIVEAWAY)
-            raw_offers.append(GogScraper.read_raw_offer(offer_element))
+            raw_offers.append(GogGamesScraper.read_raw_offer(offer_element))
         except WebDriverException:
             logger.info(
-                f"Giveaways (v1) took longer than {MAX_WAIT_SECONDS} to load, probably there are none"
+                f"Giveaways (v1) took longer than {Scraper.get_max_wait_seconds()} to load, probably there are none"
             )
 
         # Check giveaway variant 2
         try:
             # Wait until the page loaded
-            WebDriverWait(driver, MAX_WAIT_SECONDS).until(
+            WebDriverWait(driver, Scraper.get_max_wait_seconds()).until(
                 EC.presence_of_element_located((By.XPATH, XPATH_BB_GIVEAWAY))
             )
 
@@ -128,14 +129,16 @@ class GogScraper(Scraper):
                     logger.warning("Could not read url for GOG variant 2")
                     continue
             for url in offer_urls:
-                raw_offers.append(GogScraper.read_offer_from_details_page(url, driver))
+                raw_offers.append(
+                    GogGamesScraper.read_offer_from_details_page(url, driver)
+                )
 
         except WebDriverException:
             logger.info(
-                f"Giveaways (v2) took longer than {MAX_WAIT_SECONDS} to load, probably there are none"
+                f"Giveaways (v2) took longer than {Scraper.get_max_wait_seconds()} to load, probably there are none"
             )
 
-        normalized_offers = GogScraper.normalize_offers(raw_offers)
+        normalized_offers = GogGamesScraper.normalize_offers(raw_offers)
 
         return normalized_offers
 
@@ -264,8 +267,9 @@ class GogScraper(Scraper):
 
             nearest_url = raw_offer.url if raw_offer.url else ROOT_URL
             offer = Offer(
-                source=Source.GOG,
-                type=OfferType.GAME,
+                source=GogGamesScraper.get_source(),
+                duration=GogGamesScraper.get_duration(),
+                type=GogGamesScraper.get_type(),
                 title=title,
                 probable_game_name=title,
                 seen_last=datetime.now(timezone.utc),

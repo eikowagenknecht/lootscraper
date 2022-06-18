@@ -24,6 +24,12 @@ class Channel(Enum):
     TELEGRAM = "Telegram"
 
 
+class OfferDuration(Enum):
+    ALWAYS_FREE = "Always Free"  # These probably will stay free forever
+    PERMANENT_CLAIMABLE = "Permanent Claimable"  # The usual offers (Epic etc.)
+    TEMPORARY = "Temporary"  # Temporary offers (Steam weekend etc.)
+
+
 def chunkstring(string: str, length: int) -> list[str]:
     """Split a string into chunks of the given length (last chunk may be shorter)."""
     chunk_iterator = (string[0 + i : length + i] for i in range(0, len(string), length))

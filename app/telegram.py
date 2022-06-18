@@ -36,6 +36,7 @@ from app.common import (
     TIMESTAMP_READABLE_WITH_HOUR,
     TIMESTAMP_SHORT,
     Channel,
+    OfferDuration,
     OfferType,
     Source,
     chunkstring,
@@ -44,6 +45,7 @@ from app.common import (
     markdown_url,
 )
 from app.configparser import Config, ParsedConfig
+from app.scraper.loot.scraperhelper import get_all_scrapers
 from app.sqlalchemy import Announcement, Game, Offer, TelegramSubscription, User, and_
 
 BUTTON_SHOW_DETAILS = "Show details"
@@ -321,6 +323,7 @@ class TelegramBot:
                         and_(
                             Offer.type == subscription.type,
                             Offer.source == subscription.source,
+                            Offer.duration == subscription.duration,
                             Offer.id > subscription.last_offer_id,
                             # Only send offers that are already active
                             or_(
@@ -602,7 +605,9 @@ class TelegramBot:
 
         return db_user
 
-    def is_subscribed(self, user: User, type: OfferType, source: Source) -> bool:
+    def is_subscribed(
+        self, user: User, type: OfferType, source: Source, duration: OfferDuration
+    ) -> bool:
         session: Session = self.Session()
         subscription = session.execute(
             select(TelegramSubscription).where(
@@ -610,23 +615,31 @@ class TelegramBot:
                     TelegramSubscription.user_id == user.id,
                     TelegramSubscription.type == type,
                     TelegramSubscription.source == source,
+                    TelegramSubscription.duration == duration,
                 )
             )
         ).scalar_one_or_none()
         return subscription is not None
 
-    def subscribe(self, user: User, type: OfferType, source: Source) -> None:
+    def subscribe(
+        self, user: User, type: OfferType, source: Source, duration: OfferDuration
+    ) -> None:
         session: Session = self.Session()
-        session.add(TelegramSubscription(user=user, source=source, type=type))
+        session.add(
+            TelegramSubscription(user=user, source=source, type=type, duration=duration)
+        )
         session.commit()
 
-    def unsubscribe(self, user: User, type: OfferType, source: Source) -> None:
+    def unsubscribe(
+        self, user: User, type: OfferType, source: Source, duration: OfferDuration
+    ) -> None:
         session: Session = self.Session()
         session.query(TelegramSubscription).filter(
             and_(
                 TelegramSubscription.user_id == user.id,
                 TelegramSubscription.type == type,
                 TelegramSubscription.source == source,
+                TelegramSubscription.duration == duration,
             )
         ).delete()
         session.commit()
@@ -649,61 +662,29 @@ class TelegramBot:
     def manage_menu_keyboard(self, user: User) -> InlineKeyboardMarkup:
         keyboard: list[list[InlineKeyboardButton]] = []
 
-        if any(
-            x.source == Source.AMAZON and x.type == OfferType.GAME
-            for x in user.telegram_subscriptions
-        ):
-            keyboard.append(keyboard_button_row(True, Source.AMAZON, OfferType.GAME))
-        else:
-            keyboard.append(keyboard_button_row(False, Source.AMAZON, OfferType.GAME))
+        # Add buttons for all available categories
+        for scraper in get_all_scrapers():
+            scraper_source = scraper.get_source()
+            scraper_type = scraper.get_type()
+            scraper_duration = scraper.get_duration()
 
-        if any(
-            x.source == Source.AMAZON and x.type == OfferType.LOOT
-            for x in user.telegram_subscriptions
-        ):
-            keyboard.append(keyboard_button_row(True, Source.AMAZON, OfferType.LOOT))
-        else:
-            keyboard.append(keyboard_button_row(False, Source.AMAZON, OfferType.LOOT))
-
-        if any(
-            x.source == Source.EPIC and x.type == OfferType.GAME
-            for x in user.telegram_subscriptions
-        ):
-            keyboard.append(keyboard_button_row(True, Source.EPIC, OfferType.GAME))
-        else:
-            keyboard.append(keyboard_button_row(False, Source.EPIC, OfferType.GAME))
-
-        if any(
-            x.source == Source.GOG and x.type == OfferType.GAME
-            for x in user.telegram_subscriptions
-        ):
-            keyboard.append(keyboard_button_row(True, Source.GOG, OfferType.GAME))
-        else:
-            keyboard.append(keyboard_button_row(False, Source.GOG, OfferType.GAME))
-
-        if any(
-            x.source == Source.HUMBLE and x.type == OfferType.GAME
-            for x in user.telegram_subscriptions
-        ):
-            keyboard.append(keyboard_button_row(True, Source.HUMBLE, OfferType.GAME))
-        else:
-            keyboard.append(keyboard_button_row(False, Source.HUMBLE, OfferType.GAME))
-
-        if any(
-            x.source == Source.STEAM and x.type == OfferType.GAME
-            for x in user.telegram_subscriptions
-        ):
-            keyboard.append(keyboard_button_row(True, Source.STEAM, OfferType.GAME))
-        else:
-            keyboard.append(keyboard_button_row(False, Source.STEAM, OfferType.GAME))
-
-        if any(
-            x.source == Source.STEAM and x.type == OfferType.LOOT
-            for x in user.telegram_subscriptions
-        ):
-            keyboard.append(keyboard_button_row(True, Source.STEAM, OfferType.LOOT))
-        else:
-            keyboard.append(keyboard_button_row(False, Source.STEAM, OfferType.LOOT))
+            if any(
+                x.source == scraper_source
+                and x.type == scraper_type
+                and x.duration == scraper_duration
+                for x in user.telegram_subscriptions
+            ):
+                keyboard.append(
+                    keyboard_button_row(
+                        True, scraper_source, scraper_type, scraper_duration
+                    )
+                )
+            else:
+                keyboard.append(
+                    keyboard_button_row(
+                        False, scraper_source, scraper_type, scraper_duration
+                    )
+                )
 
         keyboard.append(
             [InlineKeyboardButton(text=BUTTON_CLOSE, callback_data="close menu")]
@@ -786,59 +767,19 @@ class TelegramBot:
             query.answer(text=MESSAGE_USER_NOT_REGISTERED)
             return
 
-        subscription_type = query.data.lower().removeprefix("toggle").strip()
+        data = query.data.lower().removeprefix("toggle").strip().upper().split(" ")
+        source = Source[data[0]]
+        type = OfferType[data[1]]
+        duration = OfferDuration[data[2]]
 
         answer_text = None
 
-        if subscription_type == "amazon game":
-            if not self.is_subscribed(db_user, OfferType.GAME, Source.AMAZON):
-                self.subscribe(db_user, OfferType.GAME, Source.AMAZON)
-                answer_text = POPUP_SUBSCRIBED
-            else:
-                self.unsubscribe(db_user, OfferType.GAME, Source.AMAZON)
-                answer_text = POPUP_UNSUBSCRIBED
-        elif subscription_type == "amazon loot":
-            if not self.is_subscribed(db_user, OfferType.LOOT, Source.AMAZON):
-                self.subscribe(db_user, OfferType.LOOT, Source.AMAZON)
-                answer_text = POPUP_SUBSCRIBED
-            else:
-                self.unsubscribe(db_user, OfferType.LOOT, Source.AMAZON)
-                answer_text = POPUP_UNSUBSCRIBED
-        elif subscription_type == "epic game":
-            if not self.is_subscribed(db_user, OfferType.GAME, Source.EPIC):
-                self.subscribe(db_user, OfferType.GAME, Source.EPIC)
-                answer_text = POPUP_SUBSCRIBED
-            else:
-                self.unsubscribe(db_user, OfferType.GAME, Source.EPIC)
-                answer_text = POPUP_UNSUBSCRIBED
-        elif subscription_type == "gog game":
-            if not self.is_subscribed(db_user, OfferType.GAME, Source.GOG):
-                self.subscribe(db_user, OfferType.GAME, Source.GOG)
-                answer_text = POPUP_SUBSCRIBED
-            else:
-                self.unsubscribe(db_user, OfferType.GAME, Source.GOG)
-                answer_text = POPUP_UNSUBSCRIBED
-        elif subscription_type == "humble game":
-            if not self.is_subscribed(db_user, OfferType.GAME, Source.HUMBLE):
-                self.subscribe(db_user, OfferType.GAME, Source.HUMBLE)
-                answer_text = POPUP_SUBSCRIBED
-            else:
-                self.unsubscribe(db_user, OfferType.GAME, Source.HUMBLE)
-                answer_text = POPUP_UNSUBSCRIBED
-        elif subscription_type == "steam game":
-            if not self.is_subscribed(db_user, OfferType.GAME, Source.STEAM):
-                self.subscribe(db_user, OfferType.GAME, Source.STEAM)
-                answer_text = POPUP_SUBSCRIBED
-            else:
-                self.unsubscribe(db_user, OfferType.GAME, Source.STEAM)
-                answer_text = POPUP_UNSUBSCRIBED
-        elif subscription_type == "steam loot":
-            if not self.is_subscribed(db_user, OfferType.LOOT, Source.STEAM):
-                self.subscribe(db_user, OfferType.LOOT, Source.STEAM)
-                answer_text = POPUP_SUBSCRIBED
-            else:
-                self.unsubscribe(db_user, OfferType.LOOT, Source.STEAM)
-                answer_text = POPUP_UNSUBSCRIBED
+        if not self.is_subscribed(db_user, type, source, duration):
+            self.subscribe(db_user, type, source, duration)
+            answer_text = POPUP_SUBSCRIBED
+        else:
+            self.unsubscribe(db_user, type, source, duration)
+            answer_text = POPUP_UNSUBSCRIBED
 
         query.answer(text=answer_text)
         query.edit_message_text(
@@ -890,9 +831,12 @@ class TelegramBot:
         )
 
     def offer_message(self, offer: Offer) -> str:
-        content = markdown_bold(
-            f"{offer.source.value} ({offer.type.value}) - {offer.title}"
-        )
+        source = offer.source.value
+        additional_info = offer.type.value
+        if offer.duration != OfferDuration.PERMANENT_CLAIMABLE:
+            additional_info += f", {offer.duration.value}"
+
+        content = markdown_bold(f"{source} ({additional_info}) - {offer.title}")
 
         if offer.img_url:
             content += " " + markdown_url(offer.img_url, f"[{offer.id}]")
@@ -903,17 +847,23 @@ class TelegramBot:
         else:
             content += f" [{offer.id}]"
 
+        content += "\n\n"
+
         if offer.valid_to:
             time_to_end = humanize.naturaldelta(
                 datetime.now().replace(tzinfo=timezone.utc) - offer.valid_to
             )
             if datetime.now().replace(tzinfo=timezone.utc) > offer.valid_to:
-                content += f"\nOffer expired {markdown_escape(time_to_end)} ago"
+                content += f"Offer expired {markdown_escape(time_to_end)} ago"
             else:
-                content += f"\nOffer expires in {markdown_escape(time_to_end)}"
+                content += f"Offer expires in {markdown_escape(time_to_end)}"
             content += f" \\({markdown_escape(offer.valid_to.strftime(TIMESTAMP_READABLE_WITH_HOUR))}\\)\\."
+        elif offer.duration == OfferDuration.ALWAYS_FREE:
+            content += "Offer will stay free, no need to hurry\\!"
         else:
-            content += "\nOffer is valid forever\\.\\. just kidding, I just don't know when it will end, so grab it now\\!"
+            content += "Offer is valid forever\\.\\. just kidding, I just don't know when it will end, so grab it now\\!"
+
+        content += "\n"
 
         if offer.url:
             content += " " + markdown_url(
@@ -997,9 +947,14 @@ def keyboard_button_row(
     active: bool,
     source: Source,
     offer_type: OfferType,
+    offer_duration: OfferDuration,
 ) -> list[InlineKeyboardButton]:
-    button_state = " - subscribed" if active else ""
-    source_str = f"{source.value} ({offer_type.value})"
-    command = f"toggle {source.name} {offer_type.name}"
+    is_subscribed_str = " - subscribed" if active else ""
+    source_str = f"{source.value} {offer_type.value}"
+    if offer_duration != OfferDuration.PERMANENT_CLAIMABLE:
+        source_str += f" ({offer_duration.value})"
+    command = f"toggle {source.name} {offer_type.name} {offer_duration.name}"
 
-    return [InlineKeyboardButton(f"{source_str}{button_state}", callback_data=command)]
+    return [
+        InlineKeyboardButton(f"{source_str}{is_subscribed_str}", callback_data=command)
+    ]

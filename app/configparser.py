@@ -1,6 +1,8 @@
 import configparser
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
+
+from app.common import OfferDuration, OfferType, Source
 
 CONFIG_FILE = Path("config.ini")
 
@@ -24,19 +26,15 @@ class ParsedConfig:
     virtual_linux_display: bool = False
 
     # Sources: Offers
-    offers_amazon: bool = True
-    offers_epic: bool = True
-    offers_gog: bool = True
-    offers_humble: bool = True
-    offers_steam: bool = True
+    enabled_offer_sources: list[Source] = field(default_factory=list)
+    enabled_offer_types: list[OfferType] = field(default_factory=list)
+    enabled_offer_durations: list[OfferDuration] = field(default_factory=list)
 
     # Sources: Info
     info_steam: bool = True
     info_igdb: bool = True
 
     # Actions
-    scrape_games: bool = True
-    scrape_loot: bool = True
     scrape_info: bool = True  # Not used anywhere yet
     generate_feed: bool = True
     upload_feed: bool = False
@@ -115,16 +113,34 @@ class Config:
                 "expert", "VirtualLinuxDisplay"
             )
 
-            parsed_config.offers_amazon = config.getboolean("sources_loot", "Amazon")
-            parsed_config.offers_epic = config.getboolean("sources_loot", "Epic")
-            parsed_config.offers_steam = config.getboolean("sources_loot", "Steam")
-            parsed_config.offers_gog = config.getboolean("sources_loot", "GOG")
+            if config.getboolean("offer_sources", "Amazon"):
+                parsed_config.enabled_offer_sources.append(Source.AMAZON)
+            if config.getboolean("offer_sources", "Epic"):
+                parsed_config.enabled_offer_sources.append(Source.EPIC)
+            if config.getboolean("offer_sources", "GOG"):
+                parsed_config.enabled_offer_sources.append(Source.GOG)
+            if config.getboolean("offer_sources", "Humble"):
+                parsed_config.enabled_offer_sources.append(Source.HUMBLE)
+            if config.getboolean("offer_sources", "Steam"):
+                parsed_config.enabled_offer_sources.append(Source.STEAM)
+
+            if config.getboolean("offer_types", "Games"):
+                parsed_config.enabled_offer_types.append(OfferType.GAME)
+            if config.getboolean("offer_types", "Loot"):
+                parsed_config.enabled_offer_types.append(OfferType.LOOT)
+
+            if config.getboolean("offer_durations", "Permanent"):
+                parsed_config.enabled_offer_durations.append(
+                    OfferDuration.PERMANENT_CLAIMABLE
+                )
+            if config.getboolean("offer_durations", "Temporary"):
+                parsed_config.enabled_offer_durations.append(OfferDuration.TEMPORARY)
+            if config.getboolean("offer_durations", "AlwaysFree"):
+                parsed_config.enabled_offer_durations.append(OfferDuration.ALWAYS_FREE)
 
             parsed_config.info_steam = config.getboolean("sources_info", "Steam")
             parsed_config.info_igdb = config.getboolean("sources_info", "IGDB")
 
-            parsed_config.scrape_games = config.getboolean("actions", "ScrapeGames")
-            parsed_config.scrape_loot = config.getboolean("actions", "ScrapeLoot")
             parsed_config.scrape_info = config.getboolean("actions", "ScrapeInfo")
             parsed_config.generate_feed = config.getboolean("actions", "GenerateFeed")
             parsed_config.upload_feed = config.getboolean("actions", "UploadFtp")
