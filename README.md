@@ -19,7 +19,8 @@ If you prefer Telegram, you can instead subscribe to the [Telegram LootScraperBo
 - Amazon Prime ([games](https://feed.phenx.de/lootscraper_amazon_game.xml) and [ingame loot](https://feed.phenx.de/lootscraper_amazon_loot.xml))
 - [Epic Games (games only)](https://feed.phenx.de/lootscraper_epic_game.xml)
 - [Gog (games only)](https://feed.phenx.de/lootscraper_gog_game.xml)
-- [Steam (games only)](https://feed.phenx.de/lootscraper_steam_game.xml)
+- [Humble (games only)](https://feed.phenx.de/lootscraper_humble_game.xml)
+- Steam ([games](https://feed.phenx.de/lootscraper_steam_game.xml) and [ingame loot](https://feed.phenx.de/lootscraper_steam_loot.xml))
 
 If you want everything in one feed, use [this link](https://feed.phenx.de/lootscraper.xml). If you want to get the offers by email instead, you can use free services like <https://blogtrottr.com/> or <https://feedsub.com/> to convert from RSS to email.
 
@@ -37,38 +38,9 @@ This project is still in ongoing development, so expect a few rough edges if you
 
 I have quite a few features on my mind that I'd like to implement. I also plan to extend this to more sources for free offers. All of this is tracked in the Github issues.
 
-### Settings
+## For power users and developers
 
-On the first startup, a default configuration file will be created in `./data/config.ini`. You can edit this file to change the settings (e.g. the sites to visit and the actions to perform).
-
-## Howto
-
-### Run locally
-
-Needs an installed Python 3.10+ environment.
-
-- Download repository
-- Create virtual environment (`python -m venv .venv`)
-- Activate virtual environment (`./.venv/Scripts/Activate`)
-- Install the required packages (`pip install -r requirements.txt`)
-- Run (`python ./lootscraper.py`)
-
-### Build and run Docker container
-
-Docker needs to be installed first of course. If you want to skip the build step, you can use <https://hub.docker.com/r/eikowagenknecht/lootscraper> as the image. Use the "main" tag to get the latest build from this repository.
-
-- Download repository
-- In terminal go to directory
-- First run:
-  - Build: `docker build . -t eikowagenknecht/lootscraper:main`
-  - Start: `docker run --detach --volume /your/local/path:/data --name lootscraper eikowagenknecht/lootscraper:main`
-- Update:
-  - Stop: `docker stop lootscraper`
-  - Remove: `docker container rm lootscraper`
-  - Build without cache: `docker build . --no-cache -t eikowagenknecht/lootscraper:main`
-  - Start: `docker run --detach --volume /your/local/path:/data --name lootscraper eikowagenknecht/lootscraper:main`
-- Debug: `docker run -it --entrypoint /bin/bash --volume /your/local/path:/data --name lootscraper_debug eikowagenknecht/lootscraper:main`
-- To stop, run `docker stop lootscraper`
+If you want to run this yourself or contribute, please see the [README for developers](README_DEV.md) file.
 
 ## License
 
