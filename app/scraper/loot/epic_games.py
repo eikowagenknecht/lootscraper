@@ -16,7 +16,6 @@ from app.sqlalchemy import Offer
 
 logger = logging.getLogger(__name__)
 
-SCRAPER_NAME = "Epic Games"
 ROOT_URL = "https://store.epicgames.com/en-US/"
 MAX_WAIT_SECONDS = 15  # Needs to be quite high in Docker for first run
 
@@ -40,25 +39,31 @@ class RawOffer:
     img_url: str | None
 
 
-class EpicScraper(Scraper):
+class EpicGamesScraper(Scraper):
     @staticmethod
-    def scrape(
-        driver: WebDriver, options: dict[str, bool] = None
-    ) -> dict[str, list[Offer]]:
-        if options and not options[OfferType.GAME.name]:
-            return {}
+    def get_source() -> Source:
+        return Source.EPIC
 
-        driver.get(ROOT_URL)
+    @staticmethod
+    def get_type() -> OfferType:
+        return OfferType.GAME
+
+    @staticmethod
+    def get_duration() -> OfferDuration:
+        return OfferDuration.PERMANENT_CLAIMABLE
+
+    @staticmethod
+    def scrape(driver: WebDriver) -> dict[str, list[Offer]]:
+        logger.info(f"Analyzing {ROOT_URL} for {OfferType.GAME.value} offers")
 
         offers = {}
-
-        logger.info(f"Analyzing {ROOT_URL} for {OfferType.GAME.value} offers")
-        offers[OfferType.GAME.name] = EpicScraper.read_offers_from_page(driver)
+        offers[OfferType.GAME.name] = EpicGamesScraper.read_offers_from_page(driver)
 
         return offers
 
     @staticmethod
     def read_offers_from_page(driver: WebDriver) -> list[Offer]:
+        driver.get(ROOT_URL)
         try:
             # Wait until the page loaded
             WebDriverWait(driver, MAX_WAIT_SECONDS).until(
@@ -92,9 +97,9 @@ class EpicScraper(Scraper):
 
         raw_offers: list[RawOffer] = []
         for element in elements:
-            raw_offers.append(EpicScraper.read_raw_offer(element))
+            raw_offers.append(EpicGamesScraper.read_raw_offer(element))
 
-        normalized_offers = EpicScraper.normalize_offers(raw_offers)
+        normalized_offers = EpicGamesScraper.normalize_offers(raw_offers)
 
         return normalized_offers
 
@@ -201,9 +206,9 @@ class EpicScraper(Scraper):
 
             nearest_url = raw_offer.url if raw_offer.url else ROOT_URL
             offer = Offer(
-                source=Source.EPIC,
-                duration=OfferDuration.PERMANENT_CLAIMABLE,
-                type=OfferType.GAME,
+                source=EpicGamesScraper.get_source(),
+                duration=EpicGamesScraper.get_duration(),
+                type=EpicGamesScraper.get_type(),
                 title=title,
                 probable_game_name=title,
                 seen_last=datetime.now(timezone.utc),
