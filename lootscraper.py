@@ -22,6 +22,7 @@ from app.scraper.info.steam import get_steam_details, get_steam_id
 from app.scraper.loot.amazon_prime import AmazonScraper
 from app.scraper.loot.epic_games import EpicScraper
 from app.scraper.loot.gog import GogScraper
+from app.scraper.loot.humble import HumbleScraper
 from app.scraper.loot.steam import SteamScraper
 from app.sqlalchemy import Game, LootDatabase, Offer, User
 from app.telegram import TelegramBot
@@ -147,19 +148,26 @@ def job(db: LootDatabase) -> None:
         else:
             logging.info(f"Skipping {Source.EPIC.value}")
 
-        if Config.get().offers_steam:
-            scraped_offers[Source.STEAM.name] = SteamScraper.scrape(
-                webdriver, cfg_what_to_scrape
-            )
-        else:
-            logging.info(f"Skipping {Source.STEAM.value}")
-
         if Config.get().offers_gog:
             scraped_offers[Source.GOG.name] = GogScraper.scrape(
                 webdriver, cfg_what_to_scrape
             )
         else:
             logging.info(f"Skipping {Source.GOG.value}")
+
+        if Config.get().offers_humble:
+            scraped_offers[Source.HUMBLE.name] = HumbleScraper.scrape(
+                webdriver, cfg_what_to_scrape
+            )
+        else:
+            logging.info(f"Skipping {Source.HUMBLE.value}")
+
+        if Config.get().offers_steam:
+            scraped_offers[Source.STEAM.name] = SteamScraper.scrape(
+                webdriver, cfg_what_to_scrape
+            )
+        else:
+            logging.info(f"Skipping {Source.STEAM.value}")
 
         # Check which offers are new and which are updated, then act accordingly:
         # - Offers that are neither new nor updated just get a new date
