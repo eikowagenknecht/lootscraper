@@ -24,7 +24,7 @@ from app.scraper.loot.epic_games import EpicScraper
 from app.scraper.loot.gog import GogScraper
 from app.scraper.loot.humble import HumbleScraper
 from app.scraper.loot.steam import SteamScraper
-from app.sqlalchemy import Game, LootDatabase, Offer, User
+from app.sqlalchemy import Game, IgdbInfo, LootDatabase, Offer, SteamInfo, User
 from app.telegram import TelegramBot
 from app.upload import upload_to_server
 
@@ -322,9 +322,19 @@ def add_game_info(offer: Offer, session: Session, webdriver: WebDriver) -> None:
 
     existing_game: Game | None = None
 
-    # Offer has a name but no game, try to find a matching entry in our game
-    # database (prioritize IGDB)
-    igdb_id = get_igdb_id(offer.probable_game_name)
+    # Offer has a name but no game. Try to find a matching entry in our local
+    # database first (prioritize IGDB)
+    igdb_id = (
+        session.execute(
+            select(IgdbInfo.id).where(IgdbInfo.name == offer.probable_game_name)
+        )
+        .scalars()
+        .one_or_none()
+    )
+
+    # Use the api if no local entry exists
+    if igdb_id is None:
+        igdb_id = get_igdb_id(offer.probable_game_name)
 
     if igdb_id is not None:
         existing_game = (
@@ -338,7 +348,18 @@ def add_game_info(offer: Offer, session: Session, webdriver: WebDriver) -> None:
         return
 
     # No IGDB match, try to find a matching entry via Steam
-    steam_id = get_steam_id(offer.probable_game_name, driver=webdriver)
+    steam_id = (
+        session.execute(
+            select(SteamInfo.id).where(SteamInfo.name == offer.probable_game_name)
+        )
+        .scalars()
+        .one_or_none()
+    )
+
+    # Use the api if no local entry exists
+    if steam_id is None:
+        steam_id = get_steam_id(offer.probable_game_name, driver=webdriver)
+
     if steam_id is not None:
         existing_game = (
             session.execute(select(Game).where(Game.steam_id == steam_id))
