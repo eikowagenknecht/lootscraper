@@ -18,7 +18,6 @@ from app.sqlalchemy import Offer
 logger = logging.getLogger(__name__)
 
 ROOT_URL = "https://gaming.amazon.com/home"
-MAX_WAIT_SECONDS = 15  # Needs to be quite high in Docker for first run
 XPATH_WAIT = '//div[@data-a-target="offer-section-FGWP_FULL"]'
 XPATH_LOOT = (
     '//div[@data-a-target="offer-list-IN_GAME_LOOT"]//div[@class="item-card__action"]'
@@ -51,25 +50,22 @@ class AmazonLootScraper(Scraper):
         return OfferDuration.PERMANENT_CLAIMABLE
 
     @staticmethod
-    def scrape(driver: WebDriver) -> dict[str, list[Offer]]:
-        logger.info(f"Analyzing {ROOT_URL} for {OfferType.LOOT.value} offers")
-
-        offers = {}
-        offers[OfferType.LOOT.name] = AmazonLootScraper.read_offers_from_page(driver)
-
-        return offers
+    def scrape(driver: WebDriver) -> list[Offer]:
+        return AmazonLootScraper.read_offers_from_page(driver)
 
     @staticmethod
     def read_offers_from_page(driver: WebDriver) -> list[Offer]:
         driver.get(ROOT_URL)
         try:
             # Wait until the page loaded
-            WebDriverWait(driver, MAX_WAIT_SECONDS).until(
+            WebDriverWait(driver, Scraper.get_max_wait_seconds()).until(
                 EC.presence_of_element_located((By.XPATH, XPATH_WAIT))
             )
             sleep(1)  # Otherwise the first element sometimes is not correctly evaluated
         except WebDriverException:
-            logger.error(f"Page took longer than {MAX_WAIT_SECONDS} to load")
+            logger.error(
+                f"Page took longer than {Scraper.get_max_wait_seconds()} to load"
+            )
             return []
 
         try:

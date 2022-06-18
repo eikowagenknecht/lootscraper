@@ -17,7 +17,6 @@ from app.sqlalchemy import Offer
 logger = logging.getLogger(__name__)
 
 ROOT_URL = "https://www.gog.com/#giveaway"
-MAX_WAIT_SECONDS = 15  # Needs to be quite high in Docker for first run
 
 XPATH_PAGE_LOADED = """//div[@class="content cf"]"""
 
@@ -57,28 +56,21 @@ class GogGamesScraper(Scraper):
         return OfferDuration.PERMANENT_CLAIMABLE
 
     @staticmethod
-    def scrape(driver: WebDriver) -> dict[str, list[Offer]]:
-        logger.info(
-            f"Analyzing {ROOT_URL} for {GogGamesScraper.get_type().value} offers"
-        )
-
-        offers = {}
-        offers[GogGamesScraper.get_type().name] = GogGamesScraper.read_offers_from_page(
-            driver
-        )
-
-        return offers
+    def scrape(driver: WebDriver) -> list[Offer]:
+        return GogGamesScraper.read_offers_from_page(driver)
 
     @staticmethod
     def read_offers_from_page(driver: WebDriver) -> list[Offer]:
         driver.get(ROOT_URL)
         try:
             # Wait until the page loaded
-            WebDriverWait(driver, MAX_WAIT_SECONDS).until(
+            WebDriverWait(driver, Scraper.get_max_wait_seconds()).until(
                 EC.presence_of_element_located((By.XPATH, XPATH_PAGE_LOADED))
             )
         except WebDriverException:
-            logger.error(f"Page took longer than {MAX_WAIT_SECONDS} to load")
+            logger.error(
+                f"Page took longer than {Scraper.get_max_wait_seconds()} to load"
+            )
             return []
 
         try:
@@ -102,7 +94,7 @@ class GogGamesScraper(Scraper):
         # Check giveaway variant 1
         try:
             # Wait until the page loaded
-            WebDriverWait(driver, MAX_WAIT_SECONDS).until(
+            WebDriverWait(driver, Scraper.get_max_wait_seconds()).until(
                 EC.presence_of_element_located((By.XPATH, XPATH_GIVEAWAY))
             )
 
@@ -110,13 +102,13 @@ class GogGamesScraper(Scraper):
             raw_offers.append(GogGamesScraper.read_raw_offer(offer_element))
         except WebDriverException:
             logger.info(
-                f"Giveaways (v1) took longer than {MAX_WAIT_SECONDS} to load, probably there are none"
+                f"Giveaways (v1) took longer than {Scraper.get_max_wait_seconds()} to load, probably there are none"
             )
 
         # Check giveaway variant 2
         try:
             # Wait until the page loaded
-            WebDriverWait(driver, MAX_WAIT_SECONDS).until(
+            WebDriverWait(driver, Scraper.get_max_wait_seconds()).until(
                 EC.presence_of_element_located((By.XPATH, XPATH_BB_GIVEAWAY))
             )
 
@@ -143,7 +135,7 @@ class GogGamesScraper(Scraper):
 
         except WebDriverException:
             logger.info(
-                f"Giveaways (v2) took longer than {MAX_WAIT_SECONDS} to load, probably there are none"
+                f"Giveaways (v2) took longer than {Scraper.get_max_wait_seconds()} to load, probably there are none"
             )
 
         normalized_offers = GogGamesScraper.normalize_offers(raw_offers)

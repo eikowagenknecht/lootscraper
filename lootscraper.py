@@ -131,9 +131,9 @@ def quit(signo: int, _frame: FrameType | None) -> None:
 def job(db: LootDatabase) -> None:
     webdriver: WebDriver
     session: Session = db.Session()
-    with get_pagedriver() as webdriver:
-        scraped_offers: dict[str, dict[str, list[Offer]]] = {}
+    cfg = Config.get()
 
+    with get_pagedriver() as webdriver:
         scrapers: list[Type[Scraper]] = [
             AmazonGamesScraper,
             AmazonLootScraper,
@@ -144,13 +144,28 @@ def job(db: LootDatabase) -> None:
             SteamLootScraper,
         ]
 
+        scraped_offers: list[Offer] = []
         for scraper in scrapers:
             if (
-                scraper.get_type() in Config.get().enabled_offer_types
-                and scraper.get_duration() in Config.get().enabled_offer_durations
-                and scraper.get_source() in Config.get().enabled_offer_sources
+                scraper.get_type() in cfg.enabled_offer_types
+                and scraper.get_duration() in cfg.enabled_offer_durations
+                and scraper.get_source() in cfg.enabled_offer_sources
             ):
-                scraped_offers[scraper.get_source().value] = scraper.scrape(webdriver)
+                scraper_type = scraper.get_type().value
+                scraper_duration = scraper.get_duration().value
+                scraper_source = scraper.get_source().value
+
+                logging.info(
+                    f"Analyzing {scraper_source} for offers: {scraper_type} / {scraper_duration}."
+                )
+                scraper_results = scraper.scrape(webdriver)
+
+                if scraper_results:
+                    titles = ", ".join([offer.title for offer in scraper_results])
+                    logging.info(f"Found {len(scraper_results)} offers: {titles}.")
+                    scraped_offers.extend(scraper_results)
+                else:
+                    logging.warning("Scraper finished without results.")
 
         # Check which offers are new and which are updated, then act accordingly:
         # - Offers that are neither new nor updated just get a new date
@@ -158,63 +173,47 @@ def job(db: LootDatabase) -> None:
         # - Offers that are updated are updated
         nr_of_new_offers: int = 0
 
-        for scraper_source in scraped_offers:
-            for scraper_type in scraped_offers[scraper_source]:
-                existing_offer_titles: list[str] = []
-                new_offer_titles: list[str] = []
-                for scraper_offer in scraped_offers[scraper_source][scraper_type]:
-                    # Get the existing entry if there is one
-                    existing_entry: Offer | None = db.find_offer(
-                        scraper_offer.source,
-                        scraper_offer.type,
-                        scraper_offer.title,
-                        scraper_offer.valid_to,
-                    )
+        new_offer_titles: list[str] = []
 
-                    # Do not insert offers that already have been scraped,
-                    # but update them instead. What gets updated depends on
-                    # the settings
-                    if existing_entry is not None:
-                        if Config.get().force_update:
-                            db.update_db_offer(existing_entry, scraper_offer)
-                        else:
-                            db.touch_db_offer(existing_entry)
+        for scraped_offer in scraped_offers:
+            # Get the existing entry if there is one
+            existing_entry: Offer | None = db.find_offer(
+                scraped_offer.source,
+                scraped_offer.type,
+                scraped_offer.title,
+                scraped_offer.valid_to,
+            )
 
-                        # Create a list of all existing offers (logging only)
-                        if existing_entry.title:
-                            text = existing_entry.title
-                            existing_offer_titles.append(text)
+            if not existing_entry:
+                # Create a list of new scraped offers (logging only)
+                if scraped_offer.title:
+                    new_offer_titles.append(scraped_offer.title)
 
-                        continue
+                # The enddate has been changed or it is a new offer,
+                # get information about it (if it's a game)
+                # and insert it into the database
+                if cfg.scrape_info:
+                    add_game_info(scraped_offer, session, webdriver)
+                db.add_offer(scraped_offer)
+                nr_of_new_offers += 1
+            else:
+                # Do not insert offers that already have been scraped,
+                # but update them instead. What gets updated depends on
+                # the settings
+                if cfg.force_update:
+                    db.update_db_offer(existing_entry, scraped_offer)
+                else:
+                    db.touch_db_offer(existing_entry)
 
-                    # Create a list of new scraped offers (logging only)
-                    if scraper_offer.title:
-                        text = scraper_offer.title
-                        new_offer_titles.append(text)
-
-                    # The enddate has been changed or it is a new offer,
-                    # get information about it (if it's a game)
-                    # and insert it into the database
-                    if Config.get().scrape_info:
-                        add_game_info(scraper_offer, session, webdriver)
-                    db.add_offer(scraper_offer)
-                    nr_of_new_offers += 1
-
-                if len(existing_offer_titles) > 0:
-                    logging.info(
-                        f'Found existing {scraper_source} {scraper_type} offers: {", ".join(existing_offer_titles)}'
-                    )
-                if len(new_offer_titles) > 0:
-                    logging.info(
-                        f'Found new {scraper_source} {scraper_type} offers: {", ".join(new_offer_titles)}'
-                    )
+        if new_offer_titles:
+            logging.info(
+                f'Found {nr_of_new_offers} new offers: {", ".join(new_offer_titles)}'
+            )
 
         loot_offers_in_db = db.read_all_segmented()
 
-        logging.info(f"Found {nr_of_new_offers} new offers")
-
         # Refresh game information if ForceUpdate is set
-        if Config.get().force_update and Config.get().scrape_info:
+        if cfg.force_update and cfg.scrape_info:
             # Remove all game info first
             logging.info("Force update enabled - removing all game info")
             for game in session.query(Game):
@@ -225,17 +224,15 @@ def job(db: LootDatabase) -> None:
                     for db_offer in loot_offers_in_db[scraper_source][scraper_type]:
                         add_game_info(db_offer, session, webdriver)
 
-    if Config.get().generate_feed:
-        feed_file_base = Config.data_path() / Path(
-            Config.get().feed_file_prefix + ".xml"
-        )
+    if cfg.generate_feed:
+        feed_file_base = Config.data_path() / Path(cfg.feed_file_prefix + ".xml")
         # Generate and upload feeds split by source
         any_feed_changed = False
         for scraper_source in loot_offers_in_db:
             for scraper_type in loot_offers_in_db[scraper_source]:
                 feed_changed = False
                 feed_file = Config.data_path() / Path(
-                    Config.get().feed_file_prefix
+                    cfg.feed_file_prefix
                     + f"_{Source[scraper_source].name.lower()}"
                     + f"_{OfferType[scraper_type].name.lower()}"
                     + ".xml"
@@ -244,12 +241,12 @@ def job(db: LootDatabase) -> None:
                 generate_feed(
                     offers=loot_offers_in_db[scraper_source][scraper_type],
                     feed_file_base=feed_file_base,
-                    author_name=Config.get().feed_author_name,
-                    author_web=Config.get().feed_author_web,
-                    author_mail=Config.get().feed_author_mail,
-                    feed_url_prefix=Config.get().feed_url_prefix,
-                    feed_url_alternate=Config.get().feed_url_alternate,
-                    feed_id_prefix=Config.get().feed_id_prefix,
+                    author_name=cfg.feed_author_name,
+                    author_web=cfg.feed_author_web,
+                    author_mail=cfg.feed_author_mail,
+                    feed_url_prefix=cfg.feed_url_prefix,
+                    feed_url_alternate=cfg.feed_url_alternate,
+                    feed_id_prefix=cfg.feed_id_prefix,
                     source=Source[scraper_source],
                     type=OfferType[scraper_type],
                 )
@@ -258,7 +255,7 @@ def job(db: LootDatabase) -> None:
                     feed_changed = True
                     any_feed_changed = True
 
-                if feed_changed and Config.get().upload_feed:
+                if feed_changed and cfg.upload_feed:
                     upload_to_server(feed_file)
 
         # Generate and upload cumulated feed
@@ -271,14 +268,14 @@ def job(db: LootDatabase) -> None:
             generate_feed(
                 offers=all_offers,
                 feed_file_base=feed_file_base,
-                author_name=Config.get().feed_author_name,
-                author_web=Config.get().feed_author_web,
-                author_mail=Config.get().feed_author_mail,
-                feed_url_prefix=Config.get().feed_url_prefix,
-                feed_url_alternate=Config.get().feed_url_alternate,
-                feed_id_prefix=Config.get().feed_id_prefix,
+                author_name=cfg.feed_author_name,
+                author_web=cfg.feed_author_web,
+                author_mail=cfg.feed_author_mail,
+                feed_url_prefix=cfg.feed_url_prefix,
+                feed_url_alternate=cfg.feed_url_alternate,
+                feed_id_prefix=cfg.feed_id_prefix,
             )
-            if Config.get().upload_feed:
+            if cfg.upload_feed:
                 upload_to_server(feed_file_base)
             else:
                 logging.info("Skipping upload, disabled")

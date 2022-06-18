@@ -17,11 +17,9 @@ from app.sqlalchemy import Offer
 
 logger = logging.getLogger(__name__)
 
-SCRAPER_NAME = "Steam"
 ROOT_URL = (
     "https://store.steampowered.com/search/?maxprice=free&category1=21&specials=1"
 )
-MAX_WAIT_SECONDS = 15  # Needs to be quite high in Docker for first run
 
 DETAILS_URL = "https://store.steampowered.com/app/"
 
@@ -53,32 +51,23 @@ class SteamLootScraper(Scraper):
         return OfferDuration.PERMANENT_CLAIMABLE
 
     @staticmethod
-    def scrape(
-        driver: WebDriver, options: dict[str, bool] = None
-    ) -> dict[str, list[Offer]]:
-        if options and not options[OfferType.GAME.name]:
-            return {}
-
-        driver.get(ROOT_URL)
-
-        offers = {}
-
-        logger.info(f"Analyzing {ROOT_URL} for {OfferType.GAME.value} offers")
-        offers[OfferType.GAME.name] = SteamLootScraper.read_offers_from_page(driver)
-
-        return offers
+    def scrape(driver: WebDriver) -> list[Offer]:
+        return SteamLootScraper.read_offers_from_page(driver)
 
     @staticmethod
     def read_offers_from_page(driver: WebDriver) -> list[Offer]:
+        driver.get(ROOT_URL)
         try:
             # Wait until the page loaded
-            WebDriverWait(driver, MAX_WAIT_SECONDS).until(
+            WebDriverWait(driver, Scraper.get_max_wait_seconds()).until(
                 EC.presence_of_element_located(
                     (By.XPATH, STEAM_SEARCH_RESULTS_CONTAINER)
                 )
             )
         except WebDriverException:
-            logger.error(f"Page took longer than {MAX_WAIT_SECONDS} to load")
+            logger.error(
+                f"Page took longer than {Scraper.get_max_wait_seconds()} to load"
+            )
             return []
 
         elements: list[WebElement] = []
@@ -97,7 +86,7 @@ class SteamLootScraper(Scraper):
             try:
                 driver.get(raw_offer.url)
                 skip_age_verification(driver, raw_offer.appid if raw_offer.appid else 0)
-                WebDriverWait(driver, MAX_WAIT_SECONDS).until(
+                WebDriverWait(driver, Scraper.get_max_wait_seconds()).until(
                     EC.presence_of_element_located(
                         (By.CLASS_NAME, "game_area_purchase")
                     )
@@ -176,7 +165,7 @@ class SteamLootScraper(Scraper):
                     if valid_to < yesterday:
                         valid_to = valid_to.replace(year=valid_to.year + 1)
                 except ValueError:
-                    logger.warning(f"Couldn't parse date {maybe_date}")
+                    logger.warning(f"Couldn't parse date {maybe_date}.")
 
             # Probable game name
             if not raw_offer.title:

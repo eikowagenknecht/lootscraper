@@ -17,7 +17,6 @@ from app.sqlalchemy import Offer
 logger = logging.getLogger(__name__)
 
 ROOT_URL = "https://store.epicgames.com/en-US/"
-MAX_WAIT_SECONDS = 15  # Needs to be quite high in Docker for first run
 
 XPATH_CURRENT = (
     """//span[text()="Free Now"]//ancestor::a"""  # xpath href attr is the link
@@ -53,20 +52,15 @@ class EpicGamesScraper(Scraper):
         return OfferDuration.PERMANENT_CLAIMABLE
 
     @staticmethod
-    def scrape(driver: WebDriver) -> dict[str, list[Offer]]:
-        logger.info(f"Analyzing {ROOT_URL} for {OfferType.GAME.value} offers")
-
-        offers = {}
-        offers[OfferType.GAME.name] = EpicGamesScraper.read_offers_from_page(driver)
-
-        return offers
+    def scrape(driver: WebDriver) -> list[Offer]:
+        return EpicGamesScraper.read_offers_from_page(driver)
 
     @staticmethod
     def read_offers_from_page(driver: WebDriver) -> list[Offer]:
         driver.get(ROOT_URL)
         try:
             # Wait until the page loaded
-            WebDriverWait(driver, MAX_WAIT_SECONDS).until(
+            WebDriverWait(driver, Scraper.get_max_wait_seconds()).until(
                 EC.presence_of_element_located(
                     (By.XPATH, """//h2[text()="Free Games"]""")
                 )
@@ -77,7 +71,7 @@ class EpicGamesScraper(Scraper):
                 / f'screenshot_error_{datetime.now().isoformat().replace(".", "_").replace(":", "_")}.png'
             )
             logger.error(
-                f"Page took longer than {MAX_WAIT_SECONDS} to load. Saving Screenshot to {filename}."
+                f"Page took longer than {Scraper.get_max_wait_seconds()} to load. Saving Screenshot to {filename}."
             )
             driver.save_screenshot(str(filename.resolve()))
             return []

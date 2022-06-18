@@ -16,7 +16,6 @@ from app.sqlalchemy import Offer
 logger = logging.getLogger(__name__)
 
 ROOT_URL = "https://de.humblebundle.com/store/search?sort=discount&filter=onsale"
-MAX_WAIT_SECONDS = 15  # Needs to be quite high in Docker for first run
 
 XPATH_SEARCH_RESULTS = (
     """//ul[contains(concat(" ", normalize-space(@class), " "), " entities-list ")]"""
@@ -48,13 +47,8 @@ class HumbleGamesScraper(Scraper):
         return OfferDuration.PERMANENT_CLAIMABLE
 
     @staticmethod
-    def scrape(driver: WebDriver) -> dict[str, list[Offer]]:
-        logger.info(f"Analyzing {ROOT_URL} for {OfferType.GAME.value} offers")
-
-        offers = {}
-        offers[OfferType.GAME.name] = HumbleGamesScraper.read_offers_from_page(driver)
-
-        return offers
+    def scrape(driver: WebDriver) -> list[Offer]:
+        return HumbleGamesScraper.read_offers_from_page(driver)
 
     @staticmethod
     def read_offers_from_page(driver: WebDriver) -> list[Offer]:
@@ -63,7 +57,7 @@ class HumbleGamesScraper(Scraper):
 
         try:
             # Wait until the page loaded
-            WebDriverWait(driver, MAX_WAIT_SECONDS).until(
+            WebDriverWait(driver, Scraper.get_max_wait_seconds()).until(
                 EC.presence_of_element_located((By.XPATH, XPATH_FREE_RESULTS))
             )
 
@@ -73,7 +67,7 @@ class HumbleGamesScraper(Scraper):
 
         except WebDriverException:
             logger.info(
-                f"Free search results took longer than {MAX_WAIT_SECONDS} to load, probably there are none"
+                f"Free search results took longer than {Scraper.get_max_wait_seconds()} to load, probably there are none"
             )
 
         normalized_offers = HumbleGamesScraper.normalize_offers(raw_offers)
