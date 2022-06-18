@@ -237,6 +237,7 @@ class TelegramSubscription(Base):
 
     source: Source = Column(Enum(Source), nullable=False)
     type: OfferType = Column(Enum(OfferType), nullable=False)
+    duration: OfferDuration = Column(Enum(OfferDuration), nullable=False)
 
     last_offer_id: int = Column(Integer, nullable=False, default=0)
 
@@ -285,21 +286,24 @@ class LootDatabase:
         result = session.execute(select(Offer)).scalars().all()
         return result
 
-    def read_all_segmented(self) -> dict[str, dict[str, list[Offer]]]:
+    def read_all_segmented(self) -> dict[str, dict[str, dict[str, list[Offer]]]]:
         result = self.read_all()
 
-        offers: dict[str, dict[str, list[Offer]]] = {}
+        offers: dict[str, dict[str, dict[str, list[Offer]]]] = {}
 
         offer: Offer
         for offer in result:
             source: str = Source(offer.source).name
             type: str = OfferType(offer.type).name
+            duration: str = OfferDuration(offer.duration).name
             if source not in offers:
                 offers[source] = {}
             if type not in offers[source]:
-                offers[source][type] = []
+                offers[source][type] = {}
+            if duration not in offers[source][type]:
+                offers[source][type][duration] = []
 
-            offers[source][type].append(offer)
+            offers[source][type][duration].append(offer)
 
         return offers
 

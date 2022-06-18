@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from selenium.webdriver.chrome.webdriver import WebDriver
 
 from app.common import OfferDuration, OfferType, Source

@@ -7,27 +7,19 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from threading import Event
 from types import FrameType
-from typing import Type
 
 from selenium.webdriver.chrome.webdriver import WebDriver
 from sqlalchemy import select
 from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import Session
 
-from app.common import TIMESTAMP_LONG, OfferType, Source
+from app.common import TIMESTAMP_LONG, OfferDuration, OfferType, Source
 from app.configparser import Config
 from app.feed import generate_feed
 from app.pagedriver import get_pagedriver
 from app.scraper.info.igdb import get_igdb_details, get_igdb_id
 from app.scraper.info.steam import get_steam_details, get_steam_id
-from app.scraper.loot.amazon_games import AmazonGamesScraper
-from app.scraper.loot.amazon_loot import AmazonLootScraper
-from app.scraper.loot.epic_games import EpicGamesScraper
-from app.scraper.loot.gog_games import GogGamesScraper
-from app.scraper.loot.humble_games import HumbleGamesScraper
-from app.scraper.loot.scraper import Scraper
-from app.scraper.loot.steam_games import SteamGamesScraper
-from app.scraper.loot.steam_loot import SteamLootScraper
+from app.scraper.loot.scraperhelper import get_all_scrapers
 from app.sqlalchemy import Game, IgdbInfo, LootDatabase, Offer, SteamInfo, User
 from app.telegram import TelegramBot
 from app.upload import upload_to_server
@@ -134,18 +126,8 @@ def job(db: LootDatabase) -> None:
     cfg = Config.get()
 
     with get_pagedriver() as webdriver:
-        scrapers: list[Type[Scraper]] = [
-            AmazonGamesScraper,
-            AmazonLootScraper,
-            EpicGamesScraper,
-            GogGamesScraper,
-            HumbleGamesScraper,
-            SteamGamesScraper,
-            SteamLootScraper,
-        ]
-
         scraped_offers: list[Offer] = []
-        for scraper in scrapers:
+        for scraper in get_all_scrapers():
             if (
                 scraper.get_type() in cfg.enabled_offer_types
                 and scraper.get_duration() in cfg.enabled_offer_durations
@@ -221,8 +203,13 @@ def job(db: LootDatabase) -> None:
             # Then add new game info
             for scraper_source in loot_offers_in_db:
                 for scraper_type in loot_offers_in_db[scraper_source]:
-                    for db_offer in loot_offers_in_db[scraper_source][scraper_type]:
-                        add_game_info(db_offer, session, webdriver)
+                    for scraper_duration in loot_offers_in_db[scraper_source][
+                        scraper_type
+                    ]:
+                        for db_offer in loot_offers_in_db[scraper_source][scraper_type][
+                            scraper_duration
+                        ]:
+                            add_game_info(db_offer, session, webdriver)
 
     if cfg.generate_feed:
         feed_file_base = Config.data_path() / Path(cfg.feed_file_prefix + ".xml")
@@ -230,44 +217,63 @@ def job(db: LootDatabase) -> None:
         any_feed_changed = False
         for scraper_source in loot_offers_in_db:
             for scraper_type in loot_offers_in_db[scraper_source]:
-                feed_changed = False
-                feed_file = Config.data_path() / Path(
-                    cfg.feed_file_prefix
-                    + f"_{Source[scraper_source].name.lower()}"
-                    + f"_{OfferType[scraper_type].name.lower()}"
-                    + ".xml"
-                )
-                old_hash = hash_file(feed_file)
-                generate_feed(
-                    offers=loot_offers_in_db[scraper_source][scraper_type],
-                    feed_file_base=feed_file_base,
-                    author_name=cfg.feed_author_name,
-                    author_web=cfg.feed_author_web,
-                    author_mail=cfg.feed_author_mail,
-                    feed_url_prefix=cfg.feed_url_prefix,
-                    feed_url_alternate=cfg.feed_url_alternate,
-                    feed_id_prefix=cfg.feed_id_prefix,
-                    source=Source[scraper_source],
-                    type=OfferType[scraper_type],
-                )
-                new_hash = hash_file(feed_file)
-                if old_hash != new_hash:
-                    feed_changed = True
-                    any_feed_changed = True
+                for scraper_duration in loot_offers_in_db[scraper_source][scraper_type]:
+                    feed_changed = False
+                    feed_file_core = (
+                        f"_{Source[scraper_source].name.lower()}"
+                        + f"_{OfferType[scraper_type].name.lower()}"
+                    )
+                    # To keep the old names only add when the type is one of the new ones (!= permanent)
+                    if (
+                        OfferDuration[scraper_duration]
+                        != OfferDuration.PERMANENT_CLAIMABLE
+                    ):
+                        feed_file_core += (
+                            f"_{OfferDuration[scraper_duration].name.lower()}"
+                        )
+                    feed_file = Config.data_path() / Path(
+                        cfg.feed_file_prefix + feed_file_core + ".xml"
+                    )
+                    old_hash = hash_file(feed_file)
+                    generate_feed(
+                        offers=loot_offers_in_db[scraper_source][scraper_type][
+                            scraper_duration
+                        ],
+                        file=feed_file,
+                        author_name=cfg.feed_author_name,
+                        author_web=cfg.feed_author_web,
+                        author_mail=cfg.feed_author_mail,
+                        feed_url_prefix=cfg.feed_url_prefix,
+                        feed_url_alternate=cfg.feed_url_alternate,
+                        feed_id_prefix=cfg.feed_id_prefix,
+                        source=Source[scraper_source],
+                        type=OfferType[scraper_type],
+                        duration=OfferDuration[scraper_duration],
+                    )
+                    new_hash = hash_file(feed_file)
+                    if old_hash != new_hash:
+                        feed_changed = True
+                        any_feed_changed = True
 
-                if feed_changed and cfg.upload_feed:
-                    upload_to_server(feed_file)
+                    if feed_changed and cfg.upload_feed:
+                        upload_to_server(feed_file)
 
         # Generate and upload cumulated feed
         all_offers = []
         for scraper_source in loot_offers_in_db:
             for scraper_type in loot_offers_in_db[scraper_source]:
-                all_offers.extend(loot_offers_in_db[scraper_source][scraper_type])
+                for scraper_duration in loot_offers_in_db[scraper_source][scraper_type]:
+                    all_offers.extend(
+                        loot_offers_in_db[scraper_source][scraper_type][
+                            scraper_duration
+                        ]
+                    )
 
         if any_feed_changed:
+            feed_file = Config.data_path() / Path(cfg.feed_file_prefix + ".xml")
             generate_feed(
                 offers=all_offers,
-                feed_file_base=feed_file_base,
+                file=feed_file,
                 author_name=cfg.feed_author_name,
                 author_web=cfg.feed_author_web,
                 author_mail=cfg.feed_author_mail,
