@@ -26,8 +26,9 @@ class ParsedConfig:
     # Sources: Offers
     offers_amazon: bool = True
     offers_epic: bool = True
-    offers_steam: bool = True
     offers_gog: bool = True
+    offers_humble: bool = True
+    offers_steam: bool = True
 
     # Sources: Info
     info_steam: bool = True

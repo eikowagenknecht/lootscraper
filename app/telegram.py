@@ -682,6 +682,14 @@ class TelegramBot:
             keyboard.append(keyboard_button_row(False, Source.GOG, OfferType.GAME))
 
         if any(
+            x.source == Source.HUMBLE and x.type == OfferType.GAME
+            for x in user.telegram_subscriptions
+        ):
+            keyboard.append(keyboard_button_row(True, Source.HUMBLE, OfferType.GAME))
+        else:
+            keyboard.append(keyboard_button_row(False, Source.HUMBLE, OfferType.GAME))
+
+        if any(
             x.source == Source.STEAM and x.type == OfferType.GAME
             for x in user.telegram_subscriptions
         ):
@@ -809,6 +817,13 @@ class TelegramBot:
                 answer_text = POPUP_SUBSCRIBED
             else:
                 self.unsubscribe(db_user, OfferType.GAME, Source.GOG)
+                answer_text = POPUP_UNSUBSCRIBED
+        elif subscription_type == "humble game":
+            if not self.is_subscribed(db_user, OfferType.GAME, Source.HUMBLE):
+                self.subscribe(db_user, OfferType.GAME, Source.HUMBLE)
+                answer_text = POPUP_SUBSCRIBED
+            else:
+                self.unsubscribe(db_user, OfferType.GAME, Source.HUMBLE)
                 answer_text = POPUP_UNSUBSCRIBED
         elif subscription_type == "steam game":
             if not self.is_subscribed(db_user, OfferType.GAME, Source.STEAM):

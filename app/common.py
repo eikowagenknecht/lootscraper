@@ -15,6 +15,7 @@ class Source(Enum):
     EPIC = "Epic Games"
     STEAM = "Steam"
     GOG = "GOG"
+    HUMBLE = "Humble Bundle"
 
 
 class Channel(Enum):
