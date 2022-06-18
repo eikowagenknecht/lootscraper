@@ -25,7 +25,7 @@ from sqlalchemy.orm import Session, registry, relationship, scoped_session, sess
 
 from alembic import command
 from alembic.config import Config as AlembicConfig
-from app.common import Channel, OfferType, Source
+from app.common import Channel, OfferDuration, OfferType, Source
 from app.configparser import Config
 
 logger = logging.getLogger(__name__)
@@ -170,6 +170,7 @@ class Offer(Base):
     id: int = Column(Integer, primary_key=True, nullable=False)
     source: Source = Column(Enum(Source), nullable=False)
     type: OfferType = Column(Enum(OfferType), nullable=False)
+    duration: OfferDuration = Column(Enum(OfferDuration), nullable=False)
     title: str = Column(String, nullable=False)
     probable_game_name: str = Column(String, nullable=False)
 
