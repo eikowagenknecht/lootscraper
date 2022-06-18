@@ -18,10 +18,8 @@ from app.sqlalchemy import Offer
 logger = logging.getLogger(__name__)
 
 ROOT_URL = "https://gaming.amazon.com/home"
-XPATH_WAIT = '//div[@data-a-target="offer-section-FGWP_FULL"]'
-XPATH_GAMES = (
-    '//div[@data-a-target="offer-list-FGWP_FULL"]//div[@class="item-card__action"]'
-)
+XPATH_WAIT = '//div[@data-a-target="offer-section-FGWP"]'
+XPATH_GAMES = '//div[@data-a-target="offer-list-FGWP"]//div[@class="item-card__action"]'
 SUBPATH_TITLE = './/div[contains(concat(" ", normalize-space(@class), " "), " item-card-details__body__primary ")]//p'
 SUBPATH_ENDDATE = './/div[contains(concat(" ", normalize-space(@class), " "), " item-card__availability-date ")]//p'
 SUBPATH_LINK = './a[@data-a-target="learn-more-card"]'
@@ -30,7 +28,7 @@ SUBPATH_IMG = './/div[@data-a-target="card-image"]//img'
 
 @dataclass
 class RawOffer:
-    title: str | None = None
+    title: str
     valid_to: str | None = None
     url: str | None = None
     img_url: str | None = None
@@ -75,21 +73,28 @@ class AmazonGamesScraper(Scraper):
             return []
 
         raw_offers: list[RawOffer] = []
-        title_str: str | None
+        title_str: str
         valid_to_str: str | None
         url_str: str | None
 
         for element in elements:
             try:
                 title: WebElement = element.find_element(By.XPATH, SUBPATH_TITLE)
-                title_str = title.text
+                title_str = title.get_attribute("textContent")  # type: ignore
+                if not title_str:
+                    # Offers without titles don't make sense
+                    continue
             except WebDriverException:
-                # Nothing to do here, string stays empty
-                title_str = None
+                # Offers without titles don't make sense
+                continue
+
+            # Skip duplicates (everything is contained twice on the page for weird JS reasons)
+            if any(x.title == title_str for x in raw_offers):
+                continue
 
             try:
                 enddate: WebElement = element.find_element(By.XPATH, SUBPATH_ENDDATE)
-                valid_to_str = enddate.text
+                valid_to_str = enddate.get_attribute("textContent")  # type: ignore
             except WebDriverException:
                 # Nothing to do here, string stays empty
                 valid_to_str = None
@@ -131,10 +136,6 @@ class AmazonGamesScraper(Scraper):
 
         for raw_offer in raw_offers:
             # Raw text
-            if not raw_offer.title:
-                logger.error(f"Error with offer, has no title: {raw_offer}")
-                continue
-
             rawtext = f"<title>{raw_offer.title}</title>"
 
             # Title
