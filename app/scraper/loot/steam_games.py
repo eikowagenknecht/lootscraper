@@ -9,17 +9,18 @@ from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
-from app.common import OfferType, Source
+from app.common import OfferDuration, OfferType, Source
 from app.scraper.info.steam import skip_age_verification
-from app.scraper.info.utils import clean_game_title, clean_loot_title
+from app.scraper.info.utils import clean_game_title
 from app.scraper.loot.scraper import Scraper
 from app.sqlalchemy import Offer
 
 logger = logging.getLogger(__name__)
 
 SCRAPER_NAME = "Steam"
-ROOT_URL = "https://store.steampowered.com/search/?maxprice=free&specials=1"
-MAX_WAIT_SECONDS = 15  # Needs to be quite high in Docker for first run
+ROOT_URL = (
+    "https://store.steampowered.com/search/?maxprice=free&category1=998&specials=1"
+)
 
 DETAILS_URL = "https://store.steampowered.com/app/"
 
@@ -35,37 +36,39 @@ class RawOffer:
     appid: int | None
     url: str | None
     text: str | None = None
-    dlc: bool = False
 
 
-class SteamScraper(Scraper):
+class SteamGamesScraper(Scraper):
     @staticmethod
-    def scrape(
-        driver: WebDriver, options: dict[str, bool] = None
-    ) -> dict[str, list[Offer]]:
-        if options and not options[OfferType.GAME.name]:
-            return {}
+    def get_source() -> Source:
+        return Source.STEAM
 
-        driver.get(ROOT_URL)
+    @staticmethod
+    def get_type() -> OfferType:
+        return OfferType.GAME
 
-        offers = {}
+    @staticmethod
+    def get_duration() -> OfferDuration:
+        return OfferDuration.PERMANENT_CLAIMABLE
 
-        logger.info(f"Analyzing {ROOT_URL} for {OfferType.GAME.value} offers")
-        offers[OfferType.GAME.name] = SteamScraper.read_offers_from_page(driver)
-
-        return offers
+    @staticmethod
+    def scrape(driver: WebDriver) -> list[Offer]:
+        return SteamGamesScraper.read_offers_from_page(driver)
 
     @staticmethod
     def read_offers_from_page(driver: WebDriver) -> list[Offer]:
+        driver.get(ROOT_URL)
         try:
             # Wait until the page loaded
-            WebDriverWait(driver, MAX_WAIT_SECONDS).until(
+            WebDriverWait(driver, Scraper.get_max_wait_seconds()).until(
                 EC.presence_of_element_located(
                     (By.XPATH, STEAM_SEARCH_RESULTS_CONTAINER)
                 )
             )
         except WebDriverException:
-            logger.error(f"Page took longer than {MAX_WAIT_SECONDS} to load")
+            logger.error(
+                f"Page took longer than {Scraper.get_max_wait_seconds()} to load"
+            )
             return []
 
         elements: list[WebElement] = []
@@ -77,22 +80,18 @@ class SteamScraper(Scraper):
 
         raw_offers: list[RawOffer] = []
         for element in elements:
-            raw_offer = SteamScraper.read_raw_offer(element)
+            raw_offer = SteamGamesScraper.read_raw_offer(element)
             raw_offers.append(raw_offer)
 
         for raw_offer in raw_offers:
             try:
                 driver.get(raw_offer.url)
                 skip_age_verification(driver, raw_offer.appid if raw_offer.appid else 0)
-                WebDriverWait(driver, MAX_WAIT_SECONDS).until(
+                WebDriverWait(driver, Scraper.get_max_wait_seconds()).until(
                     EC.presence_of_element_located(
                         (By.CLASS_NAME, "game_area_purchase")
                     )
                 )
-
-                if driver.find_elements(By.CLASS_NAME, "game_area_dlc_bubble"):
-                    # This seems to be a DLC, not a game
-                    raw_offer.dlc = True
 
                 element = driver.find_element(
                     By.CLASS_NAME, "game_purchase_discount_quantity"
@@ -102,7 +101,7 @@ class SteamScraper(Scraper):
                 # Text is optional, continue away
                 pass
 
-        normalized_offers = SteamScraper.normalize_offers(raw_offers)
+        normalized_offers = SteamGamesScraper.normalize_offers(raw_offers)
 
         return normalized_offers
 
@@ -172,16 +171,14 @@ class SteamScraper(Scraper):
             # Probable game name
             if not raw_offer.title:
                 probable_game_name = None
-            elif raw_offer.dlc:
-                probable_game_name = clean_loot_title(raw_offer.title)
             else:
                 probable_game_name = clean_game_title(raw_offer.title)
 
             nearest_url = raw_offer.url if raw_offer.url else ROOT_URL
-            type = OfferType.GAME if not raw_offer.dlc else OfferType.LOOT
             offer = Offer(
-                source=Source.STEAM,
-                type=type,
+                source=SteamGamesScraper.get_source(),
+                duration=SteamGamesScraper.get_duration(),
+                type=SteamGamesScraper.get_type(),
                 title=raw_offer.title,
                 probable_game_name=probable_game_name,
                 seen_last=now,

@@ -1,7 +1,6 @@
 import logging
 from dataclasses import dataclass
 from datetime import date, datetime, time, timedelta, timezone
-from time import sleep
 
 from selenium.common.exceptions import WebDriverException
 from selenium.webdriver.chrome.webdriver import WebDriver
@@ -10,22 +9,16 @@ from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
-from app.common import OfferType, Source
-from app.scraper.info.utils import clean_game_title, clean_loot_title
+from app.common import OfferDuration, OfferType, Source
+from app.scraper.info.utils import clean_loot_title
 from app.scraper.loot.scraper import Scraper
 from app.sqlalchemy import Offer
 
 logger = logging.getLogger(__name__)
 
-SCRAPER_NAME = "Amazon Prime"
 ROOT_URL = "https://gaming.amazon.com/home"
-MAX_WAIT_SECONDS = 15  # Needs to be quite high in Docker for first run
-XPATH_WAIT = '//div[@data-a-target="offer-section-FGWP_FULL"]'
 XPATH_LOOT = (
     '//div[@data-a-target="offer-list-IN_GAME_LOOT"]//div[@class="item-card__action"]'
-)
-XPATH_GAMES = (
-    '//div[@data-a-target="offer-list-FGWP_FULL"]//div[@class="item-card__action"]'
 )
 SUBPATH_TITLE = './/div[contains(concat(" ", normalize-space(@class), " "), " item-card-details__body__primary ")]//p'
 SUBPATH_ENDDATE = './/div[contains(concat(" ", normalize-space(@class), " "), " item-card__availability-date ")]//p'
@@ -41,58 +34,39 @@ class RawOffer:
     img_url: str | None = None
 
 
-class AmazonScraper(Scraper):
+class AmazonLootScraper(Scraper):
     @staticmethod
-    def scrape(
-        driver: WebDriver, options: dict[str, bool] = None
-    ) -> dict[str, list[Offer]]:
-        if (
-            options
-            and not options[OfferType.GAME.name]
-            and not options[OfferType.LOOT.name]
-        ):
-            return {}
+    def get_source() -> Source:
+        return Source.AMAZON
 
+    @staticmethod
+    def get_type() -> OfferType:
+        return OfferType.LOOT
+
+    @staticmethod
+    def get_duration() -> OfferDuration:
+        return OfferDuration.PERMANENT_CLAIMABLE
+
+    @staticmethod
+    def scrape(driver: WebDriver) -> list[Offer]:
+        return AmazonLootScraper.read_offers_from_page(driver)
+
+    @staticmethod
+    def read_offers_from_page(driver: WebDriver) -> list[Offer]:
         driver.get(ROOT_URL)
-
-        offers = {}
-
-        if not options or options[OfferType.GAME.name]:
-            logger.info(f"Analyzing {ROOT_URL} for {OfferType.GAME.value} offers")
-            offers[OfferType.GAME.name] = AmazonScraper.read_offers_from_page(
-                OfferType.GAME, driver
-            )
-
-        if not options or options[OfferType.LOOT.name]:
-            logger.info(f"Analyzing {ROOT_URL} for {OfferType.LOOT.value} offers")
-            offers[OfferType.LOOT.name] = AmazonScraper.read_offers_from_page(
-                OfferType.LOOT, driver
-            )
-
-        return offers
-
-    @staticmethod
-    def read_offers_from_page(offer_type: OfferType, driver: WebDriver) -> list[Offer]:
         try:
             # Wait until the page loaded
-            WebDriverWait(driver, MAX_WAIT_SECONDS).until(
-                EC.presence_of_element_located((By.XPATH, XPATH_WAIT))
+            WebDriverWait(driver, Scraper.get_max_wait_seconds()).until(
+                EC.presence_of_element_located((By.XPATH, XPATH_LOOT))
             )
-            sleep(1)  # Otherwise the first element sometimes is not correctly evaluated
         except WebDriverException:
-            logger.error(f"Page took longer than {MAX_WAIT_SECONDS} to load")
+            logger.error(
+                f"Page took longer than {Scraper.get_max_wait_seconds()} to load"
+            )
             return []
 
-        match offer_type:
-            case OfferType.LOOT:
-                search_xpath = XPATH_LOOT
-            case OfferType.GAME:
-                search_xpath = XPATH_GAMES
-            case _:
-                raise ValueError
-
         try:
-            elements: list[WebElement] = driver.find_elements(By.XPATH, search_xpath)
+            elements: list[WebElement] = driver.find_elements(By.XPATH, XPATH_LOOT)
         except WebDriverException:
             logger.error("Root element not found, could not scrape!")
             return []
@@ -144,14 +118,12 @@ class AmazonScraper(Scraper):
                 )
             )
 
-        normalized_offers = AmazonScraper.normalize_offers(offer_type, raw_offers)
+        normalized_offers = AmazonLootScraper.normalize_offers(raw_offers)
 
         return normalized_offers
 
     @staticmethod
-    def normalize_offers(
-        offer_type: OfferType, raw_offers: list[RawOffer]
-    ) -> list[Offer]:
+    def normalize_offers(raw_offers: list[RawOffer]) -> list[Offer]:
         normalized_offers: list[Offer] = []
 
         for raw_offer in raw_offers:
@@ -163,11 +135,7 @@ class AmazonScraper(Scraper):
             rawtext = f"<title>{raw_offer.title}</title>"
 
             # Title
-            probable_game_name: str | None = None
-            if offer_type == OfferType.GAME:
-                probable_game_name = clean_game_title(raw_offer.title)
-            else:
-                probable_game_name = clean_loot_title(raw_offer.title)
+            probable_game_name = clean_loot_title(raw_offer.title)
 
             # Date
             # This is a bit more complicated as only the relative end is
@@ -236,8 +204,9 @@ class AmazonScraper(Scraper):
 
             nearest_url = raw_offer.url if raw_offer.url else ROOT_URL
             offer = Offer(
-                source=Source.AMAZON,
-                type=offer_type,
+                source=AmazonLootScraper.get_source(),
+                duration=AmazonLootScraper.get_duration(),
+                type=AmazonLootScraper.get_type(),
                 title=raw_offer.title,
                 probable_game_name=probable_game_name,
                 seen_last=datetime.now(timezone.utc),

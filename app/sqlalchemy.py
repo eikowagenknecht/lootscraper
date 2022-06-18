@@ -25,7 +25,7 @@ from sqlalchemy.orm import Session, registry, relationship, scoped_session, sess
 
 from alembic import command
 from alembic.config import Config as AlembicConfig
-from app.common import Channel, OfferType, Source
+from app.common import Channel, OfferDuration, OfferType, Source
 from app.configparser import Config
 
 logger = logging.getLogger(__name__)
@@ -170,6 +170,7 @@ class Offer(Base):
     id: int = Column(Integer, primary_key=True, nullable=False)
     source: Source = Column(Enum(Source), nullable=False)
     type: OfferType = Column(Enum(OfferType), nullable=False)
+    duration: OfferDuration = Column(Enum(OfferDuration), nullable=False)
     title: str = Column(String, nullable=False)
     probable_game_name: str = Column(String, nullable=False)
 
@@ -236,6 +237,7 @@ class TelegramSubscription(Base):
 
     source: Source = Column(Enum(Source), nullable=False)
     type: OfferType = Column(Enum(OfferType), nullable=False)
+    duration: OfferDuration = Column(Enum(OfferDuration), nullable=False)
 
     last_offer_id: int = Column(Integer, nullable=False, default=0)
 
@@ -284,21 +286,24 @@ class LootDatabase:
         result = session.execute(select(Offer)).scalars().all()
         return result
 
-    def read_all_segmented(self) -> dict[str, dict[str, list[Offer]]]:
+    def read_all_segmented(self) -> dict[str, dict[str, dict[str, list[Offer]]]]:
         result = self.read_all()
 
-        offers: dict[str, dict[str, list[Offer]]] = {}
+        offers: dict[str, dict[str, dict[str, list[Offer]]]] = {}
 
         offer: Offer
         for offer in result:
             source: str = Source(offer.source).name
             type: str = OfferType(offer.type).name
+            duration: str = OfferDuration(offer.duration).name
             if source not in offers:
                 offers[source] = {}
             if type not in offers[source]:
-                offers[source][type] = []
+                offers[source][type] = {}
+            if duration not in offers[source][type]:
+                offers[source][type][duration] = []
 
-            offers[source][type].append(offer)
+            offers[source][type][duration].append(offer)
 
         return offers
 

@@ -9,15 +9,13 @@ from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
-from app.common import OfferType, Source
+from app.common import OfferDuration, OfferType, Source
 from app.scraper.loot.scraper import Scraper
 from app.sqlalchemy import Offer
 
 logger = logging.getLogger(__name__)
 
-SCRAPER_NAME = "Humble Bundle"
 ROOT_URL = "https://de.humblebundle.com/store/search?sort=discount&filter=onsale"
-MAX_WAIT_SECONDS = 15  # Needs to be quite high in Docker for first run
 
 XPATH_SEARCH_RESULTS = (
     """//ul[contains(concat(" ", normalize-space(@class), " "), " entities-list ")]"""
@@ -35,43 +33,44 @@ class RawOffer:
     valid_to: str | None = None
 
 
-class HumbleScraper(Scraper):
+class HumbleGamesScraper(Scraper):
     @staticmethod
-    def scrape(
-        driver: WebDriver, options: dict[str, bool] = None
-    ) -> dict[str, list[Offer]]:
-        if options and not options[OfferType.GAME.name]:
-            return {}
+    def get_source() -> Source:
+        return Source.HUMBLE
 
-        driver.get(ROOT_URL)
+    @staticmethod
+    def get_type() -> OfferType:
+        return OfferType.GAME
 
-        offers = {}
+    @staticmethod
+    def get_duration() -> OfferDuration:
+        return OfferDuration.PERMANENT_CLAIMABLE
 
-        logger.info(f"Analyzing {ROOT_URL} for {OfferType.GAME.value} offers")
-        offers[OfferType.GAME.name] = HumbleScraper.read_offers_from_page(driver)
-
-        return offers
+    @staticmethod
+    def scrape(driver: WebDriver) -> list[Offer]:
+        return HumbleGamesScraper.read_offers_from_page(driver)
 
     @staticmethod
     def read_offers_from_page(driver: WebDriver) -> list[Offer]:
+        driver.get(ROOT_URL)
         raw_offers: list[RawOffer] = []
 
         try:
             # Wait until the page loaded
-            WebDriverWait(driver, MAX_WAIT_SECONDS).until(
+            WebDriverWait(driver, Scraper.get_max_wait_seconds()).until(
                 EC.presence_of_element_located((By.XPATH, XPATH_FREE_RESULTS))
             )
 
             offer_elements = driver.find_elements(By.XPATH, XPATH_FREE_RESULTS)
             for offer_element in offer_elements:
-                raw_offers.append(HumbleScraper.read_raw_offer(offer_element))
+                raw_offers.append(HumbleGamesScraper.read_raw_offer(offer_element))
 
         except WebDriverException:
             logger.info(
-                f"Free search results took longer than {MAX_WAIT_SECONDS} to load, probably there are none"
+                f"Free search results took longer than {Scraper.get_max_wait_seconds()} to load, probably there are none"
             )
 
-        normalized_offers = HumbleScraper.normalize_offers(raw_offers)
+        normalized_offers = HumbleGamesScraper.normalize_offers(raw_offers)
 
         return normalized_offers
 
@@ -137,8 +136,9 @@ class HumbleScraper(Scraper):
 
             nearest_url = raw_offer.url if raw_offer.url else ROOT_URL
             offer = Offer(
-                source=Source.HUMBLE,
-                type=OfferType.GAME,
+                source=HumbleGamesScraper.get_source(),
+                duration=HumbleGamesScraper.get_duration(),
+                type=HumbleGamesScraper.get_type(),
                 title=title,
                 probable_game_name=title,
                 seen_last=datetime.now(timezone.utc),
