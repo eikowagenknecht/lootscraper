@@ -1,7 +1,6 @@
 import logging
 from dataclasses import dataclass
 from datetime import date, datetime, time, timedelta, timezone
-from time import sleep
 
 from selenium.common.exceptions import WebDriverException
 from selenium.webdriver.chrome.webdriver import WebDriver
@@ -18,7 +17,6 @@ from app.sqlalchemy import Offer
 logger = logging.getLogger(__name__)
 
 ROOT_URL = "https://gaming.amazon.com/home"
-XPATH_WAIT = '//div[@data-a-target="offer-section-FGWP_FULL"]'
 XPATH_LOOT = (
     '//div[@data-a-target="offer-list-IN_GAME_LOOT"]//div[@class="item-card__action"]'
 )
@@ -59,9 +57,8 @@ class AmazonLootScraper(Scraper):
         try:
             # Wait until the page loaded
             WebDriverWait(driver, Scraper.get_max_wait_seconds()).until(
-                EC.presence_of_element_located((By.XPATH, XPATH_WAIT))
+                EC.presence_of_element_located((By.XPATH, XPATH_LOOT))
             )
-            sleep(1)  # Otherwise the first element sometimes is not correctly evaluated
         except WebDriverException:
             logger.error(
                 f"Page took longer than {Scraper.get_max_wait_seconds()} to load"
