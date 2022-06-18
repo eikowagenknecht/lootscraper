@@ -33,8 +33,8 @@ def get_pagedriver() -> WebDriver:
     # https://stackoverflow.com/questions/51959986/how-to-solve-selenium-chromedriver-timed-out-receiving-message-from-renderer-exc
     options.add_argument("--disable-gpu")
 
-    # To see everything. Default: 1920,1200
-    options.add_argument("--window-size=10000,10000")
+    # To see everything, we use an extra long window. Default: 1920,1200
+    options.add_argument("--window-size=1920,10000")
     # Scrape english version of page
     options.add_argument("--lang=en-US")
     # Loglevel
