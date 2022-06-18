@@ -7,6 +7,7 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from threading import Event
 from types import FrameType
+from typing import Type
 
 from selenium.webdriver.chrome.webdriver import WebDriver
 from sqlalchemy import select
@@ -24,6 +25,7 @@ from app.scraper.loot.amazon_loot import AmazonLootScraper
 from app.scraper.loot.epic_games import EpicGamesScraper
 from app.scraper.loot.gog_games import GogGamesScraper
 from app.scraper.loot.humble_games import HumbleGamesScraper
+from app.scraper.loot.scraper import Scraper
 from app.scraper.loot.steam_games import SteamGamesScraper
 from app.scraper.loot.steam_loot import SteamLootScraper
 from app.sqlalchemy import Game, IgdbInfo, LootDatabase, Offer, SteamInfo, User
@@ -132,54 +134,23 @@ def job(db: LootDatabase) -> None:
     with get_pagedriver() as webdriver:
         scraped_offers: dict[str, dict[str, list[Offer]]] = {}
 
-        if Config.get().offers_amazon and Config.get().scrape_games:
-            scraped_offers[
-                AmazonGamesScraper.get_source().value
-            ] = AmazonGamesScraper.scrape(webdriver)
-        else:
-            logging.info(f"Skipping {AmazonGamesScraper.get_source().value}")
+        scrapers: list[Type[Scraper]] = [
+            AmazonGamesScraper,
+            AmazonLootScraper,
+            EpicGamesScraper,
+            GogGamesScraper,
+            HumbleGamesScraper,
+            SteamGamesScraper,
+            SteamLootScraper,
+        ]
 
-        if Config.get().offers_amazon and Config.get().scrape_loot:
-            scraped_offers[
-                AmazonLootScraper.get_source().value
-            ] = AmazonLootScraper.scrape(webdriver)
-        else:
-            logging.info(f"Skipping {AmazonLootScraper.get_source().value}")
-
-        if Config.get().offers_epic and Config.get().scrape_games:
-            scraped_offers[
-                EpicGamesScraper.get_source().value
-            ] = EpicGamesScraper.scrape(webdriver)
-        else:
-            logging.info(f"Skipping {EpicGamesScraper.get_source().value}")
-
-        if Config.get().offers_gog and Config.get().scrape_games:
-            scraped_offers[GogGamesScraper.get_source().value] = GogGamesScraper.scrape(
-                webdriver
-            )
-        else:
-            logging.info(f"Skipping {GogGamesScraper.get_source().value}")
-
-        if Config.get().offers_humble and Config.get().scrape_games:
-            scraped_offers[
-                HumbleGamesScraper.get_source().value
-            ] = HumbleGamesScraper.scrape(webdriver)
-        else:
-            logging.info(f"Skipping {HumbleGamesScraper.get_source().value}")
-
-        if Config.get().offers_steam and Config.get().scrape_games:
-            scraped_offers[
-                SteamGamesScraper.get_source().value
-            ] = SteamGamesScraper.scrape(webdriver)
-        else:
-            logging.info(f"Skipping {SteamGamesScraper.get_source().value}")
-
-        if Config.get().offers_steam and Config.get().scrape_loot:
-            scraped_offers[
-                SteamLootScraper.get_source().value
-            ] = SteamLootScraper.scrape(webdriver)
-        else:
-            logging.info(f"Skipping {SteamLootScraper.get_source().value}")
+        for scraper in scrapers:
+            if (
+                scraper.get_type() in Config.get().enabled_offer_types
+                and scraper.get_duration() in Config.get().enabled_offer_durations
+                and scraper.get_source() in Config.get().enabled_offer_sources
+            ):
+                scraped_offers[scraper.get_source().value] = scraper.scrape(webdriver)
 
         # Check which offers are new and which are updated, then act accordingly:
         # - Offers that are neither new nor updated just get a new date
