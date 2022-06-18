@@ -9,7 +9,7 @@ from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
-from app.common import OfferType, Source
+from app.common import OfferDuration, OfferType, Source
 from app.scraper.info.steam import skip_age_verification
 from app.scraper.info.utils import clean_game_title, clean_loot_title
 from app.scraper.loot.scraper import Scraper
@@ -181,6 +181,7 @@ class SteamScraper(Scraper):
             type = OfferType.GAME if not raw_offer.dlc else OfferType.LOOT
             offer = Offer(
                 source=Source.STEAM,
+                duration=OfferDuration.PERMANENT_CLAIMABLE,
                 type=type,
                 title=raw_offer.title,
                 probable_game_name=probable_game_name,

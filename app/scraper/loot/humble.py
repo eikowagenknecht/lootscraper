@@ -9,7 +9,7 @@ from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
-from app.common import OfferType, Source
+from app.common import OfferDuration, OfferType, Source
 from app.scraper.loot.scraper import Scraper
 from app.sqlalchemy import Offer
 
@@ -138,6 +138,7 @@ class HumbleScraper(Scraper):
             nearest_url = raw_offer.url if raw_offer.url else ROOT_URL
             offer = Offer(
                 source=Source.HUMBLE,
+                duration=OfferDuration.PERMANENT_CLAIMABLE,
                 type=OfferType.GAME,
                 title=title,
                 probable_game_name=title,
