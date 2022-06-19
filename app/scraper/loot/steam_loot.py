@@ -48,7 +48,7 @@ class SteamLootScraper(Scraper):
 
     @staticmethod
     def get_duration() -> OfferDuration:
-        return OfferDuration.PERMANENT_CLAIMABLE
+        return OfferDuration.CLAIMABLE
 
     @staticmethod
     def scrape(driver: WebDriver) -> list[Offer]:

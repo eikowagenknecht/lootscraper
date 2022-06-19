@@ -6,16 +6,17 @@ TIMESTAMP_READABLE_WITH_HOUR = "%Y-%m-%d - %H:%M UTC"
 
 
 class OfferType(Enum):
-    LOOT = "Loot"  # DLC, Ingame cash, etc.
     GAME = "Game"
+    LOOT = "Loot"  # DLC, Ingame cash, etc.
 
 
 class Source(Enum):
     AMAZON = "Amazon Prime"
     EPIC = "Epic Games"
-    STEAM = "Steam"
     GOG = "GOG"
     HUMBLE = "Humble Bundle"
+    ITCH = "itch.io"
+    STEAM = "Steam"
 
 
 class Channel(Enum):
@@ -25,8 +26,8 @@ class Channel(Enum):
 
 
 class OfferDuration(Enum):
-    ALWAYS_FREE = "Always Free"  # These probably will stay free forever
-    PERMANENT_CLAIMABLE = "Permanent Claimable"  # The usual offers (Epic etc.)
+    ALWAYS = "Always Free"  # These probably will stay free forever
+    CLAIMABLE = "Permanent after Claim"  # The usual offers (Epic etc.)
     TEMPORARY = "Temporary"  # Temporary offers (Steam weekend etc.)
 
 

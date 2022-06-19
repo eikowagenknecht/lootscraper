@@ -121,6 +121,8 @@ class Config:
                 parsed_config.enabled_offer_sources.append(Source.GOG)
             if config.getboolean("offer_sources", "Humble"):
                 parsed_config.enabled_offer_sources.append(Source.HUMBLE)
+            if config.getboolean("offer_sources", "Itch"):
+                parsed_config.enabled_offer_sources.append(Source.ITCH)
             if config.getboolean("offer_sources", "Steam"):
                 parsed_config.enabled_offer_sources.append(Source.STEAM)
 
@@ -129,14 +131,12 @@ class Config:
             if config.getboolean("offer_types", "Loot"):
                 parsed_config.enabled_offer_types.append(OfferType.LOOT)
 
-            if config.getboolean("offer_durations", "Permanent"):
-                parsed_config.enabled_offer_durations.append(
-                    OfferDuration.PERMANENT_CLAIMABLE
-                )
+            if config.getboolean("offer_durations", "Always"):
+                parsed_config.enabled_offer_durations.append(OfferDuration.ALWAYS)
+            if config.getboolean("offer_durations", "Claimable"):
+                parsed_config.enabled_offer_durations.append(OfferDuration.CLAIMABLE)
             if config.getboolean("offer_durations", "Temporary"):
                 parsed_config.enabled_offer_durations.append(OfferDuration.TEMPORARY)
-            if config.getboolean("offer_durations", "AlwaysFree"):
-                parsed_config.enabled_offer_durations.append(OfferDuration.ALWAYS_FREE)
 
             parsed_config.info_steam = config.getboolean("sources_info", "Steam")
             parsed_config.info_igdb = config.getboolean("sources_info", "IGDB")

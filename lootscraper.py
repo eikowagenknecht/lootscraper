@@ -224,10 +224,7 @@ def job(db: LootDatabase) -> None:
                         + f"_{OfferType[scraper_type].name.lower()}"
                     )
                     # To keep the old names only add when the type is one of the new ones (!= permanent)
-                    if (
-                        OfferDuration[scraper_duration]
-                        != OfferDuration.PERMANENT_CLAIMABLE
-                    ):
+                    if OfferDuration[scraper_duration] != OfferDuration.CLAIMABLE:
                         feed_file_core += (
                             f"_{OfferDuration[scraper_duration].name.lower()}"
                         )

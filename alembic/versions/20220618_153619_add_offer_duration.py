@@ -26,8 +26,8 @@ def upgrade() -> None:
             sa.Column(
                 "duration",
                 sa.Enum(
-                    "ALWAYS_FREE",
-                    "PERMANENT_CLAIMABLE",
+                    "ALWAYS",
+                    "CLAIMABLE",
                     "TEMPORARY",
                     name="offerduration",
                 ),
@@ -40,8 +40,8 @@ def upgrade() -> None:
             sa.Column(
                 "duration",
                 sa.Enum(
-                    "ALWAYS_FREE",
-                    "PERMANENT_CLAIMABLE",
+                    "ALWAYS",
+                    "CLAIMABLE",
                     "TEMPORARY",
                     name="offerduration",
                 ),
@@ -54,11 +54,11 @@ def upgrade() -> None:
     with orm.Session(bind=bind) as session:
         offer: Offer
         for offer in session.scalars(select(Offer)).all():
-            offer.duration = OfferDuration.PERMANENT_CLAIMABLE
+            offer.duration = OfferDuration.CLAIMABLE
 
         sub: TelegramSubscription
         for sub in session.scalars(select(TelegramSubscription)).all():
-            sub.duration = OfferDuration.PERMANENT_CLAIMABLE
+            sub.duration = OfferDuration.CLAIMABLE
 
         session.commit()
 
