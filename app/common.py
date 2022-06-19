@@ -25,8 +25,8 @@ class Channel(Enum):
 
 
 class OfferDuration(Enum):
-    ALWAYS_FREE = "Always Free"  # These probably will stay free forever
-    PERMANENT_CLAIMABLE = "Permanent Claimable"  # The usual offers (Epic etc.)
+    ALWAYS = "Always Free"  # These probably will stay free forever
+    CLAIMABLE = "Permanent after Claim"  # The usual offers (Epic etc.)
     TEMPORARY = "Temporary"  # Temporary offers (Steam weekend etc.)
 
 

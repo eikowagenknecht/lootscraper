@@ -66,7 +66,7 @@ def generate_feed(
         # Atom Needed
         feed_entry.id(f"{feed_id_prefix}{int(offer.id)}")
         additional_info = offer.type.value
-        if offer.duration != OfferDuration.PERMANENT_CLAIMABLE:
+        if offer.duration != OfferDuration.CLAIMABLE:
             additional_info += f", {offer.duration.value}"
 
         title = f"{offer.source.value} ({additional_info}) - {offer.title}"
@@ -229,7 +229,7 @@ def get_feed_title(
     if type is not None:
         title += " " + type.value
 
-    if duration is not None and duration != OfferDuration.PERMANENT_CLAIMABLE:
+    if duration is not None and duration != OfferDuration.CLAIMABLE:
         title += f" ({duration.value})"
 
     return title

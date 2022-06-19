@@ -130,13 +130,11 @@ class Config:
                 parsed_config.enabled_offer_types.append(OfferType.LOOT)
 
             if config.getboolean("offer_durations", "Permanent"):
-                parsed_config.enabled_offer_durations.append(
-                    OfferDuration.PERMANENT_CLAIMABLE
-                )
+                parsed_config.enabled_offer_durations.append(OfferDuration.CLAIMABLE)
             if config.getboolean("offer_durations", "Temporary"):
                 parsed_config.enabled_offer_durations.append(OfferDuration.TEMPORARY)
             if config.getboolean("offer_durations", "AlwaysFree"):
-                parsed_config.enabled_offer_durations.append(OfferDuration.ALWAYS_FREE)
+                parsed_config.enabled_offer_durations.append(OfferDuration.ALWAYS)
 
             parsed_config.info_steam = config.getboolean("sources_info", "Steam")
             parsed_config.info_igdb = config.getboolean("sources_info", "IGDB")
