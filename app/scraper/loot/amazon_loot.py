@@ -57,8 +57,12 @@ class AmazonLootScraper(Scraper):
         try:
             # Wait until the page loaded
             WebDriverWait(driver, Scraper.get_max_wait_seconds()).until(
-                EC.presence_of_element_located((By.XPATH, XPATH_LOOT))
+                EC.presence_of_element_located((By.CLASS_NAME, "offer-list__content"))
             )
+
+            # Scroll slowly to the bottom to load all offers
+            AmazonLootScraper.scroll_element_to_bottom(driver, "root")
+
         except WebDriverException:
             logger.error(
                 f"Page took longer than {Scraper.get_max_wait_seconds()} to load"
