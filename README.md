@@ -8,13 +8,21 @@ You enjoy getting games for free but you *don’t* enjoy having to keep track of
 
 This Python (3.10+) application uses Selenium to automatically visit sites with free gaming related offers (currently Amazon Prime, Epic Games and Steam are supported, more will follow) and then neatly puts the gathered information into RSS feeds and a Telegram bot. So now you can track the offers using your favorite news reader like Feedly instead of manually visiting the sites or get a message every time a new offer is available.
 
+If you encounter any problems feel free to open an issue here and I'll try my best to help. I'd also really like to hear your feature requests (even though I still have quite some ideas myself)!. This is tracked in the Github issues as well.
+
 ## Usage
 
-You can either run this script locally on your computer or in any environment capable of running a Docker container.
-
-Just want the feeds? Sure. You can use the links below. They are updated every 20 minutes.
+### Telegram bot
 
 If you prefer Telegram, you can instead subscribe to the [Telegram LootScraperBot](https://t.me/LootScraperBot) to get push notifications for new offers. You can choose which categories to subscribe there.
+
+This is what it currently looks like in Telegram:
+
+![image](https://user-images.githubusercontent.com/1475672/166058823-98e2beb9-7eb5-403d-94c7-7e17966fe9b7.png)
+
+### RSS Feeds
+
+Prefer the RSS feeds? Sure. You can use the links below. They are updated every 20 minutes.
 
 - Amazon Prime ([games](https://feed.phenx.de/lootscraper_amazon_game.xml) and [ingame loot](https://feed.phenx.de/lootscraper_amazon_loot.xml))
 - [Epic Games](https://feed.phenx.de/lootscraper_epic_game.xml)
@@ -34,19 +42,13 @@ This is what it currently looks like in Feedly:
 
 ![image](https://user-images.githubusercontent.com/1475672/161056100-2fcf005f-19a9-4279-a2d3-5a90855426ff.png)
 
-... and in Telegram:
-
-![image](https://user-images.githubusercontent.com/1475672/166058823-98e2beb9-7eb5-403d-94c7-7e17966fe9b7.png)
-
-## State
-
-This project is still in ongoing development, so expect a few rough edges if you try to run it yourself. If you encounter any problems feel free to open an issue here and I'll try to help.
-
-I have quite a few features on my mind that I'd like to implement. I also plan to extend this to more sources for free offers. All of this is tracked in the Github issues.
-
 ## For power users and developers
 
-If you want to run this yourself or contribute, please see the [README for developers](README_DEV.md) file.
+This project is still in ongoing development, so expect a few rough edges if you try to run it yourself.
+
+You can either run it locally on your computer or in any environment capable of running a Docker container.
+
+If you want to do so or contribute, please see the [README for developers](README_DEV.md) file.
 
 ## License
 
