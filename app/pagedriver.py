@@ -34,7 +34,7 @@ def get_pagedriver() -> WebDriver:
     options.add_argument("--disable-gpu")
 
     # To see everything, we use an extra long window. Default: 1920,1200
-    options.add_argument("--window-size=1920,10000")
+    options.add_argument("--window-size=1920,1200")
     # Scrape english version of page
     options.add_argument("--lang=en-US")
     # Loglevel
