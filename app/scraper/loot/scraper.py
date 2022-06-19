@@ -8,7 +8,7 @@ from app.common import OfferDuration, OfferType, Source
 from app.sqlalchemy import Offer
 
 MAX_WAIT_SECONDS = 15  # Needs to be quite high in Docker for first run
-SCROLL_PAUSE_SECONDS = 0.5
+SCROLL_PAUSE_SECONDS = 1  # Long enough so even Amazons JS can catch up
 
 
 class Scraper:
@@ -33,26 +33,33 @@ class Scraper:
         return MAX_WAIT_SECONDS
 
     @staticmethod
-    def scroll_to_infinite_bottom(driver: WebDriver) -> None:
+    def scroll_to_infinite_bottom(
+        driver: WebDriver, element_id: str | None = None
+    ) -> None:
         """Scroll down to the bottom of the current page. Useful for pages with infinite scrolling."""
 
+        if element_id:
+            selector = f'document.getElementById("{element_id}")'
+        else:
+            selector = "document.body"
+
         # Get scroll height
-        last_height = driver.execute_script("return document.body.scrollHeight")  # type: ignore
+        position = driver.execute_script(f"return {selector}.scrollTop")  # type: ignore
 
         scolled_x_times = 0
 
         while True:
-            # Scroll down to bottom
-            driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")  # type: ignore
-
-            # Wait to load page
+            # Wait to load page. We do this first to give the page time for the initial load
             sleep(SCROLL_PAUSE_SECONDS)
 
+            # Scroll down to bottom
+            driver.execute_script(f"{selector}.scrollTo(0, {position + 800});")  # type: ignore
+
             # Calculate new scroll height and compare with last scroll height
-            new_height = driver.execute_script("return document.body.scrollHeight")  # type: ignore
-            if new_height == last_height:
+            new_position = driver.execute_script(f"return {selector}.scrollTop")  # type: ignore
+            if new_position == position:
                 break
-            last_height = new_height
+            position = new_position
 
             # Do not scroll more than 100 times, something is wrong here!
             if scolled_x_times > 100:
