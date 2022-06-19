@@ -11,6 +11,7 @@ class OfferType(Enum):
 
 
 class Source(Enum):
+    APPLE = "Apple App Store"
     AMAZON = "Amazon Prime"
     EPIC = "Epic Games"
     GOG = "GOG"

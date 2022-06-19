@@ -857,13 +857,15 @@ class TelegramBot:
                 content += f"Offer expired {markdown_escape(time_to_end)} ago"
             else:
                 content += f"Offer expires in {markdown_escape(time_to_end)}"
-            content += f" \\({markdown_escape(offer.valid_to.strftime(TIMESTAMP_READABLE_WITH_HOUR))}\\)\\."
+            content += markdown_escape(
+                " (" + offer.valid_to.strftime(TIMESTAMP_READABLE_WITH_HOUR) + ")."
+            )
         elif offer.duration == OfferDuration.ALWAYS:
-            content += "Offer will stay free, no need to hurry\\!"
+            content += markdown_escape("Offer will stay free, no need to hurry.")
         else:
-            content += "Offer is valid forever\\.\\. just kidding, I just don't know when it will end, so grab it now\\!"
-
-        content += "\n"
+            content += markdown_escape(
+                "Offer is valid forever.. just kidding, I just don't know when it will end."
+            )
 
         if offer.url:
             content += " " + markdown_url(
