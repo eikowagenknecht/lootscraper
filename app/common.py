@@ -15,6 +15,7 @@ class Source(Enum):
     AMAZON = "Amazon Prime"
     EPIC = "Epic Games"
     GOG = "GOG"
+    GOOGLE = "Google Play Store"
     HUMBLE = "Humble Bundle"
     ITCH = "itch.io"
     STEAM = "Steam"

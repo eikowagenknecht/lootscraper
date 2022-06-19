@@ -121,6 +121,8 @@ class Config:
                 parsed_config.enabled_offer_sources.append(Source.EPIC)
             if config.getboolean("offer_sources", "GOG"):
                 parsed_config.enabled_offer_sources.append(Source.GOG)
+            if config.getboolean("offer_sources", "Google"):
+                parsed_config.enabled_offer_sources.append(Source.GOOGLE)
             if config.getboolean("offer_sources", "Humble"):
                 parsed_config.enabled_offer_sources.append(Source.HUMBLE)
             if config.getboolean("offer_sources", "Itch"):
