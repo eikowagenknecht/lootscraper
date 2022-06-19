@@ -1,7 +1,6 @@
 import logging
 from dataclasses import dataclass
 from datetime import datetime, timezone
-from time import sleep
 
 from selenium.common.exceptions import WebDriverException
 from selenium.webdriver.chrome.webdriver import WebDriver
@@ -16,18 +15,12 @@ from app.sqlalchemy import Offer
 
 logger = logging.getLogger(__name__)
 
-ROOT_URL = "https://www.gog.com/partner/free_games"
+ROOT_URL = "https://itch.io/games/new-and-popular/on-sale"
 
-XPATH_PAGE_LOADED = """//div[@class="content cf"]"""
-
-XPATH_SWITCH_TO_ENGLISH = """//li[contains(concat(" ", normalize-space(@class), " "), " footer-microservice-language__item ")][1]"""
-XPATH_SELECTED_LANGUAGE = """//li[contains(concat(" ", normalize-space(@class), " "), " footer-microservice-language__item is-selected ")]"""
-
-# Variant 1
-XPATH_GAMES = """//ul[contains(concat(" ", normalize-space(@class), " "), " partners__game-list ")]"""
-SUBPATH_OFFERS = """.//a"""  # URL: Attribute href
-SUBPATH_TITLE = """.//span[contains(concat(" ", normalize-space(@class), " "), " product-title__text ")]"""
-SUBPATH_IMAGE = """.//img"""  # Attribute srcset, first entry
+# XPATH_SEARCH_RESULTS = """//div[contains(concat(" ", normalize-space(@class), " "), " game_grid_widget ")]"""
+XPATH_FREE_RESULTS = """//div[contains(concat(" ", normalize-space(@class), " "), " game_grid_widget ")]//div[contains(concat(" ", normalize-space(@class), " "), " game_cell ") and .//div[@class="sale_tag" and contains(text(), "100")]]"""  # URL: Attribute href
+SUBPATH_TITLE = """.//a[contains(concat(" ", normalize-space(@class), " "), " title ")]"""  # /text(), URL: Attribute href
+SUBPATH_IMAGE = """.//img"""  # Attribute src
 
 
 @dataclass
@@ -37,10 +30,10 @@ class RawOffer:
     img_url: str | None
 
 
-class GogGamesAlwaysFreeScraper(Scraper):
+class ItchGamesScraper(Scraper):
     @staticmethod
     def get_source() -> Source:
-        return Source.GOG
+        return Source.ITCH
 
     @staticmethod
     def get_type() -> OfferType:
@@ -48,61 +41,36 @@ class GogGamesAlwaysFreeScraper(Scraper):
 
     @staticmethod
     def get_duration() -> OfferDuration:
-        return OfferDuration.ALWAYS
+        return OfferDuration.CLAIMABLE
 
     @staticmethod
     def scrape(driver: WebDriver) -> list[Offer]:
-        return GogGamesAlwaysFreeScraper.read_offers_from_page(driver)
+        return ItchGamesScraper.read_offers_from_page(driver)
 
     @staticmethod
     def read_offers_from_page(driver: WebDriver) -> list[Offer]:
         driver.get(ROOT_URL)
-        try:
-            # Wait until the page loaded
-            WebDriverWait(driver, Scraper.get_max_wait_seconds()).until(
-                EC.presence_of_element_located((By.XPATH, XPATH_PAGE_LOADED))
-            )
-        except WebDriverException:
-            logger.error(
-                f"Page took longer than {Scraper.get_max_wait_seconds()} to load"
-            )
-            return []
-
-        try:
-            # Switch to english version
-            en = driver.find_element(By.XPATH, XPATH_SWITCH_TO_ENGLISH)
-            en.click()
-            sleep(2)  # Wait for the language switching to begin
-            # Check if it's really english now
-            en_test = driver.find_element(By.XPATH, XPATH_SELECTED_LANGUAGE)
-            if en_test.text != "English":
-                logger.error(
-                    f"Tried switching to English, but {en_test.text} is active instead"
-                )
-                return []
-        except WebDriverException:
-            logger.error("Couldn't switch to English")
-            return []
 
         raw_offers: list[RawOffer] = []
 
         try:
             # Wait until the page loaded
             WebDriverWait(driver, Scraper.get_max_wait_seconds()).until(
-                EC.presence_of_element_located((By.XPATH, XPATH_GAMES))
+                EC.presence_of_element_located((By.XPATH, XPATH_FREE_RESULTS))
             )
 
-            offer_elements = driver.find_elements(By.XPATH, SUBPATH_OFFERS)
+            ItchGamesScraper.scroll_to_infinite_bottom(driver)
+
+            offer_elements = driver.find_elements(By.XPATH, XPATH_FREE_RESULTS)
             for offer_element in offer_elements:
-                raw_offers.append(
-                    GogGamesAlwaysFreeScraper.read_raw_offer(offer_element)
-                )
+                raw_offers.append(ItchGamesScraper.read_raw_offer(offer_element))
         except WebDriverException:
-            logger.info(
-                f"Giveaways took longer than {Scraper.get_max_wait_seconds()} to load, probably there are none"
+            logger.error(
+                f"Page took longer than {Scraper.get_max_wait_seconds()} to load"
             )
+            return []
 
-        normalized_offers = GogGamesAlwaysFreeScraper.normalize_offers(raw_offers)
+        normalized_offers = ItchGamesScraper.normalize_offers(raw_offers)
 
         return normalized_offers
 
@@ -119,20 +87,14 @@ class GogGamesAlwaysFreeScraper(Scraper):
             pass
 
         try:
-            url_str = str(element.get_attribute("href"))  # type: ignore
+            url_str = str(element.find_element(By.XPATH, SUBPATH_TITLE).get_attribute("href"))  # type: ignore
         except WebDriverException:
             # Nothing to do here, string stays empty
             pass
 
         try:
             img_url_str = str(
-                element.find_element(By.XPATH, SUBPATH_IMAGE).get_attribute("srcset")
-            )
-            img_url_str = "https:" + (
-                img_url_str.split(",")[0]
-                .strip()
-                .removesuffix(" 2x")
-                .removesuffix(" 1x")
+                element.find_element(By.XPATH, SUBPATH_IMAGE).get_attribute("src")
             )
         except WebDriverException:
             # Nothing to do here, string stays empty
@@ -163,9 +125,9 @@ class GogGamesAlwaysFreeScraper(Scraper):
             # Valid to
             nearest_url = raw_offer.url if raw_offer.url else ROOT_URL
             offer = Offer(
-                source=GogGamesAlwaysFreeScraper.get_source(),
-                duration=GogGamesAlwaysFreeScraper.get_duration(),
-                type=GogGamesAlwaysFreeScraper.get_type(),
+                source=ItchGamesScraper.get_source(),
+                duration=ItchGamesScraper.get_duration(),
+                type=ItchGamesScraper.get_type(),
                 title=title,
                 probable_game_name=title,
                 seen_last=datetime.now(timezone.utc),

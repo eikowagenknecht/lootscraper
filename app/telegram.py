@@ -833,7 +833,7 @@ class TelegramBot:
     def offer_message(self, offer: Offer) -> str:
         source = offer.source.value
         additional_info = offer.type.value
-        if offer.duration != OfferDuration.PERMANENT_CLAIMABLE:
+        if offer.duration != OfferDuration.CLAIMABLE:
             additional_info += f", {offer.duration.value}"
 
         content = markdown_bold(f"{source} ({additional_info}) - {offer.title}")
@@ -858,7 +858,7 @@ class TelegramBot:
             else:
                 content += f"Offer expires in {markdown_escape(time_to_end)}"
             content += f" \\({markdown_escape(offer.valid_to.strftime(TIMESTAMP_READABLE_WITH_HOUR))}\\)\\."
-        elif offer.duration == OfferDuration.ALWAYS_FREE:
+        elif offer.duration == OfferDuration.ALWAYS:
             content += "Offer will stay free, no need to hurry\\!"
         else:
             content += "Offer is valid forever\\.\\. just kidding, I just don't know when it will end, so grab it now\\!"
@@ -951,7 +951,7 @@ def keyboard_button_row(
 ) -> list[InlineKeyboardButton]:
     is_subscribed_str = " - subscribed" if active else ""
     source_str = f"{source.value} {offer_type.value}"
-    if offer_duration != OfferDuration.PERMANENT_CLAIMABLE:
+    if offer_duration != OfferDuration.CLAIMABLE:
         source_str += f" ({offer_duration.value})"
     command = f"toggle {source.name} {offer_type.name} {offer_duration.name}"
 
