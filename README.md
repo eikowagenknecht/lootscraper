@@ -20,7 +20,7 @@ This is what it currently looks like in Telegram:
 
 ![image](https://user-images.githubusercontent.com/1475672/166058823-98e2beb9-7eb5-403d-94c7-7e17966fe9b7.png)
 
-### RSS Feeds
+### RSS feeds
 
 Prefer the RSS feeds? Sure. You can use the links below. They are updated every 20 minutes.
 
