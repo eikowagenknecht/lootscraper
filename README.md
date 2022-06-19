@@ -14,15 +14,20 @@ You can either run this script locally on your computer or in any environment ca
 
 Just want the feeds? Sure. You can use the links below. They are updated every 20 minutes.
 
-If you prefer Telegram, you can instead subscribe to the [Telegram LootScraperBot](https://t.me/LootScraperBot) to get push notifications for new offers.
+If you prefer Telegram, you can instead subscribe to the [Telegram LootScraperBot](https://t.me/LootScraperBot) to get push notifications for new offers. You can choose which categories to subscribe there.
 
 - Amazon Prime ([games](https://feed.phenx.de/lootscraper_amazon_game.xml) and [ingame loot](https://feed.phenx.de/lootscraper_amazon_loot.xml))
-- [Epic Games (games only)](https://feed.phenx.de/lootscraper_epic_game.xml)
-- [Gog (games only)](https://feed.phenx.de/lootscraper_gog_game.xml)
-- [Humble (games only)](https://feed.phenx.de/lootscraper_humble_game.xml)
+- [Epic Games](https://feed.phenx.de/lootscraper_epic_game.xml)
+- [Gog games](https://feed.phenx.de/lootscraper_gog_game.xml)
+- [Humble games](https://feed.phenx.de/lootscraper_humble_game.xml)
+- [itch.io games](https://feed.phenx.de/lootscraper_itch_game.xml)
 - Steam ([games](https://feed.phenx.de/lootscraper_steam_game.xml) and [ingame loot](https://feed.phenx.de/lootscraper_steam_loot.xml))
 
-If you want everything in one feed, use [this link](https://feed.phenx.de/lootscraper.xml). If you want to get the offers by email instead, you can use free services like <https://blogtrottr.com/> or <https://feedsub.com/> to convert from RSS to email.
+For our mobile gamers:
+
+- [Apple iPhone games](https://feed.phenx.de/lootscraper_apple_game.xml)
+
+If you want *everything* in one feed, use [this link](https://feed.phenx.de/lootscraper.xml). If you want to get the offers by email instead, you can use free services like <https://blogtrottr.com/> or <https://feedsub.com/> to convert from RSS to email.
 
 This is what it currently looks like in Feedly:
 
