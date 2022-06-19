@@ -26,6 +26,7 @@ If you prefer Telegram, you can instead subscribe to the [Telegram LootScraperBo
 For our mobile gamers:
 
 - [Apple iPhone games](https://feed.phenx.de/lootscraper_apple_game.xml)
+- [Google Android games](https://feed.phenx.de/lootscraper_google_game.xml)
 
 If you want *everything* in one feed, use [this link](https://feed.phenx.de/lootscraper.xml). If you want to get the offers by email instead, you can use free services like <https://blogtrottr.com/> or <https://feedsub.com/> to convert from RSS to email.
 

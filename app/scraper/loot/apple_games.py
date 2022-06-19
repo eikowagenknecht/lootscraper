@@ -33,7 +33,7 @@ class RawOffer:
     img_url: str | None
 
 
-class AppStoreScraper(Scraper):
+class AppleGamesScraper(Scraper):
     @staticmethod
     def get_source() -> Source:
         return Source.APPLE
@@ -48,7 +48,7 @@ class AppStoreScraper(Scraper):
 
     @staticmethod
     def scrape(driver: WebDriver) -> list[Offer]:
-        return AppStoreScraper.read_offers_from_page(driver)
+        return AppleGamesScraper.read_offers_from_page(driver)
 
     @staticmethod
     def read_offers_from_page(driver: WebDriver) -> list[Offer]:
@@ -63,14 +63,14 @@ class AppStoreScraper(Scraper):
 
             offer_elements = driver.find_elements(By.XPATH, XPATH_SEARCH_RESULTS)
             for offer_element in offer_elements:
-                raw_offers.append(AppStoreScraper.read_raw_offer(offer_element))
+                raw_offers.append(AppleGamesScraper.read_raw_offer(offer_element))
 
         except WebDriverException:
             logger.info(
                 f"Free search results took longer than {Scraper.get_max_wait_seconds()} to load, probably there are none"
             )
 
-        normalized_offers = AppStoreScraper.normalize_offers(raw_offers)
+        normalized_offers = AppleGamesScraper.normalize_offers(raw_offers)
 
         return normalized_offers
 
@@ -132,9 +132,9 @@ class AppStoreScraper(Scraper):
 
             nearest_url = raw_offer.url if raw_offer.url else ROOT_URL
             offer = Offer(
-                source=AppStoreScraper.get_source(),
-                duration=AppStoreScraper.get_duration(),
-                type=AppStoreScraper.get_type(),
+                source=AppleGamesScraper.get_source(),
+                duration=AppleGamesScraper.get_duration(),
+                type=AppleGamesScraper.get_type(),
                 title=title,
                 probable_game_name=title,
                 seen_last=datetime.now(timezone.utc),
