@@ -59,7 +59,7 @@ class ItchGamesScraper(Scraper):
                 EC.presence_of_element_located((By.XPATH, XPATH_FREE_RESULTS))
             )
 
-            ItchGamesScraper.scroll_to_infinite_bottom(driver)
+            ItchGamesScraper.scroll_page_to_bottom(driver)
 
             offer_elements = driver.find_elements(By.XPATH, XPATH_FREE_RESULTS)
             for offer_element in offer_elements:

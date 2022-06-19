@@ -61,7 +61,7 @@ class AmazonLootScraper(Scraper):
             )
 
             # Scroll slowly to the bottom to load all offers
-            AmazonLootScraper.scroll_to_infinite_bottom(driver, "root")
+            AmazonLootScraper.scroll_element_to_bottom(driver, "root")
 
         except WebDriverException:
             logger.error(
