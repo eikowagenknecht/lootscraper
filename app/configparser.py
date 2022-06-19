@@ -115,6 +115,8 @@ class Config:
 
             if config.getboolean("offer_sources", "Amazon"):
                 parsed_config.enabled_offer_sources.append(Source.AMAZON)
+            if config.getboolean("offer_sources", "Apple"):
+                parsed_config.enabled_offer_sources.append(Source.APPLE)
             if config.getboolean("offer_sources", "Epic"):
                 parsed_config.enabled_offer_sources.append(Source.EPIC)
             if config.getboolean("offer_sources", "GOG"):
