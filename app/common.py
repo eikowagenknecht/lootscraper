@@ -6,16 +6,17 @@ TIMESTAMP_READABLE_WITH_HOUR = "%Y-%m-%d - %H:%M UTC"
 
 
 class OfferType(Enum):
-    LOOT = "Loot"  # DLC, Ingame cash, etc.
     GAME = "Game"
+    LOOT = "Loot"  # DLC, Ingame cash, etc.
 
 
 class Source(Enum):
     AMAZON = "Amazon Prime"
     EPIC = "Epic Games"
-    STEAM = "Steam"
     GOG = "GOG"
     HUMBLE = "Humble Bundle"
+    ITCH = "itch.io"
+    STEAM = "Steam"
 
 
 class Channel(Enum):
