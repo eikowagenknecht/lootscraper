@@ -171,8 +171,9 @@ class TelegramBot:
             return
 
         # Network instability causes that probably fix themselves.
-        if isinstance(context.error, RemoteDisconnected) or isinstance(
-            context.error, telegram.error.NetworkError
+        if isinstance(context.error, RemoteDisconnected) or (
+            isinstance(context.error, telegram.error.NetworkError)
+            and not isinstance(context.error, telegram.error.BadRequest)
         ):
             logger.error(str(context.error))
             try:
