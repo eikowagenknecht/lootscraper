@@ -1,13 +1,22 @@
 import configparser
 from dataclasses import dataclass, field
+from enum import Enum
 from pathlib import Path
 
 from app.common import OfferDuration, OfferType, Source
 
-CONFIG_FILE = Path("config.ini")
-
 # Do not use logging here. This is executed before the logging framework is
 # initialized and using logging here would initialize with the wrong values.
+
+CONFIG_FILE = Path("config.ini")
+
+
+class TelegramLogLevel(Enum):
+    DISABLED = 0
+    ERROR = 1
+    WARNING = 2
+    INFO = 3
+    DEBUG = 4
 
 
 @dataclass
@@ -41,6 +50,7 @@ class ParsedConfig:
     telegram_bot: bool = False
 
     # Telegram
+    telegram_log_level: TelegramLogLevel = TelegramLogLevel.ERROR
     telegram_access_token: str = ""
     telegram_developer_chat_id: int = 0
 
@@ -150,6 +160,9 @@ class Config:
             parsed_config.upload_feed = config.getboolean("actions", "UploadFtp")
             parsed_config.telegram_bot = config.getboolean("actions", "TelegramBot")
 
+            parsed_config.telegram_log_level = TelegramLogLevel[
+                config["telegram"]["LogLevel"]
+            ]
             parsed_config.telegram_access_token = config["telegram"]["AccessToken"]
             parsed_config.telegram_developer_chat_id = int(
                 config["telegram"]["DeveloperChatID"]

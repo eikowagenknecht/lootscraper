@@ -44,7 +44,7 @@ from app.common import (
     markdown_escape,
     markdown_url,
 )
-from app.configparser import Config, ParsedConfig
+from app.configparser import Config, ParsedConfig, TelegramLogLevel
 from app.scraper.loot.scraperhelper import get_all_scrapers
 from app.sqlalchemy import Announcement, Game, Offer, TelegramSubscription, User, and_
 
@@ -272,10 +272,14 @@ class TelegramBot:
 
     def error_command(self, update: Update, context: CallbackContext) -> None:  # type: ignore
         """Handle the /error command: Trigger an error to send to the dev chat."""
+        self.log_call(update)
+
         raise Exception("This is a test error triggered by the /error command.")
 
     def manage_command(self, update: Update, context: CallbackContext) -> None:  # type: ignore
         """Handle the /manage command: Manage subscriptions."""
+        self.log_call(update)
+
         if update.message is None or update.effective_user is None:
             return
 
@@ -291,6 +295,8 @@ class TelegramBot:
 
     def offers_command(self, update: Update, context: CallbackContext) -> None:  # type: ignore
         """Handle the /offers command: Send all subscriptions once."""
+        self.log_call(update)
+
         if update.message is None or update.effective_user is None:
             return
 
@@ -400,6 +406,8 @@ class TelegramBot:
 
     def debug_command(self, update: Update, context: CallbackContext) -> None:  # type: ignore
         """Handle the /debug command: Show some debug information."""
+        self.log_call(update)
+
         if update.message is None:
             return
 
@@ -419,6 +427,8 @@ class TelegramBot:
 
     def start_command(self, update: Update, context: CallbackContext) -> None:  # type: ignore
         """Handle the /start command: Register the user and display guide."""
+        self.log_call(update)
+
         if update.message is None or update.effective_user is None:
             return
 
@@ -486,18 +496,21 @@ class TelegramBot:
         update.message.reply_markdown_v2(message)
 
         # Notify about the new registration
-        message = (
-            Rf"New user {update.effective_user.mention_markdown_v2()} registered\."
-        )
-        logger.debug(f"Sending user registered message: {message}")
-        self.send_message(
-            chat_id=Config.get().telegram_developer_chat_id,
-            text=message,
-            parse_mode=telegram.ParseMode.MARKDOWN_V2,
-        )
+        if Config.get().telegram_log_level.value >= TelegramLogLevel.DEBUG.value:
+            message = (
+                Rf"New user {update.effective_user.mention_markdown_v2()} registered\."
+            )
+            logger.debug(f"Sending user registered message: {message}")
+            self.send_message(
+                chat_id=Config.get().telegram_developer_chat_id,
+                text=message,
+                parse_mode=telegram.ParseMode.MARKDOWN_V2,
+            )
 
     def leave_command(self, update: Update, context: CallbackContext) -> None:  # type: ignore
         """Handle the /leave command: Unregister the user."""
+        self.log_call(update)
+
         if update.message is None or update.effective_user is None:
             return
 
@@ -527,6 +540,8 @@ class TelegramBot:
 
     def help_command(self, update: Update, context: CallbackContext) -> None:  # type: ignore
         """Handle the /help command: Display all available commands to the user."""
+        self.log_call(update)
+
         if update.message is None:
             return
 
@@ -534,6 +549,8 @@ class TelegramBot:
 
     def status_command(self, update: Update, context: CallbackContext) -> None:  # type: ignore
         """Handle the /status command: Display some statistics about the user."""
+        self.log_call(update)
+
         if not update.effective_chat or not update.effective_user or not update.message:
             return
 
@@ -587,6 +604,8 @@ class TelegramBot:
         update.message.reply_markdown_v2(message)
 
     def unknown(self, update: Update, context: CallbackContext) -> None:  # type: ignore
+        self.log_call(update)
+
         if not update.effective_chat:
             return
 
@@ -940,6 +959,20 @@ class TelegramBot:
             content += R"\* Any information about the offer is automatically grabbed and may in rare cases not match the correct game\."
 
         return content
+
+    def log_call(self, update: Update) -> None:
+        if Config.get().telegram_log_level.value >= TelegramLogLevel.DEBUG.value:
+            message = "Received command: "
+            if update.effective_user:
+                message += f"User {update.effective_user.mention_markdown_v2()}"
+            if update.effective_message:
+                message += f", Message {update.effective_message.text_markdown_v2}"
+            logger.debug(message)
+            self.send_message(
+                chat_id=Config.get().telegram_developer_chat_id,
+                text=message,
+                parse_mode=telegram.ParseMode.MARKDOWN_V2,
+            )
 
 
 def markdown_json_formatted(input: str) -> str:
