@@ -496,9 +496,8 @@ class TelegramBot:
                 R"Here are the categories you are subscribed to: " + "\n"
             )
             for subscription in db_user.telegram_subscriptions:
-                subscriptions_text += (
-                    Rf"\* {subscription.source.value} \({subscription.type.value}\)"
-                    + "\n"
+                subscriptions_text += markdown_escape(
+                    f"* {subscription.source.value} / {subscription.type.value} / {subscription.duration.value}\n"
                 )
             subscriptions_text += (
                 R"You can unsubscribe from them any time with /manage\."
