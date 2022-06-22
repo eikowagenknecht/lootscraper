@@ -48,8 +48,9 @@ from app.configparser import Config, ParsedConfig, TelegramLogLevel
 from app.scraper.loot.scraperhelper import get_all_scrapers
 from app.sqlalchemy import Announcement, Game, Offer, TelegramSubscription, User, and_
 
-BUTTON_SHOW_DETAILS = "Show details"
-BUTTON_HIDE_DETAILS = "Hide details"
+BUTTON_SHOW_DETAILS = "Details"
+BUTTON_HIDE_DETAILS = "Summary"
+BUTTON_DISMISS = "Dismiss"
 BUTTON_CLOSE = "Close"
 
 POPUP_SUBSCRIBED = "You are now subscribed."
@@ -59,6 +60,7 @@ MESSAGE_MANAGE_MENU = (
     "Here you can manage your subscriptions. "
     "To do so, just click the following buttons to subscribe / unsubscribe. "
 )
+MESSAGE_DISMISSED = "Dismissed (can't delete messages older than 48h)."
 MESSAGE_MANAGE_MENU_CLOSED = (
     "Thank you for managing your subscriptions. "
     "Forgot something? "
@@ -135,13 +137,16 @@ class TelegramBot:
             CallbackQueryHandler(self.toggle_subscription_callback, pattern="toggle")
         )
         dispatcher.add_handler(
-            CallbackQueryHandler(self.offer_details_callback, pattern="details")
+            CallbackQueryHandler(self.offer_callback, pattern="details")
+        )
+        dispatcher.add_handler(
+            CallbackQueryHandler(self.dismiss_callback, pattern="dismiss")
         )
         dispatcher.add_handler(
             CallbackQueryHandler(self.close_menu_callback, pattern="close menu")
         )
 
-        dispatcher.add_handler(MessageHandler(Filters.command, self.unknown))
+        dispatcher.add_handler(MessageHandler(Filters.command, self.unknown_command))
         dispatcher.add_error_handler(self.error_handler)
 
         logger.info("Telegram Bot: Starting polling")
@@ -154,6 +159,7 @@ class TelegramBot:
 
     def error_handler(self, update: object, context: CallbackContext) -> None:  # type: ignore
         """Log the error and send a telegram message to notify the developer chat."""
+
         # Log the error before we do anything else, so we can see it even if something breaks.
         logger.error(msg="Exception while handling an update:", exc_info=context.error)
 
@@ -270,14 +276,80 @@ class TelegramBot:
                 parse_mode=telegram.ParseMode.MARKDOWN_V2,
             )
 
+    def debug_command(self, update: Update, context: CallbackContext) -> None:  # type: ignore
+        """Handle the /debug command: Show some debug information."""
+
+        self.log_call(update)
+
+        if update.message is None:
+            return
+
+        if update.effective_user is not None:
+            update.message.reply_markdown_v2(
+                markdown_json_formatted(
+                    f"update.effective_user = {json.dumps(update.effective_user.to_dict(), indent=2, ensure_ascii=False)}"
+                )
+            )
+
+        if update.effective_chat is not None:
+            update.message.reply_markdown_v2(
+                markdown_json_formatted(
+                    f"update.effective_chat = {json.dumps(update.effective_chat.to_dict(), indent=2, ensure_ascii=False)}"
+                )
+            )
+
     def error_command(self, update: Update, context: CallbackContext) -> None:  # type: ignore
         """Handle the /error command: Trigger an error to send to the dev chat."""
+
         self.log_call(update)
 
         raise Exception("This is a test error triggered by the /error command.")
 
+    def help_command(self, update: Update, context: CallbackContext) -> None:  # type: ignore
+        """Handle the /help command: Display all available commands to the user."""
+
+        self.log_call(update)
+
+        if update.message is None:
+            return
+
+        update.message.reply_markdown_v2(MESSAGE_HELP)
+
+    def leave_command(self, update: Update, context: CallbackContext) -> None:  # type: ignore
+        """Handle the /leave command: Unregister the user."""
+
+        self.log_call(update)
+
+        if update.message is None or update.effective_user is None:
+            return
+
+        db_user = self.get_user(update.effective_user.id)
+
+        if db_user is None:
+            message = (
+                Rf"Hi {update.effective_user.mention_markdown_v2()}, you are currently not registered\. "
+                R"So you can't leave ;\-\)"
+            )
+            logger.debug(f"Sending /leave reply: {message}")
+            update.message.reply_markdown_v2(message)
+            return
+
+        # Delete user from database (if registered)
+        session: Session = self.Session()
+        session.delete(db_user)
+        session.commit()
+
+        message = (
+            Rf"Bye {update.effective_user.mention_markdown_v2()}, I'm sad to see you go\. "
+            R"Your user data has been deleted\. "
+            R"If you want to come back at any time, just type /start\!"
+        )
+        logger.debug(f"Sending /leave reply: {message}")
+        update.message.reply_markdown_v2(message)
+
     def manage_command(self, update: Update, context: CallbackContext) -> None:  # type: ignore
         """Handle the /manage command: Manage subscriptions."""
+
         self.log_call(update)
 
         if update.message is None or update.effective_user is None:
@@ -290,11 +362,12 @@ class TelegramBot:
 
         update.message.reply_text(
             MESSAGE_MANAGE_MENU,
-            reply_markup=self.manage_menu_keyboard(db_user),
+            reply_markup=self.manage_keyboard(db_user),
         )
 
     def offers_command(self, update: Update, context: CallbackContext) -> None:  # type: ignore
         """Handle the /offers command: Send all subscriptions once."""
+
         self.log_call(update)
 
         if update.message is None or update.effective_user is None:
@@ -314,6 +387,268 @@ class TelegramBot:
 
         if not self.send_new_offers(db_user):
             update.message.reply_text(MESSAGE_NO_NEW_OFFERS)
+
+    def start_command(self, update: Update, context: CallbackContext) -> None:  # type: ignore
+        """Handle the /start command: Register the user and display guide."""
+
+        self.log_call(update)
+
+        if update.message is None or update.effective_user is None:
+            return
+
+        welcome_text = (
+            R"I belong to the [LootScraper](https://github\.com/eikowagenknecht/lootscraper) project\. "
+            R"If you have any issues or feature request, please use the "
+            R"[issues](https://github\.com/eikowagenknecht/lootscraper/issues) to report them\. "
+            R"And if you like it, please consider "
+            R"[⭐ starring it on GitHub](https://github\.com/eikowagenknecht/lootscraper/stargazers)\. "
+            R"Thanks\!"
+            "\n\n"
+            R"*How this works*"
+            "\n"
+            R"You tell me what kind of offers you want to see with the /manage command\. "
+            R"I will then send you a message with all current offers of that kind if you want\. "
+            R"I will also send you a message every time a new offer is added\. "
+            R"To see the commands you can use to talk to me, type /help now\."
+            "\n\n"
+            R"*Privacy*"
+            "\n"
+            R"I need to store some user data \(e\.g\. your Telegram user ID and your subscriptions\) to work\. "
+            R"You can leave any time by typing /leave\. "
+            R"This instantly deletes all data about you\. "
+            R"Also I will be sad to see you go\."
+        )
+
+        db_user = self.get_user(update.effective_user.id)
+
+        if db_user is not None:
+            message = (
+                Rf"Welcome back, {update.effective_user.mention_markdown_v2()} 👋\. "
+                + R"You are already registered ❤\. "
+                + R"In case you forgot, this was my initial message to you:"
+                + "\n\n"
+                + welcome_text
+            )
+            logger.debug(f"Sending /start reply: {message}")
+            update.message.reply_markdown_v2(message)
+            return
+
+        # Register user if not registered yet
+        session: Session = self.Session()
+        latest_announcement = session.execute(
+            select(func.max(Announcement.id))
+        ).scalar()
+
+        new_user = User(
+            telegram_id=update.effective_user.id,
+            telegram_chat_id=update.effective_chat.id
+            if update.effective_chat
+            else None,
+            telegram_user_details=update.effective_user.to_json(),
+            registration_date=datetime.now().replace(tzinfo=timezone.utc),
+            last_announcement_id=latest_announcement,
+        )
+        session.add(new_user)
+        session.commit()
+
+        message = (
+            Rf"Hi {update.effective_user.mention_markdown_v2()} 👋, welcome to the LootScraper Telegram Bot and thank you for registering\!"
+            + "\n\n"
+            + welcome_text
+        )
+        logger.debug(f"Sending /start reply: {message}")
+        update.message.reply_markdown_v2(message)
+
+        # Notify about the new registration
+        if Config.get().telegram_log_level.value >= TelegramLogLevel.DEBUG.value:
+            message = (
+                Rf"New user {update.effective_user.mention_markdown_v2()} registered\."
+            )
+            logger.debug(f"Sending user registered message: {message}")
+            self.send_message(
+                chat_id=Config.get().telegram_developer_chat_id,
+                text=message,
+                parse_mode=telegram.ParseMode.MARKDOWN_V2,
+            )
+
+    def status_command(self, update: Update, context: CallbackContext) -> None:  # type: ignore
+        """Handle the /status command: Display some statistics about the user."""
+
+        self.log_call(update)
+
+        if not update.effective_chat or not update.effective_user or not update.message:
+            return
+
+        db_user = self.get_user(update.effective_user.id)
+        if db_user is None:
+            message = (
+                Rf"Hi {update.effective_user.mention_markdown_v2()}, you are currently not registered\. "
+                R"So there is no data stored about you\. "
+                R"But I'd be happy to see you register any time with the /start command\!"
+            )
+            logger.debug(f"Sending /status reply: {message}")
+            update.message.reply_markdown_v2(message)
+            return
+
+        subscriptions_text: str
+        if len(db_user.telegram_subscriptions) > 0:
+            subscriptions_text = (
+                Rf"\- You have {len(db_user.telegram_subscriptions)} subscriptions\. "
+            )
+            subscriptions_text += (
+                R"Here are the categories you are subscribed to: " + "\n"
+            )
+            for subscription in db_user.telegram_subscriptions:
+                subscriptions_text += (
+                    Rf"\* {subscription.source.value} \({subscription.type.value}\)"
+                    + "\n"
+                )
+            subscriptions_text += (
+                R"You can unsubscribe from them any time with /manage\."
+            )
+        else:
+            subscriptions_text = (
+                R"\- You are currently not subscribed to any categories\. "
+                R"You can change that with the /manage command if you wish\."
+            )
+
+        message = (
+            Rf"Hi {update.effective_user.mention_markdown_v2()}, you are currently registered\. "
+            R"But I'm not storing much user data, so this is all I know about you: "
+            "\n\n"
+            Rf"\- You registered on {markdown_escape(db_user.registration_date.strftime(TIMESTAMP_READABLE_WITH_HOUR))} with the /start command\."
+            "\n"
+            Rf"\- Your Telegram chat id is {db_user.telegram_chat_id}\. "
+            R"Neat, huh? I use it to send you notifications\."
+            "\n"
+            f"{subscriptions_text}"
+            "\n"
+            Rf"\- You received {db_user.offers_received_count} offers so far\. "
+        )
+        logger.debug(f"Sending /status reply: {message}")
+        update.message.reply_markdown_v2(message)
+
+    def unknown_command(self, update: Update, context: CallbackContext) -> None:  # type: ignore
+        self.log_call(update)
+
+        if not update.effective_chat:
+            return
+
+        self.send_message(
+            chat_id=update.effective_chat.id,
+            text=MESSAGE_UNKNOWN_COMMAND,
+            parse_mode=None,
+        )
+
+    def offer_callback(self, update: Update, context: CallbackContext) -> None:  # type: ignore
+        """Callback from the menu buttons "Details" and "Summary" in the offer message."""
+
+        self.log_call(update)
+
+        if update.callback_query is None or update.effective_user is None:
+            return
+
+        query = update.callback_query
+
+        if query.data is None:
+            return
+
+        offer_id = int(query.data.split(" ")[2])
+        session: Session = self.Session()
+        offer = session.execute(select(Offer).where(Offer.id == offer_id)).scalar()
+
+        if query.data.startswith("details show"):
+            query.answer()
+            query.edit_message_text(
+                text=self.offer_details_message(offer),
+                parse_mode=ParseMode.MARKDOWN_V2,
+                reply_markup=self.offer_keyboard(
+                    offer,
+                    details_hide_button=True,
+                    details_show_button=False,
+                ),
+            )
+        elif query.data.startswith("details hide"):
+            query.answer()
+            query.edit_message_text(
+                text=self.offer_message(offer),
+                parse_mode=ParseMode.MARKDOWN_V2,
+                reply_markup=self.offer_keyboard(
+                    offer,
+                    details_hide_button=False,
+                    details_show_button=True,
+                ),
+            )
+
+    def dismiss_callback(self, update: Update, context: CallbackContext) -> None:  # type: ignore
+        """Callback from the menu button "Dismiss" in the offer message."""
+
+        self.log_call(update)
+
+        if update.callback_query is None:
+            return
+
+        try:
+            update.callback_query.delete_message()
+        except telegram.error.BadRequest:
+            # Message could not be deleted, probably it's older than 48h
+            update.callback_query.edit_message_text(
+                text=MESSAGE_DISMISSED,
+                reply_markup=None,
+            )
+
+    def close_menu_callback(self, update: Update, context: CallbackContext) -> None:  # type: ignore
+        """Callback from the menu button "Close" in the manage menu."""
+
+        self.log_call(update)
+
+        if update.callback_query is None or update.effective_user is None:
+            return
+
+        query = update.callback_query
+
+        if query.data != "close menu":
+            return
+
+        query.answer(text="Bye!")
+        query.edit_message_text(
+            text=MESSAGE_MANAGE_MENU_CLOSED,
+            reply_markup=None,
+        )
+
+    def toggle_subscription_callback(self, update: Update, context: CallbackContext) -> None:  # type: ignore
+        """Callback from the subscription buttons in the manage menu."""
+
+        self.log_call(update)
+
+        query = update.callback_query
+        if query is None or update.effective_user is None or query.data is None:
+            return
+
+        db_user = self.get_user(update.effective_user.id)
+        if db_user is None:
+            query.answer(text=MESSAGE_USER_NOT_REGISTERED)
+            return
+
+        data = query.data.lower().removeprefix("toggle").strip().upper().split(" ")
+        source = Source[data[0]]
+        type = OfferType[data[1]]
+        duration = OfferDuration[data[2]]
+
+        answer_text = None
+
+        if not self.is_subscribed(db_user, type, source, duration):
+            self.subscribe(db_user, type, source, duration)
+            answer_text = POPUP_SUBSCRIBED
+        else:
+            self.unsubscribe(db_user, type, source, duration)
+            answer_text = POPUP_UNSUBSCRIBED
+
+        query.answer(text=answer_text)
+        query.edit_message_text(
+            text=MESSAGE_MANAGE_MENU,
+            reply_markup=self.manage_keyboard(db_user),
+        )
 
     def send_new_offers(self, user: User) -> bool:
         """Send all new offers for the user."""
@@ -404,217 +739,6 @@ class TelegramBot:
         user.last_announcement_id = announcements[-1].id
         session.commit()
 
-    def debug_command(self, update: Update, context: CallbackContext) -> None:  # type: ignore
-        """Handle the /debug command: Show some debug information."""
-        self.log_call(update)
-
-        if update.message is None:
-            return
-
-        if update.effective_user is not None:
-            update.message.reply_markdown_v2(
-                markdown_json_formatted(
-                    f"update.effective_user = {json.dumps(update.effective_user.to_dict(), indent=2, ensure_ascii=False)}"
-                )
-            )
-
-        if update.effective_chat is not None:
-            update.message.reply_markdown_v2(
-                markdown_json_formatted(
-                    f"update.effective_chat = {json.dumps(update.effective_chat.to_dict(), indent=2, ensure_ascii=False)}"
-                )
-            )
-
-    def start_command(self, update: Update, context: CallbackContext) -> None:  # type: ignore
-        """Handle the /start command: Register the user and display guide."""
-        self.log_call(update)
-
-        if update.message is None or update.effective_user is None:
-            return
-
-        welcome_text = (
-            R"I belong to the [LootScraper](https://github\.com/eikowagenknecht/lootscraper) project\. "
-            R"If you have any issues or feature request, please use the "
-            R"[issues](https://github\.com/eikowagenknecht/lootscraper/issues) to report them\. "
-            R"And if you like it, please consider "
-            R"[⭐ starring it on GitHub](https://github\.com/eikowagenknecht/lootscraper/stargazers)\. "
-            R"Thanks\!"
-            "\n\n"
-            R"*How this works*"
-            "\n"
-            R"You tell me what kind of offers you want to see with the /manage command\. "
-            R"I will then send you a message with all current offers of that kind if you want\. "
-            R"I will also send you a message every time a new offer is added\. "
-            R"To see the commands you can use to talk to me, type /help now\."
-            "\n\n"
-            R"*Privacy*"
-            "\n"
-            R"I need to store some user data \(e\.g\. your Telegram user ID and your subscriptions\) to work\. "
-            R"You can leave any time by typing /leave\. "
-            R"This instantly deletes all data about you\. "
-            R"Also I will be sad to see you go\."
-        )
-
-        db_user = self.get_user(update.effective_user.id)
-
-        if db_user is not None:
-            message = (
-                Rf"Welcome back, {update.effective_user.mention_markdown_v2()} 👋\. "
-                + R"You are already registered ❤\. "
-                + R"In case you forgot, this was my initial message to you:"
-                + "\n\n"
-                + welcome_text
-            )
-            logger.debug(f"Sending /start reply: {message}")
-            update.message.reply_markdown_v2(message)
-            return
-
-        # Register user if not registered yet
-        session: Session = self.Session()
-        latest_announcement = session.execute(
-            select(func.max(Announcement.id))
-        ).scalar()
-
-        new_user = User(
-            telegram_id=update.effective_user.id,
-            telegram_chat_id=update.effective_chat.id
-            if update.effective_chat
-            else None,
-            telegram_user_details=update.effective_user.to_json(),
-            registration_date=datetime.now().replace(tzinfo=timezone.utc),
-            last_announcement_id=latest_announcement,
-        )
-        session.add(new_user)
-        session.commit()
-
-        message = (
-            Rf"Hi {update.effective_user.mention_markdown_v2()} 👋, welcome to the LootScraper Telegram Bot and thank you for registering\!"
-            + "\n\n"
-            + welcome_text
-        )
-        logger.debug(f"Sending /start reply: {message}")
-        update.message.reply_markdown_v2(message)
-
-        # Notify about the new registration
-        if Config.get().telegram_log_level.value >= TelegramLogLevel.DEBUG.value:
-            message = (
-                Rf"New user {update.effective_user.mention_markdown_v2()} registered\."
-            )
-            logger.debug(f"Sending user registered message: {message}")
-            self.send_message(
-                chat_id=Config.get().telegram_developer_chat_id,
-                text=message,
-                parse_mode=telegram.ParseMode.MARKDOWN_V2,
-            )
-
-    def leave_command(self, update: Update, context: CallbackContext) -> None:  # type: ignore
-        """Handle the /leave command: Unregister the user."""
-        self.log_call(update)
-
-        if update.message is None or update.effective_user is None:
-            return
-
-        db_user = self.get_user(update.effective_user.id)
-
-        if db_user is None:
-            message = (
-                Rf"Hi {update.effective_user.mention_markdown_v2()}, you are currently not registered\. "
-                R"So you can't leave ;\-\)"
-            )
-            logger.debug(f"Sending /leave reply: {message}")
-            update.message.reply_markdown_v2(message)
-            return
-
-        # Delete user from database (if registered)
-        session: Session = self.Session()
-        session.delete(db_user)
-        session.commit()
-
-        message = (
-            Rf"Bye {update.effective_user.mention_markdown_v2()}, I'm sad to see you go\. "
-            R"Your user data has been deleted\. "
-            R"If you want to come back at any time, just type /start\!"
-        )
-        logger.debug(f"Sending /leave reply: {message}")
-        update.message.reply_markdown_v2(message)
-
-    def help_command(self, update: Update, context: CallbackContext) -> None:  # type: ignore
-        """Handle the /help command: Display all available commands to the user."""
-        self.log_call(update)
-
-        if update.message is None:
-            return
-
-        update.message.reply_markdown_v2(MESSAGE_HELP)
-
-    def status_command(self, update: Update, context: CallbackContext) -> None:  # type: ignore
-        """Handle the /status command: Display some statistics about the user."""
-        self.log_call(update)
-
-        if not update.effective_chat or not update.effective_user or not update.message:
-            return
-
-        db_user = self.get_user(update.effective_user.id)
-        if db_user is None:
-            message = (
-                Rf"Hi {update.effective_user.mention_markdown_v2()}, you are currently not registered\. "
-                R"So there is no data stored about you\. "
-                R"But I'd be happy to see you register any time with the /start command\!"
-            )
-            logger.debug(f"Sending /status reply: {message}")
-            update.message.reply_markdown_v2(message)
-            return
-
-        subscriptions_text: str
-        if len(db_user.telegram_subscriptions) > 0:
-            subscriptions_text = (
-                Rf"\- You have {len(db_user.telegram_subscriptions)} subscriptions\. "
-            )
-            subscriptions_text += (
-                R"Here are the categories you are subscribed to: " + "\n"
-            )
-            for subscription in db_user.telegram_subscriptions:
-                subscriptions_text += (
-                    Rf"\* {subscription.source.value} \({subscription.type.value}\)"
-                    + "\n"
-                )
-            subscriptions_text += (
-                R"You can unsubscribe from them any time with /manage\."
-            )
-        else:
-            subscriptions_text = (
-                R"\- You are currently not subscribed to any categories\. "
-                R"You can change that with the /manage command if you wish\."
-            )
-
-        message = (
-            Rf"Hi {update.effective_user.mention_markdown_v2()}, you are currently registered\. "
-            R"But I'm not storing much user data, so this is all I know about you: "
-            "\n\n"
-            Rf"\- You registered on {markdown_escape(db_user.registration_date.strftime(TIMESTAMP_READABLE_WITH_HOUR))} with the /start command\."
-            "\n"
-            Rf"\- Your Telegram chat id is {db_user.telegram_chat_id}\. "
-            R"Neat, huh? I use it to send you notifications\."
-            "\n"
-            f"{subscriptions_text}"
-            "\n"
-            Rf"\- You received {db_user.offers_received_count} offers so far\. "
-        )
-        logger.debug(f"Sending /status reply: {message}")
-        update.message.reply_markdown_v2(message)
-
-    def unknown(self, update: Update, context: CallbackContext) -> None:  # type: ignore
-        self.log_call(update)
-
-        if not update.effective_chat:
-            return
-
-        self.send_message(
-            chat_id=update.effective_chat.id,
-            text=MESSAGE_UNKNOWN_COMMAND,
-            parse_mode=None,
-        )
-
     def get_user(self, telegram_id: int) -> User | None:
         session: Session = self.Session()
         db_user = (
@@ -676,10 +800,10 @@ class TelegramBot:
         update.callback_query.answer()
         update.callback_query.edit_message_text(
             text=MESSAGE_MANAGE_MENU,
-            reply_markup=self.manage_menu_keyboard(db_user),
+            reply_markup=self.manage_keyboard(db_user),
         )
 
-    def manage_menu_keyboard(self, user: User) -> InlineKeyboardMarkup:
+    def manage_keyboard(self, user: User) -> InlineKeyboardMarkup:
         keyboard: list[list[InlineKeyboardButton]] = []
 
         # Add buttons for all available categories
@@ -695,13 +819,13 @@ class TelegramBot:
                 for x in user.telegram_subscriptions
             ):
                 keyboard.append(
-                    keyboard_button_row(
+                    subscription_button(
                         True, scraper_source, scraper_type, scraper_duration
                     )
                 )
             else:
                 keyboard.append(
-                    keyboard_button_row(
+                    subscription_button(
                         False, scraper_source, scraper_type, scraper_duration
                     )
                 )
@@ -712,122 +836,55 @@ class TelegramBot:
 
         return InlineKeyboardMarkup(keyboard)
 
-    def offer_details_show_keyboard(self, offer: Offer) -> InlineKeyboardMarkup:
+    def offer_keyboard(
+        self,
+        offer: Offer,
+        details_show_button: bool,
+        details_hide_button: bool,
+    ) -> InlineKeyboardMarkup:
         keyboard: list[list[InlineKeyboardButton]] = []
-        keyboard.append(
-            [
+
+        first_row: list[InlineKeyboardButton] = []
+
+        if details_show_button:
+            first_row.append(
                 InlineKeyboardButton(
-                    text=BUTTON_SHOW_DETAILS, callback_data=f"details show {offer.id}"
+                    text=BUTTON_SHOW_DETAILS,
+                    callback_data=f"details show {offer.id}",
                 )
-            ]
-        )
-        return InlineKeyboardMarkup(keyboard)
-
-    def offer_details_hide_keyboard(self, offer: Offer) -> InlineKeyboardMarkup:
-        keyboard: list[list[InlineKeyboardButton]] = []
-        keyboard.append(
-            [
-                InlineKeyboardButton(
-                    text=BUTTON_HIDE_DETAILS, callback_data=f"details hide {offer.id}"
-                )
-            ]
-        )
-        return InlineKeyboardMarkup(keyboard)
-
-    def offer_details_callback(self, update: Update, context: CallbackContext) -> None:  # type: ignore
-        if update.callback_query is None or update.effective_user is None:
-            return
-
-        query = update.callback_query
-
-        if query.data is None:
-            return
-
-        offer_id = int(query.data.split(" ")[2])
-        session: Session = self.Session()
-        offer = session.execute(select(Offer).where(Offer.id == offer_id)).scalar()
-
-        if query.data.startswith("details show"):
-            query.answer()
-            query.edit_message_text(
-                text=self.offer_details_message(offer),
-                parse_mode=ParseMode.MARKDOWN_V2,
-                reply_markup=self.offer_details_hide_keyboard(offer),
-            )
-        elif query.data.startswith("details hide"):
-            query.answer()
-            query.edit_message_text(
-                text=self.offer_message(offer),
-                parse_mode=ParseMode.MARKDOWN_V2,
-                reply_markup=self.offer_details_show_keyboard(offer),
             )
 
-    def close_menu_callback(self, update: Update, context: CallbackContext) -> None:  # type: ignore
-        if update.callback_query is None or update.effective_user is None:
-            return
+        if details_hide_button:
+            first_row.append(
+                InlineKeyboardButton(
+                    text=BUTTON_HIDE_DETAILS,
+                    callback_data=f"details hide {offer.id}",
+                )
+            )
 
-        query = update.callback_query
-
-        if query.data != "close menu":
-            return
-
-        query.answer(text="Bye!")
-        query.edit_message_text(
-            text=MESSAGE_MANAGE_MENU_CLOSED,
-            reply_markup=None,
+        first_row.append(
+            InlineKeyboardButton(
+                text=BUTTON_DISMISS,
+                callback_data=f"dismiss {offer.id}",
+            )
         )
 
-    def toggle_subscription_callback(self, update: Update, context: CallbackContext) -> None:  # type: ignore
-        query = update.callback_query
-        if query is None or update.effective_user is None or query.data is None:
-            return
+        keyboard.append(first_row)
 
-        db_user = self.get_user(update.effective_user.id)
-        if db_user is None:
-            query.answer(text=MESSAGE_USER_NOT_REGISTERED)
-            return
-
-        data = query.data.lower().removeprefix("toggle").strip().upper().split(" ")
-        source = Source[data[0]]
-        type = OfferType[data[1]]
-        duration = OfferDuration[data[2]]
-
-        answer_text = None
-
-        if not self.is_subscribed(db_user, type, source, duration):
-            self.subscribe(db_user, type, source, duration)
-            answer_text = POPUP_SUBSCRIBED
-        else:
-            self.unsubscribe(db_user, type, source, duration)
-            answer_text = POPUP_UNSUBSCRIBED
-
-        query.answer(text=answer_text)
-        query.edit_message_text(
-            text=MESSAGE_MANAGE_MENU,
-            reply_markup=self.manage_menu_keyboard(db_user),
-        )
-
-    def send_message(self, *args, **kwargs) -> Message | None:  # type: ignore
-        """Wrapper around the message sending to handle exceptions."""
-        try:
-            return self.updater.bot.send_message(*args, **kwargs)
-        except TelegramError as e:
-            if e.message == "Chat not found":
-                # TODO: The user has probably closed the chat. Remove the user from the database.
-                # Does the error handler work here?
-                pass
-            else:
-                logger.error(e)
-            return None
+        return InlineKeyboardMarkup(keyboard)
 
     def send_offer(self, offer: Offer, user: User) -> bool:
         logger.debug(
             f"Sending offer {offer.title} to Telegram user {user.telegram_id}. Markdown: {self.offer_message(offer)}"
         )
 
-        markup = None
-        if offer.game and (offer.game.igdb_info or offer.game.steam_info):
-            markup = self.offer_details_show_keyboard(offer)
+        details_button = bool(
+            offer.game and (offer.game.igdb_info or offer.game.steam_info)
+        )
+
+        markup = self.offer_keyboard(
+            offer, details_show_button=details_button, details_hide_button=False
+        )
 
         return (
             self.send_message(
@@ -960,13 +1017,39 @@ class TelegramBot:
 
         return content
 
+    def send_message(self, *args, **kwargs) -> Message | None:  # type: ignore
+        """Wrapper around the message sending to handle exceptions."""
+        try:
+            return self.updater.bot.send_message(*args, **kwargs)
+        except TelegramError as e:
+            if e.message == "Chat not found":
+                # TODO: The user has probably closed the chat. Remove the user from the database.
+                # Does the error handler work here?
+                pass
+            else:
+                logger.error(e)
+            return None
+
     def log_call(self, update: Update) -> None:
         if Config.get().telegram_log_level.value >= TelegramLogLevel.DEBUG.value:
-            message = "Received command: "
+            if update.callback_query:
+                type = "Callback query"
+            else:
+                type = "Message"
+
             if update.effective_user:
-                message += f"User {update.effective_user.mention_markdown_v2()}"
-            if update.effective_message:
-                message += f", Message {update.effective_message.text_markdown_v2}"
+                user = f"from {update.effective_user.mention_markdown_v2()}"
+            else:
+                user = "from unknown user"
+
+            if update.callback_query and update.callback_query.data:
+                content = f"with content {update.callback_query.data}"
+            elif update.effective_message:
+                content = f"with content {update.effective_message.text_markdown_v2}"
+            else:
+                content = "without content"
+
+            message = f"{type} {user} {content}"
             logger.debug(message)
             self.send_message(
                 chat_id=Config.get().telegram_developer_chat_id,
@@ -979,7 +1062,7 @@ def markdown_json_formatted(input: str) -> str:
     return f"```json\n{input}\n```"
 
 
-def keyboard_button_row(
+def subscription_button(
     active: bool,
     source: Source,
     offer_type: OfferType,
