@@ -163,7 +163,7 @@ class SteamInfo(Base):
 
 
 class Offer(Base):
-    """An offer, can be for a game or soem other game related content (loot)."""
+    """An offer, can be for a game or some other game related content (loot)."""
 
     __tablename__ = "offers"
 

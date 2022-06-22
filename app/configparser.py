@@ -1,4 +1,5 @@
 import configparser
+from asyncio.log import logger
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
@@ -164,9 +165,14 @@ class Config:
                 config["telegram"]["LogLevel"]
             ]
             parsed_config.telegram_access_token = config["telegram"]["AccessToken"]
-            parsed_config.telegram_developer_chat_id = int(
-                config["telegram"]["DeveloperChatID"]
-            )
+            try:
+                parsed_config.telegram_developer_chat_id = int(
+                    config["telegram"]["DeveloperChatID"]
+                )
+            except ValueError:
+                logger.warning(
+                    "Invalid Telegram ID. Only ignore if you don't use the Telegram bot."
+                )
 
             parsed_config.igdb_client_id = config["igdb"]["ClientID"]
             parsed_config.igdb_client_secret = config["igdb"]["ClientSecret"]
