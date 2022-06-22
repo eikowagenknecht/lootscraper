@@ -20,7 +20,6 @@ down_revision = "c5a42a07d104"
 branch_labels = None
 depends_on = None
 
-
 Base = declarative_base()  # type: Any
 
 

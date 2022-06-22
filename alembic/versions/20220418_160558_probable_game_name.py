@@ -6,19 +6,55 @@ Create Date: 2022-04-18 16:05:58.909502+00:00
 
 """
 import re
+from typing import Any
 
 import sqlalchemy as sa
 from sqlalchemy import orm, select
+from sqlalchemy.ext.declarative import declarative_base
 
 from alembic import op
 from app.common import OfferType, Source
-from app.sqlalchemy import Offer
 
 # revision identifiers, used by Alembic.
 revision = "c5a42a07d104"
 down_revision = "8b0536741936"
 branch_labels = None
 depends_on = None
+
+Base = declarative_base()  # type: Any
+
+
+class Game(Base):
+    __tablename__ = "games"
+
+    id = sa.Column(sa.Integer, primary_key=True, nullable=False)
+
+    steam_id = sa.Column(sa.Integer)
+    igdb_id = sa.Column(sa.Integer)
+
+    offers = orm.relationship("Offer", back_populates="game")
+
+
+class Offer(Base):
+    __tablename__ = "offers"
+
+    id: int = sa.Column(sa.Integer, primary_key=True)
+    source = sa.Column(sa.Enum("AMAZON", "EPIC", "STEAM", "GOG", name="source"))
+    type = sa.Column(sa.Enum("LOOT", "GAME", name="offertype"))
+    title: str = sa.Column(sa.String)
+    probable_game_name: str = sa.Column(sa.String)
+
+    seen_first = sa.Column(sa.DateTime)
+    seen_last = sa.Column(sa.DateTime)
+    valid_from = sa.Column(sa.DateTime)
+    valid_to = sa.Column(sa.DateTime)
+
+    rawtext: str | None = sa.Column(sa.String)
+    url: str | None = sa.Column(sa.String)
+    img_url: str | None = sa.Column(sa.String)
+
+    game_id = sa.Column(sa.Integer, sa.ForeignKey("games.id"))
+    game = orm.relationship("Game", back_populates="offers")
 
 
 def upgrade() -> None:
