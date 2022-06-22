@@ -147,7 +147,7 @@ class TelegramBot:
         )
 
         dispatcher.add_handler(MessageHandler(Filters.command, self.unknown_command))
-        dispatcher.add_error_handler(self.error_handler)
+        dispatcher.add_error_handler(self.error_handler)  # type: ignore
 
         logger.info("Telegram Bot: Starting polling")
         self.updater.start_polling()  # Starts in a different thread
@@ -157,7 +157,7 @@ class TelegramBot:
         logger.info("Telegram Bot: Stopping polling")
         self.updater.stop()
 
-    def error_handler(self, update: object, context: CallbackContext) -> None:  # type: ignore
+    def error_handler(self, update: Update, context: CallbackContext) -> None:  # type: ignore
         """Log the error and send a telegram message to notify the developer chat."""
 
         # Log the error before we do anything else, so we can see it even if something breaks.
@@ -229,18 +229,15 @@ class TelegramBot:
             return
 
         # This happens when the bot is removed from the group chat.
-        # TODO: Also remove the user from the database.
         if (
-            isinstance(context.error, telegram.TelegramError)
-            and context.error.message == "Unauthorized"
+            isinstance(context.error, telegram.error.Unauthorized)
+            and update.effective_chat
         ):
-            error_text = "Could not send to chat, unauthorized."
-            logger.error(error_text)
-            self.send_message(
-                chat_id=Config.get().telegram_developer_chat_id,
-                text=error_text,
-                parse_mode=None,
+            chat_id = update.effective_chat.id
+            logger.info(
+                f"Removing user with chat id {chat_id} from database because the chat could not be found."
             )
+            self.remove_user(chat_id)
             return
 
         # Build the exception string from the exception
@@ -323,7 +320,7 @@ class TelegramBot:
         if update.message is None or update.effective_user is None:
             return
 
-        db_user = self.get_user(update.effective_user.id)
+        db_user = self.get_user_by_telegram_id(update.effective_user.id)
 
         if db_user is None:
             message = (
@@ -355,7 +352,7 @@ class TelegramBot:
         if update.message is None or update.effective_user is None:
             return
 
-        db_user = self.get_user(update.effective_user.id)
+        db_user = self.get_user_by_telegram_id(update.effective_user.id)
         if db_user is None:
             update.message.reply_text(MESSAGE_USER_NOT_REGISTERED)
             return
@@ -373,7 +370,7 @@ class TelegramBot:
         if update.message is None or update.effective_user is None:
             return
 
-        db_user = self.get_user(update.effective_user.id)
+        db_user = self.get_user_by_telegram_id(update.effective_user.id)
         if db_user is None:
             update.message.reply_text(MESSAGE_USER_NOT_REGISTERED)
             return
@@ -419,7 +416,7 @@ class TelegramBot:
             R"Also I will be sad to see you go\."
         )
 
-        db_user = self.get_user(update.effective_user.id)
+        db_user = self.get_user_by_telegram_id(update.effective_user.id)
 
         if db_user is not None:
             message = (
@@ -479,7 +476,7 @@ class TelegramBot:
         if not update.effective_chat or not update.effective_user or not update.message:
             return
 
-        db_user = self.get_user(update.effective_user.id)
+        db_user = self.get_user_by_telegram_id(update.effective_user.id)
         if db_user is None:
             message = (
                 Rf"Hi {update.effective_user.mention_markdown_v2()}, you are currently not registered\. "
@@ -625,7 +622,7 @@ class TelegramBot:
         if query is None or update.effective_user is None or query.data is None:
             return
 
-        db_user = self.get_user(update.effective_user.id)
+        db_user = self.get_user_by_telegram_id(update.effective_user.id)
         if db_user is None:
             query.answer(text=MESSAGE_USER_NOT_REGISTERED)
             return
@@ -739,10 +736,20 @@ class TelegramBot:
         user.last_announcement_id = announcements[-1].id
         session.commit()
 
-    def get_user(self, telegram_id: int) -> User | None:
+    def get_user_by_telegram_id(self, telegram_id: int) -> User | None:
         session: Session = self.Session()
         db_user = (
             session.execute(select(User).where(User.telegram_id == telegram_id))
+            .scalars()
+            .one_or_none()
+        )
+
+        return db_user
+
+    def get_user_by_chat_id(self, chat_id: int) -> User | None:
+        session: Session = self.Session()
+        db_user = (
+            session.execute(select(User).where(User.telegram_chat_id == chat_id))
             .scalars()
             .one_or_none()
         )
@@ -792,7 +799,7 @@ class TelegramBot:
         if update.callback_query is None or update.effective_user is None:
             return
 
-        db_user = self.get_user(update.effective_user.id)
+        db_user = self.get_user_by_telegram_id(update.effective_user.id)
         if db_user is None:
             update.callback_query.answer(text=MESSAGE_USER_NOT_REGISTERED)
             return
@@ -1021,14 +1028,37 @@ class TelegramBot:
         """Wrapper around the message sending to handle exceptions."""
         try:
             return self.updater.bot.send_message(*args, **kwargs)
+        except telegram.error.Unauthorized:
+            # The user blocked the chat. Remove the user from the database.
+            if kwargs["chat_id"]:
+                chat_id = int(kwargs.get("chat_id"))  # type: ignore
+                logger.info(
+                    f"Removing user with chat id {chat_id} from database because he blocked the chat."
+                )
+                self.remove_user(chat_id)
         except TelegramError as e:
             if e.message == "Chat not found":
-                # TODO: The user has probably closed the chat. Remove the user from the database.
-                # Does the error handler work here?
-                pass
+                chat_id = int(kwargs.get("chat_id"))  # type: ignore
+                logger.info(
+                    f"Removing user with chat id {chat_id} from database because the chat could not be found."
+                )
+                self.remove_user(chat_id)
             else:
                 logger.error(e)
             return None
+
+    def remove_user(self, chat_id: int) -> None:
+        db_user = self.get_user_by_chat_id(chat_id)
+
+        if db_user is None:
+            return
+
+        # User is registered, remove him from the database.
+        logger.debug(f"Removing user {db_user.telegram_id} from database.")
+
+        session: Session = self.Session()
+        session.delete(db_user)
+        session.commit()
 
     def log_call(self, update: Update) -> None:
         if Config.get().telegram_log_level.value >= TelegramLogLevel.DEBUG.value:
