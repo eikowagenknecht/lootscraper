@@ -50,6 +50,7 @@ from app.sqlalchemy import Announcement, Game, Offer, TelegramSubscription, User
 
 BUTTON_SHOW_DETAILS = "Details"
 BUTTON_HIDE_DETAILS = "Summary"
+BUTTON_CLAIM = "Claim"
 BUTTON_DISMISS = "Dismiss"
 BUTTON_CLOSE = "Close"
 
@@ -852,6 +853,13 @@ class TelegramBot:
 
         first_row: list[InlineKeyboardButton] = []
 
+        first_row.append(
+            InlineKeyboardButton(
+                text=BUTTON_CLAIM,
+                url=offer.url,
+            )
+        )
+
         if details_show_button:
             first_row.append(
                 InlineKeyboardButton(
@@ -948,11 +956,6 @@ class TelegramBot:
         else:
             content += markdown_escape(
                 "Offer is valid forever.. just kidding, I just don't know when it will end."
-            )
-
-        if offer.url:
-            content += " " + markdown_url(
-                offer.url, f"Claim it now for free on {offer.source.value}!"
             )
 
         return content
