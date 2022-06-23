@@ -116,11 +116,7 @@ class SteamLootScraper(Scraper):
             # Nothing to do here, string stays empty
             pass
 
-        return SteamRawOffer(
-            appid=appid,
-            title=title_str,
-            url=url_str,
-        )
+        return SteamRawOffer(appid=appid, title=title_str, url=url_str, img_url=None)
 
     @staticmethod
     def normalize_offers(raw_offers: list[SteamRawOffer]) -> list[Offer]:
