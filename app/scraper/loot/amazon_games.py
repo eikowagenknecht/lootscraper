@@ -17,7 +17,9 @@ from app.sqlalchemy import Offer
 logger = logging.getLogger(__name__)
 
 ROOT_URL = "https://gaming.amazon.com/home"
-XPATH_GAMES = '//div[@data-a-target="offer-list-FGWP"]//div[@class="item-card__action"]'
+XPATH_GAMES = (
+    '//div[@data-a-target="offer-list-FGWP_FULL"]//div[@class="item-card__action"]'
+)
 SUBPATH_TITLE = './/div[contains(concat(" ", normalize-space(@class), " "), " item-card-details__body__primary ")]//p'
 SUBPATH_ENDDATE = './/div[contains(concat(" ", normalize-space(@class), " "), " item-card__availability-date ")]//p'
 SUBPATH_LINK = './a[@data-a-target="learn-more-card"]'
