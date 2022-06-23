@@ -1,7 +1,9 @@
 import logging
 from pathlib import Path
 
-import chromedriver_binary  # pylint: disable=unused-import # noqa: F401 # Imported for the sideeffects!
+import chromedriver_autoinstaller
+
+# import chromedriver_binary  # pylint: disable=unused-import # noqa: F401 # Imported for the sideeffects!
 from selenium.webdriver import Chrome
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.webdriver import WebDriver
@@ -13,7 +15,7 @@ INJECTION_FILE = Path("js/inject.js")
 
 def get_pagedriver() -> WebDriver:
     options = Options()
-
+    chromedriver_autoinstaller.install()
     # ChromeDriver Fixes from https://stackoverflow.com/questions/48450594/selenium-timed-out-receiving-message-from-renderer
     # https://stackoverflow.com/a/26283818/1689770
     options.add_argument("start-maximized")
