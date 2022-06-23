@@ -307,6 +307,11 @@ class TelegramBot:
             text = message_parts[1].strip()
 
             self.add_announcement(header, text)
+            self.send_message(
+                chat_id=update.effective_chat.id,
+                text=markdown_escape("Announcement added successfully."),
+                parse_mode=telegram.ParseMode.MARKDOWN_V2,
+            )
 
         except IndexError:
             logger.error("Invalid announcement command.")
