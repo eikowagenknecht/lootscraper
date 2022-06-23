@@ -65,6 +65,8 @@ class EpicGamesScraper(Scraper):
                     (By.XPATH, """//h2[text()="Free Games"]""")
                 )
             )
+
+            Scraper.scroll_page_to_bottom(driver)
         except WebDriverException:
             filename = (
                 Config.data_path()
