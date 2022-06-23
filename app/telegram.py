@@ -629,12 +629,20 @@ class TelegramBot:
 
         try:
             update.callback_query.delete_message()
+            return
         except telegram.error.BadRequest:
             # Message could not be deleted, probably it's older than 48h
+            pass
+
+        try:
             update.callback_query.edit_message_text(
                 text=MESSAGE_DISMISSED,
                 reply_markup=None,
             )
+            return
+        except telegram.error.BadRequest:
+            # Message could not be edited, probably a doubleclick
+            pass
 
     def close_menu_callback(self, update: Update, context: CallbackContext) -> None:  # type: ignore
         """Callback from the menu button "Close" in the manage menu."""
