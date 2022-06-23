@@ -27,7 +27,7 @@ from app.upload import upload_to_server
 exit = Event()
 
 
-CURRENT_VERSION = "0.4.3"
+CURRENT_VERSION = "0.4.4"
 EXAMPLE_CONFIG_FILE = "config.default.ini"
 
 
