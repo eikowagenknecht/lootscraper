@@ -1,0 +1,15 @@
+*.py diff
+*.pyi diff
+
+*.js diff
+
+*.bat diff
+
+*.toml diff
+*.yml diff
+
+*.txt diff
+*.md diff
+*.ini diff
+
+Dockerfile diff
