@@ -125,14 +125,15 @@ class TelegramBot:
 
         logger.info("Telegram Bot: Initialized")
 
-        dispatcher.add_handler(CommandHandler("start", self.start_command))
-        dispatcher.add_handler(CommandHandler("leave", self.leave_command))
-        dispatcher.add_handler(CommandHandler("help", self.help_command))
-        dispatcher.add_handler(CommandHandler("manage", self.manage_command))
-        dispatcher.add_handler(CommandHandler("status", self.status_command))
-        dispatcher.add_handler(CommandHandler("offers", self.offers_command))
+        dispatcher.add_handler(CommandHandler("announce", self.announce_command))
         dispatcher.add_handler(CommandHandler("debug", self.debug_command))
         dispatcher.add_handler(CommandHandler("error", self.error_command))
+        dispatcher.add_handler(CommandHandler("help", self.help_command))
+        dispatcher.add_handler(CommandHandler("leave", self.leave_command))
+        dispatcher.add_handler(CommandHandler("manage", self.manage_command))
+        dispatcher.add_handler(CommandHandler("offers", self.offers_command))
+        dispatcher.add_handler(CommandHandler("start", self.start_command))
+        dispatcher.add_handler(CommandHandler("status", self.status_command))
 
         dispatcher.add_handler(
             CallbackQueryHandler(self.toggle_subscription_callback, pattern="toggle")
@@ -273,6 +274,42 @@ class TelegramBot:
                 text=message,
                 parse_mode=telegram.ParseMode.MARKDOWN_V2,
             )
+
+    def announce_command(self, update: Update, context: CallbackContext) -> None:  # type: ignore
+        """Handle the /announce command: Add an announcement (admin only)."""
+
+        self.log_call(update)
+
+        if (
+            not update.effective_user
+            or not update.effective_chat
+            or not update.message
+            or not update.message.text
+        ):
+            return
+
+        # Check if the user is an admin
+        if not update.effective_user.id == Config.get().telegram_admin_id:
+            self.send_message(
+                chat_id=update.effective_chat.id,
+                text=markdown_escape(
+                    "You are not an admin, so you can't use this command."
+                ),
+                parse_mode=telegram.ParseMode.MARKDOWN_V2,
+            )
+            return
+
+        try:
+            # Get the announcement text
+            message = update.message.text.removeprefix("/announce ")
+            message_parts = message.split("||")
+            header = message_parts[0].strip()
+            text = message_parts[1].strip()
+
+            self.add_announcement(header, text)
+
+        except IndexError:
+            logger.error("Invalid announcement command.")
 
     def debug_command(self, update: Update, context: CallbackContext) -> None:  # type: ignore
         """Handle the /debug command: Show some debug information."""
@@ -1088,6 +1125,25 @@ class TelegramBot:
                 text=message,
                 parse_mode=telegram.ParseMode.MARKDOWN_V2,
             )
+
+    def add_announcement(self, header: str, text: str) -> None:
+        """
+        Add an announcement to the database
+        """
+
+        announcement_full = (
+            "*" + markdown_escape(header) + "*" + "\n\n" + markdown_escape(text)
+        )
+
+        announcement = Announcement(
+            channel=Channel.TELEGRAM,
+            date=datetime.now().replace(tzinfo=timezone.utc),
+            text_markdown=announcement_full,
+        )
+
+        session: Session = self.Session()
+        session.add(announcement)
+        session.commit()
 
 
 def markdown_json_formatted(input: str) -> str:

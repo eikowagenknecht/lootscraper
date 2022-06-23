@@ -54,6 +54,7 @@ class ParsedConfig:
     telegram_log_level: TelegramLogLevel = TelegramLogLevel.ERROR
     telegram_access_token: str = ""
     telegram_developer_chat_id: int = 0
+    telegram_admin_id: int = 0
 
     # IGDB
     igdb_client_id: str = ""
@@ -171,7 +172,16 @@ class Config:
                 )
             except ValueError:
                 logger.warning(
-                    "Invalid Telegram ID. Only ignore if you don't use the Telegram bot."
+                    "Invalid developer chat ID. Only ignore if you don't use the Telegram bot."
+                )
+
+            try:
+                parsed_config.telegram_admin_id = int(
+                    config["telegram"]["AdminTelegramID"]
+                )
+            except ValueError:
+                logger.warning(
+                    "Invalid telegram admin ID. Only ignore if you don't use the Telegram bot."
                 )
 
             parsed_config.igdb_client_id = config["igdb"]["ClientID"]
