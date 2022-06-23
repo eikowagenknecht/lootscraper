@@ -2,8 +2,6 @@ import logging
 from pathlib import Path
 
 import chromedriver_autoinstaller
-
-# import chromedriver_binary  # pylint: disable=unused-import # noqa: F401 # Imported for the sideeffects!
 from selenium.webdriver import Chrome
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.webdriver import WebDriver
