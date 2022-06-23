@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from dataclasses import dataclass
 from time import sleep
 
 from selenium.webdriver.chrome.webdriver import WebDriver
@@ -9,6 +10,13 @@ from app.sqlalchemy import Offer
 
 MAX_WAIT_SECONDS = 15  # Needs to be quite high in Docker for first run
 SCROLL_PAUSE_SECONDS = 1  # Long enough so even Amazons JS can catch up
+
+
+@dataclass
+class RawOffer:
+    title: str | None
+    url: str | None
+    img_url: str | None
 
 
 class Scraper:
@@ -31,6 +39,10 @@ class Scraper:
     @staticmethod
     def get_max_wait_seconds() -> int:
         return MAX_WAIT_SECONDS
+
+    @staticmethod
+    def categorize(raw_offers: list[RawOffer]) -> list[RawOffer]:
+        return raw_offers  # ToDo: Implement this method
 
     @staticmethod
     def scroll_element_to_bottom(driver: WebDriver, element_id: str) -> None:

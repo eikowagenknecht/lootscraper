@@ -1,5 +1,4 @@
 import logging
-from dataclasses import dataclass
 from datetime import datetime, timezone
 
 from selenium.common.exceptions import WebDriverException
@@ -10,7 +9,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
 from app.common import OfferDuration, OfferType, Source
-from app.scraper.loot.scraper import Scraper
+from app.scraper.loot.scraper import RawOffer, Scraper
 from app.sqlalchemy import Offer
 
 logger = logging.getLogger(__name__)
@@ -21,13 +20,6 @@ ROOT_URL = "https://itch.io/games/new-and-popular/on-sale"
 XPATH_FREE_RESULTS = """//div[contains(concat(" ", normalize-space(@class), " "), " game_grid_widget ")]//div[contains(concat(" ", normalize-space(@class), " "), " game_cell ") and .//div[@class="sale_tag" and contains(text(), "100")]]"""  # URL: Attribute href
 SUBPATH_TITLE = """.//a[contains(concat(" ", normalize-space(@class), " "), " title ")]"""  # /text(), URL: Attribute href
 SUBPATH_IMAGE = """.//img"""  # Attribute src
-
-
-@dataclass
-class RawOffer:
-    title: str | None
-    url: str | None
-    img_url: str | None
 
 
 class ItchGamesScraper(Scraper):
