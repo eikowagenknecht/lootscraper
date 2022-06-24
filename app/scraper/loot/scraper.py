@@ -40,9 +40,6 @@ class Scraper:
     def get_max_wait_seconds() -> int:
         return MAX_WAIT_SECONDS
 
-    @staticmethod
-    def categorize(raw_offers: list[RawOffer]) -> list[RawOffer]:
-        return raw_offers  # ToDo: Implement this method
 
     @staticmethod
     def scroll_element_to_bottom(driver: WebDriver, element_id: str) -> None:
