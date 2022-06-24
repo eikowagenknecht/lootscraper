@@ -1,11 +1,16 @@
 from __future__ import annotations
 
+import logging
+import re
+from datetime import datetime, timedelta
 from time import sleep
 
 from selenium.webdriver.chrome.webdriver import WebDriver
 
-from app.common import OfferDuration, OfferType, Source
+from app.common import Category, OfferDuration, OfferType, Source
 from app.sqlalchemy import Offer
+
+logger = logging.getLogger(__name__)
 
 MAX_WAIT_SECONDS = 15  # Needs to be quite high in Docker for first run
 SCROLL_PAUSE_SECONDS = 1  # Long enough so even Amazons JS can catch up
@@ -14,7 +19,8 @@ SCROLL_PAUSE_SECONDS = 1  # Long enough so even Amazons JS can catch up
 class Scraper:
     @staticmethod
     def scrape(driver: WebDriver) -> list[Offer]:
-        raise NotImplementedError("Please implement this method")
+        offers = Scraper.read_offers_from_page(driver)
+        return Scraper.categorize_offers(offers)
 
     @staticmethod
     def get_type() -> OfferType:
@@ -29,8 +35,33 @@ class Scraper:
         raise NotImplementedError("Please implement this method")
 
     @staticmethod
+    def read_offers_from_page(driver: WebDriver) -> list[Offer]:
+        raise NotImplementedError("Please implement this method")
+
+    @staticmethod
     def get_max_wait_seconds() -> int:
         return MAX_WAIT_SECONDS
+
+    @staticmethod
+    def categorize_offers(offers: list[Offer]) -> list[Offer]:
+        for offer in offers:
+
+            if re.search("(demo|trial)", offer.title[-6:], re.IGNORECASE):
+                offer.category = Category.DEMO
+                continue
+
+            if offer.duration == OfferDuration.ALWAYS:
+                offer.category = Category.ALWAYS_FREE
+                continue
+
+            if (
+                Offer.valid_to is not None
+                and Offer.valid_to > datetime.now() + timedelta(days=3650)
+            ):
+                offer.category = Category.ALWAYS_FREE
+                continue
+
+        return offers
 
     @staticmethod
     def scroll_element_to_bottom(driver: WebDriver, element_id: str) -> None:

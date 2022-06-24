@@ -49,7 +49,8 @@ class AmazonLootScraper(Scraper):
 
     @staticmethod
     def scrape(driver: WebDriver) -> list[Offer]:
-        return AmazonLootScraper.read_offers_from_page(driver)
+        offers = AmazonLootScraper.read_offers_from_page(driver)
+        return AmazonLootScraper.categorize_offers(offers)
 
     @staticmethod
     def read_offers_from_page(driver: WebDriver) -> list[Offer]:

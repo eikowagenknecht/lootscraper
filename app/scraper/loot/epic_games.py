@@ -53,7 +53,8 @@ class EpicGamesScraper(Scraper):
 
     @staticmethod
     def scrape(driver: WebDriver) -> list[Offer]:
-        return EpicGamesScraper.read_offers_from_page(driver)
+        offers = EpicGamesScraper.read_offers_from_page(driver)
+        return EpicGamesScraper.categorize_offers(offers)
 
     @staticmethod
     def read_offers_from_page(driver: WebDriver) -> list[Offer]:

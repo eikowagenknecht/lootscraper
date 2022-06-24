@@ -27,6 +27,13 @@ class Channel(Enum):
     TELEGRAM = "Telegram"
 
 
+class Category(Enum):
+    VALID = "Valid"
+    DEMO = "Demo"
+    CHEAP = "Cheap"
+    ALWAYS_FREE = "Always Free"
+
+
 class OfferDuration(Enum):
     ALWAYS = "Always Free"  # These probably will stay free forever
     CLAIMABLE = "Permanent after Claim"  # The usual offers (Epic etc.)

@@ -48,7 +48,8 @@ class AppleGamesScraper(Scraper):
 
     @staticmethod
     def scrape(driver: WebDriver) -> list[Offer]:
-        return AppleGamesScraper.read_offers_from_page(driver)
+        offers = AppleGamesScraper.read_offers_from_page(driver)
+        return AppleGamesScraper.categorize_offers(offers)
 
     @staticmethod
     def read_offers_from_page(driver: WebDriver) -> list[Offer]:
@@ -71,8 +72,9 @@ class AppleGamesScraper(Scraper):
             )
 
         normalized_offers = AppleGamesScraper.normalize_offers(raw_offers)
+        categorized_offers = AppleGamesScraper.categorize_offers(normalized_offers)
 
-        return normalized_offers
+        return categorized_offers
 
     @staticmethod
     def read_raw_offer(element: WebElement) -> RawOffer:
@@ -113,15 +115,6 @@ class AppleGamesScraper(Scraper):
         normalized_offers: list[Offer] = []
 
         for raw_offer in raw_offers:
-            # Skip not recognized offers
-            if not raw_offer.title:
-                logger.error(f"Offer not recognized, skipping: {raw_offer}")
-                continue
-
-            # Skip some Demo spam in Humble store
-            if raw_offer.title.endswith("Demo"):
-                continue
-
             # Raw text
             rawtext = ""
             if raw_offer.title:

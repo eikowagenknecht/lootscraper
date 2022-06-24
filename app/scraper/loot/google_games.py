@@ -46,7 +46,9 @@ class GoogleGamesScraper(Scraper):
 
     @staticmethod
     def scrape(driver: WebDriver) -> list[Offer]:
-        return GoogleGamesScraper.read_offers_from_page(driver)
+        offers = GoogleGamesScraper.read_offers_from_page(driver)
+        categorized_offers = GoogleGamesScraper.categorize_offers(offers)
+        return categorized_offers
 
     @staticmethod
     def read_offers_from_page(driver: WebDriver) -> list[Offer]:
