@@ -31,8 +31,8 @@ SUBPATH_IMG = """.//img"""
 
 @dataclass
 class EpicRawOffer(RawOffer):
-    valid_from: str | None
-    valid_to: str | None
+    valid_from: str | None = None
+    valid_to: str | None = None
 
 
 class EpicGamesScraper(Scraper):

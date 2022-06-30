@@ -32,7 +32,7 @@ STEAM_SEARCH_RESULTS = (
 
 @dataclass
 class SteamRawOffer(RawOffer):
-    appid: int | None
+    appid: int | None = None
     text: str | None = None
 
 

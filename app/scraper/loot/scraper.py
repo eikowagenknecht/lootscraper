@@ -15,8 +15,8 @@ SCROLL_PAUSE_SECONDS = 1  # Long enough so even Amazons JS can catch up
 @dataclass
 class RawOffer:
     title: str | None
-    url: str | None
-    img_url: str | None
+    url: str | None = None
+    img_url: str | None = None
 
 
 class Scraper:
@@ -39,7 +39,6 @@ class Scraper:
     @staticmethod
     def get_max_wait_seconds() -> int:
         return MAX_WAIT_SECONDS
-
 
     @staticmethod
     def scroll_element_to_bottom(driver: WebDriver, element_id: str) -> None:
