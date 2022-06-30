@@ -135,6 +135,9 @@ class EpicGamesScraper(Scraper):
 
         try:
             url_str = str(element.get_attribute("href"))  # type: ignore
+            # Ignore embedded img url
+            if url_str.startswith("data"):
+                url_str = None
         except WebDriverException:
             # Nothing to do here, string stays empty
             pass
