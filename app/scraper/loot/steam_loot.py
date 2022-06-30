@@ -1,4 +1,5 @@
 import logging
+from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 
 from selenium.common.exceptions import WebDriverException
@@ -11,8 +12,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from app.common import OfferDuration, OfferType, Source
 from app.scraper.info.steam import skip_age_verification
 from app.scraper.info.utils import clean_loot_title
-from app.scraper.loot.scraper import Scraper
-from app.scraper.loot.steam_games import SteamRawOffer
+from app.scraper.loot.scraper import RawOffer, Scraper
 from app.sqlalchemy import Offer
 
 logger = logging.getLogger(__name__)
@@ -27,6 +27,12 @@ STEAM_SEARCH_RESULTS_CONTAINER = '//div[@id = "search_results"]'
 STEAM_SEARCH_RESULTS = (
     '//div[@id = "search_result_container"]//a'  # data-ds-appid contains the steam id
 )
+
+
+@dataclass
+class SteamRawOffer(RawOffer):
+    appid: int | None
+    text: str | None = None
 
 
 class SteamLootScraper(Scraper):
