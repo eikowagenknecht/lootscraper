@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from dataclasses import dataclass
 from time import sleep
 
 from selenium.webdriver.chrome.webdriver import WebDriver
@@ -9,6 +10,13 @@ from app.sqlalchemy import Offer
 
 MAX_WAIT_SECONDS = 15  # Needs to be quite high in Docker for first run
 SCROLL_PAUSE_SECONDS = 1  # Long enough so even Amazons JS can catch up
+
+
+@dataclass
+class RawOffer:
+    title: str | None
+    url: str | None = None
+    img_url: str | None = None
 
 
 class Scraper:

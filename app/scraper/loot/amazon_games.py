@@ -11,7 +11,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 
 from app.common import OfferDuration, OfferType, Source
 from app.scraper.info.utils import clean_game_title
-from app.scraper.loot.scraper import Scraper
+from app.scraper.loot.scraper import RawOffer, Scraper
 from app.sqlalchemy import Offer
 
 logger = logging.getLogger(__name__)
@@ -27,11 +27,9 @@ SUBPATH_IMG = './/div[@data-a-target="card-image"]//img'
 
 
 @dataclass
-class RawOffer:
+class AmazonRawOffer(RawOffer):
     title: str
     valid_to: str | None = None
-    url: str | None = None
-    img_url: str | None = None
 
 
 class AmazonGamesScraper(Scraper):
@@ -75,7 +73,7 @@ class AmazonGamesScraper(Scraper):
             logger.error("Root element not found, could not scrape!")
             return []
 
-        raw_offers: list[RawOffer] = []
+        raw_offers: list[AmazonRawOffer] = []
         title_str: str
         valid_to_str: str | None
         url_str: str | None
@@ -121,7 +119,7 @@ class AmazonGamesScraper(Scraper):
                 img_url_str = None
 
             raw_offers.append(
-                RawOffer(
+                AmazonRawOffer(
                     title=title_str,
                     valid_to=valid_to_str,
                     url=url_str,
@@ -134,7 +132,7 @@ class AmazonGamesScraper(Scraper):
         return normalized_offers
 
     @staticmethod
-    def normalize_offers(raw_offers: list[RawOffer]) -> list[Offer]:
+    def normalize_offers(raw_offers: list[AmazonRawOffer]) -> list[Offer]:
         normalized_offers: list[Offer] = []
 
         for raw_offer in raw_offers:

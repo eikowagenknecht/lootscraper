@@ -10,7 +10,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
 from app.common import OfferDuration, OfferType, Source
-from app.scraper.loot.scraper import Scraper
+from app.scraper.loot.scraper import RawOffer, Scraper
 from app.sqlalchemy import Offer
 
 logger = logging.getLogger(__name__)
@@ -26,10 +26,7 @@ SUBPATH_IMAGE = """.//img"""  # Attr "src"
 
 
 @dataclass
-class RawOffer:
-    title: str | None
-    url: str | None
-    img_url: str | None
+class HumbleRawOffer(RawOffer):
     valid_to: str | None = None
 
 
@@ -53,7 +50,7 @@ class HumbleGamesScraper(Scraper):
     @staticmethod
     def read_offers_from_page(driver: WebDriver) -> list[Offer]:
         driver.get(ROOT_URL)
-        raw_offers: list[RawOffer] = []
+        raw_offers: list[HumbleRawOffer] = []
 
         try:
             # Wait until the page loaded
@@ -75,7 +72,7 @@ class HumbleGamesScraper(Scraper):
         return normalized_offers
 
     @staticmethod
-    def read_raw_offer(element: WebElement) -> RawOffer:
+    def read_raw_offer(element: WebElement) -> HumbleRawOffer:
         title_str = None
         url_str = None
         img_url_str = None
@@ -106,14 +103,14 @@ class HumbleGamesScraper(Scraper):
             # Nothing to do here, string stays empty
             pass
 
-        return RawOffer(
+        return HumbleRawOffer(
             title=title_str,
             url=url_str,
             img_url=img_url_str,
         )
 
     @staticmethod
-    def normalize_offers(raw_offers: list[RawOffer]) -> list[Offer]:
+    def normalize_offers(raw_offers: list[HumbleRawOffer]) -> list[Offer]:
         normalized_offers: list[Offer] = []
 
         for raw_offer in raw_offers:

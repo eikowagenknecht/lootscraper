@@ -12,7 +12,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from app.common import OfferDuration, OfferType, Source
 from app.scraper.info.steam import skip_age_verification
 from app.scraper.info.utils import clean_loot_title
-from app.scraper.loot.scraper import Scraper
+from app.scraper.loot.scraper import RawOffer, Scraper
 from app.sqlalchemy import Offer
 
 logger = logging.getLogger(__name__)
@@ -30,10 +30,8 @@ STEAM_SEARCH_RESULTS = (
 
 
 @dataclass
-class RawOffer:
-    title: str | None
-    appid: int | None
-    url: str | None
+class SteamRawOffer(RawOffer):
+    appid: int | None = None
     text: str | None = None
 
 
@@ -77,7 +75,7 @@ class SteamLootScraper(Scraper):
             logger.info("No current offer found.")
             pass
 
-        raw_offers: list[RawOffer] = []
+        raw_offers: list[SteamRawOffer] = []
         for element in elements:
             raw_offer = SteamLootScraper.read_raw_offer(element)
             raw_offers.append(raw_offer)
@@ -105,7 +103,7 @@ class SteamLootScraper(Scraper):
         return normalized_offers
 
     @staticmethod
-    def read_raw_offer(element: WebElement) -> RawOffer:
+    def read_raw_offer(element: WebElement) -> SteamRawOffer:
         title_str: str | None = None
         appid: int | None = None
         url_str: str | None = None
@@ -124,14 +122,10 @@ class SteamLootScraper(Scraper):
             # Nothing to do here, string stays empty
             pass
 
-        return RawOffer(
-            appid=appid,
-            title=title_str,
-            url=url_str,
-        )
+        return SteamRawOffer(appid=appid, title=title_str, url=url_str)
 
     @staticmethod
-    def normalize_offers(raw_offers: list[RawOffer]) -> list[Offer]:
+    def normalize_offers(raw_offers: list[SteamRawOffer]) -> list[Offer]:
         normalized_offers: list[Offer] = []
 
         now = datetime.now(timezone.utc)

@@ -11,7 +11,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
 from app.common import OfferDuration, OfferType, Source
-from app.scraper.loot.scraper import Scraper
+from app.scraper.loot.scraper import RawOffer, Scraper
 from app.sqlalchemy import Offer
 
 logger = logging.getLogger(__name__)
@@ -35,10 +35,7 @@ SUBPATH_BB_PRICE = """.//*[contains(concat(" ", normalize-space(@ng-if), " "), "
 
 
 @dataclass
-class RawOffer:
-    title: str | None
-    url: str | None
-    img_url: str | None
+class GogRawOffer(RawOffer):
     valid_to: str | None = None
 
 
@@ -89,7 +86,7 @@ class GogGamesScraper(Scraper):
             logger.error("Couldn't switch to English")
             return []
 
-        raw_offers: list[RawOffer] = []
+        raw_offers: list[GogRawOffer] = []
 
         # Check giveaway variant 1
         try:
@@ -143,7 +140,7 @@ class GogGamesScraper(Scraper):
         return normalized_offers
 
     @staticmethod
-    def read_raw_offer(element: WebElement) -> RawOffer:
+    def read_raw_offer(element: WebElement) -> GogRawOffer:
         title_str = None
         valid_to_str = None
         url_str = None
@@ -191,7 +188,7 @@ class GogGamesScraper(Scraper):
 
         # For current offers, the date is included twice but only means the enddate
 
-        return RawOffer(
+        return GogRawOffer(
             title=title_str,
             valid_to=valid_to_str,
             url=url_str,
@@ -199,7 +196,7 @@ class GogGamesScraper(Scraper):
         )
 
     @staticmethod
-    def read_offer_from_details_page(url: str, driver: WebDriver) -> RawOffer:
+    def read_offer_from_details_page(url: str, driver: WebDriver) -> GogRawOffer:
         title_str = None
         img_url_str = None
 
@@ -231,14 +228,14 @@ class GogGamesScraper(Scraper):
             # Nothing to do here, string stays empty
             pass
 
-        return RawOffer(
+        return GogRawOffer(
             url=url,
             title=title_str,
             img_url=img_url_str,
         )
 
     @staticmethod
-    def normalize_offers(raw_offers: list[RawOffer]) -> list[Offer]:
+    def normalize_offers(raw_offers: list[GogRawOffer]) -> list[Offer]:
         normalized_offers: list[Offer] = []
 
         for raw_offer in raw_offers:
