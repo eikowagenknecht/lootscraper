@@ -1,10 +1,10 @@
 import json
 import logging
-import re
 from datetime import datetime, timezone
 
 import requests
 from igdb.wrapper import IGDBWrapper
+from unidecode import unidecode
 
 from app.configparser import Config
 from app.scraper.info.utils import RESULT_MATCH_THRESHOLD, get_match_score
@@ -18,11 +18,8 @@ def get_igdb_id(search_string: str) -> int | None:
 
     logger.info(f"Getting id for {search_string}")
 
-    api_search_string = re.sub(
-        r"[^\x00-\x7F\x80-\xFF\u0100-\u017F\u0180-\u024F\u1E00-\u1EFF]",
-        "",
-        search_string,
-    )
+    # Replace non-Latin characters with their closest representation
+    api_search_string = unidecode(search_string)
     raw_response: bytes = igdb.api_request(
         "games",
         f'search "{api_search_string}"; fields name; where version_parent = null; limit 50;',
@@ -53,11 +50,11 @@ def get_igdb_id(search_string: str) -> int | None:
 
     if best_id is not None:
         logger.info(
-            f"IGDB: Search for {search_string} resulted in {best_title} ({best_id}) as the best match with a score of {(best_score*100):.0f} %"
+            f"IGDB: Search for {api_search_string} resulted in {best_title} ({best_id}) as the best match with a score of {(best_score*100):.0f} %"
         )
         return best_id
 
-    logger.info(f"IGDB: Search for {search_string} found no result")
+    logger.info(f"IGDB: Search for {api_search_string} found no result")
 
     return None
 
