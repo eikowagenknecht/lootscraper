@@ -11,7 +11,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 
 from app.common import OfferDuration, OfferType, Source
 from app.configparser import Config
-from app.scraper.loot.scraper import Scraper
+from app.scraper.loot.scraper import RawOffer, Scraper
 from app.sqlalchemy import Offer
 
 logger = logging.getLogger(__name__)
@@ -30,12 +30,9 @@ SUBPATH_IMG = """.//img"""
 
 
 @dataclass
-class RawOffer:
-    title: str | None
-    valid_from: str | None
-    valid_to: str | None
-    url: str | None
-    img_url: str | None
+class EpicRawOffer(RawOffer):
+    valid_from: str | None = None
+    valid_to: str | None = None
 
 
 class EpicGamesScraper(Scraper):
@@ -92,7 +89,7 @@ class EpicGamesScraper(Scraper):
         #     logger.warning("No coming offer found.")
         #     pass
 
-        raw_offers: list[RawOffer] = []
+        raw_offers: list[EpicRawOffer] = []
         for element in elements:
             raw_offers.append(EpicGamesScraper.read_raw_offer(element))
 
@@ -101,7 +98,7 @@ class EpicGamesScraper(Scraper):
         return normalized_offers
 
     @staticmethod
-    def read_raw_offer(element: WebElement) -> RawOffer:
+    def read_raw_offer(element: WebElement) -> EpicRawOffer:
         title_str = None
         valid_from_str = None
         valid_to_str = None
@@ -136,6 +133,9 @@ class EpicGamesScraper(Scraper):
 
         try:
             url_str = str(element.get_attribute("href"))  # type: ignore
+            # Ignore embedded img url
+            if url_str.startswith("data"):
+                url_str = None
         except WebDriverException:
             # Nothing to do here, string stays empty
             pass
@@ -152,7 +152,7 @@ class EpicGamesScraper(Scraper):
         if valid_from_str == valid_to_str:
             valid_from_str = None
 
-        return RawOffer(
+        return EpicRawOffer(
             title=title_str,
             valid_from=valid_from_str,
             valid_to=valid_to_str,
@@ -161,7 +161,7 @@ class EpicGamesScraper(Scraper):
         )
 
     @staticmethod
-    def normalize_offers(raw_offers: list[RawOffer]) -> list[Offer]:
+    def normalize_offers(raw_offers: list[EpicRawOffer]) -> list[Offer]:
         normalized_offers: list[Offer] = []
 
         for raw_offer in raw_offers:

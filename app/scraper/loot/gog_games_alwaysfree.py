@@ -1,5 +1,4 @@
 import logging
-from dataclasses import dataclass
 from datetime import datetime, timezone
 from time import sleep
 
@@ -11,7 +10,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
 from app.common import OfferDuration, OfferType, Source
-from app.scraper.loot.scraper import Scraper
+from app.scraper.loot.scraper import RawOffer, Scraper
 from app.sqlalchemy import Offer
 
 logger = logging.getLogger(__name__)
@@ -28,13 +27,6 @@ XPATH_GAMES = """//ul[contains(concat(" ", normalize-space(@class), " "), " part
 SUBPATH_OFFERS = """.//a"""  # URL: Attribute href
 SUBPATH_TITLE = """.//span[contains(concat(" ", normalize-space(@class), " "), " product-title__text ")]"""
 SUBPATH_IMAGE = """.//img"""  # Attribute srcset, first entry
-
-
-@dataclass
-class RawOffer:
-    title: str | None
-    url: str | None
-    img_url: str | None
 
 
 class GogGamesAlwaysFreeScraper(Scraper):

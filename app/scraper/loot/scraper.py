@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 import re
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 from time import sleep
 
@@ -14,6 +15,13 @@ logger = logging.getLogger(__name__)
 
 MAX_WAIT_SECONDS = 15  # Needs to be quite high in Docker for first run
 SCROLL_PAUSE_SECONDS = 1  # Long enough so even Amazons JS can catch up
+
+
+@dataclass
+class RawOffer:
+    title: str | None
+    url: str | None = None
+    img_url: str | None = None
 
 
 class Scraper:

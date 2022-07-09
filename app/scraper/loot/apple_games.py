@@ -1,5 +1,4 @@
 import logging
-from dataclasses import dataclass
 from datetime import datetime, timezone
 
 from selenium.common.exceptions import WebDriverException
@@ -10,7 +9,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
 from app.common import OfferDuration, OfferType, Source
-from app.scraper.loot.scraper import Scraper
+from app.scraper.loot.scraper import RawOffer, Scraper
 from app.sqlalchemy import Offer
 
 logger = logging.getLogger(__name__)
@@ -24,13 +23,6 @@ XPATH_SEARCH_RESULTS = (
 )
 SUBPATH_TITLE = """.//div[contains(concat(" ", normalize-space(@class), " "), " title ")]//a"""  # /text()
 SUBPATH_IMAGE = """.//div[contains(concat(" ", normalize-space(@class), " "), " icon ")]//img"""  # Attr "src"
-
-
-@dataclass
-class RawOffer:
-    title: str | None
-    url: str | None
-    img_url: str | None
 
 
 class AppleGamesScraper(Scraper):
