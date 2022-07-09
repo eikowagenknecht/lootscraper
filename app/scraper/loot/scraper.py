@@ -62,10 +62,9 @@ class Scraper:
                 offer.category = Category.ALWAYS_FREE
                 continue
 
-            if (
-                Offer.valid_to is not None
-                and Offer.valid_to > datetime.now() + timedelta(days=3650)
-            ):
+            if offer.valid_to is not None and offer.valid_to > datetime.now().replace(
+                tzinfo=None
+            ) + timedelta(days=3650):
                 offer.category = Category.ALWAYS_FREE
                 continue
 
