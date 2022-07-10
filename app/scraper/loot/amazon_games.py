@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from datetime import date, datetime, time, timedelta, timezone
 
 from selenium.common.exceptions import WebDriverException
+from selenium.webdriver.chrome.webdriver import WebDriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support import expected_conditions as EC
@@ -44,16 +45,22 @@ class AmazonGamesScraper(Scraper):
     def get_duration() -> OfferDuration:
         return OfferDuration.CLAIMABLE
 
-    def read_offers_from_page(self) -> list[Offer]:
-        self.driver.get(ROOT_URL)
+    @staticmethod
+    def scrape(driver: WebDriver) -> list[Offer]:
+        offers = AmazonGamesScraper.read_offers_from_page(driver)
+        return AmazonGamesScraper.categorize_offers(offers)
+
+    @staticmethod
+    def read_offers_from_page(driver: WebDriver) -> list[Offer]:
+        driver.get(ROOT_URL)
         try:
             # Wait until the page loaded
-            WebDriverWait(self.driver, Scraper.get_max_wait_seconds()).until(
+            WebDriverWait(driver, Scraper.get_max_wait_seconds()).until(
                 EC.presence_of_element_located((By.CLASS_NAME, "offer-list__content"))
             )
 
             # Scroll slowly to the bottom to load all offers
-            AmazonGamesScraper.scroll_element_to_bottom(self.driver, "root")
+            AmazonGamesScraper.scroll_element_to_bottom(driver, "root")
 
         except WebDriverException:
             logger.error(
@@ -62,9 +69,7 @@ class AmazonGamesScraper(Scraper):
             return []
 
         try:
-            elements: list[WebElement] = self.driver.find_elements(
-                By.XPATH, XPATH_GAMES
-            )
+            elements: list[WebElement] = driver.find_elements(By.XPATH, XPATH_GAMES)
         except WebDriverException:
             logger.error("Root element not found, could not scrape!")
             return []
