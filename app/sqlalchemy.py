@@ -183,7 +183,7 @@ class Offer(Base):
     url: str | None = Column(String)
     img_url: str | None = Column(String)
 
-    category: Category = Category.VALID
+    category: Category = Column(Enum(Category), nullable=False, default=Category.VALID)
 
     game_id: int | None = Column(Integer, ForeignKey("games.id"))
     game: Game | None = relationship("Game", back_populates="offers")
