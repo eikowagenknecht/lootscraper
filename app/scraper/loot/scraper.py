@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 import re
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from time import sleep
 
 from selenium.webdriver.chrome.webdriver import WebDriver
@@ -63,7 +63,7 @@ class Scraper:
                 continue
 
             if offer.valid_to is not None and offer.valid_to > datetime.now().replace(
-                tzinfo=None
+                tzinfo=timezone.utc
             ) + timedelta(days=3650):
                 offer.category = Category.ALWAYS_FREE
                 continue
