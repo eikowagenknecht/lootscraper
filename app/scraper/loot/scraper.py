@@ -62,6 +62,9 @@ class Scraper(object):
                 offer.category = Category.ALWAYS_FREE
                 continue
 
+            if offer.valid_to is None:
+                offer.valid_to = self.try_to_get_valid_to(offer)
+
             if offer.valid_to is not None and offer.valid_to > datetime.now().replace(
                 tzinfo=timezone.utc
             ) + timedelta(days=3650):
@@ -69,6 +72,9 @@ class Scraper(object):
                 continue
 
         return offers
+
+    def try_to_get_valid_to(self, offer: Offer) -> datetime | None:
+        return None
 
     @staticmethod
     def scroll_element_to_bottom(driver: WebDriver, element_id: str) -> None:
