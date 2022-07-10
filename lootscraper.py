@@ -157,20 +157,20 @@ def scrape_offers(webdriver: WebDriver) -> list[Offer]:
     cfg = Config.get()
 
     scraped_offers: list[Offer] = []
-    for scraper in get_all_scrapers():
+    for scraperType in get_all_scrapers():
         if (
-            scraper.get_type() in cfg.enabled_offer_types
-            and scraper.get_duration() in cfg.enabled_offer_durations
-            and scraper.get_source() in cfg.enabled_offer_sources
+            scraperType.get_type() in cfg.enabled_offer_types
+            and scraperType.get_duration() in cfg.enabled_offer_durations
+            and scraperType.get_source() in cfg.enabled_offer_sources
         ):
-            scraper_type = scraper.get_type().value
+            scraper = scraperType(webdriver)
             scraper_duration = scraper.get_duration().value
             scraper_source = scraper.get_source().value
 
             logging.info(
-                f"Analyzing {scraper_source} for offers: {scraper_type} / {scraper_duration}."
+                f"Analyzing {scraper_source} for offers: {scraper.get_type().value} / {scraper_duration}."
             )
-            scraper_results = scraper.scrape(webdriver)
+            scraper_results = scraper.scrape()
 
             if scraper_results:
                 titles = ", ".join([offer.title for offer in scraper_results])

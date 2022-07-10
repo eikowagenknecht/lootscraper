@@ -2,7 +2,6 @@ import logging
 from datetime import datetime, timezone
 
 from selenium.common.exceptions import WebDriverException
-from selenium.webdriver.chrome.webdriver import WebDriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support import expected_conditions as EC
@@ -36,27 +35,25 @@ class GoogleGamesScraper(Scraper):
     def get_duration() -> OfferDuration:
         return OfferDuration.CLAIMABLE
 
-    @staticmethod
-    def scrape(driver: WebDriver) -> list[Offer]:
-        offers = GoogleGamesScraper.read_offers_from_page(driver)
-        categorized_offers = GoogleGamesScraper.categorize_offers(offers)
+    def scrape(self) -> list[Offer]:
+        offers = self.read_offers_from_page()
+        categorized_offers = self.categorize_offers(offers)
         filtered = list(
             filter(lambda offer: offer.category != Category.DEMO, categorized_offers)
         )
         return filtered
 
-    @staticmethod
-    def read_offers_from_page(driver: WebDriver) -> list[Offer]:
-        driver.get(ROOT_URL)
+    def read_offers_from_page(self) -> list[Offer]:
+        self.driver.get(ROOT_URL)
         raw_offers: list[RawOffer] = []
 
         try:
             # Wait until the page loaded
-            WebDriverWait(driver, Scraper.get_max_wait_seconds()).until(
+            WebDriverWait(self.driver, Scraper.get_max_wait_seconds()).until(
                 EC.presence_of_element_located((By.XPATH, XPATH_SEARCH_RESULTS))
             )
 
-            offer_elements = driver.find_elements(By.XPATH, XPATH_SEARCH_RESULTS)
+            offer_elements = self.driver.find_elements(By.XPATH, XPATH_SEARCH_RESULTS)
             for offer_element in offer_elements:
                 raw_offers.append(GoogleGamesScraper.read_raw_offer(offer_element))
 

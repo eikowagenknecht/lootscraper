@@ -3,7 +3,6 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 
 from selenium.common.exceptions import WebDriverException
-from selenium.webdriver.chrome.webdriver import WebDriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support import expected_conditions as EC
@@ -48,23 +47,17 @@ class EpicGamesScraper(Scraper):
     def get_duration() -> OfferDuration:
         return OfferDuration.CLAIMABLE
 
-    @staticmethod
-    def scrape(driver: WebDriver) -> list[Offer]:
-        offers = EpicGamesScraper.read_offers_from_page(driver)
-        return EpicGamesScraper.categorize_offers(offers)
-
-    @staticmethod
-    def read_offers_from_page(driver: WebDriver) -> list[Offer]:
-        driver.get(ROOT_URL)
+    def read_offers_from_page(self) -> list[Offer]:
+        self.driver.get(ROOT_URL)
         try:
             # Wait until the page loaded
-            WebDriverWait(driver, Scraper.get_max_wait_seconds()).until(
+            WebDriverWait(self.driver, Scraper.get_max_wait_seconds()).until(
                 EC.presence_of_element_located(
                     (By.XPATH, """//h2[text()="Free Games"]""")
                 )
             )
 
-            Scraper.scroll_page_to_bottom(driver)
+            Scraper.scroll_page_to_bottom(self.driver)
         except WebDriverException:
             filename = (
                 Config.data_path()
@@ -73,18 +66,18 @@ class EpicGamesScraper(Scraper):
             logger.error(
                 f"Page took longer than {Scraper.get_max_wait_seconds()} to load. Saving Screenshot to {filename}."
             )
-            driver.save_screenshot(str(filename.resolve()))
+            self.driver.save_screenshot(str(filename.resolve()))
             return []
 
         elements: list[WebElement] = []
         try:
-            elements.extend(driver.find_elements(By.XPATH, XPATH_CURRENT))
+            elements.extend(self.driver.find_elements(By.XPATH, XPATH_CURRENT))
         except WebDriverException:
             logger.warning("No current offer found.")
             pass
 
         # try:
-        #     elements.extend(driver.find_elements(By.XPATH, XPATH_COMING_SOON))
+        #     elements.extend(self.driver.find_elements(By.XPATH, XPATH_COMING_SOON))
         # except WebDriverException:
         #     logger.warning("No coming offer found.")
         #     pass

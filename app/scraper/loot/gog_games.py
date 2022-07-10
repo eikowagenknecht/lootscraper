@@ -4,7 +4,6 @@ from datetime import datetime, timezone
 from time import sleep
 
 from selenium.common.exceptions import WebDriverException
-from selenium.webdriver.chrome.webdriver import WebDriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support import expected_conditions as EC
@@ -52,17 +51,11 @@ class GogGamesScraper(Scraper):
     def get_duration() -> OfferDuration:
         return OfferDuration.CLAIMABLE
 
-    @staticmethod
-    def scrape(driver: WebDriver) -> list[Offer]:
-        offers = GogGamesScraper.read_offers_from_page(driver)
-        return GogGamesScraper.categorize_offers(offers)
-
-    @staticmethod
-    def read_offers_from_page(driver: WebDriver) -> list[Offer]:
-        driver.get(ROOT_URL)
+    def read_offers_from_page(self) -> list[Offer]:
+        self.driver.get(ROOT_URL)
         try:
             # Wait until the page loaded
-            WebDriverWait(driver, Scraper.get_max_wait_seconds()).until(
+            WebDriverWait(self.driver, Scraper.get_max_wait_seconds()).until(
                 EC.presence_of_element_located((By.XPATH, XPATH_PAGE_LOADED))
             )
         except WebDriverException:
@@ -73,11 +66,11 @@ class GogGamesScraper(Scraper):
 
         try:
             # Switch to english version
-            en = driver.find_element(By.XPATH, XPATH_SWITCH_TO_ENGLISH)
+            en = self.driver.find_element(By.XPATH, XPATH_SWITCH_TO_ENGLISH)
             en.click()
             sleep(2)  # Wait for the language switching to begin
             # Check if it's really english now
-            en_test = driver.find_element(By.XPATH, XPATH_SELECTED_LANGUAGE)
+            en_test = self.driver.find_element(By.XPATH, XPATH_SELECTED_LANGUAGE)
             if en_test.text != "English":
                 logger.error(
                     f"Tried switching to English, but {en_test.text} is active instead"
@@ -92,11 +85,11 @@ class GogGamesScraper(Scraper):
         # Check giveaway variant 1
         try:
             # Wait until the page loaded
-            WebDriverWait(driver, Scraper.get_max_wait_seconds()).until(
+            WebDriverWait(self.driver, Scraper.get_max_wait_seconds()).until(
                 EC.presence_of_element_located((By.XPATH, XPATH_GIVEAWAY))
             )
 
-            offer_element = driver.find_element(By.XPATH, XPATH_GIVEAWAY)
+            offer_element = self.driver.find_element(By.XPATH, XPATH_GIVEAWAY)
             raw_offers.append(GogGamesScraper.read_raw_offer(offer_element))
         except WebDriverException:
             logger.info(
@@ -106,11 +99,11 @@ class GogGamesScraper(Scraper):
         # Check giveaway variant 2
         try:
             # Wait until the page loaded
-            WebDriverWait(driver, Scraper.get_max_wait_seconds()).until(
+            WebDriverWait(self.driver, Scraper.get_max_wait_seconds()).until(
                 EC.presence_of_element_located((By.XPATH, XPATH_BB_GIVEAWAY))
             )
 
-            offer_elements = driver.find_elements(By.XPATH, XPATH_BB_GIVEAWAY)
+            offer_elements = self.driver.find_elements(By.XPATH, XPATH_BB_GIVEAWAY)
             offer_urls: list[str] = []
             for el in offer_elements:
                 try:
@@ -127,9 +120,7 @@ class GogGamesScraper(Scraper):
                     logger.warning("Could not read url for GOG variant 2")
                     continue
             for url in offer_urls:
-                raw_offers.append(
-                    GogGamesScraper.read_offer_from_details_page(url, driver)
-                )
+                raw_offers.append(self.read_offer_from_details_page(url))
 
         except WebDriverException:
             logger.info(
@@ -196,16 +187,17 @@ class GogGamesScraper(Scraper):
             img_url=img_url_str,
         )
 
-    @staticmethod
-    def read_offer_from_details_page(url: str, driver: WebDriver) -> GogRawOffer:
+    def read_offer_from_details_page(self, url: str) -> GogRawOffer:
         title_str = None
         img_url_str = None
 
-        driver.get(url)
+        self.driver.get(url)
 
         try:
             title_str = str(
-                driver.find_element(By.CLASS_NAME, "productcard-basics__title").text
+                self.driver.find_element(
+                    By.CLASS_NAME, "productcard-basics__title"
+                ).text
             )
         except WebDriverException:
             # Nothing to do here, string stays empty
@@ -213,7 +205,7 @@ class GogGamesScraper(Scraper):
 
         try:
             img_url_str = str(
-                driver.find_element(
+                self.driver.find_element(
                     By.CLASS_NAME, "productcard-player__logo"
                 ).get_attribute(
                     "srcset"
