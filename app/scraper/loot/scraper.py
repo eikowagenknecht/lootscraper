@@ -74,7 +74,7 @@ class Scraper(object):
         return offers
 
     def try_to_get_valid_to(self, offer: Offer) -> datetime | None:
-        return None
+        return offer.valid_to
 
     @staticmethod
     def scroll_element_to_bottom(driver: WebDriver, element_id: str) -> None:
