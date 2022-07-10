@@ -41,7 +41,7 @@ class GoogleGamesScraper(Scraper):
         offers = GoogleGamesScraper.read_offers_from_page(driver)
         categorized_offers = GoogleGamesScraper.categorize_offers(offers)
         filtered = list(
-            filter(lambda category: category != Category.DEMO, categorized_offers)
+            filter(lambda offer: offer.category != Category.DEMO, categorized_offers)
         )
         return filtered
 
