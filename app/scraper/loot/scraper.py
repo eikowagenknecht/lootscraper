@@ -73,6 +73,14 @@ class Scraper(object):
 
         return offers
 
+    @staticmethod
+    def is_demo(title: str) -> bool:
+        if re.search(r"(demo|trial)", title[-6:], re.IGNORECASE):
+            return True
+        if re.search(r"demo\W", title[:6], re.IGNORECASE):
+            return True
+        return False
+
     def find_and_set_valid_to(self, offer: Offer) -> None:
         return
 
