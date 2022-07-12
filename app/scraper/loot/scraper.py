@@ -71,6 +71,17 @@ class Scraper:
         return offers
 
     @staticmethod
+    def is_demo(title: str) -> bool:
+        if re.search(r"(demo|trial)", title[-6:], re.IGNORECASE):
+            return True
+        if re.search(r"demo\W", title[:6], re.IGNORECASE):
+            return True
+        return False
+
+    def find_and_set_valid_to(self, offer: Offer) -> None:
+        return
+
+    @staticmethod
     def scroll_element_to_bottom(driver: WebDriver, element_id: str) -> None:
         """Scroll down to the bottom of the given alement. Useful for pages with infinite scrolling."""
 
