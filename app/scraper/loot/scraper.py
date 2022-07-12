@@ -62,6 +62,7 @@ class Scraper:
                 offer.category = Category.ALWAYS_FREE
                 continue
 
+            # some sites / developers market their offers as "limited" with silly durations
             if offer.valid_to is not None and offer.valid_to > datetime.now().replace(
                 tzinfo=timezone.utc
             ) + timedelta(days=3650):
