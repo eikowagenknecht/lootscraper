@@ -72,9 +72,9 @@ class Scraper:
 
     @staticmethod
     def is_demo(title: str) -> bool:
-        if re.search(r"(demo|trial)", title[-6:], re.IGNORECASE):
+        if re.search(r"\Wdemo\W?$", title[-6:], re.IGNORECASE):
             return True
-        if re.search(r"demo\W", title[:6], re.IGNORECASE):
+        if re.search(r"^\W?demo\W", title[:6], re.IGNORECASE):
             return True
         return False
 
