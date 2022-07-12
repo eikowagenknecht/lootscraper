@@ -63,7 +63,7 @@ class Scraper(object):
                 continue
 
             if offer.valid_to is None:
-                offer.valid_to = self.try_to_get_valid_to(offer)
+                self.find_and_set_valid_to(offer)
 
             if offer.valid_to is not None and offer.valid_to > datetime.now().replace(
                 tzinfo=timezone.utc
@@ -73,8 +73,8 @@ class Scraper(object):
 
         return offers
 
-    def try_to_get_valid_to(self, offer: Offer) -> datetime | None:
-        return offer.valid_to
+    def find_and_set_valid_to(self, offer: Offer) -> None:
+        return
 
     @staticmethod
     def scroll_element_to_bottom(driver: WebDriver, element_id: str) -> None:

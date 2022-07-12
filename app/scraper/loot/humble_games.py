@@ -1,6 +1,6 @@
 import logging
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 from selenium.common.exceptions import WebDriverException
 from selenium.webdriver.common.by import By
@@ -22,6 +22,7 @@ XPATH_SEARCH_RESULTS = (
 XPATH_FREE_RESULTS = """//ul[contains(concat(" ", normalize-space(@class), " "), " entities-list ")]/li[.//div[contains(concat(" ", normalize-space(@class), " "), " discount-amount ") and contains(text(), "100")]]//a"""  # URL: Attribute href
 SUBPATH_TITLE = """.//span[contains(concat(" ", normalize-space(@class), " "), " entity-title ")]"""  # /text()
 SUBPATH_IMAGE = """.//img"""  # Attr "src"
+XPATH_TIMER = """.//div[contains"""  # ToDo
 
 
 @dataclass
@@ -66,6 +67,45 @@ class HumbleGamesScraper(Scraper):
             filter(lambda offer: offer.category != Category.DEMO, categorized_offers)
         )
         return filtered
+
+    def find_and_set_valid_to(self, offer: Offer) -> None:
+        self.driver.get(offer.url)
+        try:
+            # Wait until the page loaded
+            WebDriverWait(self.driver, Scraper.get_max_wait_seconds()).until(
+                EC.presence_of_element_located((By.XPATH, XPATH_TIMER))
+            )
+
+            # <div class="timer">
+            #   <div class="time-digit">
+            #     <span class="js-days digit">357016</span>
+            #     <span class="js-days-text digit-type">days</span>
+            #   </div>
+            #   <div class="time-digit">
+            #     <span class="js-hours digit">16</span>
+            #     <span class="js-hours-text digit-type">hours</span>
+            #   </div>
+            #   <div class="time-digit">
+            #     <span class="js-minutes digit">34</span>
+            #     <span class="js-minutes-text digit-type">mins</span>
+            #   </div>
+            #   <div class="time-digit">
+            #     <span class="js-seconds digit">12</span>
+            #     <span class="js-seconds-text digit-type">secs</span>
+            #   </div>
+            # </div>
+
+            timer = self.driver.find_elements(By.XPATH, XPATH_TIMER)
+
+            offer.valid_to = datetime.now().replace(tzinfo=timezone.utc) + timedelta(
+                days=1
+            )
+
+        except WebDriverException:
+            logger.info(
+                f"Search for end date took longer than {Scraper.get_max_wait_seconds()}."
+            )
+        return
 
     def read_offers_from_page(self) -> list[Offer]:
         self.driver.get(ROOT_URL)
