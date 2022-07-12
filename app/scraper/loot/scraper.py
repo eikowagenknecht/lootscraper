@@ -54,7 +54,7 @@ class Scraper:
     def categorize_offers(offers: list[Offer]) -> list[Offer]:
         for offer in offers:
 
-            if re.search("(demo|trial)", offer.title[-6:], re.IGNORECASE):
+            if Scraper.is_demo(offer.title):
                 offer.category = Category.DEMO
                 continue
 
