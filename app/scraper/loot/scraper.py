@@ -3,7 +3,6 @@ from __future__ import annotations
 import logging
 import re
 from dataclasses import dataclass
-from datetime import datetime, timedelta, timezone
 from time import sleep
 
 from selenium.webdriver.chrome.webdriver import WebDriver
@@ -56,17 +55,6 @@ class Scraper:
 
             if Scraper.is_demo(offer.title):
                 offer.category = Category.DEMO
-                continue
-
-            if offer.duration == OfferDuration.ALWAYS:
-                offer.category = Category.ALWAYS_FREE
-                continue
-
-            # some sites / developers market their offers as "limited" with silly durations
-            if offer.valid_to is not None and offer.valid_to > datetime.now().replace(
-                tzinfo=timezone.utc
-            ) + timedelta(days=3650):
-                offer.category = Category.ALWAYS_FREE
                 continue
 
         return offers

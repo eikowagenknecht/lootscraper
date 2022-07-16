@@ -29,7 +29,6 @@ def upgrade() -> None:
                     "VALID",
                     "DEMO",
                     "CHEAP",
-                    "ALWAYS_FREE",
                     name="category",
                 ),
                 nullable=True,
