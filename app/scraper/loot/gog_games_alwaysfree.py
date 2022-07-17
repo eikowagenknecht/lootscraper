@@ -44,7 +44,8 @@ class GogGamesAlwaysFreeScraper(Scraper):
 
     @staticmethod
     def scrape(driver: WebDriver) -> list[Offer]:
-        return GogGamesAlwaysFreeScraper.read_offers_from_page(driver)
+        offers = GogGamesAlwaysFreeScraper.read_offers_from_page(driver)
+        return GogGamesAlwaysFreeScraper.categorize_offers(offers)
 
     @staticmethod
     def read_offers_from_page(driver: WebDriver) -> list[Offer]:

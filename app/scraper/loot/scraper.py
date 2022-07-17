@@ -1,12 +1,16 @@
 from __future__ import annotations
 
+import logging
+import re
 from dataclasses import dataclass
 from time import sleep
 
 from selenium.webdriver.chrome.webdriver import WebDriver
 
-from app.common import OfferDuration, OfferType, Source
+from app.common import Category, OfferDuration, OfferType, Source
 from app.sqlalchemy import Offer
+
+logger = logging.getLogger(__name__)
 
 MAX_WAIT_SECONDS = 15  # Needs to be quite high in Docker for first run
 SCROLL_PAUSE_SECONDS = 1  # Long enough so even Amazons JS can catch up
@@ -22,7 +26,8 @@ class RawOffer:
 class Scraper:
     @staticmethod
     def scrape(driver: WebDriver) -> list[Offer]:
-        raise NotImplementedError("Please implement this method")
+        offers = Scraper.read_offers_from_page(driver)
+        return Scraper.categorize_offers(offers)
 
     @staticmethod
     def get_type() -> OfferType:
@@ -37,8 +42,33 @@ class Scraper:
         raise NotImplementedError("Please implement this method")
 
     @staticmethod
+    def read_offers_from_page(driver: WebDriver) -> list[Offer]:
+        raise NotImplementedError("Please implement this method")
+
+    @staticmethod
     def get_max_wait_seconds() -> int:
         return MAX_WAIT_SECONDS
+
+    @staticmethod
+    def categorize_offers(offers: list[Offer]) -> list[Offer]:
+        for offer in offers:
+
+            if Scraper.is_demo(offer.title):
+                offer.category = Category.DEMO
+                continue
+
+        return offers
+
+    @staticmethod
+    def is_demo(title: str) -> bool:
+        if re.search(r"\Wdemo\W?$", title[-6:], re.IGNORECASE):
+            return True
+        if re.search(r"^\W?demo\W", title[:6], re.IGNORECASE):
+            return True
+        return False
+
+    def find_and_set_valid_to(self, offer: Offer) -> None:
+        return
 
     @staticmethod
     def scroll_element_to_bottom(driver: WebDriver, element_id: str) -> None:
