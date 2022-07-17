@@ -3,7 +3,6 @@ from datetime import datetime, timezone
 from time import sleep
 
 from selenium.common.exceptions import WebDriverException
-from selenium.webdriver.chrome.webdriver import WebDriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support import expected_conditions as EC
@@ -42,17 +41,11 @@ class GogGamesAlwaysFreeScraper(Scraper):
     def get_duration() -> OfferDuration:
         return OfferDuration.ALWAYS
 
-    @staticmethod
-    def scrape(driver: WebDriver) -> list[Offer]:
-        offers = GogGamesAlwaysFreeScraper.read_offers_from_page(driver)
-        return GogGamesAlwaysFreeScraper.categorize_offers(offers)
-
-    @staticmethod
-    def read_offers_from_page(driver: WebDriver) -> list[Offer]:
-        driver.get(ROOT_URL)
+    def read_offers_from_page(self) -> list[Offer]:
+        self.driver.get(ROOT_URL)
         try:
             # Wait until the page loaded
-            WebDriverWait(driver, Scraper.get_max_wait_seconds()).until(
+            WebDriverWait(self.driver, Scraper.get_max_wait_seconds()).until(
                 EC.presence_of_element_located((By.XPATH, XPATH_PAGE_LOADED))
             )
         except WebDriverException:
@@ -63,11 +56,11 @@ class GogGamesAlwaysFreeScraper(Scraper):
 
         try:
             # Switch to english version
-            en = driver.find_element(By.XPATH, XPATH_SWITCH_TO_ENGLISH)
+            en = self.driver.find_element(By.XPATH, XPATH_SWITCH_TO_ENGLISH)
             en.click()
             sleep(2)  # Wait for the language switching to begin
             # Check if it's really english now
-            en_test = driver.find_element(By.XPATH, XPATH_SELECTED_LANGUAGE)
+            en_test = self.driver.find_element(By.XPATH, XPATH_SELECTED_LANGUAGE)
             if en_test.text != "English":
                 logger.error(
                     f"Tried switching to English, but {en_test.text} is active instead"
@@ -81,11 +74,11 @@ class GogGamesAlwaysFreeScraper(Scraper):
 
         try:
             # Wait until the page loaded
-            WebDriverWait(driver, Scraper.get_max_wait_seconds()).until(
+            WebDriverWait(self.driver, Scraper.get_max_wait_seconds()).until(
                 EC.presence_of_element_located((By.XPATH, XPATH_GAMES))
             )
 
-            offer_elements = driver.find_elements(By.XPATH, SUBPATH_OFFERS)
+            offer_elements = self.driver.find_elements(By.XPATH, SUBPATH_OFFERS)
             for offer_element in offer_elements:
                 raw_offers.append(
                     GogGamesAlwaysFreeScraper.read_raw_offer(offer_element)
