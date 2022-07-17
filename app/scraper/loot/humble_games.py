@@ -30,23 +30,6 @@ class HumbleRawOffer(RawOffer):
 
 
 class HumbleGamesScraper(Scraper):
-    # def try_to_get_valid_to(self, offer: Offer) -> datetime | None:
-    #     try:
-    #         WebDriverWait(self.driver, Scraper.get_max_wait_seconds()).until(
-    #             EC.presence_of_element_located((By.XPATH, XPATH_FREE_RESULTS))
-    #         )
-
-    #         offer_elements = self.driver.find_elements(By.XPATH, XPATH_FREE_RESULTS)
-    #         for offer_element in offer_elements:
-    #             raw_offers.append(HumbleGamesScraper.read_raw_offer(offer_element))
-
-    #     except WebDriverException:
-    #         logger.info(
-    #             f"Free search results took longer than {Scraper.get_max_wait_seconds()} to load, probably there are none"
-    #         )
-
-    #     return None
-
     @staticmethod
     def get_source() -> Source:
         return Source.HUMBLE
