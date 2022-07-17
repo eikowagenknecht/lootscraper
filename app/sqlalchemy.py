@@ -25,7 +25,7 @@ from sqlalchemy.orm import Session, registry, relationship, scoped_session, sess
 
 from alembic import command
 from alembic.config import Config as AlembicConfig
-from app.common import Channel, OfferDuration, OfferType, Source
+from app.common import Category, Channel, OfferDuration, OfferType, Source
 from app.configparser import Config
 
 logger = logging.getLogger(__name__)
@@ -182,6 +182,8 @@ class Offer(Base):
     rawtext: str | None = Column(String)
     url: str | None = Column(String)
     img_url: str | None = Column(String)
+
+    category: Category = Column(Enum(Category), nullable=False, default=Category.VALID)
 
     game_id: int | None = Column(Integer, ForeignKey("games.id"))
     game: Game | None = relationship("Game", back_populates="offers")

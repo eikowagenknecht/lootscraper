@@ -8,7 +8,7 @@ from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
-from app.common import OfferDuration, OfferType, Source
+from app.common import Category, OfferDuration, OfferType, Source
 from app.scraper.loot.scraper import RawOffer, Scraper
 from app.sqlalchemy import Offer
 
@@ -38,7 +38,12 @@ class GoogleGamesScraper(Scraper):
 
     @staticmethod
     def scrape(driver: WebDriver) -> list[Offer]:
-        return GoogleGamesScraper.read_offers_from_page(driver)
+        offers = GoogleGamesScraper.read_offers_from_page(driver)
+        categorized_offers = GoogleGamesScraper.categorize_offers(offers)
+        filtered = list(
+            filter(lambda offer: offer.category != Category.DEMO, categorized_offers)
+        )
+        return filtered
 
     @staticmethod
     def read_offers_from_page(driver: WebDriver) -> list[Offer]:
@@ -109,10 +114,6 @@ class GoogleGamesScraper(Scraper):
             # Skip not recognized offers
             if not raw_offer.title:
                 logger.error(f"Offer not recognized, skipping: {raw_offer}")
-                continue
-
-            # Skip some Demo spam in Humble store
-            if raw_offer.title.endswith("Demo"):
                 continue
 
             # Raw text

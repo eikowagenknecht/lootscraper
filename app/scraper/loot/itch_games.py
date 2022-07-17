@@ -37,7 +37,8 @@ class ItchGamesScraper(Scraper):
 
     @staticmethod
     def scrape(driver: WebDriver) -> list[Offer]:
-        return ItchGamesScraper.read_offers_from_page(driver)
+        offers = ItchGamesScraper.read_offers_from_page(driver)
+        return ItchGamesScraper.categorize_offers(offers)
 
     @staticmethod
     def read_offers_from_page(driver: WebDriver) -> list[Offer]:
