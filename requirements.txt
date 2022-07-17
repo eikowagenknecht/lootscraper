@@ -1,7 +1,7 @@
 # Runtime
 pytz >= 2021.3
 feedgen >= 0.9
-selenium >= 4.1
+selenium >= 4.3
 chromedriver-autoinstaller >= 0.3.1
 igdb-api-v4 >= 0.0.5
 python-telegram-bot >= 13.11
