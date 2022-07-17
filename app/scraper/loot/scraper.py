@@ -3,7 +3,6 @@ from __future__ import annotations
 import logging
 import re
 from dataclasses import dataclass
-from datetime import datetime, timedelta, timezone
 from time import sleep
 
 from selenium.webdriver.chrome.webdriver import WebDriver
