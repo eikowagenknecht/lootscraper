@@ -3,7 +3,6 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 
 from selenium.common.exceptions import WebDriverException
-from selenium.webdriver.chrome.webdriver import WebDriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support import expected_conditions as EC
@@ -49,16 +48,11 @@ class SteamGamesScraper(Scraper):
     def get_duration() -> OfferDuration:
         return OfferDuration.CLAIMABLE
 
-    @staticmethod
-    def scrape(driver: WebDriver) -> list[Offer]:
-        return SteamGamesScraper.read_offers_from_page(driver)
-
-    @staticmethod
-    def read_offers_from_page(driver: WebDriver) -> list[Offer]:
-        driver.get(ROOT_URL)
+    def read_offers_from_page(self) -> list[Offer]:
+        self.driver.get(ROOT_URL)
         try:
             # Wait until the page loaded
-            WebDriverWait(driver, Scraper.get_max_wait_seconds()).until(
+            WebDriverWait(self.driver, Scraper.get_max_wait_seconds()).until(
                 EC.presence_of_element_located(
                     (By.XPATH, STEAM_SEARCH_RESULTS_CONTAINER)
                 )
@@ -71,7 +65,7 @@ class SteamGamesScraper(Scraper):
 
         elements: list[WebElement] = []
         try:
-            elements.extend(driver.find_elements(By.XPATH, STEAM_SEARCH_RESULTS))
+            elements.extend(self.driver.find_elements(By.XPATH, STEAM_SEARCH_RESULTS))
         except WebDriverException:
             logger.info("No current offer found.")
             pass
@@ -83,15 +77,17 @@ class SteamGamesScraper(Scraper):
 
         for raw_offer in raw_offers:
             try:
-                driver.get(raw_offer.url)
-                skip_age_verification(driver, raw_offer.appid if raw_offer.appid else 0)
-                WebDriverWait(driver, Scraper.get_max_wait_seconds()).until(
+                self.driver.get(raw_offer.url)
+                skip_age_verification(
+                    self.driver, raw_offer.appid if raw_offer.appid else 0
+                )
+                WebDriverWait(self.driver, Scraper.get_max_wait_seconds()).until(
                     EC.presence_of_element_located(
                         (By.CLASS_NAME, "game_area_purchase")
                     )
                 )
 
-                element = driver.find_element(
+                element = self.driver.find_element(
                     By.CLASS_NAME, "game_purchase_discount_quantity"
                 )
                 raw_offer.text = element.text

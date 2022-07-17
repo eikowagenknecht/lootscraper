@@ -23,11 +23,13 @@ class RawOffer:
     img_url: str | None = None
 
 
-class Scraper:
-    @staticmethod
-    def scrape(driver: WebDriver) -> list[Offer]:
-        offers = Scraper.read_offers_from_page(driver)
-        return Scraper.categorize_offers(offers)
+class Scraper(object):
+    def __init__(self, driver: WebDriver):
+        self.driver = driver
+
+    def scrape(self) -> list[Offer]:
+        offers = self.read_offers_from_page()
+        return self.categorize_offers(offers)
 
     @staticmethod
     def get_type() -> OfferType:
@@ -41,16 +43,14 @@ class Scraper:
     def get_duration() -> OfferDuration:
         raise NotImplementedError("Please implement this method")
 
-    @staticmethod
-    def read_offers_from_page(driver: WebDriver) -> list[Offer]:
+    def read_offers_from_page(self) -> list[Offer]:
         raise NotImplementedError("Please implement this method")
 
     @staticmethod
     def get_max_wait_seconds() -> int:
         return MAX_WAIT_SECONDS
 
-    @staticmethod
-    def categorize_offers(offers: list[Offer]) -> list[Offer]:
+    def categorize_offers(self, offers: list[Offer]) -> list[Offer]:
         for offer in offers:
 
             if Scraper.is_demo(offer.title):
@@ -66,9 +66,6 @@ class Scraper:
         if re.search(r"^\W?demo\W", title[:6], re.IGNORECASE):
             return True
         return False
-
-    def find_and_set_valid_to(self, offer: Offer) -> None:
-        return
 
     @staticmethod
     def scroll_element_to_bottom(driver: WebDriver, element_id: str) -> None:
