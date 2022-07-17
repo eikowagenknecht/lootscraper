@@ -237,9 +237,9 @@ class TelegramBot:
         ):
             chat_id = update.effective_chat.id
             logger.info(
-                f"Removing user with chat id {chat_id} from database because the chat could not be found."
+                f"Suggest removing user with chat id {chat_id} from database because the chat could not be found."
             )
-            self.remove_user(chat_id)
+            # self.remove_user(chat_id)
             return
 
         # Build the exception string from the exception
@@ -376,8 +376,12 @@ class TelegramBot:
 
         # Delete user from database (if registered)
         session: Session = self.Session()
-        session.delete(db_user)
-        session.commit()
+        try:
+            session.delete(db_user)
+            session.commit()
+        except Exception:
+            session.rollback()
+            raise
 
         message = (
             Rf"Bye {update.effective_user.mention_markdown_v2()}, I'm sad to see you go\. "
@@ -475,21 +479,25 @@ class TelegramBot:
 
         # Register user if not registered yet
         session: Session = self.Session()
-        latest_announcement = session.execute(
-            select(func.max(Announcement.id))
-        ).scalar()
+        try:
+            latest_announcement = session.execute(
+                select(func.max(Announcement.id))
+            ).scalar()
 
-        new_user = User(
-            telegram_id=update.effective_user.id,
-            telegram_chat_id=update.effective_chat.id
-            if update.effective_chat
-            else None,
-            telegram_user_details=update.effective_user.to_json(),
-            registration_date=datetime.now().replace(tzinfo=timezone.utc),
-            last_announcement_id=latest_announcement,
-        )
-        session.add(new_user)
-        session.commit()
+            new_user = User(
+                telegram_id=update.effective_user.id,
+                telegram_chat_id=update.effective_chat.id
+                if update.effective_chat
+                else None,
+                telegram_user_details=update.effective_user.to_json(),
+                registration_date=datetime.now().replace(tzinfo=timezone.utc),
+                last_announcement_id=latest_announcement,
+            )
+            session.add(new_user)
+            session.commit()
+        except Exception:
+            session.rollback()
+            raise
 
         message = (
             Rf"Hi {update.effective_user.mention_markdown_v2()} 👋, welcome to the LootScraper Telegram Bot and thank you for registering\!"
@@ -593,31 +601,34 @@ class TelegramBot:
             return
 
         offer_id = int(query.data.split(" ")[2])
-        session: Session = self.Session()
-        offer = session.execute(select(Offer).where(Offer.id == offer_id)).scalar()
-
-        if query.data.startswith("details show"):
-            query.answer()
-            query.edit_message_text(
-                text=self.offer_details_message(offer),
-                parse_mode=ParseMode.MARKDOWN_V2,
-                reply_markup=self.offer_keyboard(
-                    offer,
-                    details_hide_button=True,
-                    details_show_button=False,
-                ),
-            )
-        elif query.data.startswith("details hide"):
-            query.answer()
-            query.edit_message_text(
-                text=self.offer_message(offer),
-                parse_mode=ParseMode.MARKDOWN_V2,
-                reply_markup=self.offer_keyboard(
-                    offer,
-                    details_hide_button=False,
-                    details_show_button=True,
-                ),
-            )
+        try:
+            session: Session = self.Session()
+            offer = session.execute(select(Offer).where(Offer.id == offer_id)).scalar()
+            if query.data.startswith("details show"):
+                query.answer()
+                query.edit_message_text(
+                    text=self.offer_details_message(offer),
+                    parse_mode=ParseMode.MARKDOWN_V2,
+                    reply_markup=self.offer_keyboard(
+                        offer,
+                        details_hide_button=True,
+                        details_show_button=False,
+                    ),
+                )
+            elif query.data.startswith("details hide"):
+                query.answer()
+                query.edit_message_text(
+                    text=self.offer_message(offer),
+                    parse_mode=ParseMode.MARKDOWN_V2,
+                    reply_markup=self.offer_keyboard(
+                        offer,
+                        details_hide_button=False,
+                        details_show_button=True,
+                    ),
+                )
+        except Exception:
+            session.rollback()
+            raise
 
     def dismiss_callback(self, update: Update, context: CallbackContext) -> None:  # type: ignore
         """Callback from the menu button "Dismiss" in the offer message."""
@@ -705,53 +716,57 @@ class TelegramBot:
         offers_sent = 0
         subscription: TelegramSubscription
         session: Session = self.Session()
-        for subscription in subscriptions:
-            offers: list[Offer] = (
-                session.execute(
-                    select(Offer).where(
-                        and_(
-                            Offer.type == subscription.type,
-                            Offer.source == subscription.source,
-                            Offer.duration == subscription.duration,
-                            Offer.id > subscription.last_offer_id,
-                            # Only send offers that are already active
-                            or_(
-                                Offer.valid_from <= datetime.now().replace(tzinfo=None),  # type: ignore
-                                Offer.valid_from == None,  # noqa: E711
-                            ),
-                            # Only send offers that are either:
-                            # - valid at this point of time
-                            # - have no start and end date and have been first seen in the last 7 days
-                            or_(
-                                Offer.valid_to >= datetime.now().replace(tzinfo=None),  # type: ignore
-                                and_(
+        try:
+            for subscription in subscriptions:
+                offers: list[Offer] = (
+                    session.execute(
+                        select(Offer).where(
+                            and_(
+                                Offer.type == subscription.type,
+                                Offer.source == subscription.source,
+                                Offer.duration == subscription.duration,
+                                Offer.id > subscription.last_offer_id,
+                                # Only send offers that are already active
+                                or_(
+                                    Offer.valid_from <= datetime.now().replace(tzinfo=None),  # type: ignore
                                     Offer.valid_from == None,  # noqa: E711
-                                    Offer.valid_to == None,  # noqa: E711
-                                    Offer.seen_first
-                                    >= datetime.now().replace(tzinfo=timezone.utc)
-                                    - timedelta(days=7),
                                 ),
-                            ),
+                                # Only send offers that are either:
+                                # - valid at this point of time
+                                # - have no start and end date and have been first seen in the last 7 days
+                                or_(
+                                    Offer.valid_to >= datetime.now().replace(tzinfo=None),  # type: ignore
+                                    and_(
+                                        Offer.valid_from == None,  # noqa: E711
+                                        Offer.valid_to == None,  # noqa: E711
+                                        Offer.seen_first
+                                        >= datetime.now().replace(tzinfo=timezone.utc)
+                                        - timedelta(days=7),
+                                    ),
+                                ),
+                            )
                         )
                     )
+                    .scalars()
+                    .all()
                 )
-                .scalars()
-                .all()
-            )
 
-            if len(offers) == 0:
-                continue
+                if len(offers) == 0:
+                    continue
 
-            offers_sent += len(offers)
+                offers_sent += len(offers)
 
-            # Send the offers
-            for offer in offers:
-                self.send_offer(offer, user)
+                # Send the offers
+                for offer in offers:
+                    self.send_offer(offer, user)
 
-            # Update the last offer id
-            subscription.last_offer_id = offers[-1].id
-            user.offers_received_count = user.offers_received_count + len(offers)
-            session.commit()
+                # Update the last offer id
+                subscription.last_offer_id = offers[-1].id
+                user.offers_received_count = user.offers_received_count + len(offers)
+                session.commit()
+        except Exception:
+            session.rollback()
+            raise
 
         if offers_sent:
             return True
@@ -760,49 +775,61 @@ class TelegramBot:
 
     def send_new_announcements(self, user: User) -> None:
         session: Session = self.Session()
-        announcements: list[Announcement] = (
-            session.execute(
-                select(Announcement).where(
-                    and_(
-                        or_(
-                            Announcement.channel == Channel.ALL,
-                            Announcement.channel == Channel.TELEGRAM,
-                        ),
-                        Announcement.id > user.last_announcement_id,
+        try:
+            announcements: list[Announcement] = (
+                session.execute(
+                    select(Announcement).where(
+                        and_(
+                            or_(
+                                Announcement.channel == Channel.ALL,
+                                Announcement.channel == Channel.TELEGRAM,
+                            ),
+                            Announcement.id > user.last_announcement_id,
+                        )
                     )
                 )
+                .scalars()
+                .all()
             )
-            .scalars()
-            .all()
-        )
 
-        if len(announcements) == 0:
-            return
+            if len(announcements) == 0:
+                return
 
-        # Send the offers
-        for announcement in announcements:
-            self.send_announcement(announcement, user)
+            user.last_announcement_id = announcements[-1].id
+            session.commit()
 
-        user.last_announcement_id = announcements[-1].id
-        session.commit()
+            # Send the offers
+            for announcement in announcements:
+                self.send_announcement(announcement, user)
+        except Exception:
+            session.rollback()
+            raise
 
     def get_user_by_telegram_id(self, telegram_id: int) -> User | None:
         session: Session = self.Session()
-        db_user = (
-            session.execute(select(User).where(User.telegram_id == telegram_id))
-            .scalars()
-            .one_or_none()
-        )
+        try:
+            db_user = (
+                session.execute(select(User).where(User.telegram_id == telegram_id))
+                .scalars()
+                .one_or_none()
+            )
+        except Exception:
+            session.rollback()
+            raise
 
         return db_user
 
     def get_user_by_chat_id(self, chat_id: int) -> User | None:
-        session: Session = self.Session()
-        db_user = (
-            session.execute(select(User).where(User.telegram_chat_id == chat_id))
-            .scalars()
-            .one_or_none()
-        )
+        try:
+            session: Session = self.Session()
+            db_user = (
+                session.execute(select(User).where(User.telegram_chat_id == chat_id))
+                .scalars()
+                .one_or_none()
+            )
+        except Exception:
+            session.rollback()
+            raise
 
         return db_user
 
@@ -810,40 +837,56 @@ class TelegramBot:
         self, user: User, type: OfferType, source: Source, duration: OfferDuration
     ) -> bool:
         session: Session = self.Session()
-        subscription = session.execute(
-            select(TelegramSubscription).where(
-                and_(
-                    TelegramSubscription.user_id == user.id,
-                    TelegramSubscription.type == type,
-                    TelegramSubscription.source == source,
-                    TelegramSubscription.duration == duration,
+        subscription = None
+        try:
+            subscription = session.execute(
+                select(TelegramSubscription).where(
+                    and_(
+                        TelegramSubscription.user_id == user.id,
+                        TelegramSubscription.type == type,
+                        TelegramSubscription.source == source,
+                        TelegramSubscription.duration == duration,
+                    )
                 )
-            )
-        ).scalar_one_or_none()
+            ).scalar_one_or_none()
+        except Exception:
+            session.rollback()
+            raise
+
         return subscription is not None
 
     def subscribe(
         self, user: User, type: OfferType, source: Source, duration: OfferDuration
     ) -> None:
         session: Session = self.Session()
-        session.add(
-            TelegramSubscription(user=user, source=source, type=type, duration=duration)
-        )
-        session.commit()
+        try:
+            session.add(
+                TelegramSubscription(
+                    user=user, source=source, type=type, duration=duration
+                )
+            )
+            session.commit()
+        except Exception:
+            session.rollback()
+            raise
 
     def unsubscribe(
         self, user: User, type: OfferType, source: Source, duration: OfferDuration
     ) -> None:
         session: Session = self.Session()
-        session.query(TelegramSubscription).filter(
-            and_(
-                TelegramSubscription.user_id == user.id,
-                TelegramSubscription.type == type,
-                TelegramSubscription.source == source,
-                TelegramSubscription.duration == duration,
-            )
-        ).delete()
-        session.commit()
+        try:
+            session.query(TelegramSubscription).filter(
+                and_(
+                    TelegramSubscription.user_id == user.id,
+                    TelegramSubscription.type == type,
+                    TelegramSubscription.source == source,
+                    TelegramSubscription.duration == duration,
+                )
+            ).delete()
+            session.commit()
+        except Exception:
+            session.rollback()
+            raise
 
     def manage_menu(self, update: Update, context: CallbackContext) -> None:  # type: ignore
         if update.callback_query is None or update.effective_user is None:
@@ -1085,16 +1128,16 @@ class TelegramBot:
             if kwargs["chat_id"]:
                 chat_id = int(kwargs.get("chat_id"))  # type: ignore
                 logger.info(
-                    f"Removing user with chat id {chat_id} from database because he blocked the chat."
+                    f"Suggest removing user with chat id {chat_id} from database because he blocked the chat."
                 )
-                self.remove_user(chat_id)
+                # self.remove_user(chat_id)
         except TelegramError as e:
             if e.message == "Chat not found":
                 chat_id = int(kwargs.get("chat_id"))  # type: ignore
                 logger.info(
-                    f"Removing user with chat id {chat_id} from database because the chat could not be found."
+                    f"Suggest removing user with chat id {chat_id} from database because the chat could not be found."
                 )
-                self.remove_user(chat_id)
+                # self.remove_user(chat_id)
             else:
                 logger.error(e)
             return None
@@ -1109,8 +1152,12 @@ class TelegramBot:
         logger.debug(f"Removing user {db_user.telegram_id} from database.")
 
         session: Session = self.Session()
-        session.delete(db_user)
-        session.commit()
+        try:
+            session.delete(db_user)
+            session.commit()
+        except Exception:
+            session.rollback()
+            raise
 
     def log_call(self, update: Update) -> None:
         if Config.get().telegram_log_level.value >= TelegramLogLevel.DEBUG.value:
@@ -1155,8 +1202,12 @@ class TelegramBot:
         )
 
         session: Session = self.Session()
-        session.add(announcement)
-        session.commit()
+        try:
+            session.add(announcement)
+            session.commit()
+        except Exception:
+            session.rollback()
+            raise
 
 
 def markdown_json_formatted(input: str) -> str:

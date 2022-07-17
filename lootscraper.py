@@ -133,24 +133,27 @@ def run_main_loop() -> None:
 
 def job(db: LootDatabase) -> None:
     webdriver: WebDriver
-    session: Session = db.Session()
     cfg = Config.get()
 
     with get_pagedriver() as webdriver:
-        scraped_offers = scrape_offers(webdriver)
-        process_new_offers(db, webdriver, session, scraped_offers)
+        session: Session = db.Session()
+        try:
+            scraped_offers = scrape_offers(webdriver)
+            process_new_offers(db, webdriver, session, scraped_offers)
 
-        all_offers = db.read_all()
+            all_offers = db.read_all()
 
-        if cfg.force_update and cfg.scrape_info:
-            rebuild_game_infos(webdriver, session, all_offers)
+            if cfg.force_update and cfg.scrape_info:
+                rebuild_game_infos(webdriver, session, all_offers)
+            session.commit()
+        except Exception:
+            session.rollback()
+            raise
 
     if cfg.generate_feed:
         action_generate_feed(all_offers)
     else:
         logging.info("Skipping feed generation, disabled")
-
-    session.commit()
 
 
 def scrape_offers(webdriver: WebDriver) -> list[Offer]:
@@ -238,9 +241,13 @@ def process_new_offers(
 
 def telegram_job(db: LootDatabase, bot: TelegramBot) -> None:
     session: Session = db.Session()
-    for user in session.execute(select(User)).scalars().all():
-        bot.send_new_announcements(user)
-        bot.send_new_offers(user)
+    try:
+        for user in session.execute(select(User)).scalars().all():
+            bot.send_new_announcements(user)
+            bot.send_new_offers(user)
+    except Exception:
+        session.rollback()
+        raise
 
 
 def rebuild_game_infos(

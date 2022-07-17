@@ -54,21 +54,19 @@ class Scraper(object):
     def categorize_offers(self, offers: list[Offer]) -> list[Offer]:
         for offer in offers:
 
-            if re.search("(demo|trial)", offer.title[-6:], re.IGNORECASE):
+            if Scraper.is_demo(offer.title):
                 offer.category = Category.DEMO
                 continue
 
-            if offer.duration == OfferDuration.ALWAYS:
-                offer.category = Category.ALWAYS_FREE
-                continue
-
-            if offer.valid_to is not None and offer.valid_to > datetime.now().replace(
-                tzinfo=timezone.utc
-            ) + timedelta(days=3650):
-                offer.category = Category.ALWAYS_FREE
-                continue
-
         return offers
+
+    @staticmethod
+    def is_demo(title: str) -> bool:
+        if re.search(r"\Wdemo\W?$", title[-6:], re.IGNORECASE):
+            return True
+        if re.search(r"^\W?demo\W", title[:6], re.IGNORECASE):
+            return True
+        return False
 
     @staticmethod
     def scroll_element_to_bottom(driver: WebDriver, element_id: str) -> None:

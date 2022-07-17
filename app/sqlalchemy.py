@@ -285,7 +285,11 @@ class LootDatabase:
 
     def read_all(self) -> list[Offer]:
         session: Session = self.Session()
-        result = session.execute(select(Offer)).scalars().all()
+        try:
+            result = session.execute(select(Offer)).scalars().all()
+        except Exception:
+            session.rollback()
+            raise
         return result
 
     def read_all_segmented(self) -> dict[str, dict[str, dict[str, list[Offer]]]]:
@@ -337,7 +341,11 @@ class LootDatabase:
             )
 
         session: Session = self.Session()
-        result: list[Offer] = session.execute(statement).scalars().all()
+        try:
+            result: list[Offer] = session.execute(statement).scalars().all()
+        except Exception:
+            session.rollback()
+            raise
 
         if len(result) == 0:
             return None
@@ -352,14 +360,22 @@ class LootDatabase:
     def find_offer_by_id(self, id: int) -> Offer:
         statement = select(Offer).where(Offer.id == id)
         session: Session = self.Session()
-        result = session.execute(statement).scalars().one_or_none()
+        try:
+            result = session.execute(statement).scalars().one_or_none()
+        except Exception:
+            session.rollback()
+            raise
 
         return result
 
     def touch_db_offer(self, db_offer: Offer) -> None:
         db_offer.seen_last = datetime.now().replace(tzinfo=timezone.utc)
         session: Session = self.Session()
-        session.commit()
+        try:
+            session.commit()
+        except Exception:
+            session.rollback()
+            raise
 
     def update_db_offer(self, db_offer: Offer, new_data: Offer) -> None:
         db_offer.source = new_data.source
@@ -386,10 +402,18 @@ class LootDatabase:
             db_offer.game_id = new_data.game_id
 
         session: Session = self.Session()
-        session.commit()
+        try:
+            session.commit()
+        except Exception:
+            session.rollback()
+            raise
 
     def add_offer(self, offer: Offer) -> None:
         offer.seen_first = offer.seen_last
         session: Session = self.Session()
-        session.add(offer)
-        session.commit()
+        try:
+            session.add(offer)
+            session.commit()
+        except Exception:
+            session.rollback()
+            raise

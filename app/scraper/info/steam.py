@@ -120,7 +120,8 @@ def skip_age_verification(driver: WebDriver, steam_app_id: int) -> None:
                 EC.presence_of_element_located((By.XPATH, STEAM_DETAILS_REVIEW_SCORE))
             )
             logger.debug(f"Passed age verification for {steam_app_id}")
-        except WebDriverException:
+        except (WebDriverException, AttributeError):
+            # TODO: Sometimes AttributeErrors occur on NAS. Why?
             logger.error("Something went wrong trying to pass the age verification")
 
 

@@ -31,7 +31,6 @@ class Category(Enum):
     VALID = "Valid"
     DEMO = "Demo"
     CHEAP = "Cheap"
-    ALWAYS_FREE = "Always Free"
 
 
 class OfferDuration(Enum):
