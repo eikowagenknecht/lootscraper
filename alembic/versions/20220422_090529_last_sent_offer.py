@@ -17,29 +17,37 @@ depends_on = None
 
 
 def upgrade() -> None:
-    with op.batch_alter_table("offers", schema=None) as batch_op:  # type: ignore
-        batch_op.alter_column("seen_first", existing_type=sa.DATETIME(), nullable=False)
-        batch_op.alter_column("seen_last", existing_type=sa.DATETIME(), nullable=False)
+    with op.batch_alter_table("offers", schema=None) as batch_op:
+        batch_op.alter_column(  # type: ignore
+            "seen_first", existing_type=sa.DATETIME(), nullable=False
+        )
+        batch_op.alter_column(  # type: ignore
+            "seen_last", existing_type=sa.DATETIME(), nullable=False
+        )
 
     with op.batch_alter_table(  # type: ignore
         "telegram_subscriptions", schema=None
     ) as batch_op:
-        batch_op.add_column(sa.Column("last_offer_id", sa.Integer(), nullable=True))
+        batch_op.add_column(  # type: ignore
+            sa.Column("last_offer_id", sa.Integer(), nullable=True)
+        )
 
     op.execute("UPDATE telegram_subscriptions SET last_offer_id = 0")
 
-    with op.batch_alter_table(  # type: ignore
-        "telegram_subscriptions", schema=None
-    ) as batch_op:
-        batch_op.alter_column(
+    with op.batch_alter_table("telegram_subscriptions", schema=None) as batch_op:
+        batch_op.alter_column(  # type: ignore
             "last_offer_id", existing_type=sa.Integer(), nullable=False
         )
 
 
 def downgrade() -> None:
-    with op.batch_alter_table("telegram_subscriptions", schema=None) as batch_op:  # type: ignore
-        batch_op.drop_column("last_offer_id")
+    with op.batch_alter_table("telegram_subscriptions", schema=None) as batch_op:
+        batch_op.drop_column("last_offer_id")  # type: ignore
 
-    with op.batch_alter_table("offers", schema=None) as batch_op:  # type: ignore
-        batch_op.alter_column("seen_last", existing_type=sa.DATETIME(), nullable=True)
-        batch_op.alter_column("seen_first", existing_type=sa.DATETIME(), nullable=True)
+    with op.batch_alter_table("offers", schema=None) as batch_op:
+        batch_op.alter_column(  # type: ignore
+            "seen_last", existing_type=sa.DATETIME(), nullable=True
+        )
+        batch_op.alter_column(  # type: ignore
+            "seen_first", existing_type=sa.DATETIME(), nullable=True
+        )

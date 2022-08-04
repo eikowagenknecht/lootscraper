@@ -30,19 +30,19 @@ def upgrade() -> None:
         sa.Column("text_markdown", sa.String(), nullable=False),
         sa.PrimaryKeyConstraint("id"),
     )
-    with op.batch_alter_table("users", schema=None) as batch_op:  # type: ignore
-        batch_op.add_column(
+    with op.batch_alter_table("users", schema=None) as batch_op:
+        batch_op.add_column(  # type: ignore
             sa.Column("last_announcement_id", sa.Integer(), nullable=True)
         )
     op.execute("UPDATE users SET last_announcement_id = 0")
-    with op.batch_alter_table("users", schema=None) as batch_op:  # type: ignore
-        batch_op.alter_column(
+    with op.batch_alter_table("users", schema=None) as batch_op:
+        batch_op.alter_column(  # type: ignore
             "last_announcement_id", existing_type=sa.Integer(), nullable=False
         )
 
 
 def downgrade() -> None:
-    with op.batch_alter_table("users", schema=None) as batch_op:  # type: ignore
-        batch_op.drop_column("last_announcement_id")
+    with op.batch_alter_table("users", schema=None) as batch_op:
+        batch_op.drop_column("last_announcement_id")  # type: ignore
 
     op.drop_table("announcements")
