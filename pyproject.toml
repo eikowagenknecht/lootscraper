@@ -45,4 +45,4 @@ disable = [
 [tool.pylint.logging]
 
 # Allow fstrings in logging. Might be changed later to better support log aggregators like Sentry
-logging-format-style = "fstr"
+logging-format-style = "new"
