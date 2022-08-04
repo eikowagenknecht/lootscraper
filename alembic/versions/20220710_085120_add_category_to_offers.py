@@ -21,8 +21,8 @@ depends_on = None
 
 def upgrade() -> None:
     # 1 - Add new column as nullable
-    with op.batch_alter_table("offers", schema=None) as batch_op:  # type: ignore
-        batch_op.add_column(
+    with op.batch_alter_table("offers", schema=None) as batch_op:
+        batch_op.add_column(  # type: ignore
             sa.Column(
                 "category",
                 sa.Enum(
@@ -45,10 +45,10 @@ def upgrade() -> None:
         session.commit()
 
     # 3 - Make it non-nullable
-    with op.batch_alter_table("offers", schema=None) as batch_op:  # type: ignore
-        batch_op.alter_column("category", nullable=False)
+    with op.batch_alter_table("offers", schema=None) as batch_op:
+        batch_op.alter_column("category", nullable=False)  # type: ignore
 
 
 def downgrade() -> None:
-    with op.batch_alter_table("offers", schema=None) as batch_op:  # type: ignore
-        batch_op.drop_column("category")
+    with op.batch_alter_table("offers", schema=None) as batch_op:
+        batch_op.drop_column("category")  # type: ignore

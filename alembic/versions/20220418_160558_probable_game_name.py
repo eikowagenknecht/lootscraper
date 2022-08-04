@@ -59,15 +59,19 @@ class Offer(Base):
 
 def upgrade() -> None:
 
-    with op.batch_alter_table("offers", schema=None) as batch_op:  # type: ignore
-        batch_op.add_column(sa.Column("probable_game_name", sa.String(), nullable=True))
-        batch_op.alter_column(
+    with op.batch_alter_table("offers", schema=None) as batch_op:
+        batch_op.add_column(  # type: ignore
+            sa.Column("probable_game_name", sa.String(), nullable=True)
+        )
+        batch_op.alter_column(  # type: ignore
             "source", existing_type=sa.VARCHAR(length=6), nullable=False
         )
-        batch_op.alter_column(
+        batch_op.alter_column(  # type: ignore
             "type", existing_type=sa.VARCHAR(length=4), nullable=False
         )
-        batch_op.alter_column("title", existing_type=sa.VARCHAR(), nullable=False)
+        batch_op.alter_column(  # type: ignore
+            "title", existing_type=sa.VARCHAR(), nullable=False
+        )
 
     bind = op.get_bind()
     with orm.Session(bind=bind) as session:
@@ -96,17 +100,21 @@ def upgrade() -> None:
 
         session.commit()
 
-    with op.batch_alter_table("offers", schema=None) as batch_op:  # type: ignore
-        batch_op.alter_column(
+    with op.batch_alter_table("offers", schema=None) as batch_op:
+        batch_op.alter_column(  # type: ignore
             "probable_game_name", existing_type=sa.String, nullable=False
         )
 
 
 def downgrade() -> None:
-    with op.batch_alter_table("offers", schema=None) as batch_op:  # type: ignore
-        batch_op.alter_column("title", existing_type=sa.VARCHAR(), nullable=True)
-        batch_op.alter_column("type", existing_type=sa.VARCHAR(length=4), nullable=True)
-        batch_op.alter_column(
+    with op.batch_alter_table("offers", schema=None) as batch_op:
+        batch_op.alter_column(  # type: ignore
+            "title", existing_type=sa.VARCHAR(), nullable=True
+        )
+        batch_op.alter_column(  # type: ignore
+            "type", existing_type=sa.VARCHAR(length=4), nullable=True
+        )
+        batch_op.alter_column(  # type: ignore
             "source", existing_type=sa.VARCHAR(length=6), nullable=True
         )
-        batch_op.drop_column("probable_game_name")
+        batch_op.drop_column("probable_game_name")  # type: ignore
