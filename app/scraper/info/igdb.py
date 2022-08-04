@@ -16,6 +16,9 @@ logger = logging.getLogger(__name__)
 def get_igdb_id(search_string: str) -> int | None:
     igdb = get_igdb_wrapper()
 
+    if igdb is None:
+        return None
+
     logger.info(f"Getting id for {search_string}")
 
     # Replace non-Latin characters with their closest representation
@@ -80,6 +83,10 @@ def get_igdb_details(
     igdb_info.id = igdb_game_id
 
     igdb = get_igdb_wrapper()
+
+    if igdb is None:
+        return None
+
     raw_response: bytes = igdb.api_request(
         "games",
         f"fields *; where id = {igdb_game_id};",
@@ -140,7 +147,7 @@ def get_igdb_details(
 
 
 # TODO: Only use one connection, rate limit to < 4 per second
-def get_igdb_wrapper() -> IGDBWrapper:
+def get_igdb_wrapper() -> IGDBWrapper | None:
     client_id = Config.get().igdb_client_id
     client_secret = Config.get().igdb_client_secret
 
@@ -148,6 +155,7 @@ def get_igdb_wrapper() -> IGDBWrapper:
         f"https://id.twitch.tv/oauth2/token?client_id={client_id}&client_secret={client_secret}&grant_type=client_credentials"
     )
     if r._content is None:
+        logger.error("Failed to get IGDB wrapper.")
         return None
     access_token = json.loads(r._content)["access_token"]
 
