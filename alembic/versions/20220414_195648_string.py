@@ -17,80 +17,80 @@ depends_on = None
 
 
 def upgrade() -> None:
-    with op.batch_alter_table("loot", schema=None) as batch_op:  # type: ignore
-        batch_op.alter_column(
+    with op.batch_alter_table("loot", schema=None) as batch_op:
+        batch_op.alter_column(  # type: ignore
             "seen_first",
             existing_type=sa.TEXT(),
             type_=sa.String(),
             existing_nullable=True,
         )
-        batch_op.alter_column(
+        batch_op.alter_column(  # type: ignore
             "seen_last",
             existing_type=sa.TEXT(),
             type_=sa.String(),
             existing_nullable=True,
         )
-        batch_op.alter_column(
+        batch_op.alter_column(  # type: ignore
             "source",
             existing_type=sa.TEXT(),
             type_=sa.String(),
             existing_nullable=True,
         )
-        batch_op.alter_column(
+        batch_op.alter_column(  # type: ignore
             "type",
             existing_type=sa.TEXT(),
             type_=sa.String(),
             existing_nullable=True,
         )
-        batch_op.alter_column(
+        batch_op.alter_column(  # type: ignore
             "rawtext",
             existing_type=sa.TEXT(),
             type_=sa.String(),
             existing_nullable=True,
         )
-        batch_op.alter_column(
+        batch_op.alter_column(  # type: ignore
             "title",
             existing_type=sa.TEXT(),
             type_=sa.String(),
             existing_nullable=True,
         )
-        batch_op.alter_column(
+        batch_op.alter_column(  # type: ignore
             "subtitle",
             existing_type=sa.TEXT(),
             type_=sa.String(),
             existing_nullable=True,
         )
-        batch_op.alter_column(
+        batch_op.alter_column(  # type: ignore
             "publisher",
             existing_type=sa.TEXT(),
             type_=sa.String(),
             existing_nullable=True,
         )
-        batch_op.alter_column(
+        batch_op.alter_column(  # type: ignore
             "valid_from",
             existing_type=sa.TEXT(),
             type_=sa.String(),
             existing_nullable=True,
         )
-        batch_op.alter_column(
+        batch_op.alter_column(  # type: ignore
             "valid_to",
             existing_type=sa.TEXT(),
             type_=sa.String(),
             existing_nullable=True,
         )
-        batch_op.alter_column(
+        batch_op.alter_column(  # type: ignore
             "url",
             existing_type=sa.TEXT(),
             type_=sa.String(),
             existing_nullable=True,
         )
-        batch_op.alter_column(
+        batch_op.alter_column(  # type: ignore
             "img_url",
             existing_type=sa.TEXT(),
             type_=sa.String(),
             existing_nullable=True,
         )
-        batch_op.alter_column(
+        batch_op.alter_column(  # type: ignore
             "gameinfo",
             existing_type=sa.TEXT(),
             type_=sa.String(),
@@ -99,80 +99,80 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
-    with op.batch_alter_table("loot", schema=None) as batch_op:  # type: ignore
-        batch_op.alter_column(
+    with op.batch_alter_table("loot", schema=None) as batch_op:
+        batch_op.alter_column(  # type: ignore
             "gameinfo",
             existing_type=sa.String(),
             type_=sa.TEXT(),
             existing_nullable=True,
         )
-        batch_op.alter_column(
+        batch_op.alter_column(  # type: ignore
             "img_url",
             existing_type=sa.String(),
             type_=sa.TEXT(),
             existing_nullable=True,
         )
-        batch_op.alter_column(
+        batch_op.alter_column(  # type: ignore
             "url",
             existing_type=sa.String(),
             type_=sa.TEXT(),
             existing_nullable=True,
         )
-        batch_op.alter_column(
+        batch_op.alter_column(  # type: ignore
             "valid_to",
             existing_type=sa.String(),
             type_=sa.TEXT(),
             existing_nullable=True,
         )
-        batch_op.alter_column(
+        batch_op.alter_column(  # type: ignore
             "valid_from",
             existing_type=sa.String(),
             type_=sa.TEXT(),
             existing_nullable=True,
         )
-        batch_op.alter_column(
+        batch_op.alter_column(  # type: ignore
             "publisher",
             existing_type=sa.String(),
             type_=sa.TEXT(),
             existing_nullable=True,
         )
-        batch_op.alter_column(
+        batch_op.alter_column(  # type: ignore
             "subtitle",
             existing_type=sa.String(),
             type_=sa.TEXT(),
             existing_nullable=True,
         )
-        batch_op.alter_column(
+        batch_op.alter_column(  # type: ignore
             "title",
             existing_type=sa.String(),
             type_=sa.TEXT(),
             existing_nullable=True,
         )
-        batch_op.alter_column(
+        batch_op.alter_column(  # type: ignore
             "rawtext",
             existing_type=sa.String(),
             type_=sa.TEXT(),
             existing_nullable=True,
         )
-        batch_op.alter_column(
+        batch_op.alter_column(  # type: ignore
             "type",
             existing_type=sa.String(),
             type_=sa.TEXT(),
             existing_nullable=True,
         )
-        batch_op.alter_column(
+        batch_op.alter_column(  # type: ignore
             "source",
             existing_type=sa.String(),
             type_=sa.TEXT(),
             existing_nullable=True,
         )
-        batch_op.alter_column(
+        batch_op.alter_column(  # type: ignore
             "seen_last",
             existing_type=sa.String(),
             type_=sa.TEXT(),
             existing_nullable=True,
         )
-        batch_op.alter_column(
+        batch_op.alter_column(  # type: ignore
             "seen_first",
             existing_type=sa.String(),
             type_=sa.TEXT(),

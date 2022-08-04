@@ -70,11 +70,11 @@ def upgrade() -> None:
     op.drop_column("loot", "valid_from")
     op.drop_column("loot", "valid_to")
 
-    with op.batch_alter_table("loot", schema=None) as batch_op:  # type: ignore
-        batch_op.alter_column("seen_first_tmp", new_column_name="seen_first")
-        batch_op.alter_column("seen_last_tmp", new_column_name="seen_last")
-        batch_op.alter_column("valid_from_tmp", new_column_name="valid_from")
-        batch_op.alter_column("valid_to_tmp", new_column_name="valid_to")
+    with op.batch_alter_table("loot", schema=None) as batch_op:
+        batch_op.alter_column("seen_first_tmp", new_column_name="seen_first")  # type: ignore
+        batch_op.alter_column("seen_last_tmp", new_column_name="seen_last")  # type: ignore
+        batch_op.alter_column("valid_from_tmp", new_column_name="valid_from")  # type: ignore
+        batch_op.alter_column("valid_to_tmp", new_column_name="valid_to")  # type: ignore
 
 
 def downgrade() -> None:
@@ -126,8 +126,8 @@ def downgrade() -> None:
     op.drop_column("loot", "valid_from")
     op.drop_column("loot", "valid_to")
 
-    with op.batch_alter_table("loot", schema=None) as batch_op:  # type: ignore
-        batch_op.alter_column("seen_first_tmp", new_column_name="seen_first")
-        batch_op.alter_column("seen_last_tmp", new_column_name="seen_last")
-        batch_op.alter_column("valid_from_tmp", new_column_name="valid_from")
-        batch_op.alter_column("valid_to_tmp", new_column_name="valid_to")
+    with op.batch_alter_table("loot", schema=None) as batch_op:
+        batch_op.alter_column("seen_first_tmp", new_column_name="seen_first")  # type: ignore
+        batch_op.alter_column("seen_last_tmp", new_column_name="seen_last")  # type: ignore
+        batch_op.alter_column("valid_from_tmp", new_column_name="valid_from")  # type: ignore
+        batch_op.alter_column("valid_to_tmp", new_column_name="valid_to")  # type: ignore

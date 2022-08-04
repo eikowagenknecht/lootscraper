@@ -41,8 +41,8 @@ def upgrade() -> None:
         if e.orig.args[0] == "table loot already exists":
             # Table already exists, we probably have a legacy database.
             # Apply the relevant fixes only to get up to speed.
-            with op.batch_alter_table("loot", schema=None) as batch_op:  # type: ignore
-                batch_op.alter_column(
+            with op.batch_alter_table("loot", schema=None) as batch_op:
+                batch_op.alter_column(  # type: ignore
                     "id",
                     existing_type=sa.INTEGER(),
                     nullable=False,
