@@ -41,7 +41,7 @@ class Gameinfo:
 
         result = Gameinfo()
 
-        for attr in cls.__dataclass_fields__:
+        for attr in cls.__dataclass_fields__:  # pylint: disable=no-member
             if getattr(prio, attr) is not None:
                 setattr(result, attr, getattr(prio, attr))
             if getattr(other, attr) is not None and getattr(result, attr) is None:
@@ -64,106 +64,106 @@ class Gameinfo:
 
     @classmethod
     def from_json(cls, json_str: str) -> Gameinfo:
-        input = json.loads(json_str)
+        input_ = json.loads(json_str)
 
         result: Gameinfo = Gameinfo()
         try:
-            result.steam_id = input["steam_id"]
+            result.steam_id = input_["steam_id"]
         except KeyError:
             pass
 
         try:
-            result.idgb_id = input["idgb_id"]
+            result.idgb_id = input_["idgb_id"]
         except KeyError:
             pass
 
         try:
-            result.name = input["name"]
+            result.name = input_["name"]
         except KeyError:
             pass
 
         try:
-            result.short_description = input["short_description"]
+            result.short_description = input_["short_description"]
         except KeyError:
             pass
 
         try:
-            result.release_date = datetime.fromisoformat(input["release_date"])
+            result.release_date = datetime.fromisoformat(input_["release_date"])
         except (KeyError, ValueError, TypeError):
             pass
 
         try:
-            result.recommended_price_eur = float(input["recommended_price_eur"])
+            result.recommended_price_eur = float(input_["recommended_price_eur"])
         except KeyError:
             pass
 
         try:
-            result.genres = input["genres"]
+            result.genres = input_["genres"]
         except KeyError:
             pass
 
         try:
-            result.steam_recommendations = input["steam_recommendations"]
+            result.steam_recommendations = input_["steam_recommendations"]
         except KeyError:
             pass
 
         try:
-            result.steam_percent = input["steam_percent"]
+            result.steam_percent = input_["steam_percent"]
         except KeyError:
             pass
 
         try:
-            result.steam_score = input["steam_score"]
+            result.steam_score = input_["steam_score"]
         except KeyError:
             pass
 
         try:
-            result.igdb_user_score = input["igdb_user_score"]
+            result.igdb_user_score = input_["igdb_user_score"]
         except KeyError:
             pass
 
         try:
-            result.igdb_user_ratings = input["igdb_user_ratings"]
+            result.igdb_user_ratings = input_["igdb_user_ratings"]
         except KeyError:
             pass
 
         try:
-            result.igdb_meta_score = input["igdb_meta_score"]
+            result.igdb_meta_score = input_["igdb_meta_score"]
         except KeyError:
             pass
 
         try:
-            result.igdb_meta_ratings = input["igdb_meta_ratings"]
+            result.igdb_meta_ratings = input_["igdb_meta_ratings"]
         except KeyError:
             pass
 
         try:
-            result.igdb_url = input["igdb_url"]
+            result.igdb_url = input_["igdb_url"]
         except KeyError:
             pass
 
         try:
-            result.metacritic_score = input["metacritic_score"]
+            result.metacritic_score = input_["metacritic_score"]
         except KeyError:
             pass
 
         try:
-            result.metacritic_url = input["metacritic_url"]
+            result.metacritic_url = input_["metacritic_url"]
         except KeyError:
             pass
 
         try:
-            result.steam_url = input["steam_url"]
+            result.steam_url = input_["steam_url"]
         except KeyError:
             pass
 
         try:
-            result.image_url = input["image_url"]
+            result.image_url = input_["image_url"]
         except KeyError:
             pass
 
         try:
-            result.publishers = input["publishers"]
+            result.publishers = input_["publishers"]
         except KeyError:
             pass
 

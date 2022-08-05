@@ -1,15 +1,15 @@
 # Dev environment:
 -r requirements.txt
-black
-isort
+black >= 22.6.0
+isort >= 5.10.1
 
-MonkeyType
+MonkeyType >= 22.2.0
 
-bandit
-pylint
-flake8
-flake8-isort
+bandit >= 1.7.4
+pylint >= 2.14.5
+flake8 >= 5.0.4
+flake8-isort >= 4.2.0
 
-mypy
-types-selenium
-types-requests
+mypy >= 0.971
+types-selenium >= 3.141.9
+types-requests >= 2.28.8

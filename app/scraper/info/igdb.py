@@ -63,12 +63,12 @@ def get_igdb_id(search_string: str) -> int | None:
 
 
 def get_igdb_details(
-    id: int | None = None, title: str | None = None
+    id_: int | None = None, title: str | None = None
 ) -> IgdbInfo | None:
     igdb_game_id: int | None = None
 
-    if id:
-        igdb_game_id = id
+    if id_:
+        igdb_game_id = id_
 
     if not igdb_game_id and title:
         igdb_game_id = get_igdb_id(title)
@@ -77,7 +77,7 @@ def get_igdb_details(
         # No entry found, not adding any data
         return None
 
-    logger.info(f"IGDB: Reading details for IGDB id {id}")
+    logger.info(f"IGDB: Reading details for IGDB id {id_}")
 
     igdb_info = IgdbInfo()
     igdb_info.id = igdb_game_id

@@ -6,22 +6,9 @@ from pathlib import Path
 from types import TracebackType
 from typing import Any, Type
 
-from sqlalchemy import (
-    JSON,
-    Column,
-    DateTime,
-    Enum,
-    Float,
-    ForeignKey,
-    Integer,
-    String,
-    TypeDecorator,
-    and_,
-    create_engine,
-    select,
-)
+import sqlalchemy as sa
+from sqlalchemy import orm
 from sqlalchemy.engine.interfaces import Dialect
-from sqlalchemy.orm import Session, registry, relationship, scoped_session, sessionmaker
 
 from alembic import command
 from alembic.config import Config as AlembicConfig
@@ -30,14 +17,14 @@ from app.configparser import Config
 
 logger = logging.getLogger(__name__)
 
-mapper_registry = registry()
+mapper_registry = orm.registry()
 Base = mapper_registry.generate_base()  # type: Any
 
 
-class AwareDateTime(TypeDecorator):
+class AwareDateTime(sa.TypeDecorator):
     """Results returned as aware datetimes, not naive ones."""
 
-    impl = DateTime
+    impl = sa.DateTime
     cache_ok = True
 
     def process_result_value(
@@ -45,18 +32,25 @@ class AwareDateTime(TypeDecorator):
     ) -> datetime | None:
         if value is not None:
             return value.replace(tzinfo=timezone.utc)
-        else:
-            return None
+
+        return None
+
+    def process_bind_param(
+        self, value: datetime | None, dialect: Dialect
+    ) -> datetime | None:
+        if value is not None:
+            return value.replace(tzinfo=None)
+        return value
 
 
 class Announcement(Base):
     __tablename__ = "announcements"
 
-    id: int = Column(Integer, primary_key=True, nullable=False)
+    id: int = sa.Column(sa.Integer, primary_key=True, nullable=False)
 
-    channel: Channel = Column(Enum(Channel), nullable=False)
-    date: datetime = Column(AwareDateTime, nullable=False)
-    text_markdown: str = Column(String, nullable=False)
+    channel: Channel = sa.Column(sa.Enum(Channel), nullable=False)
+    date: datetime = sa.Column(AwareDateTime, nullable=False)
+    text_markdown: str = sa.Column(sa.String, nullable=False)
 
 
 class Game(Base):
@@ -64,15 +58,15 @@ class Game(Base):
 
     __tablename__ = "games"
 
-    id: int = Column(Integer, primary_key=True, nullable=False)
+    id: int = sa.Column(sa.Integer, primary_key=True, nullable=False)
 
-    igdb_id: int | None = Column(Integer, ForeignKey("igdb_info.id"))
-    steam_id: int | None = Column(Integer, ForeignKey("steam_info.id"))
+    igdb_id: int | None = sa.Column(sa.Integer, sa.ForeignKey("igdb_info.id"))
+    steam_id: int | None = sa.Column(sa.Integer, sa.ForeignKey("steam_info.id"))
 
-    igdb_info: IgdbInfo | None = relationship("IgdbInfo", back_populates="game")
-    steam_info: SteamInfo | None = relationship("SteamInfo", back_populates="game")
+    igdb_info: IgdbInfo | None = orm.relationship("IgdbInfo", back_populates="game")
+    steam_info: SteamInfo | None = orm.relationship("SteamInfo", back_populates="game")
 
-    offers: list[Offer] = relationship("Offer", back_populates="game")
+    offers: list[Offer] = orm.relationship("Offer", back_populates="game")
 
     def __repr__(self) -> str:
         return (
@@ -88,17 +82,17 @@ class IgdbInfo(Base):
 
     __tablename__ = "igdb_info"
 
-    id: int = Column(Integer, primary_key=True, nullable=False)
-    url: str = Column(String, nullable=False)
+    id: int = sa.Column(sa.Integer, primary_key=True, nullable=False)
+    url: str = sa.Column(sa.String, nullable=False)
 
-    name: str = Column(String, nullable=False)
-    short_description: str | None = Column(String)
-    release_date: datetime | None = Column(AwareDateTime)
+    name: str = sa.Column(sa.String, nullable=False)
+    short_description: str | None = sa.Column(sa.String)
+    release_date: datetime | None = sa.Column(AwareDateTime)
 
-    user_score: int | None = Column(Integer)
-    user_ratings: int | None = Column(Integer)
-    meta_score: int | None = Column(Integer)
-    meta_ratings: int | None = Column(Integer)
+    user_score: int | None = sa.Column(sa.Integer)
+    user_ratings: int | None = sa.Column(sa.Integer)
+    meta_score: int | None = sa.Column(sa.Integer)
+    meta_ratings: int | None = sa.Column(sa.Integer)
 
     def __repr__(self) -> str:
         return (
@@ -114,7 +108,7 @@ class IgdbInfo(Base):
             f"release_date={self.release_date!r})"
         )
 
-    game: Game = relationship("Game", back_populates="igdb_info")
+    game: Game = orm.relationship("Game", back_populates="igdb_info")
 
 
 class SteamInfo(Base):
@@ -122,23 +116,23 @@ class SteamInfo(Base):
 
     __tablename__ = "steam_info"
 
-    id: int = Column(Integer, primary_key=True, nullable=False)
-    url: str = Column(String, nullable=False)
+    id: int = sa.Column(sa.Integer, primary_key=True, nullable=False)
+    url: str = sa.Column(sa.String, nullable=False)
 
-    name: str = Column(String, nullable=False)
-    short_description: str | None = Column(String)
-    release_date: datetime | None = Column(AwareDateTime)
-    genres: str | None = Column(String)
-    publishers: str | None = Column(String)
-    image_url: str | None = Column(String)
+    name: str = sa.Column(sa.String, nullable=False)
+    short_description: str | None = sa.Column(sa.String)
+    release_date: datetime | None = sa.Column(AwareDateTime)
+    genres: str | None = sa.Column(sa.String)
+    publishers: str | None = sa.Column(sa.String)
+    image_url: str | None = sa.Column(sa.String)
 
-    recommendations: int | None = Column(Integer)
-    percent: int | None = Column(Integer)
-    score: int | None = Column(Integer)
-    metacritic_score: int | None = Column(Integer)
-    metacritic_url: str | None = Column(String)
+    recommendations: int | None = sa.Column(sa.Integer)
+    percent: int | None = sa.Column(sa.Integer)
+    score: int | None = sa.Column(sa.Integer)
+    metacritic_score: int | None = sa.Column(sa.Integer)
+    metacritic_url: str | None = sa.Column(sa.String)
 
-    recommended_price_eur: float | None = Column(Float)
+    recommended_price_eur: float | None = sa.Column(sa.Float)
 
     def __repr__(self) -> str:
         return (
@@ -159,7 +153,7 @@ class SteamInfo(Base):
             f"recommended_price_eur={self.recommended_price_eur!r})"
         )
 
-    game: Game = relationship("Game", back_populates="steam_info")
+    game: Game = orm.relationship("Game", back_populates="steam_info")
 
 
 class Offer(Base):
@@ -167,26 +161,28 @@ class Offer(Base):
 
     __tablename__ = "offers"
 
-    id: int = Column(Integer, primary_key=True, nullable=False)
-    source: Source = Column(Enum(Source), nullable=False)
-    type: OfferType = Column(Enum(OfferType), nullable=False)
-    duration: OfferDuration = Column(Enum(OfferDuration), nullable=False)
-    title: str = Column(String, nullable=False)
-    probable_game_name: str = Column(String, nullable=False)
+    id: int = sa.Column(sa.Integer, primary_key=True, nullable=False)
+    source: Source = sa.Column(sa.Enum(Source), nullable=False)
+    type: OfferType = sa.Column(sa.Enum(OfferType), nullable=False)
+    duration: OfferDuration = sa.Column(sa.Enum(OfferDuration), nullable=False)
+    title: str = sa.Column(sa.String, nullable=False)
+    probable_game_name: str = sa.Column(sa.String, nullable=False)
 
-    seen_first: datetime = Column(AwareDateTime, nullable=False)
-    seen_last: datetime = Column(AwareDateTime, nullable=False)
-    valid_from: datetime | None = Column(AwareDateTime)
-    valid_to: datetime | None = Column(AwareDateTime)
+    seen_first: datetime = sa.Column(AwareDateTime, nullable=False)
+    seen_last: datetime = sa.Column(AwareDateTime, nullable=False)
+    valid_from: datetime | None = sa.Column(AwareDateTime)
+    valid_to: datetime | None = sa.Column(AwareDateTime)
 
-    rawtext: str | None = Column(String)
-    url: str | None = Column(String)
-    img_url: str | None = Column(String)
+    rawtext: str | None = sa.Column(sa.String)
+    url: str | None = sa.Column(sa.String)
+    img_url: str | None = sa.Column(sa.String)
 
-    category: Category = Column(Enum(Category), nullable=False, default=Category.VALID)
+    category: Category = sa.Column(
+        sa.Enum(Category), nullable=False, default=Category.VALID
+    )
 
-    game_id: int | None = Column(Integer, ForeignKey("games.id"))
-    game: Game | None = relationship("Game", back_populates="offers")
+    game_id: int | None = sa.Column(sa.Integer, sa.ForeignKey("games.id"))
+    game: Game | None = orm.relationship("Game", back_populates="offers")
 
     def __repr__(self) -> str:
         return (
@@ -211,20 +207,20 @@ class User(Base):
 
     __tablename__ = "users"
 
-    id: int = Column(Integer, primary_key=True, nullable=False)
+    id: int = sa.Column(sa.Integer, primary_key=True, nullable=False)
 
-    registration_date: datetime = Column(AwareDateTime)
-    offers_received_count: int = Column(Integer, default=0)
+    registration_date: datetime = sa.Column(AwareDateTime)
+    offers_received_count: int = sa.Column(sa.Integer, default=0)
 
-    telegram_id: int | None = Column(Integer)
-    telegram_chat_id: int | None = Column(Integer)
-    telegram_user_details: str | None = Column(JSON)
+    telegram_id: int | None = sa.Column(sa.Integer)
+    telegram_chat_id: int | None = sa.Column(sa.Integer)
+    telegram_user_details: str | None = sa.Column(sa.JSON)
 
-    telegram_subscriptions: list[TelegramSubscription] = relationship(
+    telegram_subscriptions: list[TelegramSubscription] = orm.relationship(
         "TelegramSubscription", back_populates="user", cascade="all, delete-orphan"
     )
 
-    last_announcement_id: int = Column(Integer, nullable=False, default=0)
+    last_announcement_id: int = sa.Column(sa.Integer, nullable=False, default=0)
 
 
 class TelegramSubscription(Base):
@@ -232,16 +228,16 @@ class TelegramSubscription(Base):
 
     __tablename__ = "telegram_subscriptions"
 
-    id: int = Column(Integer, primary_key=True, nullable=False)
+    id: int = sa.Column(sa.Integer, primary_key=True, nullable=False)
 
-    user_id: int = Column(Integer, ForeignKey("users.id"), nullable=False)
-    user: User = relationship("User", back_populates="telegram_subscriptions")
+    user_id: int = sa.Column(sa.Integer, sa.ForeignKey("users.id"), nullable=False)
+    user: User = orm.relationship("User", back_populates="telegram_subscriptions")
 
-    source: Source = Column(Enum(Source), nullable=False)
-    type: OfferType = Column(Enum(OfferType), nullable=False)
-    duration: OfferDuration = Column(Enum(OfferDuration), nullable=False)
+    source: Source = sa.Column(sa.Enum(Source), nullable=False)
+    type: OfferType = sa.Column(sa.Enum(OfferType), nullable=False)
+    duration: OfferDuration = sa.Column(sa.Enum(OfferDuration), nullable=False)
 
-    last_offer_id: int = Column(Integer, nullable=False, default=0)
+    last_offer_id: int = sa.Column(sa.Integer, nullable=False, default=0)
 
 
 class LootDatabase:
@@ -250,13 +246,13 @@ class LootDatabase:
         self.initialize_or_update()
 
         db_file_path = Config.data_path() / Path(Config.get().database_file)
-        self.engine = create_engine(
+        self.engine = sa.create_engine(
             f"sqlite+pysqlite:///{db_file_path}",
             echo=echo,
             future=True,
         )
-        session_factory = sessionmaker(bind=self.engine)
-        self.Session = scoped_session(session_factory)
+        session_factory = orm.sessionmaker(bind=self.engine)
+        self.Session = orm.scoped_session(session_factory)
 
     def __enter__(self) -> LootDatabase:
         return self
@@ -267,13 +263,12 @@ class LootDatabase:
         exc_value: BaseException | None,
         traceback: TracebackType | None,
     ) -> None:
-        session: Session = self.Session()
+        session: orm.Session = self.Session()
         if isinstance(exc_value, Exception):
             session.rollback()
         else:
             session.commit()
         session.close()
-        pass
 
     def initialize_or_update(self) -> None:
         logger.info("Running database migrations")
@@ -284,9 +279,9 @@ class LootDatabase:
         command.upgrade(alembic_cfg, "head")
 
     def read_all(self) -> list[Offer]:
-        session: Session = self.Session()
+        session: orm.Session = self.Session()
         try:
-            result = session.execute(select(Offer)).scalars().all()
+            result = session.execute(sa.select(Offer)).scalars().all()
         except Exception:
             session.rollback()
             raise
@@ -300,23 +295,23 @@ class LootDatabase:
         offer: Offer
         for offer in result:
             source: str = Source(offer.source).name
-            type: str = OfferType(offer.type).name
+            type_: str = OfferType(offer.type).name
             duration: str = OfferDuration(offer.duration).name
             if source not in offers:
                 offers[source] = {}
-            if type not in offers[source]:
-                offers[source][type] = {}
-            if duration not in offers[source][type]:
-                offers[source][type][duration] = []
+            if type_ not in offers[source]:
+                offers[source][type_] = {}
+            if duration not in offers[source][type_]:
+                offers[source][type_][duration] = []
 
-            offers[source][type][duration].append(offer)
+            offers[source][type_][duration].append(offer)
 
         return offers
 
     def find_offer(
         self,
         source: Source,
-        type: OfferType,
+        type_: OfferType,
         title: str,
         valid_to: datetime | None,
     ) -> Offer | None:
@@ -324,9 +319,9 @@ class LootDatabase:
         "at most 1 day older or 1 day newer" to avoid getting duplicates for offers
         where the exact end date is not clear (looking at you, Amazon!)"""
         statement = (
-            select(Offer)
+            sa.select(Offer)
             .where(Offer.source == source)
-            .where(Offer.type == type)
+            .where(Offer.type == type_)
             .where(Offer.title == title)
         )
 
@@ -334,13 +329,13 @@ class LootDatabase:
             earliest_date = valid_to.replace(tzinfo=timezone.utc) - timedelta(days=1)
             latest_date = valid_to.replace(tzinfo=timezone.utc) + timedelta(days=1)
             statement = statement.where(
-                and_(
+                sa.and_(
                     Offer.valid_to >= earliest_date,  # type: ignore
                     Offer.valid_to <= latest_date,  # type: ignore
                 )
             )
 
-        session: Session = self.Session()
+        session: orm.Session = self.Session()
         try:
             result: list[Offer] = session.execute(statement).scalars().all()
         except Exception:
@@ -357,9 +352,9 @@ class LootDatabase:
 
         return result[0]
 
-    def find_offer_by_id(self, id: int) -> Offer:
-        statement = select(Offer).where(Offer.id == id)
-        session: Session = self.Session()
+    def find_offer_by_id(self, id_: int) -> Offer:
+        statement = sa.select(Offer).where(Offer.id == id_)
+        session: orm.Session = self.Session()
         try:
             result = session.execute(statement).scalars().one_or_none()
         except Exception:
@@ -370,7 +365,7 @@ class LootDatabase:
 
     def touch_db_offer(self, db_offer: Offer) -> None:
         db_offer.seen_last = datetime.now().replace(tzinfo=timezone.utc)
-        session: Session = self.Session()
+        session: orm.Session = self.Session()
         try:
             session.commit()
         except Exception:
@@ -401,7 +396,7 @@ class LootDatabase:
         if new_data.game_id:
             db_offer.game_id = new_data.game_id
 
-        session: Session = self.Session()
+        session: orm.Session = self.Session()
         try:
             session.commit()
         except Exception:
@@ -410,7 +405,7 @@ class LootDatabase:
 
     def add_offer(self, offer: Offer) -> None:
         offer.seen_first = offer.seen_last
-        session: Session = self.Session()
+        session: orm.Session = self.Session()
         try:
             session.add(offer)
             session.commit()

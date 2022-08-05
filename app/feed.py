@@ -27,7 +27,7 @@ def generate_feed(
     feed_url_alternate: str,
     feed_id_prefix: str,
     source: Source = None,
-    type: OfferType = None,
+    type_: OfferType = None,
     duration: OfferDuration = None,
 ) -> None:
     """
@@ -177,7 +177,7 @@ def generate_feed(
     # Atom Needed
     feed_id = get_feed_id(file.name)
     feed_generator.id(feed_id_prefix + feed_id)
-    feed_generator.title(get_feed_title(source, type, duration))
+    feed_generator.title(get_feed_title(source, type_, duration))
     feed_generator.updated(latest_date)
     # Atom Recommended
     feed_generator.link(rel="self", href=f"{feed_url_prefix}{file.name}")
@@ -216,9 +216,9 @@ def get_feed_id(filename: str) -> str:
 
 
 def get_feed_title(
-    source: Source | None, type: OfferType | None, duration: OfferDuration | None
+    source: Source | None, type_: OfferType | None, duration: OfferDuration | None
 ) -> str:
-    if source is None and type is None and duration is None:
+    if source is None and type_ is None and duration is None:
         return "Free Games and Loot"
 
     title = "Free"
@@ -226,8 +226,8 @@ def get_feed_title(
     if source is not None:
         title += " " + source.value
 
-    if type is not None:
-        title += " " + type.value
+    if type_ is not None:
+        title += " " + type_.value
 
     if duration is not None and duration != OfferDuration.CLAIMABLE:
         title += f" ({duration.value})"

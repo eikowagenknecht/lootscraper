@@ -5,6 +5,8 @@ Revises: f2ce7aba3802
 Create Date: 2022-04-14 19:56:48.664279+00:00
 
 """
+# pylint: disable=no-member
+
 import sqlalchemy as sa
 
 from alembic import op
