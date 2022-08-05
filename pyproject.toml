@@ -41,7 +41,10 @@ disable = [
     "unused-import",
     "invalid-name",
     "too-many-lines",
+    "too-many-public-methods",
+    "too-many-branches",
     "singleton-comparison",
+    "logging-fstring-interpolation",
 ]
 
 [tool.pylint.logging]
