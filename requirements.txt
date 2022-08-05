@@ -1,12 +1,12 @@
 # Runtime
-pytz >= 2021.3
-feedgen >= 0.9
-selenium >= 4.3
-chromedriver-autoinstaller >= 0.3.1
+alembic >= 1.8.1
+chromedriver-autoinstaller >= 0.4.0
+feedgen >= 0.9.0
+humanize >= 4.2.3
 igdb-api-v4 >= 0.0.5
-python-telegram-bot >= 13.11
-sqlalchemy >= 1.4.0
-alembic >= 1.7.7
-humanize >= 4.0.0
-xvfbwrapper >= 0.2.9
+python-telegram-bot >= 13.13
+pytz >= 2022.1
+selenium >= 4.3.0
+sqlalchemy >= 1.4.39
 unidecode >= 1.3.4
+xvfbwrapper >= 0.2.9
