@@ -2,9 +2,9 @@
 import logging
 import unittest
 
+import sqlalchemy as sa
 from selenium.webdriver.chrome.webdriver import WebDriver
-from sqlalchemy import select
-from sqlalchemy.orm import Session
+from sqlalchemy import orm
 
 from app.common import TIMESTAMP_LONG
 from app.configparser import Config
@@ -26,7 +26,6 @@ class VariousTests(unittest.TestCase):
     def test_entity_framework(self) -> None:
         with LootDatabase(echo=True) as db:
             db.initialize_or_update()
-            self.assertTrue(True)
 
     def test_telegram(self) -> None:
         with LootDatabase(echo=True) as db:
@@ -42,13 +41,13 @@ class VariousTests(unittest.TestCase):
             TelegramBot(Config.get(), db.Session) as bot,
         ):
             # Arrange
-            session: Session = db.Session()
+            session: orm.Session = db.Session()
 
             # Act
-            offer: Offer = session.execute(select(Offer)).scalars().first()
+            offer: Offer = session.execute(sa.select(Offer)).scalars().first()
             user: User = (
                 session.execute(
-                    select(User).where(User.telegram_id == 724039662)
+                    sa.select(User).where(User.telegram_id == 724039662)
                 )  # Eiko
                 .scalars()
                 .first()
@@ -65,13 +64,13 @@ class VariousTests(unittest.TestCase):
             TelegramBot(Config.get(), db.Session) as bot,
         ):
             # Arrange
-            session: Session = db.Session()
+            session: orm.Session = db.Session()
 
             # Act
-            offer: Offer = session.execute(select(Offer)).scalars().first()
+            offer: Offer = session.execute(sa.select(Offer)).scalars().first()
             user: User = (
                 session.execute(
-                    select(User).where(User.telegram_id == 99921143)
+                    sa.select(User).where(User.telegram_id == 99921143)
                 )  # Martin
                 .scalars()
                 .first()
@@ -88,11 +87,11 @@ class VariousTests(unittest.TestCase):
             TelegramBot(Config.get(), db.Session) as bot,
         ):
             # Arrange
-            session: Session = db.Session()
+            session: orm.Session = db.Session()
 
             # Act
             user: User = (
-                session.execute(select(User).where(User.telegram_id == 724039662))
+                session.execute(sa.select(User).where(User.telegram_id == 724039662))
                 .scalars()
                 .first()
             )
@@ -105,7 +104,7 @@ class VariousTests(unittest.TestCase):
         result = "Tom Clancy's Rainbow Six® Siege"
 
         score = get_match_score(search, result)
-        self.assertEquals(score, 0.99)
+        self.assertEqual(score, 0.99)
 
         search = "Fall Guys"
         result = "Fall Guy"
@@ -122,7 +121,7 @@ class VariousTests(unittest.TestCase):
         with get_pagedriver() as driver:
             expected_id: int = 359550  # Tom Clancy's Rainbow Six® Siege
             scraped_id: int = get_steam_id(driver, "Rainbow Six Siege")
-            self.assertEquals(expected_id, scraped_id)
+            self.assertEqual(expected_id, scraped_id)
 
     def test_steam_appid_resolution_with_special_chars(self) -> None:
         driver: WebDriver
@@ -131,32 +130,32 @@ class VariousTests(unittest.TestCase):
             scraped_id: int = get_steam_id(
                 driver, "Monkey Island 2 Special Edition: LeChuck’s Revenge"
             )
-            self.assertEquals(expected_id, scraped_id)
+            self.assertEqual(expected_id, scraped_id)
 
     def test_igdb_id_resolution_with_special_chars(self) -> None:
         searchstring = "Monkey Island 2 Special Edition: LeChuck’s Revenge"
         expected_id: int = 66
         scraped_id: int = get_igdb_id(searchstring)
-        self.assertEquals(expected_id, scraped_id)
+        self.assertEqual(expected_id, scraped_id)
 
     def test_steam_appinfo(self) -> None:
         driver: WebDriver
         with get_pagedriver() as driver:
             steam_info = get_steam_details(driver, title="Counter-Strike")
             self.assertIsNotNone(steam_info)
-            self.assertEquals(steam_info.name, "Counter-Strike")
+            self.assertEqual(steam_info.name, "Counter-Strike")
             self.assertIsNotNone(steam_info.short_description)
-            self.assertEquals(
+            self.assertEqual(
                 steam_info.release_date.isoformat(), "2000-11-01T00:00:00+00:00"
             )
-            self.assertEquals(steam_info.recommended_price_eur, 8.19)
-            self.assertEquals(steam_info.genres, "Action")
+            self.assertEqual(steam_info.recommended_price_eur, 8.19)
+            self.assertEqual(steam_info.genres, "Action")
 
             self.assertGreater(steam_info.recommendations, 100000)
-            self.assertEquals(steam_info.percent, 96)
-            self.assertEquals(steam_info.score, 10)
-            self.assertEquals(steam_info.metacritic_score, 88)
-            self.assertEquals(
+            self.assertEqual(steam_info.percent, 96)
+            self.assertEqual(steam_info.score, 10)
+            self.assertEqual(steam_info.metacritic_score, 88)
+            self.assertEqual(
                 steam_info.metacritic_url,
                 """https://www.metacritic.com/game/pc/counter-strike?ftag=MCD-06-10aaa1f""",
             )
@@ -166,28 +165,28 @@ class VariousTests(unittest.TestCase):
         with get_pagedriver() as driver:
             steam_info = get_steam_details(driver, title="Rainbow Six Siege")
             self.assertIsNotNone(steam_info)
-            self.assertEquals(steam_info.name, "Tom Clancy's Rainbow Six® Siege")
+            self.assertEqual(steam_info.name, "Tom Clancy's Rainbow Six® Siege")
             self.assertIsNotNone(steam_info.short_description)
-            self.assertEquals(
+            self.assertEqual(
                 steam_info.release_date.isoformat(), "2015-12-01T00:00:00+00:00"
             )
-            self.assertEquals(steam_info.recommended_price_eur, 19.99)
-            self.assertEquals(steam_info.genres, "Action")
+            self.assertEqual(steam_info.recommended_price_eur, 19.99)
+            self.assertEqual(steam_info.genres, "Action")
 
             self.assertGreater(steam_info.recommendations, 850000)
-            self.assertEquals(steam_info.percent, 87)
-            self.assertEquals(steam_info.score, 9)
-            self.assertEquals(steam_info.metacritic_score, None)
-            self.assertEquals(steam_info.metacritic_url, None)
+            self.assertEqual(steam_info.percent, 87)
+            self.assertEqual(steam_info.score, 9)
+            self.assertEqual(steam_info.metacritic_score, None)
+            self.assertEqual(steam_info.metacritic_url, None)
 
     def test_steam_appinfo_releasedate(self) -> None:
         driver: WebDriver
         with get_pagedriver() as driver:
             steam_info = get_steam_details(driver, title="Guild Wars 2")
             self.assertIsNotNone(steam_info)
-            self.assertEquals(steam_info.name, "Guild Wars 2")
+            self.assertEqual(steam_info.name, "Guild Wars 2")
             self.assertIsNotNone(steam_info.release_date)
-            self.assertEquals(
+            self.assertEqual(
                 steam_info.release_date.isoformat(), "2012-08-28T00:00:00+00:00"
             )
 
@@ -196,7 +195,7 @@ class VariousTests(unittest.TestCase):
         with get_pagedriver() as driver:
             steam_info = get_steam_details(driver, title="Riverbond")
             self.assertIsNotNone(steam_info)
-            self.assertEquals(steam_info.name, "Riverbond")
+            self.assertEqual(steam_info.name, "Riverbond")
             self.assertIsNotNone(steam_info.recommendations)
 
     # This is a weird one where the price is shown in "KWR" in the JSON, so the
@@ -206,40 +205,40 @@ class VariousTests(unittest.TestCase):
         with get_pagedriver() as driver:
             steam_info = get_steam_details(driver, title="Cities: Skylines")
             self.assertIsNotNone(steam_info)
-            self.assertEquals(steam_info.name, "Cities: Skylines")
-            self.assertEquals(steam_info.recommended_price_eur, 27.99)
+            self.assertEqual(steam_info.name, "Cities: Skylines")
+            self.assertEqual(steam_info.recommended_price_eur, 27.99)
 
     def test_steam_appinfo_language(self) -> None:
         driver: WebDriver
         with get_pagedriver() as driver:
             steam_info = get_steam_details(driver, title="Warframe")
             self.assertIsNotNone(steam_info)
-            self.assertEquals(steam_info.name, "Warframe")
-            self.assertEquals(steam_info.short_description[0:6], "Awaken")
+            self.assertEqual(steam_info.name, "Warframe")
+            self.assertEqual(steam_info.short_description[0:6], "Awaken")
 
     def test_steam_appinfo_ageverify(self) -> None:
         driver: WebDriver
         with get_pagedriver() as driver:
             steam_info = get_steam_details(driver, title="Doom Eternal")
             self.assertIsNotNone(steam_info)
-            self.assertEquals(steam_info.name, "DOOM Eternal")
-            self.assertEquals(steam_info.score, 9)
+            self.assertEqual(steam_info.name, "DOOM Eternal")
+            self.assertEqual(steam_info.score, 9)
 
     def test_steam_json_multiple_genres(self) -> None:
         with get_pagedriver() as driver:
             steam_info = get_steam_details(driver, id_=1424910)
             self.assertIsNotNone(steam_info)
-            self.assertEquals(steam_info.genres, "Action, Indie, Racing, Early Access")
+            self.assertEqual(steam_info.genres, "Action, Indie, Racing, Early Access")
 
     def test_igdb_id(self) -> None:
-        id = get_igdb_id("Cities: Skylines")
-        self.assertEquals(id, 9066)
+        id_ = get_igdb_id("Cities: Skylines")
+        self.assertEqual(id_, 9066)
 
     # def test_igdb_details(self) -> None:
     #     game = add_igdb_details("Cities: Skylines")
-    #     self.assertEquals(game.name, "Cities: Skylines")
+    #     self.assertEqual(game.name, "Cities: Skylines")
     #     self.assertIsNotNone(game.release_date)
-    #     self.assertEquals(game.release_date.isoformat(), "2015-03-10T00:00:00+00:00")
+    #     self.assertEqual(game.release_date.isoformat(), "2015-03-10T00:00:00+00:00")
 
 
 if __name__ == "__main__":

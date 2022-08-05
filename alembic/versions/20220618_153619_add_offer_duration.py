@@ -5,14 +5,14 @@ Revises: fc43de437432
 Create Date: 2022-06-18 15:36:19.169481+00:00
 
 """
+# pylint: disable=no-member
+
 from datetime import datetime
 from typing import Any
 
 import sqlalchemy as sa
-import sqlalchemy.orm as orm
-from sqlalchemy import Column, Enum, ForeignKey, Integer, String, select
+from sqlalchemy import orm
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import relationship
 
 from alembic import op
 from app.common import OfferDuration, OfferType, Source
@@ -43,31 +43,31 @@ class Offer(Base):
 
     __tablename__ = "offers"
 
-    id: int = Column(Integer, primary_key=True, nullable=False)
-    source: Source = Column(Enum(Source), nullable=False)
-    type: OfferType = Column(Enum(OfferType), nullable=False)
-    duration: OfferDuration = Column(Enum(OfferDuration), nullable=False)
-    title: str = Column(String, nullable=False)
-    probable_game_name: str = Column(String, nullable=False)
+    id: int = sa.Column(sa.Integer, primary_key=True, nullable=False)
+    source: Source = sa.Column(sa.Enum(Source), nullable=False)
+    type: OfferType = sa.Column(sa.Enum(OfferType), nullable=False)
+    duration: OfferDuration = sa.Column(sa.Enum(OfferDuration), nullable=False)
+    title: str = sa.Column(sa.String, nullable=False)
+    probable_game_name: str = sa.Column(sa.String, nullable=False)
 
-    seen_first: datetime = Column(AwareDateTime, nullable=False)
-    seen_last: datetime = Column(AwareDateTime, nullable=False)
-    valid_from: datetime | None = Column(AwareDateTime)
-    valid_to: datetime | None = Column(AwareDateTime)
+    seen_first: datetime = sa.Column(AwareDateTime, nullable=False)
+    seen_last: datetime = sa.Column(AwareDateTime, nullable=False)
+    valid_from: datetime | None = sa.Column(AwareDateTime)
+    valid_to: datetime | None = sa.Column(AwareDateTime)
 
-    rawtext: str | None = Column(String)
-    url: str | None = Column(String)
-    img_url: str | None = Column(String)
+    rawtext: str | None = sa.Column(sa.String)
+    url: str | None = sa.Column(sa.String)
+    img_url: str | None = sa.Column(sa.String)
 
-    game_id: int | None = Column(Integer, ForeignKey("games.id"))
-    game: Game | None = relationship("Game", back_populates="offers")
+    game_id: int | None = sa.Column(sa.Integer, sa.ForeignKey("games.id"))
+    game: Game | None = orm.relationship("Game", back_populates="offers")
 
 
 def upgrade() -> None:
     # 1 - Add new column as nullable
     with op.batch_alter_table("offers", schema=None) as batch_op:
         batch_op.add_column(  # type: ignore
-            sa.Column(
+            sa.sa.Column(
                 "duration",
                 sa.Enum(
                     "ALWAYS",
@@ -97,11 +97,11 @@ def upgrade() -> None:
     bind = op.get_bind()
     with orm.Session(bind=bind) as session:
         offer: Offer
-        for offer in session.scalars(select(Offer)).all():
+        for offer in session.scalars(sa.select(Offer)).all():
             offer.duration = OfferDuration.CLAIMABLE
 
         sub: TelegramSubscription
-        for sub in session.scalars(select(TelegramSubscription)).all():
+        for sub in session.scalars(sa.select(TelegramSubscription)).all():
             sub.duration = OfferDuration.CLAIMABLE
 
         session.commit()

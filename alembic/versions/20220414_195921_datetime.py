@@ -5,11 +5,13 @@ Revises: d0cab9037616
 Create Date: 2022-04-14 19:59:21.276815+00:00
 
 """
+# pylint: disable=no-member
+
 from datetime import datetime, timezone
 from typing import Any
 
 import sqlalchemy as sa
-from sqlalchemy import orm, select
+from sqlalchemy import orm
 from sqlalchemy.ext.declarative import declarative_base
 
 from alembic import op
@@ -46,7 +48,7 @@ def upgrade() -> None:
     op.add_column("loot", sa.Column("valid_to_tmp", sa.DateTime(), nullable=True))
 
     with orm.Session(bind=bind) as session:
-        for loot in session.scalars(select(OldLoot)).all():
+        for loot in session.scalars(sa.select(OldLoot)).all():
             if loot.seen_first:
                 loot.seen_first_tmp = datetime.fromisoformat(loot.seen_first).replace(
                     tzinfo=timezone.utc
@@ -102,7 +104,7 @@ def downgrade() -> None:
     op.add_column("loot", sa.Column("valid_to_tmp", sa.String(), nullable=True))
 
     with orm.Session(bind=bind) as session:
-        for loot in session.scalars(select(NewLoot)).all():
+        for loot in session.scalars(sa.select(NewLoot)).all():
             if loot.seen_first:
                 loot.seen_first_tmp = loot.seen_first.replace(
                     tzinfo=timezone.utc

@@ -5,6 +5,8 @@ Revises: c5a42a07d104
 Create Date: 2022-04-19 12:47:03.252360+00:00
 
 """
+# pylint: disable=no-member
+
 from typing import Any
 
 import sqlalchemy as sa
@@ -19,6 +21,7 @@ revision = "038c26b62555"
 down_revision = "c5a42a07d104"
 branch_labels = None
 depends_on = None
+
 
 Base = declarative_base()  # type: Any
 

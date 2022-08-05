@@ -12,9 +12,9 @@ from typing import Any, Type
 from urllib.error import HTTPError
 
 import humanize
+import sqlalchemy as sa
 import telegram
-from sqlalchemy import func, or_, select
-from sqlalchemy.orm import Session
+from sqlalchemy import orm
 from telegram import (
     InlineKeyboardButton,
     InlineKeyboardMarkup,
@@ -46,7 +46,7 @@ from app.common import (
 )
 from app.configparser import Config, ParsedConfig, TelegramLogLevel
 from app.scraper.loot.scraperhelper import get_all_scrapers
-from app.sqlalchemy import Announcement, Game, Offer, TelegramSubscription, User, and_
+from app.sqlalchemy import Announcement, Game, Offer, TelegramSubscription, User
 
 BUTTON_SHOW_DETAILS = "Details"
 BUTTON_HIDE_DETAILS = "Summary"
@@ -89,7 +89,7 @@ logger = logging.getLogger(__name__)
 
 
 class TelegramBot:
-    def __init__(self, config: ParsedConfig, session: Session):
+    def __init__(self, config: ParsedConfig, session: orm.Session):
         self.config = config
         self.Session = session
         self.updater: Updater[
@@ -392,7 +392,7 @@ class TelegramBot:
             return
 
         # Delete user from database (if registered)
-        session: Session = self.Session()
+        session: orm.Session = self.Session()
         try:
             session.delete(db_user)
             session.commit()
@@ -501,10 +501,10 @@ class TelegramBot:
             return
 
         # Register user if not registered yet
-        session: Session = self.Session()
+        session: orm.Session = self.Session()
         try:
             latest_announcement = session.execute(
-                select(func.max(Announcement.id))
+                sa.select(sa.func.max(Announcement.id))
             ).scalar()
 
             new_user = User(
@@ -633,8 +633,10 @@ class TelegramBot:
 
         offer_id = int(query.data.split(" ")[2])
         try:
-            session: Session = self.Session()
-            offer = session.execute(select(Offer).where(Offer.id == offer_id)).scalar()
+            session: orm.Session = self.Session()
+            offer = session.execute(
+                sa.select(Offer).where(Offer.id == offer_id)
+            ).scalar()
             if query.data.startswith("details show"):
                 query.answer()
                 query.edit_message_text(
@@ -752,28 +754,28 @@ class TelegramBot:
 
         offers_sent = 0
         subscription: TelegramSubscription
-        session: Session = self.Session()
+        session: orm.Session = self.Session()
         try:
             for subscription in subscriptions:
                 offers: list[Offer] = (
                     session.execute(
-                        select(Offer).where(
-                            and_(
+                        sa.select(Offer).where(
+                            sa.and_(
                                 Offer.type == subscription.type,
                                 Offer.source == subscription.source,
                                 Offer.duration == subscription.duration,
                                 Offer.id > subscription.last_offer_id,
                                 # Only send offers that are already active
-                                or_(
+                                sa.or_(
                                     Offer.valid_from <= datetime.now().replace(tzinfo=None),  # type: ignore
                                     Offer.valid_from == None,  # noqa: E711
                                 ),
                                 # Only send offers that are either:
                                 # - valid at this point of time
                                 # - have no start and end date and have been first seen in the last 7 days
-                                or_(
+                                sa.or_(
                                     Offer.valid_to >= datetime.now().replace(tzinfo=None),  # type: ignore
-                                    and_(
+                                    sa.and_(
                                         Offer.valid_from == None,  # noqa: E711
                                         Offer.valid_to == None,  # noqa: E711
                                         Offer.seen_first
@@ -808,13 +810,13 @@ class TelegramBot:
         return bool(offers_sent)
 
     def send_new_announcements(self, user: User) -> None:
-        session: Session = self.Session()
+        session: orm.Session = self.Session()
         try:
             announcements: list[Announcement] = (
                 session.execute(
-                    select(Announcement).where(
-                        and_(
-                            or_(
+                    sa.select(Announcement).where(
+                        sa.and_(
+                            sa.or_(
                                 Announcement.channel == Channel.ALL,
                                 Announcement.channel == Channel.TELEGRAM,
                             ),
@@ -840,10 +842,10 @@ class TelegramBot:
             raise
 
     def get_user_by_telegram_id(self, telegram_id: int) -> User | None:
-        session: Session = self.Session()
+        session: orm.Session = self.Session()
         try:
             db_user = (
-                session.execute(select(User).where(User.telegram_id == telegram_id))
+                session.execute(sa.select(User).where(User.telegram_id == telegram_id))
                 .scalars()
                 .one_or_none()
             )
@@ -855,9 +857,9 @@ class TelegramBot:
 
     def get_user_by_chat_id(self, chat_id: int) -> User | None:
         try:
-            session: Session = self.Session()
+            session: orm.Session = self.Session()
             db_user = (
-                session.execute(select(User).where(User.telegram_chat_id == chat_id))
+                session.execute(sa.select(User).where(User.telegram_chat_id == chat_id))
                 .scalars()
                 .one_or_none()
             )
@@ -870,12 +872,12 @@ class TelegramBot:
     def is_subscribed(
         self, user: User, type_: OfferType, source: Source, duration: OfferDuration
     ) -> bool:
-        session: Session = self.Session()
+        session: orm.Session = self.Session()
         subscription = None
         try:
             subscription = session.execute(
-                select(TelegramSubscription).where(
-                    and_(
+                sa.select(TelegramSubscription).where(
+                    sa.and_(
                         TelegramSubscription.user_id == user.id,
                         TelegramSubscription.type == type_,
                         TelegramSubscription.source == source,
@@ -892,7 +894,7 @@ class TelegramBot:
     def subscribe(
         self, user: User, type_: OfferType, source: Source, duration: OfferDuration
     ) -> None:
-        session: Session = self.Session()
+        session: orm.Session = self.Session()
         try:
             session.add(
                 TelegramSubscription(
@@ -907,10 +909,10 @@ class TelegramBot:
     def unsubscribe(
         self, user: User, type_: OfferType, source: Source, duration: OfferDuration
     ) -> None:
-        session: Session = self.Session()
+        session: orm.Session = self.Session()
         try:
             session.query(TelegramSubscription).filter(
-                and_(
+                sa.and_(
                     TelegramSubscription.user_id == user.id,
                     TelegramSubscription.type == type_,
                     TelegramSubscription.source == source,
@@ -1193,7 +1195,7 @@ class TelegramBot:
         # User is registered, remove him from the database.
         logger.debug(f"Removing user {db_user.telegram_id} from database.")
 
-        session: Session = self.Session()
+        session: orm.Session = self.Session()
         try:
             session.delete(db_user)
             session.commit()
@@ -1243,7 +1245,7 @@ class TelegramBot:
             text_markdown=announcement_full,
         )
 
-        session: Session = self.Session()
+        session: orm.Session = self.Session()
         try:
             session.add(announcement)
             session.commit()

@@ -5,11 +5,13 @@ Revises: 8b0536741936
 Create Date: 2022-04-18 16:05:58.909502+00:00
 
 """
+# pylint: disable=no-member
+
 import re
 from typing import Any
 
 import sqlalchemy as sa
-from sqlalchemy import orm, select
+from sqlalchemy import orm
 from sqlalchemy.ext.declarative import declarative_base
 
 from alembic import op
@@ -20,6 +22,7 @@ revision = "c5a42a07d104"
 down_revision = "8b0536741936"
 branch_labels = None
 depends_on = None
+
 
 Base = declarative_base()  # type: Any
 
@@ -76,7 +79,7 @@ def upgrade() -> None:
     bind = op.get_bind()
     with orm.Session(bind=bind) as session:
         offer: Offer
-        for offer in session.scalars(select(Offer)).all():
+        for offer in session.scalars(sa.select(Offer)).all():
             probable_game_name: str | None = None
             if offer.type == OfferType.LOOT and offer.source == Source.AMAZON:
                 title_parts: list[str] = offer.title.split(": ")
