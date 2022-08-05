@@ -40,9 +40,18 @@ disable = [
     "import-error",
     "unused-import",
     "invalid-name",
+    "too-few-public-methods",
+    "too-many-lines",
+    "too-many-public-methods",
+    "too-many-branches",
+    "too-many-statements",
+    "too-many-instance-attributes",
+    "too-many-nested-blocks",
+    "singleton-comparison",
+    "logging-fstring-interpolation",
 ]
 
 [tool.pylint.logging]
 
 # Allow fstrings in logging. Might be changed later to better support log aggregators like Sentry
-logging-format-style = "fstr"
+logging-format-style = "new"

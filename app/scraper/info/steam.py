@@ -126,12 +126,12 @@ def skip_age_verification(driver: WebDriver, steam_app_id: int) -> None:
 
 
 def get_steam_details(
-    driver: WebDriver, id: int | None = None, title: str | None = None
+    driver: WebDriver, id_: int | None = None, title: str | None = None
 ) -> SteamInfo | None:
     steam_app_id: int | None = None
 
-    if id:
-        steam_app_id = id
+    if id_:
+        steam_app_id = id_
 
     if not steam_app_id and title:
         steam_app_id = get_steam_id(title, driver)
@@ -244,7 +244,6 @@ def get_steam_details(
         logger.error(
             f"Steam store page for {steam_app_id} didn't load after waiting for {MAX_WAIT_SECONDS}s"
         )
-        pass
 
     skip_age_verification(driver, steam_app_id)
 

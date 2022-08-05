@@ -74,13 +74,11 @@ class EpicGamesScraper(Scraper):
             elements.extend(self.driver.find_elements(By.XPATH, XPATH_CURRENT))
         except WebDriverException:
             logger.warning("No current offer found.")
-            pass
 
         # try:
         #     elements.extend(self.driver.find_elements(By.XPATH, XPATH_COMING_SOON))
         # except WebDriverException:
         #     logger.warning("No coming offer found.")
-        #     pass
 
         raw_offers: list[EpicRawOffer] = []
         for element in elements:

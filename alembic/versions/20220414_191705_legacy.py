@@ -5,8 +5,10 @@ Revises:
 Create Date: 2022-04-14 19:17:05.517698+00:00
 
 """
+# pylint: disable=no-member
+
 import sqlalchemy as sa
-from sqlalchemy.exc import OperationalError
+from sqlalchemy import exc as sa_exc
 
 from alembic import op
 
@@ -37,7 +39,7 @@ def upgrade() -> None:
             sa.Column("gameinfo", sa.TEXT(), nullable=True),
             sa.PrimaryKeyConstraint("id"),
         )
-    except OperationalError as e:
+    except sa_exc.OperationalError as e:
         if e.orig.args[0] == "table loot already exists":
             # Table already exists, we probably have a legacy database.
             # Apply the relevant fixes only to get up to speed.

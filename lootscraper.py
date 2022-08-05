@@ -1,8 +1,11 @@
+__version__ = "0.4.5"
+__author__ = "Eiko Wagenknecht"
+
 import hashlib
 import logging
 import shutil
 import sys
-from contextlib import nullcontext
+from contextlib import ExitStack
 from datetime import datetime, timedelta
 from pathlib import Path
 from threading import Event
@@ -24,10 +27,16 @@ from app.sqlalchemy import Game, IgdbInfo, LootDatabase, Offer, SteamInfo, User
 from app.telegram import TelegramBot
 from app.upload import upload_to_server
 
-exit = Event()
+try:
+    from xvfbwrapper import Xvfb
+
+    use_virtual_display = True
+except ImportError:
+    use_virtual_display = False
+
+exit_ = Event()
 
 
-CURRENT_VERSION = "0.4.5"
 EXAMPLE_CONFIG_FILE = "config.default.ini"
 
 
@@ -36,9 +45,9 @@ def main() -> None:
     check_config_file()
     setup_logging()
 
-    logging.info(f"Starting LootScraper v{CURRENT_VERSION}")
+    logging.info(f"Starting LootScraper v{__version__}")
     run_main_loop()
-    logging.info(f"Exiting LootScraper v{CURRENT_VERSION}")
+    logging.info(f"Exiting LootScraper v{__version__}")
 
 
 def initialize_config_file() -> None:
@@ -89,19 +98,16 @@ def run_main_loop() -> None:
     not exact because it does not account for the execution time, but that
     doesn't matter in our context.
     """
-    if Config.get().virtual_linux_display:
-        from xvfbwrapper import Xvfb
-
-    with (
-        LootDatabase(echo=Config.get().db_echo) as db,
-        TelegramBot(Config.get(), db.Session) as bot,
-        Xvfb() if Config.get().virtual_linux_display else nullcontext(),
-    ):
+    with ExitStack() as stack:
+        db = stack.enter_context(LootDatabase(echo=Config.get().db_echo))
+        bot = stack.enter_context(TelegramBot(Config.get(), db.Session))
+        if use_virtual_display:
+            Xvfb()
 
         run = 1
         time_between_runs = int(Config.get().wait_between_runs)
 
-        while not exit.is_set():
+        while not exit_.is_set():
             logging.info(f"Starting Run # {run}")
 
             try:
@@ -109,11 +115,11 @@ def run_main_loop() -> None:
                 if Config.get().telegram_bot:
                     telegram_job(db, bot)
             except OperationalError as oe:
-                logging.error(f"Database error: {oe}")
-                logging.error("Database error, exiting applications")
+                logging.error(f"Database error, exiting application: {oe}")
                 sys.exit()
-            except Exception as e:
-                # Something unexpected occurred, log it and continue with the next run as usual
+            except Exception as e:  # pylint: disable=broad-except
+                # This is our catch-all. Something really unexpected occurred.
+                # Log it and continue with the next run as if nothing happened.
                 logging.exception(e)
 
             if time_between_runs == 0:
@@ -126,7 +132,7 @@ def run_main_loop() -> None:
             )
 
             run += 1
-            exit.wait(time_between_runs)
+            exit_.wait(time_between_runs)
 
         logging.info(f"Finished {run} runs")
 
@@ -309,7 +315,7 @@ def action_generate_feed(loot_offers_in_db: list[Offer]) -> None:
             feed_url_alternate=cfg.feed_url_alternate,
             feed_id_prefix=cfg.feed_id_prefix,
             source=source,
-            type=type_,
+            type_=type_,
             duration=duration,
         )
         new_hash = hash_file(feed_file)
@@ -412,9 +418,9 @@ def add_game_info(offer: Offer, session: Session, webdriver: WebDriver) -> None:
     # We have some new match. Create a new game and attach it to the offer
     offer.game = Game()
     if igdb_id:
-        offer.game.igdb_info = get_igdb_details(id=igdb_id)
+        offer.game.igdb_info = get_igdb_details(id_=igdb_id)
     if steam_id:
-        offer.game.steam_info = get_steam_details(id=steam_id, driver=webdriver)
+        offer.game.steam_info = get_steam_details(id_=steam_id, driver=webdriver)
 
 
 def log_new_offer(offer: Offer) -> None:
@@ -429,27 +435,27 @@ def hash_file(file: Path) -> str:
     if not file.exists():
         return ""
 
-    hash = hashlib.sha256()
+    hash_ = hashlib.sha256()
 
     with open(file, "rb") as f:
         while True:
             data = f.read(65536)
             if not data:
                 break
-            hash.update(data)
+            hash_.update(data)
 
-    return hash.hexdigest()
+    return hash_.hexdigest()
 
 
-def quit(signo: int, _frame: FrameType | None) -> None:
+def quit_(signo: int, _frame: FrameType | None) -> None:
     print(f"Interrupted by signal {signo}, shutting down")
-    exit.set()
+    exit_.set()
 
 
 if __name__ == "__main__":
     import signal
 
-    signal.signal(signal.SIGTERM, quit)
-    signal.signal(signal.SIGINT, quit)
+    signal.signal(signal.SIGTERM, quit_)
+    signal.signal(signal.SIGINT, quit_)
 
     main()

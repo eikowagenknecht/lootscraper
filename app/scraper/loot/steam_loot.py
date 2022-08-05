@@ -67,7 +67,6 @@ class SteamLootScraper(Scraper):
             elements.extend(self.driver.find_elements(By.XPATH, STEAM_SEARCH_RESULTS))
         except WebDriverException:
             logger.info("No current offer found.")
-            pass
 
         raw_offers: list[SteamRawOffer] = []
         for element in elements:

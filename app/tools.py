@@ -16,7 +16,7 @@ def refresh_all_steam_info(session: Session, webdriver: WebDriver) -> None:
     logger.info("Refreshing Steam information")
     steam_info: SteamInfo
     for steam_info in session.query(SteamInfo):
-        new_steam_info = get_steam_details(id=steam_info.id, driver=webdriver)
+        new_steam_info = get_steam_details(id_=steam_info.id, driver=webdriver)
         if new_steam_info is None:
             return
         steam_info.name = new_steam_info.name

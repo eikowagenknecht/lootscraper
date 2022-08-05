@@ -5,6 +5,8 @@ Revises: 8267b60db582
 Create Date: 2022-04-15 20:03:32.928325+00:00
 
 """
+# pylint: disable=no-member
+
 from __future__ import annotations
 
 import json
@@ -12,9 +14,8 @@ import logging
 from typing import Any
 
 import sqlalchemy as sa
-from sqlalchemy import ForeignKey, orm, select
+from sqlalchemy import orm
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import relationship
 
 from alembic import op
 from app.migration.gameinfo import Gameinfo
@@ -79,7 +80,7 @@ class Game(Base):
     release_date = sa.Column(sa.DateTime)
     image_url = sa.Column(sa.String)  # Currently Steam only
 
-    offers = relationship("Offer", back_populates="game")
+    offers = orm.relationship("Offer", back_populates="game")
 
 
 class Offer(Base):
@@ -99,8 +100,8 @@ class Offer(Base):
     url = sa.Column(sa.String)
     img_url = sa.Column(sa.String)
 
-    game_id = sa.Column(sa.Integer, ForeignKey("games.id"))
-    game = relationship("Game", back_populates="offers")
+    game_id = sa.Column(sa.Integer, sa.ForeignKey("games.id"))
+    game = orm.relationship("Game", back_populates="offers")
 
 
 def upgrade() -> None:
@@ -113,7 +114,7 @@ def upgrade() -> None:
     # Migrate the old data (and fix missing rawtext in the process)
     with orm.Session(bind=bind) as session:
         loot: OldLoot
-        for loot in session.scalars(select(OldLoot)).all():
+        for loot in session.scalars(sa.select(OldLoot)).all():
             if loot.source == "Amazon Prime":
                 source = "AMAZON"
                 if loot.rawtext:
@@ -152,9 +153,9 @@ def upgrade() -> None:
                     rawtext = f"<title>{loot.title}</title>"
 
             if loot.type == "Loot":
-                type = "LOOT"
+                type_ = "LOOT"
             elif loot.type == "Game":
-                type = "GAME"
+                type_ = "GAME"
 
             title = loot.title
             if loot.subtitle:
@@ -163,7 +164,7 @@ def upgrade() -> None:
             new_offer = Offer(
                 id=loot.id,
                 source=source,
-                type=type,
+                type=type_,
                 title=title,
                 seen_first=loot.seen_first,
                 seen_last=loot.seen_last,
@@ -181,7 +182,7 @@ def upgrade() -> None:
                 if gameinfo.steam_id:
                     existing_game = (
                         session.execute(
-                            select(Game).where(Game.steam_id == gameinfo.steam_id)
+                            sa.select(Game).where(Game.steam_id == gameinfo.steam_id)
                         )
                         .scalars()
                         .first()
@@ -189,7 +190,7 @@ def upgrade() -> None:
                 if existing_game is None and gameinfo.idgb_id:
                     existing_game = (
                         session.execute(
-                            select(Game).where(Game.igdb_id == gameinfo.idgb_id)
+                            sa.select(Game).where(Game.igdb_id == gameinfo.idgb_id)
                         )
                         .scalars()
                         .first()
@@ -244,7 +245,7 @@ def downgrade() -> None:
     # Loop over all Offer objects and create OldLoot objects
     with orm.Session(bind=bind) as session:
         offer: Offer
-        for offer in session.scalars(select(Offer)).all():
+        for offer in session.scalars(sa.select(Offer)).all():
 
             if offer.source == "AMAZON":
                 source = "Amazon Prime"
@@ -256,9 +257,9 @@ def downgrade() -> None:
                 source = "GOG"
 
             if offer.type == "LOOT":
-                type = "Loot"
+                type_ = "Loot"
             elif offer.type == "GAME":
-                type = "Game"
+                type_ = "Game"
 
             if offer.source == "AMAZON":
                 parsed_heads = offer.title.split(": ", 1)
@@ -301,7 +302,7 @@ def downgrade() -> None:
             new_loot = OldLoot(
                 id=offer.id,
                 source=source,
-                type=type,
+                type=type_,
                 title=title,
                 subtitle=subtitle,
                 publisher=publisher,

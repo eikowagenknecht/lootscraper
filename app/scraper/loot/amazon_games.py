@@ -202,7 +202,6 @@ class AmazonGamesScraper(Scraper):
                     ).replace(tzinfo=timezone.utc)
                 except (ValueError, IndexError):
                     logger.warning(f"Date parsing failed for {raw_offer.title}")
-                    pass
 
             nearest_url = raw_offer.url if raw_offer.url else ROOT_URL
             offer = Offer(

@@ -45,9 +45,9 @@ def chunkstring(string: str, length: int) -> list[str]:
     return list(chunk_iterator)
 
 
-def markdown_escape(input: str) -> str:
+def markdown_escape(input_: str) -> str:
     return (
-        input.replace("\\", "\\\\")
+        input_.replace("\\", "\\\\")
         .replace("_", "\\_")
         .replace("*", "\\*")
         .replace("[", "\\[")
@@ -69,9 +69,9 @@ def markdown_escape(input: str) -> str:
     )
 
 
-def markdown_unescape(input: str) -> str:
+def markdown_unescape(input_: str) -> str:
     return (
-        input.replace("\\_", "_")
+        input_.replace("\\_", "_")
         .replace("\\*", "*")
         .replace("\\[", "[")
         .replace("\\]", "]")
