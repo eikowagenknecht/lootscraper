@@ -24,7 +24,7 @@ from app.sqlalchemy import Game, IgdbInfo, LootDatabase, Offer, SteamInfo, User
 from app.telegram import TelegramBot
 from app.upload import upload_to_server
 
-exit = Event()
+exit_ = Event()
 
 
 CURRENT_VERSION = "0.4.5"
@@ -101,7 +101,7 @@ def run_main_loop() -> None:
         run = 1
         time_between_runs = int(Config.get().wait_between_runs)
 
-        while not exit.is_set():
+        while not exit_.is_set():
             logging.info(f"Starting Run # {run}")
 
             try:
@@ -126,7 +126,7 @@ def run_main_loop() -> None:
             )
 
             run += 1
-            exit.wait(time_between_runs)
+            exit_.wait(time_between_runs)
 
         logging.info(f"Finished {run} runs")
 
@@ -309,7 +309,7 @@ def action_generate_feed(loot_offers_in_db: list[Offer]) -> None:
             feed_url_alternate=cfg.feed_url_alternate,
             feed_id_prefix=cfg.feed_id_prefix,
             source=source,
-            type=type_,
+            type_=type_,
             duration=duration,
         )
         new_hash = hash_file(feed_file)
@@ -412,9 +412,9 @@ def add_game_info(offer: Offer, session: Session, webdriver: WebDriver) -> None:
     # We have some new match. Create a new game and attach it to the offer
     offer.game = Game()
     if igdb_id:
-        offer.game.igdb_info = get_igdb_details(id=igdb_id)
+        offer.game.igdb_info = get_igdb_details(id_=igdb_id)
     if steam_id:
-        offer.game.steam_info = get_steam_details(id=steam_id, driver=webdriver)
+        offer.game.steam_info = get_steam_details(id_=steam_id, driver=webdriver)
 
 
 def log_new_offer(offer: Offer) -> None:
@@ -429,27 +429,27 @@ def hash_file(file: Path) -> str:
     if not file.exists():
         return ""
 
-    hash = hashlib.sha256()
+    hash_ = hashlib.sha256()
 
     with open(file, "rb") as f:
         while True:
             data = f.read(65536)
             if not data:
                 break
-            hash.update(data)
+            hash_.update(data)
 
-    return hash.hexdigest()
+    return hash_.hexdigest()
 
 
-def quit(signo: int, _frame: FrameType | None) -> None:
+def quit_(signo: int, _frame: FrameType | None) -> None:
     print(f"Interrupted by signal {signo}, shutting down")
-    exit.set()
+    exit_.set()
 
 
 if __name__ == "__main__":
     import signal
 
-    signal.signal(signal.SIGTERM, quit)
-    signal.signal(signal.SIGINT, quit)
+    signal.signal(signal.SIGTERM, quit_)
+    signal.signal(signal.SIGINT, quit_)
 
     main()

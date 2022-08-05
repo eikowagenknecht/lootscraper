@@ -273,7 +273,6 @@ class LootDatabase:
         else:
             session.commit()
         session.close()
-        pass
 
     def initialize_or_update(self) -> None:
         logger.info("Running database migrations")
@@ -300,23 +299,23 @@ class LootDatabase:
         offer: Offer
         for offer in result:
             source: str = Source(offer.source).name
-            type: str = OfferType(offer.type).name
+            type_: str = OfferType(offer.type).name
             duration: str = OfferDuration(offer.duration).name
             if source not in offers:
                 offers[source] = {}
-            if type not in offers[source]:
-                offers[source][type] = {}
-            if duration not in offers[source][type]:
-                offers[source][type][duration] = []
+            if type_ not in offers[source]:
+                offers[source][type_] = {}
+            if duration not in offers[source][type_]:
+                offers[source][type_][duration] = []
 
-            offers[source][type][duration].append(offer)
+            offers[source][type_][duration].append(offer)
 
         return offers
 
     def find_offer(
         self,
         source: Source,
-        type: OfferType,
+        type_: OfferType,
         title: str,
         valid_to: datetime | None,
     ) -> Offer | None:
@@ -326,7 +325,7 @@ class LootDatabase:
         statement = (
             select(Offer)
             .where(Offer.source == source)
-            .where(Offer.type == type)
+            .where(Offer.type == type_)
             .where(Offer.title == title)
         )
 
@@ -357,8 +356,8 @@ class LootDatabase:
 
         return result[0]
 
-    def find_offer_by_id(self, id: int) -> Offer:
-        statement = select(Offer).where(Offer.id == id)
+    def find_offer_by_id(self, id_: int) -> Offer:
+        statement = select(Offer).where(Offer.id == id_)
         session: Session = self.Session()
         try:
             result = session.execute(statement).scalars().one_or_none()

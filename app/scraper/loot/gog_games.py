@@ -169,7 +169,7 @@ class GogGamesScraper(Scraper):
                 element.find_element(By.XPATH, SUBPATH_IMAGE).get_attribute("srcset")
             )
             img_url_str = "https:" + (
-                img_url_str.split(",")[0]
+                img_url_str.split(",", maxsplit=1)[0]
                 .strip()
                 .removesuffix(" 2x")
                 .removesuffix(" 1x")
@@ -212,7 +212,7 @@ class GogGamesScraper(Scraper):
                 )  # type: ignore
             )
             img_url_str = (
-                img_url_str.split(",")[0]
+                img_url_str.split(",", maxsplit=1)[0]
                 .strip()
                 .removesuffix(" 2x")
                 .removesuffix(" 1x")

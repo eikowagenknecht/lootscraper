@@ -102,7 +102,7 @@ class TelegramBot:
         self,
         exc_type: Type[BaseException] | None,
         exc_value: BaseException | None,
-        traceback: TracebackType | None,
+        traceback_: TracebackType | None,
     ) -> None:
         if self.updater is not None:
             self.stop()
@@ -690,16 +690,16 @@ class TelegramBot:
 
         data = query.data.lower().removeprefix("toggle").strip().upper().split(" ")
         source = Source[data[0]]
-        type = OfferType[data[1]]
+        type_ = OfferType[data[1]]
         duration = OfferDuration[data[2]]
 
         answer_text = None
 
-        if not self.is_subscribed(db_user, type, source, duration):
-            self.subscribe(db_user, type, source, duration)
+        if not self.is_subscribed(db_user, type_, source, duration):
+            self.subscribe(db_user, type_, source, duration)
             answer_text = POPUP_SUBSCRIBED
         else:
-            self.unsubscribe(db_user, type, source, duration)
+            self.unsubscribe(db_user, type_, source, duration)
             answer_text = POPUP_UNSUBSCRIBED
 
         query.answer(text=answer_text)
@@ -834,7 +834,7 @@ class TelegramBot:
         return db_user
 
     def is_subscribed(
-        self, user: User, type: OfferType, source: Source, duration: OfferDuration
+        self, user: User, type_: OfferType, source: Source, duration: OfferDuration
     ) -> bool:
         session: Session = self.Session()
         subscription = None
@@ -843,7 +843,7 @@ class TelegramBot:
                 select(TelegramSubscription).where(
                     and_(
                         TelegramSubscription.user_id == user.id,
-                        TelegramSubscription.type == type,
+                        TelegramSubscription.type == type_,
                         TelegramSubscription.source == source,
                         TelegramSubscription.duration == duration,
                     )
@@ -856,13 +856,13 @@ class TelegramBot:
         return subscription is not None
 
     def subscribe(
-        self, user: User, type: OfferType, source: Source, duration: OfferDuration
+        self, user: User, type_: OfferType, source: Source, duration: OfferDuration
     ) -> None:
         session: Session = self.Session()
         try:
             session.add(
                 TelegramSubscription(
-                    user=user, source=source, type=type, duration=duration
+                    user=user, source=source, type=type_, duration=duration
                 )
             )
             session.commit()
@@ -871,14 +871,14 @@ class TelegramBot:
             raise
 
     def unsubscribe(
-        self, user: User, type: OfferType, source: Source, duration: OfferDuration
+        self, user: User, type_: OfferType, source: Source, duration: OfferDuration
     ) -> None:
         session: Session = self.Session()
         try:
             session.query(TelegramSubscription).filter(
                 and_(
                     TelegramSubscription.user_id == user.id,
-                    TelegramSubscription.type == type,
+                    TelegramSubscription.type == type_,
                     TelegramSubscription.source == source,
                     TelegramSubscription.duration == duration,
                 )
@@ -1162,9 +1162,9 @@ class TelegramBot:
     def log_call(self, update: Update) -> None:
         if Config.get().telegram_log_level.value >= TelegramLogLevel.DEBUG.value:
             if update.callback_query:
-                type = "Callback query"
+                type_ = "Callback query"
             else:
-                type = "Message"
+                type_ = "Message"
 
             if update.effective_user:
                 user = f"from {update.effective_user.mention_markdown_v2()}"
@@ -1178,7 +1178,7 @@ class TelegramBot:
             else:
                 content = "without content"
 
-            message = f"{type} {user} {content}"
+            message = f"{type_} {user} {content}"
             logger.debug(message)
             self.send_message(
                 chat_id=Config.get().telegram_developer_chat_id,
@@ -1210,8 +1210,8 @@ class TelegramBot:
             raise
 
 
-def markdown_json_formatted(input: str) -> str:
-    return f"```json\n{input}\n```"
+def markdown_json_formatted(input_: str) -> str:
+    return f"```json\n{input_}\n```"
 
 
 def subscription_button(

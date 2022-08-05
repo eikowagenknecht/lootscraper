@@ -227,7 +227,7 @@ class VariousTests(unittest.TestCase):
 
     def test_steam_json_multiple_genres(self) -> None:
         with get_pagedriver() as driver:
-            steam_info = get_steam_details(driver, id=1424910)
+            steam_info = get_steam_details(driver, id_=1424910)
             self.assertIsNotNone(steam_info)
             self.assertEquals(steam_info.genres, "Action, Indie, Racing, Early Access")
 

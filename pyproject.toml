@@ -40,6 +40,8 @@ disable = [
     "import-error",
     "unused-import",
     "invalid-name",
+    "too-many-lines",
+    "singleton-comparison",
 ]
 
 [tool.pylint.logging]
