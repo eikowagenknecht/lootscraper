@@ -8,7 +8,7 @@ import traceback
 from datetime import datetime, timedelta, timezone
 from http.client import RemoteDisconnected
 from types import TracebackType
-from typing import Type
+from typing import Any, Type
 from urllib.error import HTTPError
 
 import humanize
@@ -92,6 +92,12 @@ class TelegramBot:
     def __init__(self, config: ParsedConfig, session: Session):
         self.config = config
         self.Session = session
+        self.updater: Updater[
+            CallbackContext[Any, Any, Any],
+            dict[Any, Any],
+            dict[Any, Any],
+            dict[Any, Any],
+        ] | None = None
 
     def __enter__(self) -> TelegramBot:
         if self.config.telegram_bot:
@@ -157,7 +163,8 @@ class TelegramBot:
     def stop(self) -> None:
         """Stop the bot."""
         logger.info("Telegram Bot: Stopping polling")
-        self.updater.stop()
+        if self.updater is not None:
+            self.updater.stop()
 
     def error_handler(self, update: Update, context: CallbackContext) -> None:  # type: ignore
         """Log the error and send a telegram message to notify the developer chat."""
@@ -278,6 +285,8 @@ class TelegramBot:
     def announce_command(self, update: Update, context: CallbackContext) -> None:  # type: ignore
         """Handle the /announce command: Add an announcement (admin only)."""
 
+        del context  # Unused
+
         self.log_call(update)
 
         if (
@@ -319,6 +328,8 @@ class TelegramBot:
     def debug_command(self, update: Update, context: CallbackContext) -> None:  # type: ignore
         """Handle the /debug command: Show some debug information."""
 
+        del context  # Unused
+
         self.log_call(update)
 
         if update.message is None:
@@ -341,12 +352,16 @@ class TelegramBot:
     def error_command(self, update: Update, context: CallbackContext) -> None:  # type: ignore
         """Handle the /error command: Trigger an error to send to the dev chat."""
 
+        del context  # Unused
+
         self.log_call(update)
 
         raise Exception("This is a test error triggered by the /error command.")
 
     def help_command(self, update: Update, context: CallbackContext) -> None:  # type: ignore
         """Handle the /help command: Display all available commands to the user."""
+
+        del context  # Unused
 
         self.log_call(update)
 
@@ -357,6 +372,8 @@ class TelegramBot:
 
     def leave_command(self, update: Update, context: CallbackContext) -> None:  # type: ignore
         """Handle the /leave command: Unregister the user."""
+
+        del context  # Unused
 
         self.log_call(update)
 
@@ -394,6 +411,8 @@ class TelegramBot:
     def manage_command(self, update: Update, context: CallbackContext) -> None:  # type: ignore
         """Handle the /manage command: Manage subscriptions."""
 
+        del context  # Unused
+
         self.log_call(update)
 
         if update.message is None or update.effective_user is None:
@@ -411,6 +430,8 @@ class TelegramBot:
 
     def offers_command(self, update: Update, context: CallbackContext) -> None:  # type: ignore
         """Handle the /offers command: Send all subscriptions once."""
+
+        del context  # Unused
 
         self.log_call(update)
 
@@ -434,6 +455,8 @@ class TelegramBot:
 
     def start_command(self, update: Update, context: CallbackContext) -> None:  # type: ignore
         """Handle the /start command: Register the user and display guide."""
+
+        del context  # Unused
 
         self.log_call(update)
 
@@ -522,6 +545,8 @@ class TelegramBot:
     def status_command(self, update: Update, context: CallbackContext) -> None:  # type: ignore
         """Handle the /status command: Display some statistics about the user."""
 
+        del context  # Unused
+
         self.log_call(update)
 
         if not update.effective_chat or not update.effective_user or not update.message:
@@ -576,6 +601,10 @@ class TelegramBot:
         update.message.reply_markdown_v2(message)
 
     def unknown_command(self, update: Update, context: CallbackContext) -> None:  # type: ignore
+        """Handle unknown commands."""
+
+        del context  # Unused
+
         self.log_call(update)
 
         if not update.effective_chat:
@@ -589,6 +618,8 @@ class TelegramBot:
 
     def offer_callback(self, update: Update, context: CallbackContext) -> None:  # type: ignore
         """Callback from the menu buttons "Details" and "Summary" in the offer message."""
+
+        del context  # Unused
 
         self.log_call(update)
 
@@ -633,6 +664,8 @@ class TelegramBot:
     def dismiss_callback(self, update: Update, context: CallbackContext) -> None:  # type: ignore
         """Callback from the menu button "Dismiss" in the offer message."""
 
+        del context  # Unused
+
         self.log_call(update)
 
         if update.callback_query is None:
@@ -658,6 +691,8 @@ class TelegramBot:
     def close_menu_callback(self, update: Update, context: CallbackContext) -> None:  # type: ignore
         """Callback from the menu button "Close" in the manage menu."""
 
+        del context  # Unused
+
         self.log_call(update)
 
         if update.callback_query is None or update.effective_user is None:
@@ -676,6 +711,8 @@ class TelegramBot:
 
     def toggle_subscription_callback(self, update: Update, context: CallbackContext) -> None:  # type: ignore
         """Callback from the subscription buttons in the manage menu."""
+
+        del context  # Unused
 
         self.log_call(update)
 
@@ -768,10 +805,7 @@ class TelegramBot:
             session.rollback()
             raise
 
-        if offers_sent:
-            return True
-        else:
-            return False
+        return bool(offers_sent)
 
     def send_new_announcements(self, user: User) -> None:
         session: Session = self.Session()
@@ -889,6 +923,8 @@ class TelegramBot:
             raise
 
     def manage_menu(self, update: Update, context: CallbackContext) -> None:  # type: ignore
+        del context  # Unused
+
         if update.callback_query is None or update.effective_user is None:
             return
 
@@ -1121,8 +1157,13 @@ class TelegramBot:
 
     def send_message(self, *args, **kwargs) -> Message | None:  # type: ignore
         """Wrapper around the message sending to handle exceptions."""
+        if self.updater is None:
+            logger.error("Tried to send message while the updater is not initialized.")
+            return None
+
         try:
-            return self.updater.bot.send_message(*args, **kwargs)
+            message = self.updater.bot.send_message(*args, **kwargs)
+            return message
         except telegram.error.Unauthorized:
             # The user blocked the chat. Remove the user from the database.
             if kwargs["chat_id"]:
@@ -1140,7 +1181,8 @@ class TelegramBot:
                 # self.remove_user(chat_id)
             else:
                 logger.error(e)
-            return None
+
+        return None
 
     def remove_user(self, chat_id: int) -> None:
         db_user = self.get_user_by_chat_id(chat_id)

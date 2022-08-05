@@ -1,8 +1,11 @@
+__version__ = "0.4.5"
+__author__ = "Eiko Wagenknecht"
+
 import hashlib
 import logging
 import shutil
 import sys
-from contextlib import nullcontext
+from contextlib import ExitStack
 from datetime import datetime, timedelta
 from pathlib import Path
 from threading import Event
@@ -24,10 +27,16 @@ from app.sqlalchemy import Game, IgdbInfo, LootDatabase, Offer, SteamInfo, User
 from app.telegram import TelegramBot
 from app.upload import upload_to_server
 
+try:
+    from xvfbwrapper import Xvfb
+
+    use_virtual_display = True
+except ImportError:
+    use_virtual_display = False
+
 exit_ = Event()
 
 
-CURRENT_VERSION = "0.4.5"
 EXAMPLE_CONFIG_FILE = "config.default.ini"
 
 
@@ -36,9 +45,9 @@ def main() -> None:
     check_config_file()
     setup_logging()
 
-    logging.info(f"Starting LootScraper v{CURRENT_VERSION}")
+    logging.info(f"Starting LootScraper v{__version__}")
     run_main_loop()
-    logging.info(f"Exiting LootScraper v{CURRENT_VERSION}")
+    logging.info(f"Exiting LootScraper v{__version__}")
 
 
 def initialize_config_file() -> None:
@@ -89,14 +98,11 @@ def run_main_loop() -> None:
     not exact because it does not account for the execution time, but that
     doesn't matter in our context.
     """
-    if Config.get().virtual_linux_display:
-        from xvfbwrapper import Xvfb
-
-    with (
-        LootDatabase(echo=Config.get().db_echo) as db,
-        TelegramBot(Config.get(), db.Session) as bot,
-        Xvfb() if Config.get().virtual_linux_display else nullcontext(),
-    ):
+    with ExitStack() as stack:
+        db = stack.enter_context(LootDatabase(echo=Config.get().db_echo))
+        bot = stack.enter_context(TelegramBot(Config.get(), db.Session))
+        if use_virtual_display:
+            Xvfb()
 
         run = 1
         time_between_runs = int(Config.get().wait_between_runs)
@@ -109,11 +115,11 @@ def run_main_loop() -> None:
                 if Config.get().telegram_bot:
                     telegram_job(db, bot)
             except OperationalError as oe:
-                logging.error(f"Database error: {oe}")
-                logging.error("Database error, exiting applications")
+                logging.error(f"Database error, exiting application: {oe}")
                 sys.exit()
-            except Exception as e:
-                # Something unexpected occurred, log it and continue with the next run as usual
+            except Exception as e:  # pylint: disable=broad-except
+                # This is our catch-all. Something really unexpected occurred.
+                # Log it and continue with the next run as if nothing happened.
                 logging.exception(e)
 
             if time_between_runs == 0:

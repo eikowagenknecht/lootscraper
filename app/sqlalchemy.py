@@ -9,16 +9,14 @@ from typing import Any, Type
 from sqlalchemy import (
     JSON,
     Column,
-    DateTime,
     Enum,
     Float,
     ForeignKey,
-    Integer,
-    String,
     TypeDecorator,
     and_,
     create_engine,
     select,
+    types,
 )
 from sqlalchemy.engine.interfaces import Dialect
 from sqlalchemy.orm import Session, registry, relationship, scoped_session, sessionmaker
@@ -37,7 +35,7 @@ Base = mapper_registry.generate_base()  # type: Any
 class AwareDateTime(TypeDecorator):
     """Results returned as aware datetimes, not naive ones."""
 
-    impl = DateTime
+    impl = types.DateTime
     cache_ok = True
 
     def process_result_value(
@@ -45,18 +43,25 @@ class AwareDateTime(TypeDecorator):
     ) -> datetime | None:
         if value is not None:
             return value.replace(tzinfo=timezone.utc)
-        else:
-            return None
+
+        return None
+
+    def process_bind_param(
+        self, value: datetime | None, dialect: Dialect
+    ) -> datetime | None:
+        if value is not None:
+            return value.replace(tzinfo=None)
+        return value
 
 
 class Announcement(Base):
     __tablename__ = "announcements"
 
-    id: int = Column(Integer, primary_key=True, nullable=False)
+    id: int = Column(types.Integer, primary_key=True, nullable=False)
 
     channel: Channel = Column(Enum(Channel), nullable=False)
     date: datetime = Column(AwareDateTime, nullable=False)
-    text_markdown: str = Column(String, nullable=False)
+    text_markdown: str = Column(types.String, nullable=False)
 
 
 class Game(Base):
@@ -64,10 +69,10 @@ class Game(Base):
 
     __tablename__ = "games"
 
-    id: int = Column(Integer, primary_key=True, nullable=False)
+    id: int = Column(types.Integer, primary_key=True, nullable=False)
 
-    igdb_id: int | None = Column(Integer, ForeignKey("igdb_info.id"))
-    steam_id: int | None = Column(Integer, ForeignKey("steam_info.id"))
+    igdb_id: int | None = Column(types.Integer, ForeignKey("igdb_info.id"))
+    steam_id: int | None = Column(types.Integer, ForeignKey("steam_info.id"))
 
     igdb_info: IgdbInfo | None = relationship("IgdbInfo", back_populates="game")
     steam_info: SteamInfo | None = relationship("SteamInfo", back_populates="game")
@@ -88,17 +93,17 @@ class IgdbInfo(Base):
 
     __tablename__ = "igdb_info"
 
-    id: int = Column(Integer, primary_key=True, nullable=False)
-    url: str = Column(String, nullable=False)
+    id: int = Column(types.Integer, primary_key=True, nullable=False)
+    url: str = Column(types.String, nullable=False)
 
-    name: str = Column(String, nullable=False)
-    short_description: str | None = Column(String)
+    name: str = Column(types.String, nullable=False)
+    short_description: str | None = Column(types.String)
     release_date: datetime | None = Column(AwareDateTime)
 
-    user_score: int | None = Column(Integer)
-    user_ratings: int | None = Column(Integer)
-    meta_score: int | None = Column(Integer)
-    meta_ratings: int | None = Column(Integer)
+    user_score: int | None = Column(types.Integer)
+    user_ratings: int | None = Column(types.Integer)
+    meta_score: int | None = Column(types.Integer)
+    meta_ratings: int | None = Column(types.Integer)
 
     def __repr__(self) -> str:
         return (
@@ -122,21 +127,21 @@ class SteamInfo(Base):
 
     __tablename__ = "steam_info"
 
-    id: int = Column(Integer, primary_key=True, nullable=False)
-    url: str = Column(String, nullable=False)
+    id: int = Column(types.Integer, primary_key=True, nullable=False)
+    url: str = Column(types.String, nullable=False)
 
-    name: str = Column(String, nullable=False)
-    short_description: str | None = Column(String)
+    name: str = Column(types.String, nullable=False)
+    short_description: str | None = Column(types.String)
     release_date: datetime | None = Column(AwareDateTime)
-    genres: str | None = Column(String)
-    publishers: str | None = Column(String)
-    image_url: str | None = Column(String)
+    genres: str | None = Column(types.String)
+    publishers: str | None = Column(types.String)
+    image_url: str | None = Column(types.String)
 
-    recommendations: int | None = Column(Integer)
-    percent: int | None = Column(Integer)
-    score: int | None = Column(Integer)
-    metacritic_score: int | None = Column(Integer)
-    metacritic_url: str | None = Column(String)
+    recommendations: int | None = Column(types.Integer)
+    percent: int | None = Column(types.Integer)
+    score: int | None = Column(types.Integer)
+    metacritic_score: int | None = Column(types.Integer)
+    metacritic_url: str | None = Column(types.String)
 
     recommended_price_eur: float | None = Column(Float)
 
@@ -167,25 +172,25 @@ class Offer(Base):
 
     __tablename__ = "offers"
 
-    id: int = Column(Integer, primary_key=True, nullable=False)
+    id: int = Column(types.Integer, primary_key=True, nullable=False)
     source: Source = Column(Enum(Source), nullable=False)
     type: OfferType = Column(Enum(OfferType), nullable=False)
     duration: OfferDuration = Column(Enum(OfferDuration), nullable=False)
-    title: str = Column(String, nullable=False)
-    probable_game_name: str = Column(String, nullable=False)
+    title: str = Column(types.String, nullable=False)
+    probable_game_name: str = Column(types.String, nullable=False)
 
     seen_first: datetime = Column(AwareDateTime, nullable=False)
     seen_last: datetime = Column(AwareDateTime, nullable=False)
     valid_from: datetime | None = Column(AwareDateTime)
     valid_to: datetime | None = Column(AwareDateTime)
 
-    rawtext: str | None = Column(String)
-    url: str | None = Column(String)
-    img_url: str | None = Column(String)
+    rawtext: str | None = Column(types.String)
+    url: str | None = Column(types.String)
+    img_url: str | None = Column(types.String)
 
     category: Category = Column(Enum(Category), nullable=False, default=Category.VALID)
 
-    game_id: int | None = Column(Integer, ForeignKey("games.id"))
+    game_id: int | None = Column(types.Integer, ForeignKey("games.id"))
     game: Game | None = relationship("Game", back_populates="offers")
 
     def __repr__(self) -> str:
@@ -211,20 +216,20 @@ class User(Base):
 
     __tablename__ = "users"
 
-    id: int = Column(Integer, primary_key=True, nullable=False)
+    id: int = Column(types.Integer, primary_key=True, nullable=False)
 
     registration_date: datetime = Column(AwareDateTime)
-    offers_received_count: int = Column(Integer, default=0)
+    offers_received_count: int = Column(types.Integer, default=0)
 
-    telegram_id: int | None = Column(Integer)
-    telegram_chat_id: int | None = Column(Integer)
+    telegram_id: int | None = Column(types.Integer)
+    telegram_chat_id: int | None = Column(types.Integer)
     telegram_user_details: str | None = Column(JSON)
 
     telegram_subscriptions: list[TelegramSubscription] = relationship(
         "TelegramSubscription", back_populates="user", cascade="all, delete-orphan"
     )
 
-    last_announcement_id: int = Column(Integer, nullable=False, default=0)
+    last_announcement_id: int = Column(types.Integer, nullable=False, default=0)
 
 
 class TelegramSubscription(Base):
@@ -232,16 +237,16 @@ class TelegramSubscription(Base):
 
     __tablename__ = "telegram_subscriptions"
 
-    id: int = Column(Integer, primary_key=True, nullable=False)
+    id: int = Column(types.Integer, primary_key=True, nullable=False)
 
-    user_id: int = Column(Integer, ForeignKey("users.id"), nullable=False)
+    user_id: int = Column(types.Integer, ForeignKey("users.id"), nullable=False)
     user: User = relationship("User", back_populates="telegram_subscriptions")
 
     source: Source = Column(Enum(Source), nullable=False)
     type: OfferType = Column(Enum(OfferType), nullable=False)
     duration: OfferDuration = Column(Enum(OfferDuration), nullable=False)
 
-    last_offer_id: int = Column(Integer, nullable=False, default=0)
+    last_offer_id: int = Column(types.Integer, nullable=False, default=0)
 
 
 class LootDatabase:
