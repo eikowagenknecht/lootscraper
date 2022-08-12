@@ -250,7 +250,9 @@ def get_steam_details(
     try:
         element: WebElement = driver.find_element(By.XPATH, STEAM_DETAILS_REVIEW_SCORE)
         rating_str: str = element.get_attribute("data-tooltip-html")  # type: ignore
-        steam_info.percent = int(rating_str.split("%")[0].strip())
+        # No percentage, but this reason is fine
+        if not rating_str.startswith("Need more user reviews"):
+            steam_info.percent = int(rating_str.split("%")[0].strip())
     except WebDriverException:
         logger.error(f"No Steam percentage found for {steam_app_id}!")
     except ValueError:
