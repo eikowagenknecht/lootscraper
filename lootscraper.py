@@ -104,7 +104,7 @@ def run_main_loop() -> None:
         db = stack.enter_context(LootDatabase(echo=Config.get().db_echo))
         bot = stack.enter_context(TelegramBot(Config.get(), db.Session))
         if use_virtual_display:
-            Xvfb()
+            stack.enter_context(Xvfb())
 
         run = 1
         time_between_runs = int(Config.get().wait_between_runs)
