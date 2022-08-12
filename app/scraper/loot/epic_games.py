@@ -22,9 +22,9 @@ XPATH_CURRENT = (
 )
 # XPATH_COMING_SOON = """//span[text()="Coming Soon"]//ancestor::a"""
 
-SUBPATH_TITLE = """.//span[@data-testid="offer-title-info-title"]/div"""  # /text()
-SUBPATH_TIME_FROM = """.//span[@data-testid="offer-title-info-subtitle"]//time[1]"""  # /@datetime  # format 2022-02-24T16:00:00.000Z
-SUBPATH_TIME_TO = """.//span[@data-testid="offer-title-info-subtitle"]//time[2]"""  # /@datetime  # format 2022-02-24T16:00:00.000Z
+SUBPATH_TITLE = """.//*[@data-testid="offer-title-info-title"]/div"""  # /text()
+SUBPATH_TIME_FROM = """.//*[@data-testid="offer-title-info-subtitle"]//time[1]"""  # /@datetime  # format 2022-02-24T16:00:00.000Z
+SUBPATH_TIME_TO = """.//*[@data-testid="offer-title-info-subtitle"]//time[2]"""  # /@datetime  # format 2022-02-24T16:00:00.000Z
 SUBPATH_IMG = """.//img"""
 
 
@@ -157,9 +157,11 @@ class EpicGamesScraper(Scraper):
 
         for raw_offer in raw_offers:
             # Raw text
-            rawtext = ""
-            if raw_offer.title:
-                rawtext += f"<title>{raw_offer.title}</title>"
+            if not raw_offer.title:
+                logger.error(f"Error with offer, has no title: {raw_offer}")
+                continue
+
+            rawtext = f"<title>{raw_offer.title}</title>"
 
             if raw_offer.valid_from:
                 rawtext += f"<startdate>{raw_offer.valid_from}</startdate>"
@@ -208,4 +210,5 @@ class EpicGamesScraper(Scraper):
             )
 
             normalized_offers.append(offer)
+
         return normalized_offers

@@ -101,9 +101,12 @@ class AppleGamesScraper(Scraper):
 
         for raw_offer in raw_offers:
             # Raw text
-            rawtext = ""
-            if raw_offer.title:
-                rawtext += f"<title>{raw_offer.title}</title>"
+            if not raw_offer.title:
+                logger.error(f"Error with offer, has no title: {raw_offer}")
+                continue
+
+            # Raw text
+            rawtext = f"<title>{raw_offer.title}</title>"
 
             # Title
             title = raw_offer.title
