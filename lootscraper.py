@@ -30,10 +30,10 @@ from app.upload import upload_to_server
 try:
     from xvfbwrapper import Xvfb
 
-    logging.info("Using virtual display")
+    print("Using virtual display")  # Logging not initialized yet, so we print to stdout
     use_virtual_display = True
 except ImportError:
-    logging.info("Using real display")
+    print("Using real display")
     use_virtual_display = False
 
 exit_ = Event()
