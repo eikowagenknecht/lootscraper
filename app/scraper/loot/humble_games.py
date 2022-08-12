@@ -116,15 +116,12 @@ class HumbleGamesScraper(Scraper):
         normalized_offers: list[Offer] = []
 
         for raw_offer in raw_offers:
-            # Skip not recognized offers
+            # Raw text
             if not raw_offer.title:
-                logger.error(f"Offer not recognized, skipping: {raw_offer}")
+                logger.error(f"Error with offer, has no title: {raw_offer}")
                 continue
 
-            # Raw text
-            rawtext = ""
-            if raw_offer.title:
-                rawtext += f"<title>{raw_offer.title}</title>"
+            rawtext = f"<title>{raw_offer.title}</title>"
 
             # Title
             title = raw_offer.title
@@ -142,7 +139,6 @@ class HumbleGamesScraper(Scraper):
                 img_url=raw_offer.img_url,
             )
 
-            if title is not None and len(title) > 0:
-                normalized_offers.append(offer)
+            normalized_offers.append(offer)
 
         return normalized_offers

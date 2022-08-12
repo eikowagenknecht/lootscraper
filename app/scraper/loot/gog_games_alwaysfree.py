@@ -138,9 +138,11 @@ class GogGamesAlwaysFreeScraper(Scraper):
 
         for raw_offer in raw_offers:
             # Raw text
-            rawtext = ""
-            if raw_offer.title:
-                rawtext += f"<title>{raw_offer.title}</title>"
+            if not raw_offer.title:
+                logger.error(f"Error with offer, has no title: {raw_offer}")
+                continue
+
+            rawtext = f"<title>{raw_offer.title}</title>"
 
             # Title
             # Contains additional text that needs to be stripped
@@ -160,6 +162,5 @@ class GogGamesAlwaysFreeScraper(Scraper):
                 img_url=raw_offer.img_url,
             )
 
-            if title is not None and len(title) > 0:
-                normalized_offers.append(offer)
+            normalized_offers.append(offer)
         return normalized_offers

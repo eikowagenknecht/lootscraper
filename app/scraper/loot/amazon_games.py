@@ -133,6 +133,10 @@ class AmazonGamesScraper(Scraper):
 
         for raw_offer in raw_offers:
             # Raw text
+            if not raw_offer.title:
+                logger.error(f"Error with offer, has no title: {raw_offer}")
+                continue
+
             rawtext = f"<title>{raw_offer.title}</title>"
 
             # Title
