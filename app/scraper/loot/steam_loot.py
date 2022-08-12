@@ -127,9 +127,11 @@ class SteamLootScraper(Scraper):
 
         for raw_offer in raw_offers:
             # Raw text
-            rawtext = ""
-            if raw_offer.title:
-                rawtext += f"<title>{raw_offer.title}</title>"
+            if not raw_offer.title:
+                logger.error(f"Error with offer, has no title: {raw_offer}")
+                continue
+
+            rawtext = f"<title>{raw_offer.title}</title>"
 
             if raw_offer.appid:
                 rawtext += f"<appid>{raw_offer.appid}</appid>"
@@ -178,4 +180,5 @@ class SteamLootScraper(Scraper):
             )
 
             normalized_offers.append(offer)
+
         return normalized_offers
