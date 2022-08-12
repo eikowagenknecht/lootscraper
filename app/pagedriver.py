@@ -12,8 +12,12 @@ INJECTION_FILE = Path("js/inject.js")
 
 
 def get_pagedriver() -> WebDriver:
-    options = Options()
     chromedriver_autoinstaller.install()
+
+    options = Options()
+    # https://stackoverflow.com/a/50725918/1689770
+    # Must be first argument according to stack overflow
+    options.add_argument("--no-sandbox")
     # ChromeDriver Fixes from https://stackoverflow.com/questions/48450594/selenium-timed-out-receiving-message-from-renderer
     # https://stackoverflow.com/a/26283818/1689770
     options.add_argument("start-maximized")
@@ -22,8 +26,6 @@ def get_pagedriver() -> WebDriver:
     # only if you are ACTUALLY running headless
     if Config.get().headless_chrome:
         options.add_argument("--headless")
-    # https://stackoverflow.com/a/50725918/1689770
-    options.add_argument("--no-sandbox")
     # https://stackoverflow.com/a/43840128/1689770
     options.add_argument("--disable-infobars")
     # https://stackoverflow.com/a/50725918/1689770
@@ -32,7 +34,6 @@ def get_pagedriver() -> WebDriver:
     options.add_argument("--disable-browser-side-navigation")
     # https://stackoverflow.com/questions/51959986/how-to-solve-selenium-chromedriver-timed-out-receiving-message-from-renderer-exc
     options.add_argument("--disable-gpu")
-
     # To see everything, we use an extra long window. Default: 1920,1200
     options.add_argument("--window-size=1920,1200")
     # Scrape english version of page
