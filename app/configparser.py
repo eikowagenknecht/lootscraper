@@ -33,7 +33,6 @@ class ParsedConfig:
     force_update: bool = False
     db_echo: bool = False
     headless_chrome: bool = True
-    virtual_linux_display: bool = False
 
     # Sources: Offers
     enabled_offer_sources: list[Source] = field(default_factory=list)
@@ -120,9 +119,6 @@ class Config:
             parsed_config.db_echo = config.getboolean("expert", "DbEcho")
             parsed_config.headless_chrome = config.getboolean(
                 "expert", "HeadlessChrome"
-            )
-            parsed_config.virtual_linux_display = config.getboolean(
-                "expert", "VirtualLinuxDisplay"
             )
 
             if config.getboolean("offer_sources", "Amazon"):
