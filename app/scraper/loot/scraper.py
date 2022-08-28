@@ -98,6 +98,9 @@ class Scraper(object):
             if scolled_x_times > 100:
                 break
 
+        # One final wait so the content may load
+        sleep(SCROLL_PAUSE_SECONDS)
+
     @staticmethod
     def scroll_page_to_bottom(driver: WebDriver) -> None:
         """Scroll down to the bottom of the current page. Useful for pages with infinite scrolling."""
@@ -123,3 +126,6 @@ class Scraper(object):
             # Do not scroll more than 100 times, something is wrong here!
             if scolled_x_times > 100:
                 break
+
+        # One final wait so the content may load
+        sleep(SCROLL_PAUSE_SECONDS)

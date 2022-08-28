@@ -33,7 +33,10 @@ RUN pip install --upgrade pip \
     && pip install -r requirements.txt
 
 # Lootscraper: Add
-COPY lootscraper.py config.default.ini alembic.ini /app/
+COPY lootscraper.py \
+    config.default.ini \
+    alembic.ini \
+    /app/
 COPY app /app/app/
 COPY alembic /app/alembic/
 COPY js /app/js/
