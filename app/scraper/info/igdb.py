@@ -22,11 +22,17 @@ def get_igdb_id(search_string: str) -> int | None:
     logger.info(f"Getting id for {search_string}")
 
     # Replace non-Latin characters with their closest representation
-    api_search_string = unidecode(search_string)
-    raw_response: bytes = igdb.api_request(
-        "games",
-        f'search "{api_search_string}"; fields name; where version_parent = null; limit 50;',
-    )
+    # and replace " because that would break the query
+    api_search_string = unidecode(search_string).replace('"', "")
+    try:
+        raw_response: bytes = igdb.api_request(
+            "games",
+            f'search "{api_search_string}"; fields name; where version_parent = null; limit 50;',
+        )
+
+    except requests.exceptions.RequestException as e:
+        logger.error(f"IGDB: Request failed: {e}")
+        return None
 
     response = json.loads(raw_response)
 
