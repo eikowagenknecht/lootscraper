@@ -1058,13 +1058,7 @@ class TelegramBot:
         if offer.duration != OfferDuration.CLAIMABLE:
             additional_info += f", {offer.duration.value}"
 
-        content = ""
-        if offer.type == OfferType.LOOT and offer.probable_game_name:
-            content += markdown_bold(
-                f"{source} ({additional_info}) - {offer.probable_game_name}: {offer.title}"
-            )
-        else:
-            content += markdown_bold(f"{source} ({additional_info}) - {offer.title}")
+        content = markdown_bold(f"{source} ({additional_info}) - {offer.title}")
 
         if offer.img_url:
             content += " " + markdown_url(offer.img_url, f"[{offer.id}]")
