@@ -19,6 +19,7 @@ ROOT_URL = "https://gaming.amazon.com/home"
 XPATH_LOOT = (
     '//div[@data-a-target="offer-list-IN_GAME_LOOT"]//div[@class="item-card__action"]'
 )
+SUBPATH_GAME_TITLE = './/div[contains(concat(" ", normalize-space(@class), " "), " item-card-details__body ")]//p'
 SUBPATH_TITLE = './/div[contains(concat(" ", normalize-space(@class), " "), " item-card-details__body__primary ")]//h3'
 SUBPATH_ENDDATE = './/div[contains(concat(" ", normalize-space(@class), " "), " item-card__availability-date ")]//p'
 SUBPATH_LINK = './a[@data-a-target="learn-more-card"]'
@@ -27,6 +28,7 @@ SUBPATH_IMG = './/div[@data-a-target="card-image"]//img'
 
 @dataclass
 class AmazonLootRawOffer(RawOffer):
+    game_title: str | None = None
     valid_to: str | None = None
 
 
@@ -67,11 +69,21 @@ class AmazonLootScraper(Scraper):
             return []
 
         raw_offers: list[AmazonLootRawOffer] = []
+        game_title_str: str | None
         title_str: str | None
         valid_to_str: str | None
         url_str: str | None
 
         for element in elements:
+            try:
+                game_title: WebElement = element.find_element(
+                    By.XPATH, SUBPATH_GAME_TITLE
+                )
+                game_title_str = game_title.text
+            except WebDriverException:
+                # Nothing to do here, string stays empty
+                game_title_str = None
+
             try:
                 title: WebElement = element.find_element(By.XPATH, SUBPATH_TITLE)
                 title_str = title.text
@@ -106,6 +118,7 @@ class AmazonLootScraper(Scraper):
 
             raw_offers.append(
                 AmazonLootRawOffer(
+                    game_title=game_title_str,
                     title=title_str,
                     valid_to=valid_to_str,
                     url=url_str,
@@ -129,8 +142,18 @@ class AmazonLootScraper(Scraper):
 
             rawtext = f"<title>{raw_offer.title}</title>"
 
-            # Title
-            probable_game_name = clean_loot_title(raw_offer.title)
+            # Game title
+            # New Amazon page layout since 2022-08-09 21:10 finally includes
+            # the title in a seperate tag
+            if raw_offer.game_title:
+                rawtext += f"<gametitle>{raw_offer.game_title}</gametitle>"
+                probable_game_name = raw_offer.game_title
+                title = f"{raw_offer.game_title}: {raw_offer.title}"
+            # If the title is not there for any reason, try to get it from the
+            # general loot description instead
+            else:
+                title = raw_offer.title
+                probable_game_name = clean_loot_title(raw_offer.title)
 
             # Date
             # This is a bit more complicated as only the relative end is
@@ -201,7 +224,7 @@ class AmazonLootScraper(Scraper):
                 source=AmazonLootScraper.get_source(),
                 duration=AmazonLootScraper.get_duration(),
                 type=AmazonLootScraper.get_type(),
-                title=raw_offer.title,
+                title=title,
                 probable_game_name=probable_game_name,
                 seen_last=datetime.now(timezone.utc),
                 valid_to=end_date,
