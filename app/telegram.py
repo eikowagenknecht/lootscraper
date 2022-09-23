@@ -1089,6 +1089,10 @@ class TelegramBot:
                 "Offer is valid forever.. just kidding, I just don't know when it will end."
             )
 
+        if offer.url:
+            content += "\n\n"
+            content += markdown_url(offer.url, "[Claim here]")
+
         return content
 
     def offer_details_message(self, offer: Offer) -> str:
