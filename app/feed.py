@@ -226,10 +226,12 @@ def get_feed_title(
     if source is not None:
         title += " " + source.value
 
-    if type_ is not None:
-        title += " " + type_.value
+    if type_ == OfferType.GAME:
+        title += " Games"
+    elif type_ == OfferType.LOOT:
+        title += " Loot"
 
-    if duration is not None and duration != OfferDuration.CLAIMABLE:
+    if duration in (OfferDuration.TEMPORARY, OfferDuration.ALWAYS):
         title += f" ({duration.value})"
 
     return title
