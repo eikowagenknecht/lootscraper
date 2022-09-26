@@ -74,7 +74,7 @@ class GoogleGamesScraper(Scraper):
 
         try:
             title_str = str(
-                element.find_element(By.XPATH, SUBPATH_TITLE).get_attribute("title")
+                element.find_element(By.XPATH, SUBPATH_TITLE).get_attribute("text")
             )
         except WebDriverException:
             # Nothing to do here, string stays empty
