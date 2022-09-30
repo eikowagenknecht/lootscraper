@@ -46,3 +46,6 @@ CMD [ "python", "lootscraper.py", "--docker" ]
 
 # Config
 VOLUME /data
+
+# Debug: Show installed packages
+RUN pip freeze > /data/installed_packages.txt
