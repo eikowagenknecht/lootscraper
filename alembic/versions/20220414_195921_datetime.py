@@ -67,12 +67,12 @@ def upgrade() -> None:
                 )
         session.commit()
 
-    op.drop_column("loot", "seen_first")
-    op.drop_column("loot", "seen_last")
-    op.drop_column("loot", "valid_from")
-    op.drop_column("loot", "valid_to")
-
     with op.batch_alter_table("loot", schema=None) as batch_op:
+        batch_op.drop_column("seen_first")  # type: ignore
+        batch_op.drop_column("seen_last")  # type: ignore
+        batch_op.drop_column("valid_from")  # type: ignore
+        batch_op.drop_column("valid_to")  # type: ignore
+
         batch_op.alter_column("seen_first_tmp", new_column_name="seen_first")  # type: ignore
         batch_op.alter_column("seen_last_tmp", new_column_name="seen_last")  # type: ignore
         batch_op.alter_column("valid_from_tmp", new_column_name="valid_from")  # type: ignore
@@ -123,12 +123,12 @@ def downgrade() -> None:
                 ).isoformat()
         session.commit()
 
-    op.drop_column("loot", "seen_first")
-    op.drop_column("loot", "seen_last")
-    op.drop_column("loot", "valid_from")
-    op.drop_column("loot", "valid_to")
-
     with op.batch_alter_table("loot", schema=None) as batch_op:
+        batch_op.drop_column("loot", "seen_first")  # type: ignore
+        batch_op.drop_column("loot", "seen_last")  # type: ignore
+        batch_op.drop_column("loot", "valid_from")  # type: ignore
+        batch_op.drop_column("loot", "valid_to")  # type: ignore
+
         batch_op.alter_column("seen_first_tmp", new_column_name="seen_first")  # type: ignore
         batch_op.alter_column("seen_last_tmp", new_column_name="seen_last")  # type: ignore
         batch_op.alter_column("valid_from_tmp", new_column_name="valid_from")  # type: ignore
