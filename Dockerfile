@@ -31,6 +31,8 @@ WORKDIR /app
 COPY requirements.txt /app
 RUN pip install --upgrade pip \
     && pip install -r requirements.txt
+# Debug: Show installed packages
+RUN pip freeze > installed_packages.txt
 
 # Lootscraper: Add
 COPY lootscraper.py \
@@ -46,6 +48,3 @@ CMD [ "python", "lootscraper.py", "--docker" ]
 
 # Config
 VOLUME /data
-
-# Debug: Show installed packages
-RUN pip freeze > /data/installed_packages.txt
