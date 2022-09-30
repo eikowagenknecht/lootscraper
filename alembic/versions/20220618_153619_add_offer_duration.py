@@ -67,7 +67,7 @@ def upgrade() -> None:
     # 1 - Add new column as nullable
     with op.batch_alter_table("offers", schema=None) as batch_op:
         batch_op.add_column(  # type: ignore
-            sa.sa.Column(
+            sa.Column(
                 "duration",
                 sa.Enum(
                     "ALWAYS",
