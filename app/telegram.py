@@ -78,6 +78,7 @@ MESSAGE_HELP = markdown_bold("Available commands") + markdown_escape(
     "\n/status - Show information about your subscriptions"
     "\n/offers - Send all current offers once (only from the categories you are subscribed to)"
     "\n/manage - Manage your subscriptions"
+    "\n/timezone - Choose a timezone that will be used to display the start and end dates"
     "\n/leave - Leave this bot and delete stored user data"
 )
 MESSAGE_UNKNOWN_COMMAND = (
