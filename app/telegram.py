@@ -656,6 +656,10 @@ class TelegramBot:
         if query.data is None:
             return
 
+        db_user = self.get_user_by_telegram_id(update.effective_user.id)
+        if db_user is None:
+            return
+
         offer_id = int(query.data.split(" ")[2])
         try:
             session: orm.Session = self.Session()
@@ -665,7 +669,10 @@ class TelegramBot:
             if query.data.startswith("details show"):
                 query.answer()
                 query.edit_message_text(
-                    text=self.offer_details_message(offer),
+                    text=self.offer_details_message(
+                        offer,
+                        tzoffset=db_user.timezone_offset,
+                    ),
                     parse_mode=ParseMode.MARKDOWN_V2,
                     reply_markup=self.offer_keyboard(
                         offer,
@@ -676,7 +683,7 @@ class TelegramBot:
             elif query.data.startswith("details hide"):
                 query.answer()
                 query.edit_message_text(
-                    text=self.offer_message(offer),
+                    text=self.offer_message(offer, tzoffset=db_user.timezone_offset),
                     parse_mode=ParseMode.MARKDOWN_V2,
                     reply_markup=self.offer_keyboard(
                         offer,
@@ -1100,7 +1107,7 @@ class TelegramBot:
 
     def send_offer(self, offer: Offer, user: User) -> bool:
         logger.debug(
-            f"Sending offer {offer.title} to Telegram user {user.telegram_id}. Markdown: {self.offer_message(offer)}"
+            f"Sending offer {offer.title} to Telegram user {user.telegram_id}."
         )
 
         details_button = bool(
@@ -1114,7 +1121,10 @@ class TelegramBot:
         return (
             self.send_message(
                 chat_id=user.telegram_chat_id,
-                text=self.offer_message(offer),
+                text=self.offer_message(
+                    offer,
+                    tzoffset=user.timezone_offset,
+                ),
                 parse_mode=ParseMode.MARKDOWN_V2,
                 reply_markup=markup,
             )
@@ -1123,7 +1133,7 @@ class TelegramBot:
 
     def send_announcement(self, announcement: Announcement, user: User) -> None:
         logger.debug(
-            f"Sending announcement {announcement.id} to Telegram user {user.telegram_id}. Markdown: {announcement.text_markdown}"
+            f"Sending announcement {announcement.id} to Telegram user {user.telegram_id}."
         )
         self.send_message(
             chat_id=user.telegram_chat_id,
@@ -1132,7 +1142,7 @@ class TelegramBot:
             reply_markup=None,
         )
 
-    def offer_message(self, offer: Offer) -> str:
+    def offer_message(self, offer: Offer, *, tzoffset: int | None = 0) -> str:
         source = offer.source.value
         additional_info = offer.type.value
         if offer.duration != OfferDuration.CLAIMABLE:
@@ -1152,6 +1162,20 @@ class TelegramBot:
         content += "\n\n"
 
         if offer.valid_to:
+            if tzoffset is None:
+                tzoffset = 0
+            if tzoffset == 0:
+                valid_to_localized = (
+                    offer.valid_to.strftime(TIMESTAMP_READABLE_WITH_HOUR) + " UTC"
+                )
+            else:
+                valid_to_localized = (
+                    offer.valid_to.astimezone(
+                        timezone(timedelta(hours=tzoffset))
+                    ).strftime(TIMESTAMP_READABLE_WITH_HOUR)
+                    + f" UTC{tzoffset:+d}"
+                )
+
             time_to_end = humanize.naturaldelta(
                 datetime.now().replace(tzinfo=timezone.utc) - offer.valid_to
             )
@@ -1159,9 +1183,7 @@ class TelegramBot:
                 content += f"Offer expired {markdown_escape(time_to_end)} ago"
             else:
                 content += f"Offer expires in {markdown_escape(time_to_end)}"
-            content += markdown_escape(
-                " (" + offer.valid_to.strftime(TIMESTAMP_READABLE_WITH_HOUR) + ")."
-            )
+            content += markdown_escape(f"({valid_to_localized}).")
         elif offer.duration == OfferDuration.ALWAYS:
             content += markdown_escape("Offer will stay free, no need to hurry.")
         else:
@@ -1175,8 +1197,8 @@ class TelegramBot:
 
         return content
 
-    def offer_details_message(self, offer: Offer) -> str:
-        content = self.offer_message(offer)
+    def offer_details_message(self, offer: Offer, *, tzoffset: int | None = 0) -> str:
+        content = self.offer_message(offer, tzoffset=tzoffset)
 
         if offer.game:
             game: Game = offer.game
