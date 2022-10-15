@@ -68,6 +68,10 @@ MESSAGE_MANAGE_MENU_CLOSED = (
     "You can continue any time with /manage. "
     "If you want me to send you all current offers of your subscriptions, you can type /offers now or any time later."
 )
+MESSAGE_TIMEZONE_MENU_CLOSED = (
+    "Thank you for choosing your timezone. "
+    "If you live in a place with daylight saving time, please remember to do this again at the appropriate time of year. "
+)
 MESSAGE_HELP = markdown_bold("Available commands") + markdown_escape(
     "\n/start - Start the bot (you already did that)"
     "\n/help - Show this help message"
@@ -140,9 +144,13 @@ class TelegramBot:
         dispatcher.add_handler(CommandHandler("offers", self.offers_command))
         dispatcher.add_handler(CommandHandler("start", self.start_command))
         dispatcher.add_handler(CommandHandler("status", self.status_command))
+        dispatcher.add_handler(CommandHandler("timezone", self.timezone_command))
 
         dispatcher.add_handler(
             CallbackQueryHandler(self.toggle_subscription_callback, pattern="toggle")
+        )
+        dispatcher.add_handler(
+            CallbackQueryHandler(self.set_timezone_callback, pattern="settimezone")
         )
         dispatcher.add_handler(
             CallbackQueryHandler(self.offer_callback, pattern="details")
@@ -151,7 +159,7 @@ class TelegramBot:
             CallbackQueryHandler(self.dismiss_callback, pattern="dismiss")
         )
         dispatcher.add_handler(
-            CallbackQueryHandler(self.close_menu_callback, pattern="close menu")
+            CallbackQueryHandler(self.close_callback, pattern="close")
         )
 
         dispatcher.add_handler(MessageHandler(Filters.command, self.unknown_command))
@@ -600,6 +608,23 @@ class TelegramBot:
         logger.debug(f"Sending /status reply: {message}")
         update.message.reply_markdown_v2(message)
 
+    def timezone_command(self, update: Update, context: CallbackContext) -> None:  # type: ignore
+        """Handle timezonelist command."""
+
+        del context  # Unused
+
+        self.log_call(update)
+
+        if not update.effective_chat:
+            return
+
+        self.send_message(
+            chat_id=update.effective_chat.id,
+            text="Choose one of these available timezones:",
+            reply_markup=self.timezone_keyboard(),
+            parse_mode=None,
+        )
+
     def unknown_command(self, update: Update, context: CallbackContext) -> None:  # type: ignore
         """Handle unknown commands."""
 
@@ -690,8 +715,8 @@ class TelegramBot:
             # Message could not be edited, probably a doubleclick
             pass
 
-    def close_menu_callback(self, update: Update, context: CallbackContext) -> None:  # type: ignore
-        """Callback from the menu button "Close" in the manage menu."""
+    def close_callback(self, update: Update, context: CallbackContext) -> None:  # type: ignore
+        """Callback from the menu button "Close" in various menus."""
 
         del context  # Unused
 
@@ -702,14 +727,18 @@ class TelegramBot:
 
         query = update.callback_query
 
-        if query.data != "close menu":
-            return
-
-        query.answer(text="Bye!")
-        query.edit_message_text(
-            text=MESSAGE_MANAGE_MENU_CLOSED,
-            reply_markup=None,
-        )
+        if query.data == "close manage":
+            query.answer(text="Bye!")
+            query.edit_message_text(
+                text=MESSAGE_MANAGE_MENU_CLOSED,
+                reply_markup=None,
+            )
+        elif query.data == "close timezone":
+            query.answer(text="Bye!")
+            query.edit_message_text(
+                text=MESSAGE_TIMEZONE_MENU_CLOSED,
+                reply_markup=None,
+            )
 
     def toggle_subscription_callback(self, update: Update, context: CallbackContext) -> None:  # type: ignore
         """Callback from the subscription buttons in the manage menu."""
@@ -745,6 +774,35 @@ class TelegramBot:
         query.edit_message_text(
             text=MESSAGE_MANAGE_MENU,
             reply_markup=self.manage_keyboard(db_user),
+        )
+
+    def set_timezone_callback(self, update: Update, context: CallbackContext) -> None:  # type: ignore
+        """Callback from the timezone buttons in the timezone menu."""
+
+        del context  # Unused
+
+        self.log_call(update)
+
+        query = update.callback_query
+        if query is None or update.effective_user is None or query.data is None:
+            return
+
+        data = int(query.data.removeprefix("settimezone").strip())
+
+        session: orm.Session = self.Session()
+        try:
+            db_user = self.get_user_by_telegram_id(update.effective_user.id)
+            if db_user is None:
+                query.answer(text=MESSAGE_USER_NOT_REGISTERED)
+                return
+            db_user.timezone_offset = data
+            session.commit()
+        except Exception:
+            session.rollback()
+            raise
+
+        query.edit_message_text(
+            text=f"Timezone offset set to {data} hours from UTC. {MESSAGE_TIMEZONE_MENU_CLOSED}",
         )
 
     def send_new_offers(self, user: User) -> bool:
@@ -969,7 +1027,29 @@ class TelegramBot:
                 )
 
         keyboard.append(
-            [InlineKeyboardButton(text=BUTTON_CLOSE, callback_data="close menu")]
+            [InlineKeyboardButton(text=BUTTON_CLOSE, callback_data="close manage")]
+        )
+
+        return InlineKeyboardMarkup(keyboard)
+
+    def timezone_keyboard(self) -> InlineKeyboardMarkup:
+        keyboard: list[list[InlineKeyboardButton]] = []
+
+        # Add buttons for all available categories
+        for hour in range(-12, 15):
+            hourstr = str(hour)
+            if not hourstr.startswith("-"):
+                hourstr = "+" + str(hour)
+            keyboard.append(
+                [
+                    InlineKeyboardButton(
+                        text=f"UTC{hourstr}:00", callback_data=f"settimezone {hourstr}"
+                    )
+                ]
+            )
+
+        keyboard.append(
+            [InlineKeyboardButton(text=BUTTON_CLOSE, callback_data="close timezone")]
         )
 
         return InlineKeyboardMarkup(keyboard)
