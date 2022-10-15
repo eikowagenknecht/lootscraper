@@ -2,7 +2,7 @@ from enum import Enum
 
 TIMESTAMP_SHORT = "%Y-%m-%d"
 TIMESTAMP_LONG = "%Y-%m-%d %H:%M:%S"
-TIMESTAMP_READABLE_WITH_HOUR = "%Y-%m-%d - %H:%M UTC"
+TIMESTAMP_READABLE_WITH_HOUR = "%Y-%m-%d - %H:%M"
 
 
 class OfferType(Enum):
@@ -45,9 +45,10 @@ def chunkstring(string: str, length: int) -> list[str]:
     return list(chunk_iterator)
 
 
-def markdown_escape(input_: str) -> str:
+def markdown_escape(input_: str | int) -> str:
+    inputstring = str(input_)
     return (
-        input_.replace("\\", "\\\\")
+        inputstring.replace("\\", "\\\\")
         .replace("_", "\\_")
         .replace("*", "\\*")
         .replace("[", "\\[")
