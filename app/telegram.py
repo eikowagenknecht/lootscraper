@@ -581,7 +581,7 @@ class TelegramBot:
             )
             for subscription in db_user.telegram_subscriptions:
                 subscriptions_text += markdown_escape(
-                    f"* {subscription.source.value} / {subscription.type.value} / {subscription.duration.value}\n"
+                    f"  * {subscription.source.value} / {subscription.type.value} / {subscription.duration.value}\n"
                 )
             subscriptions_text += (
                 R"You can unsubscribe from them any time with /manage\."
@@ -590,6 +590,17 @@ class TelegramBot:
             subscriptions_text = (
                 R"\- You are currently not subscribed to any categories\. "
                 R"You can change that with the /manage command if you wish\."
+            )
+
+        if db_user.timezone_offset:
+            timezone_text = (
+                Rf"\- Your timezone is set to {markdown_escape(db_user.timezone_offset)} hours\. "
+                R"You can change that with the /timezone command if you wish\."
+            )
+        else:
+            timezone_text = (
+                R"\- Your timezone is not set, so UTC is used\. "
+                R"You can change that with the /timezone command if you wish\."
             )
 
         message = (
@@ -604,6 +615,8 @@ class TelegramBot:
             f"{subscriptions_text}"
             "\n"
             Rf"\- You received {db_user.offers_received_count} offers so far\. "
+            "\n"
+            f"{timezone_text}"
         )
         logger.debug(f"Sending /status reply: {message}")
         update.message.reply_markdown_v2(message)
