@@ -68,12 +68,17 @@ MESSAGE_MANAGE_MENU_CLOSED = (
     "You can continue any time with /manage. "
     "If you want me to send you all current offers of your subscriptions, you can type /offers now or any time later."
 )
+MESSAGE_TIMEZONE_MENU_CLOSED = (
+    "Thank you for choosing your timezone. "
+    "If you live in a place with daylight saving time, please remember to do this again at the appropriate time of year. "
+)
 MESSAGE_HELP = markdown_bold("Available commands") + markdown_escape(
     "\n/start - Start the bot (you already did that)"
     "\n/help - Show this help message"
     "\n/status - Show information about your subscriptions"
     "\n/offers - Send all current offers once (only from the categories you are subscribed to)"
     "\n/manage - Manage your subscriptions"
+    "\n/timezone - Choose a timezone that will be used to display the start and end dates"
     "\n/leave - Leave this bot and delete stored user data"
 )
 MESSAGE_UNKNOWN_COMMAND = (
@@ -140,9 +145,13 @@ class TelegramBot:
         dispatcher.add_handler(CommandHandler("offers", self.offers_command))
         dispatcher.add_handler(CommandHandler("start", self.start_command))
         dispatcher.add_handler(CommandHandler("status", self.status_command))
+        dispatcher.add_handler(CommandHandler("timezone", self.timezone_command))
 
         dispatcher.add_handler(
             CallbackQueryHandler(self.toggle_subscription_callback, pattern="toggle")
+        )
+        dispatcher.add_handler(
+            CallbackQueryHandler(self.set_timezone_callback, pattern="settimezone")
         )
         dispatcher.add_handler(
             CallbackQueryHandler(self.offer_callback, pattern="details")
@@ -151,7 +160,7 @@ class TelegramBot:
             CallbackQueryHandler(self.dismiss_callback, pattern="dismiss")
         )
         dispatcher.add_handler(
-            CallbackQueryHandler(self.close_menu_callback, pattern="close menu")
+            CallbackQueryHandler(self.close_callback, pattern="close")
         )
 
         dispatcher.add_handler(MessageHandler(Filters.command, self.unknown_command))
@@ -573,7 +582,7 @@ class TelegramBot:
             )
             for subscription in db_user.telegram_subscriptions:
                 subscriptions_text += markdown_escape(
-                    f"* {subscription.source.value} / {subscription.type.value} / {subscription.duration.value}\n"
+                    f"  * {subscription.source.value} / {subscription.type.value} / {subscription.duration.value}\n"
                 )
             subscriptions_text += (
                 R"You can unsubscribe from them any time with /manage\."
@@ -582,6 +591,17 @@ class TelegramBot:
             subscriptions_text = (
                 R"\- You are currently not subscribed to any categories\. "
                 R"You can change that with the /manage command if you wish\."
+            )
+
+        if db_user.timezone_offset:
+            timezone_text = (
+                Rf"\- Your timezone is set to {markdown_escape(db_user.timezone_offset)} hours\. "
+                R"You can change that with the /timezone command if you wish\."
+            )
+        else:
+            timezone_text = (
+                R"\- Your timezone is not set, so UTC is used\. "
+                R"You can change that with the /timezone command if you wish\."
             )
 
         message = (
@@ -596,9 +616,28 @@ class TelegramBot:
             f"{subscriptions_text}"
             "\n"
             Rf"\- You received {db_user.offers_received_count} offers so far\. "
+            "\n"
+            f"{timezone_text}"
         )
         logger.debug(f"Sending /status reply: {message}")
         update.message.reply_markdown_v2(message)
+
+    def timezone_command(self, update: Update, context: CallbackContext) -> None:  # type: ignore
+        """Handle timezonelist command."""
+
+        del context  # Unused
+
+        self.log_call(update)
+
+        if not update.effective_chat:
+            return
+
+        self.send_message(
+            chat_id=update.effective_chat.id,
+            text="Choose one of these available timezones:",
+            reply_markup=self.timezone_keyboard(),
+            parse_mode=None,
+        )
 
     def unknown_command(self, update: Update, context: CallbackContext) -> None:  # type: ignore
         """Handle unknown commands."""
@@ -631,6 +670,10 @@ class TelegramBot:
         if query.data is None:
             return
 
+        db_user = self.get_user_by_telegram_id(update.effective_user.id)
+        if db_user is None:
+            return
+
         offer_id = int(query.data.split(" ")[2])
         try:
             session: orm.Session = self.Session()
@@ -640,7 +683,10 @@ class TelegramBot:
             if query.data.startswith("details show"):
                 query.answer()
                 query.edit_message_text(
-                    text=self.offer_details_message(offer),
+                    text=self.offer_details_message(
+                        offer,
+                        tzoffset=db_user.timezone_offset,
+                    ),
                     parse_mode=ParseMode.MARKDOWN_V2,
                     reply_markup=self.offer_keyboard(
                         offer,
@@ -651,7 +697,7 @@ class TelegramBot:
             elif query.data.startswith("details hide"):
                 query.answer()
                 query.edit_message_text(
-                    text=self.offer_message(offer),
+                    text=self.offer_message(offer, tzoffset=db_user.timezone_offset),
                     parse_mode=ParseMode.MARKDOWN_V2,
                     reply_markup=self.offer_keyboard(
                         offer,
@@ -690,8 +736,8 @@ class TelegramBot:
             # Message could not be edited, probably a doubleclick
             pass
 
-    def close_menu_callback(self, update: Update, context: CallbackContext) -> None:  # type: ignore
-        """Callback from the menu button "Close" in the manage menu."""
+    def close_callback(self, update: Update, context: CallbackContext) -> None:  # type: ignore
+        """Callback from the menu button "Close" in various menus."""
 
         del context  # Unused
 
@@ -702,14 +748,18 @@ class TelegramBot:
 
         query = update.callback_query
 
-        if query.data != "close menu":
-            return
-
-        query.answer(text="Bye!")
-        query.edit_message_text(
-            text=MESSAGE_MANAGE_MENU_CLOSED,
-            reply_markup=None,
-        )
+        if query.data == "close manage":
+            query.answer(text="Bye!")
+            query.edit_message_text(
+                text=MESSAGE_MANAGE_MENU_CLOSED,
+                reply_markup=None,
+            )
+        elif query.data == "close timezone":
+            query.answer(text="Bye!")
+            query.edit_message_text(
+                text=MESSAGE_TIMEZONE_MENU_CLOSED,
+                reply_markup=None,
+            )
 
     def toggle_subscription_callback(self, update: Update, context: CallbackContext) -> None:  # type: ignore
         """Callback from the subscription buttons in the manage menu."""
@@ -745,6 +795,35 @@ class TelegramBot:
         query.edit_message_text(
             text=MESSAGE_MANAGE_MENU,
             reply_markup=self.manage_keyboard(db_user),
+        )
+
+    def set_timezone_callback(self, update: Update, context: CallbackContext) -> None:  # type: ignore
+        """Callback from the timezone buttons in the timezone menu."""
+
+        del context  # Unused
+
+        self.log_call(update)
+
+        query = update.callback_query
+        if query is None or update.effective_user is None or query.data is None:
+            return
+
+        data = int(query.data.removeprefix("settimezone").strip())
+
+        session: orm.Session = self.Session()
+        try:
+            db_user = self.get_user_by_telegram_id(update.effective_user.id)
+            if db_user is None:
+                query.answer(text=MESSAGE_USER_NOT_REGISTERED)
+                return
+            db_user.timezone_offset = data
+            session.commit()
+        except Exception:
+            session.rollback()
+            raise
+
+        query.edit_message_text(
+            text=f"Timezone offset set to {data} hours from UTC. {MESSAGE_TIMEZONE_MENU_CLOSED}",
         )
 
     def send_new_offers(self, user: User) -> bool:
@@ -969,7 +1048,29 @@ class TelegramBot:
                 )
 
         keyboard.append(
-            [InlineKeyboardButton(text=BUTTON_CLOSE, callback_data="close menu")]
+            [InlineKeyboardButton(text=BUTTON_CLOSE, callback_data="close manage")]
+        )
+
+        return InlineKeyboardMarkup(keyboard)
+
+    def timezone_keyboard(self) -> InlineKeyboardMarkup:
+        keyboard: list[list[InlineKeyboardButton]] = []
+
+        # Add buttons for all available categories
+        for hour in range(-12, 15):
+            hourstr = str(hour)
+            if not hourstr.startswith("-"):
+                hourstr = "+" + str(hour)
+            keyboard.append(
+                [
+                    InlineKeyboardButton(
+                        text=f"UTC{hourstr}:00", callback_data=f"settimezone {hourstr}"
+                    )
+                ]
+            )
+
+        keyboard.append(
+            [InlineKeyboardButton(text=BUTTON_CLOSE, callback_data="close timezone")]
         )
 
         return InlineKeyboardMarkup(keyboard)
@@ -1020,7 +1121,7 @@ class TelegramBot:
 
     def send_offer(self, offer: Offer, user: User) -> bool:
         logger.debug(
-            f"Sending offer {offer.title} to Telegram user {user.telegram_id}. Markdown: {self.offer_message(offer)}"
+            f"Sending offer {offer.title} to Telegram user {user.telegram_id}."
         )
 
         details_button = bool(
@@ -1034,7 +1135,10 @@ class TelegramBot:
         return (
             self.send_message(
                 chat_id=user.telegram_chat_id,
-                text=self.offer_message(offer),
+                text=self.offer_message(
+                    offer,
+                    tzoffset=user.timezone_offset,
+                ),
                 parse_mode=ParseMode.MARKDOWN_V2,
                 reply_markup=markup,
             )
@@ -1043,7 +1147,7 @@ class TelegramBot:
 
     def send_announcement(self, announcement: Announcement, user: User) -> None:
         logger.debug(
-            f"Sending announcement {announcement.id} to Telegram user {user.telegram_id}. Markdown: {announcement.text_markdown}"
+            f"Sending announcement {announcement.id} to Telegram user {user.telegram_id}."
         )
         self.send_message(
             chat_id=user.telegram_chat_id,
@@ -1052,7 +1156,7 @@ class TelegramBot:
             reply_markup=None,
         )
 
-    def offer_message(self, offer: Offer) -> str:
+    def offer_message(self, offer: Offer, *, tzoffset: int | None = 0) -> str:
         source = offer.source.value
         additional_info = offer.type.value
         if offer.duration != OfferDuration.CLAIMABLE:
@@ -1072,6 +1176,20 @@ class TelegramBot:
         content += "\n\n"
 
         if offer.valid_to:
+            if tzoffset is None:
+                tzoffset = 0
+            if tzoffset == 0:
+                valid_to_localized = (
+                    offer.valid_to.strftime(TIMESTAMP_READABLE_WITH_HOUR) + " UTC"
+                )
+            else:
+                valid_to_localized = (
+                    offer.valid_to.astimezone(
+                        timezone(timedelta(hours=tzoffset))
+                    ).strftime(TIMESTAMP_READABLE_WITH_HOUR)
+                    + f" UTC{tzoffset:+d}"
+                )
+
             time_to_end = humanize.naturaldelta(
                 datetime.now().replace(tzinfo=timezone.utc) - offer.valid_to
             )
@@ -1079,9 +1197,7 @@ class TelegramBot:
                 content += f"Offer expired {markdown_escape(time_to_end)} ago"
             else:
                 content += f"Offer expires in {markdown_escape(time_to_end)}"
-            content += markdown_escape(
-                " (" + offer.valid_to.strftime(TIMESTAMP_READABLE_WITH_HOUR) + ")."
-            )
+            content += markdown_escape(f"({valid_to_localized}).")
         elif offer.duration == OfferDuration.ALWAYS:
             content += markdown_escape("Offer will stay free, no need to hurry.")
         else:
@@ -1095,8 +1211,8 @@ class TelegramBot:
 
         return content
 
-    def offer_details_message(self, offer: Offer) -> str:
-        content = self.offer_message(offer)
+    def offer_details_message(self, offer: Offer, *, tzoffset: int | None = 0) -> str:
+        content = self.offer_message(offer, tzoffset=tzoffset)
 
         if offer.game:
             game: Game = offer.game
