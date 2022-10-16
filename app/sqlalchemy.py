@@ -216,6 +216,7 @@ class User(Base):
     telegram_chat_id: int | None = sa.Column(sa.Integer)
     telegram_user_details: str | None = sa.Column(sa.JSON)
     timezone_offset: int | None = sa.Column(sa.Integer)
+    inactive: str | None = sa.Column(sa.String)
 
     telegram_subscriptions: list[TelegramSubscription] = orm.relationship(
         "TelegramSubscription", back_populates="user", cascade="all, delete-orphan"
