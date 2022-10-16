@@ -82,13 +82,14 @@ class TelegramTests(unittest.TestCase):
 
 
 class LocalTests(unittest.TestCase):
-    def test_similarity(self) -> None:
+    def test_similarity_1(self) -> None:
         search = "Rainbow Six Siege"
         result = "Tom Clancy's Rainbow Six® Siege"
 
         score = get_match_score(search, result)
         self.assertEqual(score, 0.99)
 
+    def test_similarity_2(self) -> None:
         search = "Fall Guys"
         result = "Fall Guy"
 
