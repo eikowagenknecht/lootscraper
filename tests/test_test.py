@@ -8,7 +8,7 @@ from sqlalchemy import orm
 from app.common import TIMESTAMP_LONG
 from app.configparser import Config
 from app.pagedriver import get_pagedriver
-from app.scraper.info.igdb import get_igdb_id
+from app.scraper.info.igdb import get_igdb_details, get_igdb_id
 from app.scraper.info.steam import get_steam_details, get_steam_id
 from app.scraper.info.utils import get_match_score
 from app.sqlalchemy import LootDatabase, Offer, User
@@ -212,11 +212,11 @@ class ApiTests(unittest.TestCase):
         scraped_id: int = get_igdb_id(searchstring)
         self.assertEqual(expected_id, scraped_id)
 
-    # def test_igdb_details(self) -> None:
-    #     game = add_igdb_details("Cities: Skylines")
-    #     self.assertEqual(game.name, "Cities: Skylines")
-    #     self.assertIsNotNone(game.release_date)
-    #     self.assertEqual(game.release_date.isoformat(), "2015-03-10T00:00:00+00:00")
+    def test_igdb_details(self) -> None:
+        game = get_igdb_details(title="Cities: Skylines")
+        self.assertEqual(game.name, "Cities: Skylines")
+        self.assertIsNotNone(game.release_date)
+        self.assertEqual(game.release_date.isoformat(), "2015-03-10T00:00:00+00:00")
 
 
 if __name__ == "__main__":
