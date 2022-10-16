@@ -250,9 +250,11 @@ def process_new_offers(
 def telegram_job(db: LootDatabase, bot: TelegramBot) -> None:
     session: Session = db.Session()
     try:
+        user: User
         for user in session.execute(select(User)).scalars().all():
-            bot.send_new_announcements(user)
-            bot.send_new_offers(user)
+            if not user.inactive:
+                bot.send_new_announcements(user)
+                bot.send_new_offers(user)
     except Exception:
         session.rollback()
         raise

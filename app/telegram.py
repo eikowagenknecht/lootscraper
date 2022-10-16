@@ -223,16 +223,16 @@ class TelegramBot:
             os.kill(bot_pid, signal.SIGINT)
             return
 
-        # This happens when the bot is removed from the group chat.
         if (
             isinstance(context.error, telegram.error.Unauthorized)
             and update.effective_chat
         ):
+            # The bot was removed from a group chat.
             chat_id = update.effective_chat.id
             logger.info(
-                f"Suggest removing user with chat id {chat_id} from database because the chat could not be found."
+                f"Deactivating user with group chat id {chat_id} because the bot was removed from the group."
             )
-            # self.remove_user(chat_id)
+            self.deactivate_user(chat_id, "removed group")
             return
 
         # Build the exception string from the exception
@@ -304,12 +304,20 @@ class TelegramBot:
             self.add_announcement(header, text)
             self.send_message(
                 chat_id=update.effective_chat.id,
-                text=markdown_escape("Announcement added successfully."),
+                text=markdown_escape(
+                    "Announcement added successfully. Sending it with the next scraping run."
+                ),
                 parse_mode=telegram.ParseMode.MARKDOWN_V2,
             )
 
         except IndexError:
-            logger.error("Invalid announcement command.")
+            self.send_message(
+                chat_id=update.effective_chat.id,
+                text=markdown_escape(
+                    "Invalid announcement command. Format needs to be /announce <header> || <text>"
+                ),
+                parse_mode=telegram.ParseMode.MARKDOWN_V2,
+            )
 
     def debug_command(self, update: Update, context: CallbackContext) -> None:  # type: ignore
         """Handle the /debug command: Show some debug information."""
@@ -1264,24 +1272,42 @@ class TelegramBot:
             message = self.updater.bot.send_message(*args, **kwargs)
             return message
         except telegram.error.Unauthorized:
-            # The user blocked the chat. Remove the user from the database.
+            # The user blocked the chat.
             if kwargs["chat_id"]:
                 chat_id = int(kwargs.get("chat_id"))  # type: ignore
                 logger.info(
-                    f"Suggest removing user with chat id {chat_id} from database because he blocked the chat."
+                    f"Deactivating user with chat id {chat_id} because he blocked the chat."
                 )
-                # self.remove_user(chat_id)
+                self.deactivate_user(chat_id, "blocked chat")
         except TelegramError as e:
+            # The chat could not be found
             if e.message == "Chat not found":
                 chat_id = int(kwargs.get("chat_id"))  # type: ignore
                 logger.info(
-                    f"Suggest removing user with chat id {chat_id} from database because the chat could not be found."
+                    f"Deactivating user with chat id {chat_id} because the chat could not be found."
                 )
-                # self.remove_user(chat_id)
+                self.deactivate_user(chat_id, "not found")
             else:
                 logger.error(e)
 
         return None
+
+    def deactivate_user(self, chat_id: int, reason: str) -> None:
+        db_user = self.get_user_by_chat_id(chat_id)
+
+        if db_user is None:
+            return
+
+        # User is registered, deactivate him.
+        logger.debug(f"Deactivating user {db_user.telegram_id}.")
+
+        session: orm.Session = self.Session()
+        try:
+            db_user.inactive = reason
+            session.commit()
+        except Exception:
+            session.rollback()
+            raise
 
     def remove_user(self, chat_id: int) -> None:
         db_user = self.get_user_by_chat_id(chat_id)
