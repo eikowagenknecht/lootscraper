@@ -9,7 +9,6 @@ from datetime import datetime, timedelta, timezone
 from http.client import RemoteDisconnected
 from types import TracebackType
 from typing import Any, Type
-from urllib.error import HTTPError
 
 import humanize
 import sqlalchemy as sa
@@ -195,37 +194,15 @@ class TelegramBot:
             return
 
         # Network instability causes that probably fix themselves.
+        # Log as a warning, but do not alert the admin.
         if isinstance(context.error, RemoteDisconnected) or (
             isinstance(context.error, telegram.error.NetworkError)
             and not isinstance(context.error, telegram.error.BadRequest)
         ):
-            logger.error(str(context.error))
-            try:
-                message = (
-                    markdown_escape(
-                        "Common error encountered, probably will fix itself. See log file for details."
-                    )
-                    + "\n"
-                    + "```\n"
-                    + markdown_escape(exception_type + ": " + str(context.error))
-                    + "\n```"
-                )
-                self.send_message(
-                    chat_id=Config.get().telegram_developer_chat_id,
-                    text=message,
-                    parse_mode=telegram.ParseMode.MARKDOWN_V2,
-                )
-                return
-            except (
-                RemoteDisconnected,
-                TelegramError,
-                telegram.error.NetworkError,
-                HTTPError,
-            ):
-                logger.error(
-                    "Failed to send message to developer chat (probably network or Telegram is down)."
-                )
-                return
+            logger.warning(
+                f"Network error encountered {exception_type}, probably will fix itself."
+            )
+            return
 
         # Multiple bot instances, abort to avoid Telegram punishing API key misuse!
         if isinstance(
