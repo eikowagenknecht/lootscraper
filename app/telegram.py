@@ -737,20 +737,23 @@ class TelegramBot:
         if not update.effective_chat:
             return
 
+        # Special handling for channels
+        if update.effective_chat.type == update.effective_chat.CHANNEL:
+            self.send_message(
+                chat_id=update.effective_chat.id,
+                text=markdown_escape(
+                    f"Commands are not supported in channels. This channel has the id {update.effective_chat.id}."
+                ),
+                parse_mode=telegram.ParseMode.MARKDOWN_V2,
+            )
+            return
+
+        # Normal chats
         self.send_message(
             chat_id=update.effective_chat.id,
             text=MESSAGE_UNKNOWN_COMMAND,
             parse_mode=None,
         )
-
-        if update.effective_chat is not None:
-            self.send_message(
-                chat_id=update.effective_chat.id,
-                text=markdown_json_formatted(
-                    f"update.effective_chat = {json.dumps(update.effective_chat.to_dict(), indent=2, ensure_ascii=False)}"
-                ),
-                parse_mode=telegram.ParseMode.MARKDOWN_V2,
-            )
 
     def offer_callback(self, update: Update, context: CallbackContext) -> None:  # type: ignore
         """Callback from the menu buttons "Details" and "Summary" in the offer message."""
