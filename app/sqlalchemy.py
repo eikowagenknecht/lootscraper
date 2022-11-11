@@ -212,8 +212,8 @@ class User(Base):
     registration_date: datetime = sa.Column(AwareDateTime)
     offers_received_count: int = sa.Column(sa.Integer, default=0)
 
-    telegram_id: int | None = sa.Column(sa.Integer)
-    telegram_chat_id: int | None = sa.Column(sa.Integer)
+    telegram_id: str | None = sa.Column(sa.String)
+    telegram_chat_id: str = sa.Column(sa.String)
     telegram_user_details: str | None = sa.Column(sa.JSON)
     timezone_offset: int | None = sa.Column(sa.Integer)
 
