@@ -1440,6 +1440,12 @@ class TelegramBot:
                     logger.error(e)
                     return None
                 retry_in_seconds = e.retry_after
+            except telegram.error.TimedOut:
+                # Telegram is not responding.
+                if send_attempt > 3:
+                    logger.error(e)
+                    return None
+                retry_in_seconds = 5
             except TelegramError as e:
                 message_handled = True
                 # The chat could not be found
