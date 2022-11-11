@@ -136,6 +136,7 @@ class TelegramBot:
         logger.info("Telegram Bot: Initialized")
 
         dispatcher.add_handler(CommandHandler("announce", self.announce_command))
+        dispatcher.add_handler(CommandHandler("channel", self.channel_command))
         dispatcher.add_handler(CommandHandler("debug", self.debug_command))
         dispatcher.add_handler(CommandHandler("error", self.error_command))
         dispatcher.add_handler(CommandHandler("help", self.help_command))
@@ -315,6 +316,108 @@ class TelegramBot:
                 chat_id=update.effective_chat.id,
                 text=markdown_escape(
                     "Invalid announcement command. Format needs to be /announce <header> || <text>"
+                ),
+                parse_mode=telegram.ParseMode.MARKDOWN_V2,
+            )
+
+    def channel_command(self, update: Update, context: CallbackContext) -> None:  # type: ignore
+        """Handle the /channel command: Manage channels (admin only)."""
+
+        del context  # Unused
+
+        self.log_call(update)
+
+        if (
+            not update.effective_user
+            or not update.effective_chat
+            or not update.message
+            or not update.message.text
+        ):
+            return
+
+        # Check if the user is an admin
+        if not update.effective_user.id == Config.get().telegram_admin_id:
+            self.send_message(
+                chat_id=update.effective_chat.id,
+                text=markdown_escape(
+                    "You are not an admin, so you can't use this command."
+                ),
+                parse_mode=telegram.ParseMode.MARKDOWN_V2,
+            )
+            return
+
+        try:
+            message = update.message.text.removeprefix("/channel ")
+            message_parts = message.split(" ")
+            channel_name = message_parts[0].strip()
+            offer_type = OfferType[message_parts[1].strip()]
+            source = Source[message_parts[2].strip()]
+            duration = OfferDuration[message_parts[3].strip()]
+
+            # Add the channel as a "user" to the database and set it to receive
+            # the appropriate type of messages.
+
+            channel_db_user = self.get_user_by_telegram_id(channel_name)
+
+            if channel_db_user is None:
+                # Register channel user if not registered yet
+                session: orm.Session = self.Session()
+                try:
+                    latest_announcement = session.execute(
+                        sa.select(sa.func.max(Announcement.id))
+                    ).scalar()
+
+                    new_user = User(
+                        telegram_id=channel_name,
+                        telegram_chat_id=channel_name,
+                        telegram_user_details="Channel user created by admin",
+                        registration_date=datetime.now().replace(tzinfo=timezone.utc),
+                        last_announcement_id=latest_announcement,
+                    )
+                    session.add(new_user)
+                    session.commit()
+
+                    channel_db_user = self.get_user_by_telegram_id(channel_name)
+                except Exception:
+                    session.rollback()
+                    raise
+
+            if channel_db_user is None:
+                raise Exception("Channel user not found.")
+
+            if self.is_subscribed(channel_db_user, offer_type, source, duration):
+                self.unsubscribe(channel_db_user, offer_type, source, duration)
+
+                self.send_message(
+                    chat_id=update.effective_chat.id,
+                    text=markdown_escape(
+                        (
+                            f"Channel {channel_db_user.telegram_chat_id} is now unsubscribed "
+                            f"to offers from: {offer_type.value} / {source.value} / {duration.value}."
+                        )
+                    ),
+                    parse_mode=telegram.ParseMode.MARKDOWN_V2,
+                )
+            else:
+                self.subscribe(channel_db_user, offer_type, source, duration)
+
+                self.send_message(
+                    chat_id=update.effective_chat.id,
+                    text=markdown_escape(
+                        (
+                            f"Channel {channel_db_user.telegram_chat_id} is now subscribed "
+                            f"to offers from: {offer_type.value} / {source.value} / {duration.value}."
+                            f"Sending new offers with the next scraping run."
+                        )
+                    ),
+                    parse_mode=telegram.ParseMode.MARKDOWN_V2,
+                )
+
+        except IndexError:
+            self.send_message(
+                chat_id=update.effective_chat.id,
+                text=markdown_escape(
+                    "Invalid channel command. Format needs to be /channel <channel_name> <offer_type> <source> <duration>."
                 ),
                 parse_mode=telegram.ParseMode.MARKDOWN_V2,
             )
@@ -640,6 +743,15 @@ class TelegramBot:
             parse_mode=None,
         )
 
+        if update.effective_chat is not None:
+            self.send_message(
+                chat_id=update.effective_chat.id,
+                text=markdown_json_formatted(
+                    f"update.effective_chat = {json.dumps(update.effective_chat.to_dict(), indent=2, ensure_ascii=False)}"
+                ),
+                parse_mode=telegram.ParseMode.MARKDOWN_V2,
+            )
+
     def offer_callback(self, update: Update, context: CallbackContext) -> None:  # type: ignore
         """Callback from the menu buttons "Details" and "Summary" in the offer message."""
 
@@ -677,6 +789,7 @@ class TelegramBot:
                         offer,
                         details_hide_button=True,
                         details_show_button=False,
+                        dismiss_button=True,
                     ),
                 )
             elif query.data.startswith("details hide"):
@@ -688,6 +801,7 @@ class TelegramBot:
                         offer,
                         details_hide_button=False,
                         details_show_button=True,
+                        dismiss_button=True,
                     ),
                 )
         except Exception:
@@ -905,7 +1019,7 @@ class TelegramBot:
             session.rollback()
             raise
 
-    def get_user_by_telegram_id(self, telegram_id: int) -> User | None:
+    def get_user_by_telegram_id(self, telegram_id: int | str) -> User | None:
         session: orm.Session = self.Session()
         try:
             db_user = (
@@ -919,7 +1033,7 @@ class TelegramBot:
 
         return db_user
 
-    def get_user_by_chat_id(self, chat_id: int) -> User | None:
+    def get_user_by_chat_id(self, chat_id: int | str) -> User | None:
         try:
             session: orm.Session = self.Session()
             db_user = (
@@ -937,10 +1051,11 @@ class TelegramBot:
         self, user: User, type_: OfferType, source: Source, duration: OfferDuration
     ) -> bool:
         session: orm.Session = self.Session()
-        subscription = None
+        existing_subscriptions = 0
         try:
-            subscription = session.execute(
-                sa.select(TelegramSubscription).where(
+            existing_subscriptions = (
+                session.query(TelegramSubscription)
+                .filter(
                     sa.and_(
                         TelegramSubscription.user_id == user.id,
                         TelegramSubscription.type == type_,
@@ -948,18 +1063,22 @@ class TelegramBot:
                         TelegramSubscription.duration == duration,
                     )
                 )
-            ).scalar_one_or_none()
+                .count()
+            )
         except Exception:
             session.rollback()
             raise
 
-        return subscription is not None
+        return existing_subscriptions > 0
 
     def subscribe(
         self, user: User, type_: OfferType, source: Source, duration: OfferDuration
     ) -> None:
         session: orm.Session = self.Session()
         try:
+            if self.is_subscribed(user, type_, source, duration):
+                return
+
             session.add(
                 TelegramSubscription(
                     user=user, source=source, type=type_, duration=duration
@@ -1063,8 +1182,9 @@ class TelegramBot:
     def offer_keyboard(
         self,
         offer: Offer,
-        details_show_button: bool,
-        details_hide_button: bool,
+        details_show_button: bool = False,
+        details_hide_button: bool = False,
+        dismiss_button: bool = False,
     ) -> InlineKeyboardMarkup:
         keyboard: list[list[InlineKeyboardButton]] = []
 
@@ -1093,12 +1213,13 @@ class TelegramBot:
                 )
             )
 
-        first_row.append(
-            InlineKeyboardButton(
-                text=BUTTON_DISMISS,
-                callback_data=f"dismiss {offer.id}",
+        if dismiss_button:
+            first_row.append(
+                InlineKeyboardButton(
+                    text=BUTTON_DISMISS,
+                    callback_data=f"dismiss {offer.id}",
+                )
             )
-        )
 
         keyboard.append(first_row)
 
@@ -1109,26 +1230,45 @@ class TelegramBot:
             f"Sending offer {offer.title} to Telegram user {user.telegram_id}."
         )
 
-        details_button = bool(
-            offer.game and (offer.game.igdb_info or offer.game.steam_info)
-        )
+        # Special treatment for channels
+        if user.telegram_chat_id.startswith("@") or user.telegram_chat_id.startswith(
+            "-100"
+        ):
+            markup = self.offer_keyboard(offer)
 
-        markup = self.offer_keyboard(
-            offer, details_show_button=details_button, details_hide_button=False
-        )
-
-        return (
-            self.send_message(
+            success = self.send_message(
                 chat_id=user.telegram_chat_id,
-                text=self.offer_message(
+                text=self.offer_details_message(
                     offer,
                     tzoffset=user.timezone_offset,
                 ),
                 parse_mode=ParseMode.MARKDOWN_V2,
                 reply_markup=markup,
             )
-            is not None
+            return success is not None
+
+        # Normal users
+        details_button = bool(
+            offer.game and (offer.game.igdb_info or offer.game.steam_info)
         )
+
+        markup = self.offer_keyboard(
+            offer,
+            details_show_button=details_button,
+            details_hide_button=False,
+            dismiss_button=True,
+        )
+
+        success = self.send_message(
+            chat_id=user.telegram_chat_id,
+            text=self.offer_message(
+                offer,
+                tzoffset=user.timezone_offset,
+            ),
+            parse_mode=ParseMode.MARKDOWN_V2,
+            reply_markup=markup,
+        )
+        return success is not None
 
     def send_announcement(self, announcement: Announcement, user: User) -> None:
         logger.debug(
@@ -1147,16 +1287,19 @@ class TelegramBot:
         if offer.duration != OfferDuration.CLAIMABLE:
             additional_info += f", {offer.duration.value}"
 
-        content = markdown_bold(f"{source} ({additional_info}) - {offer.title}")
+        content = markdown_bold(
+            f"{offer.title} - {source} ({additional_info})"
+        ) + markdown_escape(f" [{offer.id}")
 
+        # Put the image first for the Telegram preview image
         if offer.img_url:
-            content += " " + markdown_url(offer.img_url, f"[{offer.id}]")
+            content += markdown_url(offer.img_url, R"*")
         elif offer.game and offer.game.steam_info and offer.game.steam_info.image_url:
-            content += " " + markdown_url(
-                offer.game.steam_info.image_url, f"[{offer.id}]"
-            )
-        else:
-            content += f" [{offer.id}]"
+            content += markdown_url(offer.game.steam_info.image_url, R"*")
+
+        content += markdown_escape("]")
+        if offer.url:
+            content += markdown_escape(" - ") + markdown_url(offer.url, "[Claim here]")
 
         content += "\n\n"
 
@@ -1182,17 +1325,13 @@ class TelegramBot:
                 content += f"Offer expired {markdown_escape(time_to_end)} ago"
             else:
                 content += f"Offer expires in {markdown_escape(time_to_end)}"
-            content += markdown_escape(f"({valid_to_localized}).")
+            content += markdown_escape(f" ({valid_to_localized}).")
         elif offer.duration == OfferDuration.ALWAYS:
             content += markdown_escape("Offer will stay free, no need to hurry.")
         else:
             content += markdown_escape(
                 "Offer is valid forever.. just kidding, I just don't know when it will end."
             )
-
-        if offer.url:
-            content += "\n\n"
-            content += markdown_url(offer.url, "[Claim here]")
 
         return content
 
@@ -1202,11 +1341,22 @@ class TelegramBot:
         if offer.game:
             game: Game = offer.game
 
-            content += "\n\n__About the game__\n\n"
+            # "\n\n__Details__\n\n"
             if game.igdb_info and game.igdb_info.name:
-                content += Rf"*Name:* {markdown_escape(game.igdb_info.name)}" + "\n\n"
+                content += (
+                    "\n\n__"
+                    + Rf'More info about "{markdown_escape(game.igdb_info.name)}:'
+                    + '"__\n'
+                )
             elif game.steam_info and game.steam_info.name:
-                content += Rf"*Name:* {markdown_escape(game.steam_info.name)}" + "\n\n"
+                content += (
+                    "\n\n__"
+                    + Rf'More info about "{markdown_escape(game.steam_info.name)}:'
+                    + '"__\n'
+                )
+            else:
+                # No Steam or IGDB info = no details
+                return content
 
             ratings = []
             if game.steam_info and game.steam_info.metacritic_score:
@@ -1241,24 +1391,23 @@ class TelegramBot:
                 ratings.append(text)
 
             if len(ratings) > 0:
-                ratings_str = f"*Ratings:* {' / '.join(ratings)}\n\n"
+                ratings_str = f"*Ratings:* {' / '.join(ratings)}\n"
                 content += ratings_str
             if game.igdb_info and game.igdb_info.release_date:
-                content += f"*Release date:* {markdown_escape(game.igdb_info.release_date.strftime(TIMESTAMP_SHORT))}\n\n"
+                content += f"*Release date:* {markdown_escape(game.igdb_info.release_date.strftime(TIMESTAMP_SHORT))}\n"
             elif game.steam_info and game.steam_info.release_date:
-                content += f"*Release date:* {markdown_escape(game.steam_info.release_date.strftime(TIMESTAMP_SHORT))}\n\n"
+                content += f"*Release date:* {markdown_escape(game.steam_info.release_date.strftime(TIMESTAMP_SHORT))}\n"
             if game.steam_info and game.steam_info.recommended_price_eur:
                 content += (
                     Rf"*Recommended price \(Steam\):* {markdown_escape(str(game.steam_info.recommended_price_eur))} EUR"
-                    + "\n\n"
+                    + "\n"
                 )
-            if game.igdb_info and game.igdb_info.short_description:
-                content += f"*Description:* {markdown_escape(game.igdb_info.short_description)}\n\n"
-            elif game.steam_info and game.steam_info.short_description:
-                content += f"*Description:* {markdown_escape(game.steam_info.short_description)}\n\n"
             if game.steam_info and game.steam_info.genres:
-                content += f"*Genres:* {markdown_escape(game.steam_info.genres)}\n\n"
-            content += R"\* Any information about the offer is automatically grabbed and may in rare cases not match the correct game\."
+                content += f"*Genres:* {markdown_escape(game.steam_info.genres)}\n"
+            if game.igdb_info and game.igdb_info.short_description:
+                content += f"*Description:* {markdown_escape(game.igdb_info.short_description)}\n"
+            elif game.steam_info and game.steam_info.short_description:
+                content += f"*Description:* {markdown_escape(game.steam_info.short_description)}\n"
 
         return content
 
