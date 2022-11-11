@@ -1423,11 +1423,11 @@ class TelegramBot:
         except telegram.error.Unauthorized:
             # The user blocked the chat.
             if kwargs["chat_id"]:
-                chat_id = int(kwargs.get("chat_id"))  # type: ignore
+                chat_id = kwargs.get("chat_id")
                 logger.info(
                     f"Deactivating user with chat id {chat_id} because he blocked the chat."
                 )
-                self.deactivate_user(chat_id, "blocked chat")
+                self.deactivate_user(chat_id, "blocked chat")  # type: ignore
         except TelegramError as e:
             # The chat could not be found
             if e.message == "Chat not found":
@@ -1441,7 +1441,7 @@ class TelegramBot:
 
         return None
 
-    def deactivate_user(self, chat_id: int, reason: str) -> None:
+    def deactivate_user(self, chat_id: int | str, reason: str) -> None:
         db_user = self.get_user_by_chat_id(chat_id)
 
         if db_user is None:
@@ -1458,7 +1458,7 @@ class TelegramBot:
             session.rollback()
             raise
 
-    def remove_user(self, chat_id: int) -> None:
+    def remove_user(self, chat_id: int | str) -> None:
         db_user = self.get_user_by_chat_id(chat_id)
 
         if db_user is None:
