@@ -4,6 +4,7 @@ import json
 import logging
 import os
 import signal
+import time
 import traceback
 from datetime import datetime, timedelta, timezone
 from http.client import RemoteDisconnected
@@ -432,18 +433,16 @@ class TelegramBot:
         if update.message is None:
             return
 
-        if update.effective_user is not None:
-            update.message.reply_markdown_v2(
-                markdown_json_formatted(
+        if update.effective_chat is not None and update.effective_user is not None:
+            self.send_message(
+                chat_id=update.effective_chat.id,
+                text=markdown_json_formatted(
                     f"update.effective_user = {json.dumps(update.effective_user.to_dict(), indent=2, ensure_ascii=False)}"
                 )
-            )
-
-        if update.effective_chat is not None:
-            update.message.reply_markdown_v2(
-                markdown_json_formatted(
+                + markdown_json_formatted(
                     f"update.effective_chat = {json.dumps(update.effective_chat.to_dict(), indent=2, ensure_ascii=False)}"
-                )
+                ),
+                parse_mode=telegram.ParseMode.MARKDOWN_V2
             )
 
     def error_command(self, update: Update, context: CallbackContext) -> None:  # type: ignore
@@ -1245,7 +1244,6 @@ class TelegramBot:
                     offer,
                     tzoffset=user.timezone_offset,
                 ),
-                parse_mode=ParseMode.MARKDOWN_V2,
                 reply_markup=markup,
             )
             return success is not None
@@ -1268,7 +1266,6 @@ class TelegramBot:
                 offer,
                 tzoffset=user.timezone_offset,
             ),
-            parse_mode=ParseMode.MARKDOWN_V2,
             reply_markup=markup,
         )
         return success is not None
@@ -1280,7 +1277,6 @@ class TelegramBot:
         self.send_message(
             chat_id=user.telegram_chat_id,
             text=announcement.text_markdown,
-            parse_mode=ParseMode.MARKDOWN_V2,
             reply_markup=None,
         )
 
@@ -1414,33 +1410,46 @@ class TelegramBot:
 
         return content
 
-    def send_message(self, *args, **kwargs) -> Message | None:  # type: ignore
+    def send_message(self, *args, chat_id: int | str, text: str, parse_mode=telegram.ParseMode.MARKDOWN_V2, **kwargs) -> Message | None:  # type: ignore
         """Wrapper around the message sending to handle exceptions."""
         if self.updater is None:
             logger.error("Tried to send message while the updater is not initialized.")
             return None
 
-        try:
-            message = self.updater.bot.send_message(*args, **kwargs)
-            return message
-        except telegram.error.Unauthorized:
-            # The user blocked the chat.
-            if kwargs["chat_id"]:
-                chat_id = kwargs.get("chat_id")
+        message_handled = False
+        send_attempt = 0
+        retry_in_seconds = 0.0
+
+        while not message_handled:
+            try:
+                send_attempt = send_attempt + 1
+                time.sleep(retry_in_seconds)
+                message = self.updater.bot.send_message(chat_id=chat_id, text=text, parse_mode=parse_mode, *args, **kwargs)
+                message_handled = True
+                return message
+            except telegram.error.Unauthorized:
+                message_handled = True
+                # The user blocked the chat.
                 logger.info(
                     f"Deactivating user with chat id {chat_id} because he blocked the chat."
                 )
-                self.deactivate_user(chat_id, "blocked chat")  # type: ignore
-        except TelegramError as e:
-            # The chat could not be found
-            if e.message == "Chat not found":
-                chat_id = int(kwargs.get("chat_id"))  # type: ignore
-                logger.info(
-                    f"Deactivating user with chat id {chat_id} because the chat could not be found."
-                )
-                self.deactivate_user(chat_id, "not found")
-            else:
-                logger.error(e)
+                self.deactivate_user(chat_id, "blocked chat")
+            except telegram.error.RetryAfter as e:
+                # Telegram is rate limiting us.
+                if send_attempt > 3:
+                    logger.error(e)
+                    return None
+                retry_in_seconds = e.retry_after
+            except TelegramError as e:
+                message_handled = True
+                # The chat could not be found
+                if e.message == "Chat not found":
+                    logger.info(
+                        f"Deactivating user with chat id {chat_id} because the chat could not be found."
+                    )
+                    self.deactivate_user(chat_id, "not found")
+                else:
+                    logger.error(e)
 
         return None
 
@@ -1502,7 +1511,6 @@ class TelegramBot:
             self.send_message(
                 chat_id=Config.get().telegram_developer_chat_id,
                 text=message,
-                parse_mode=telegram.ParseMode.MARKDOWN_V2,
             )
 
     def add_announcement(self, header: str, text: str) -> None:

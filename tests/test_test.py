@@ -63,11 +63,11 @@ class TelegramTests(unittest.TestCase):
             self.assertTrue(message)
 
     def test_telegram_new_offers(self) -> None:
+        # Arrange
         with (
             LootDatabase(echo=True) as db,
             TelegramBot(Config.get(), db.Session) as bot,
         ):
-            # Arrange
             session: orm.Session = db.Session()
 
             # Act
@@ -79,6 +79,18 @@ class TelegramTests(unittest.TestCase):
             bot.send_new_offers(user)
 
             # Assert
+
+    def test_telegram_flooding(self) -> None:
+        # Arrange
+        with (
+            LootDatabase(echo=True) as db,
+            TelegramBot(Config.get(), db.Session) as bot,
+        ):
+            for i in range(300):
+                # Act
+                result = bot.send_message(724039662, f"Flooding Test message {i}")
+                # Assert
+                self.assertIsNotNone(result)
 
 
 class LocalTests(unittest.TestCase):
