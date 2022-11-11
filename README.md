@@ -6,15 +6,29 @@
 
 You enjoy getting games for free but you *don’t* enjoy having to keep track of the various sources (Amazon Prime, Epic Games, Steam, ...) for free offers? Also your F5 key starts to look a bit worn out? Then this is for you!
 
-This Python (3.10+) application uses Selenium to automatically visit sites with free gaming related offers (currently Amazon Prime, Epic Games and Steam are supported, more will follow) and then neatly puts the gathered information into RSS feeds and a Telegram bot. So now you can track the offers using your favorite news reader like Feedly instead of manually visiting the sites or get a message every time a new offer is available.
+## Public feeds / channels / bots
 
-If you encounter any problems feel free to open an issue here and I'll try my best to help. I'd also really like to hear your feature requests (even though I still have quite some ideas myself)!. This is tracked in the Github issues as well.
+Let's be honest, you're probably not here because you are interested in the technical details of how this works. You just want free games. And that's fine. So without further ado, here's where you find them!
 
-## Usage
+### Telegram channels
+
+Want to get a Telegram notification each time a new offer is discovered? Just subscribe to the Telegram channels.
+
+- Amazon Prime ([games](https://t.me/free_amazon_games_ls) and [ingame loot](https://t.me/free_amazon_loot_ls))
+- [Epic Games](https://t.me/free_epic_games_ls)
+- [Gog games](https://t.me/free_gog_games_ls)
+- [Humble games](https://t.me/free_humble_games_ls)
+- [itch.io games](https://t.me/free_itch_games_ls)
+- Steam ([games](https://t.me/free_steam_games_ls) and [ingame loot](https://t.me/+ENZ8x3Ec1dwxMThi))
+
+For our mobile gamers:
+
+- [Apple iPhone games](https://t.me/+SOF7VjGTGPw1OTAy)
+- [Google Android games](https://t.me/+Vma9PScf1uY3M2Uy)
 
 ### Telegram bot
 
-If you prefer Telegram, you can instead subscribe to the [Telegram LootScraperBot](https://t.me/LootScraperBot) to get push notifications for new offers. You can choose which categories to subscribe there.
+Want to receive only the offers *you* want in one single chat? Subscribe directly to the source: The [Telegram LootScraperBot](https://t.me/LootScraperBot) will happily send you push notifications for new offers. You can choose which categories to subscribe there.
 
 This is what it currently looks like in Telegram:
 
@@ -22,7 +36,7 @@ This is what it currently looks like in Telegram:
 
 ### RSS feeds
 
-Prefer the RSS feeds? Sure. You can use the links below. They are updated every 20 minutes.
+You prefer the anonymity and manageability of RSS feeds? Sure. You can use the links below.
 
 - Amazon Prime ([games](https://feed.phenx.de/lootscraper_amazon_game.xml) and [ingame loot](https://feed.phenx.de/lootscraper_amazon_loot.xml))
 - [Epic Games](https://feed.phenx.de/lootscraper_epic_game.xml)
@@ -42,13 +56,17 @@ This is what it currently looks like in Feedly:
 
 ![image](https://user-images.githubusercontent.com/1475672/161056100-2fcf005f-19a9-4279-a2d3-5a90855426ff.png)
 
-## For power users and developers
+## How this works
 
-This project is still in ongoing development, so expect a few rough edges if you try to run it yourself.
+This Python (3.10+) application uses Selenium to automatically visit sites with free gaming related offers (currently Amazon Prime, Epic Games and Steam are supported, more will follow) and then neatly puts the gathered information into RSS feeds and a Telegram bot. So now you can track the offers using your favorite news reader like Feedly instead of manually visiting the sites or get a message every time a new offer is available.
 
-You can either run it locally on your computer or in any environment capable of running a Docker container.
+If you encounter any problems feel free to open an issue here and I'll try my best to help. I'd also really like to hear your feature requests (even though I still have quite some ideas myself)!. This is tracked in the Github issues as well.
 
-If you want to do so or contribute, please see the [README for developers](README_DEV.md) file.
+### For power users and developers
+
+You can either run this project locally on your computer or in any environment capable of running a Docker container.
+
+If you want to do so or even contribute, please see the [README for developers](README_DEV.md) file.
 
 ## License
 
