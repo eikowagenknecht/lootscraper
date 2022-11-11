@@ -442,7 +442,7 @@ class TelegramBot:
                 + markdown_json_formatted(
                     f"update.effective_chat = {json.dumps(update.effective_chat.to_dict(), indent=2, ensure_ascii=False)}"
                 ),
-                parse_mode=telegram.ParseMode.MARKDOWN_V2
+                parse_mode=telegram.ParseMode.MARKDOWN_V2,
             )
 
     def error_command(self, update: Update, context: CallbackContext) -> None:  # type: ignore
@@ -1424,7 +1424,9 @@ class TelegramBot:
             try:
                 send_attempt = send_attempt + 1
                 time.sleep(retry_in_seconds)
-                message = self.updater.bot.send_message(chat_id=chat_id, text=text, parse_mode=parse_mode, *args, **kwargs)
+                message = self.updater.bot.send_message(
+                    chat_id=chat_id, text=text, parse_mode=parse_mode, *args, **kwargs
+                )
                 message_handled = True
                 return message
             except telegram.error.Unauthorized:
@@ -1501,9 +1503,11 @@ class TelegramBot:
                 type_ = "Message"
 
             if update.effective_user:
-                user = f"from {update.effective_user.mention_markdown_v2()}"
+                user = update.effective_user.name
+                if user and user.startswith("@"):
+                    user = "(@)" + user.removeprefix("@")
             else:
-                user = "from unknown user"
+                user = "unknown user"
 
             if update.callback_query and update.callback_query.data:
                 content = f"with content {update.callback_query.data}"
@@ -1512,7 +1516,7 @@ class TelegramBot:
             else:
                 content = "without content"
 
-            message = f"{type_} {user} {content}"
+            message = f"{type_} from {user} {content}"
             logger.debug(message)
             self.send_message(
                 chat_id=Config.get().telegram_developer_chat_id,
