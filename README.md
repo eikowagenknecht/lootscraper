@@ -1,5 +1,7 @@
 # LootScraper
 
+![image](images/ls_2880x1024.png)
+
 [![Publish to Docker Hub](https://github.com/eikowagenknecht/lootscraper/actions/workflows/publish_docker_hub.yml/badge.svg)](https://github.com/eikowagenknecht/lootscraper/actions/workflows/publish_docker_hub.yml)
 [![Publish to Github Packages](https://github.com/eikowagenknecht/lootscraper/actions/workflows/publish_github_packages.yml/badge.svg)](https://github.com/eikowagenknecht/lootscraper/actions/workflows/publish_github_packages.yml)
 [![CC BY-NC-SA 4.0][cc-by-nc-sa-shield]][cc-by-nc-sa]
