@@ -13,3 +13,6 @@
 *.ini diff
 
 Dockerfile diff
+
+*.png filter=lfs diff=lfs merge=lfs -text
+*.xcf filter=lfs diff=lfs merge=lfs -text
