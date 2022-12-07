@@ -48,12 +48,16 @@ class ParsedConfig:
     generate_feed: bool = True
     upload_feed: bool = False
     telegram_bot: bool = False
+    discord_bot: bool = False
 
     # Telegram
     telegram_log_level: TelegramLogLevel = TelegramLogLevel.ERROR
     telegram_access_token: str = ""
     telegram_developer_chat_id: int = 0
     telegram_admin_id: int = 0
+
+    # Discord
+    discord_access_token: str = ""
 
     # IGDB
     igdb_client_id: str = ""
@@ -157,11 +161,13 @@ class Config:
             parsed_config.generate_feed = config.getboolean("actions", "GenerateFeed")
             parsed_config.upload_feed = config.getboolean("actions", "UploadFtp")
             parsed_config.telegram_bot = config.getboolean("actions", "TelegramBot")
+            parsed_config.discord_bot = config.getboolean("actions", "DiscordBot")
 
             parsed_config.telegram_log_level = TelegramLogLevel[
                 config["telegram"]["LogLevel"]
             ]
             parsed_config.telegram_access_token = config["telegram"]["AccessToken"]
+            parsed_config.discord_access_token = config["discord"]["AccessToken"]
             try:
                 parsed_config.telegram_developer_chat_id = int(
                     config["telegram"]["DeveloperChatID"]
