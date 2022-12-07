@@ -7,6 +7,7 @@ from sqlalchemy import orm
 
 from app.common import TIMESTAMP_LONG
 from app.configparser import Config
+from app.discordbot import DiscordBot
 from app.pagedriver import get_pagedriver
 from app.scraper.info.igdb import get_igdb_details, get_igdb_id
 from app.scraper.info.steam import get_steam_details, get_steam_id
@@ -19,6 +20,15 @@ logging.basicConfig(
     format="%(asctime)s [%(levelname)-5s] %(message)s",
     datefmt=TIMESTAMP_LONG,
 )
+
+
+class DiscordBotTests(unittest.TestCase):
+    def test_discord_bot(self) -> None:
+        with (
+            LootDatabase(echo=True) as db,
+            DiscordBot(Config.get(), db.Session) as bot,
+        ):
+            pass
 
 
 class VariousTests(unittest.TestCase):
