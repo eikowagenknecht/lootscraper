@@ -37,7 +37,7 @@ STEAM_RELEASE_DATE = '//div[@id="genresAndManufacturer"]'
 MAX_WAIT_SECONDS = 30  # Needs to be quite high in Docker for first run
 
 
-def get_steam_id(search_string: str, driver: WebDriver) -> int | None:
+async def get_steam_id(search_string: str, driver: WebDriver) -> int | None:
     logger.info(f"Getting id for {search_string}")
 
     encoded_searchstring = urllib.parse.quote_plus(search_string, safe="")
@@ -125,7 +125,7 @@ def skip_age_verification(driver: WebDriver, steam_app_id: int) -> None:
             logger.error("Something went wrong trying to pass the age verification")
 
 
-def get_steam_details(
+async def get_steam_details(
     driver: WebDriver, id_: int | None = None, title: str | None = None
 ) -> SteamInfo | None:
     steam_app_id: int | None = None
@@ -134,7 +134,7 @@ def get_steam_details(
         steam_app_id = id_
 
     if not steam_app_id and title:
-        steam_app_id = get_steam_id(title, driver)
+        steam_app_id = await get_steam_id(title, driver)
 
     if not steam_app_id:
         # No entry found, not adding any data
