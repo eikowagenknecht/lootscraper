@@ -45,7 +45,7 @@ class AmazonLootScraper(Scraper):
     def get_duration() -> OfferDuration:
         return OfferDuration.CLAIMABLE
 
-    def read_offers_from_page(self) -> list[Offer]:
+    async def read_offers_from_page(self) -> list[Offer]:
         self.driver.get(ROOT_URL)
         try:
             # Wait until the page loaded
@@ -54,7 +54,7 @@ class AmazonLootScraper(Scraper):
             )
 
             # Scroll slowly to the bottom to load all offers
-            AmazonLootScraper.scroll_element_to_bottom(self.driver, "root")
+            await AmazonLootScraper.scroll_element_to_bottom(self.driver, "root")
 
         except WebDriverException:
             logger.error(

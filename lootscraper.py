@@ -29,7 +29,8 @@ from app.upload import upload_to_server
 try:
     from xvfbwrapper import Xvfb
 
-    print("Using virtual display")  # Logging not initialized yet, so we print to stdout
+    # Logging not initialized yet, so we print to stdout
+    print("Using virtual display")
     use_virtual_display = True
 except ImportError:
     print("Using real display")
@@ -47,19 +48,16 @@ async def main() -> None:
 
     logging.info(f"Starting LootScraper v{__version__}")
 
-    # Run the various parts of the bot asynchronously so we don't block
+    # Run the various parts of the bot asynchronously (so we don't block)
+    # and communicate using a queue.
+    telegram_queue: asyncio.Queue[int] = asyncio.Queue()
+
     try:
         with LootDatabase(echo=Config.get().db_echo) as db:
-            async with asyncio.TaskGroup() as tg:
-                tg.create_task(run_scraper_loop(db))
+            async with asyncio.TaskGroup() as tg:  # type: ignore
+                tg.create_task(run_scraper_loop(db, telegram_queue))
                 if Config.get().telegram_bot:
-                    tg.create_task(run_telegram_bot(db))
-                tg.create_task(run_discord_bot(db))
-            # await asyncio.gather(
-            #     run_scraper_loop(db),
-            #     run_telegram_bot(db),
-            #     run_discord_bot(db),
-            # )
+                    tg.create_task(run_telegram_bot(db, telegram_queue))
     except OperationalError as db_error:
         logging.error(f"Database error, exiting application: {db_error}")
         sys.exit()
@@ -77,12 +75,18 @@ def initialize_config_file() -> None:
 
 
 def create_config_file(config_file: Path) -> None:
+    """
+    Create a new config file from the example config file.
+    """
     print(f"Config file {config_file} not found, creating a new one")
     config_file.parent.mkdir(exist_ok=True, parents=True)
     shutil.copy(EXAMPLE_CONFIG_FILE, config_file)
 
 
 def check_config_file() -> None:
+    """
+    Check if the config file is valid and can be read.
+    """
     # Now we can try to read the config file. In case anything goes wrong, we
     # terminate because without a valid config continuing is useless.
     try:
@@ -93,7 +97,9 @@ def check_config_file() -> None:
 
 
 def setup_logging() -> None:
-    # TODO: Use rotating file handler (5 files, 5MB each)
+    """
+    Set up the logging system.
+    """
     filename = Config.data_path() / Path(Config.get().log_file)
     loglevel = Config.get().log_level
     logging.basicConfig(
@@ -110,17 +116,17 @@ def setup_logging() -> None:
     logging.getLogger().addHandler(stream_handler)
 
 
-async def run_telegram_bot(db: LootDatabase) -> None:
-
+async def run_telegram_bot(
+    db: LootDatabase,
+    queue: asyncio.Queue[int],
+) -> None:
     async with TelegramBot(Config.get(), db.Session) as bot:
         # The bot is running now and will stop when the context exits
-
-        time_between_runs = int(Config.get().wait_between_runs)
-
-        # Loop forever (until terminated by external events)
-        run = 0
         while True:
-            run += 1
+            run = await queue.get()
+            logging.info(
+                f"Sending offers on Telegram that were found in scraping run #{run}."
+            )
 
             try:
                 await send_new_offers_telegram(db, bot)
@@ -133,30 +139,16 @@ async def run_telegram_bot(db: LootDatabase) -> None:
                 # next run.
                 logging.critical(e)
 
-            if time_between_runs == 0:
-                break
-
-            next_execution = datetime.now() + timedelta(seconds=time_between_runs)
-
-            logging.info(
-                f"Waiting until {next_execution.isoformat()} for next scraper execution"
-            )
-
-            await asyncio.sleep(time_between_runs)
-
-        pass
-        # await
+            queue.task_done()
 
 
-async def run_discord_bot(db: LootDatabase) -> None:
-    pass
-
-
-async def run_scraper_loop(db: LootDatabase) -> None:
+async def run_scraper_loop(
+    db: LootDatabase,
+    telegram_queue: asyncio.Queue[int],
+) -> None:
     """
-    Run the job every hour (or whatever is set in the config file). This is
-    not exact because it does not account for the execution time, but that
-    doesn't matter in our context.
+    Run the job in a loop with a waiting time of x seconds (set in the config
+    file) between the runs.
     """
     with ExitStack() as stack:
         # Check the "global" variable (set on import) to see if we can use a virtual display
@@ -170,7 +162,7 @@ async def run_scraper_loop(db: LootDatabase) -> None:
         while True:
             run += 1
 
-            logging.info(f"Starting scraping run # {run}")
+            logging.info(f"Starting scraping run #{run}.")
 
             try:
                 await scrape_new_offers(db)
@@ -188,9 +180,10 @@ async def run_scraper_loop(db: LootDatabase) -> None:
 
             next_execution = datetime.now() + timedelta(seconds=time_between_runs)
 
-            logging.info(
-                f"Waiting until {next_execution.isoformat()} for next scraper execution"
-            )
+            logging.info(f"Next scraping run will be at {next_execution.isoformat()}.")
+
+            if Config.get().telegram_bot:
+                await telegram_queue.put(run)
 
             await asyncio.sleep(time_between_runs)
 

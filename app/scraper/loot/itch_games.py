@@ -34,7 +34,7 @@ class ItchGamesScraper(Scraper):
     def get_duration() -> OfferDuration:
         return OfferDuration.CLAIMABLE
 
-    def read_offers_from_page(self) -> list[Offer]:
+    async def read_offers_from_page(self) -> list[Offer]:
         self.driver.get(ROOT_URL)
 
         raw_offers: list[RawOffer] = []
@@ -45,7 +45,7 @@ class ItchGamesScraper(Scraper):
                 EC.presence_of_element_located((By.XPATH, XPATH_FREE_RESULTS))
             )
 
-            ItchGamesScraper.scroll_page_to_bottom(self.driver)
+            await ItchGamesScraper.scroll_page_to_bottom(self.driver)
 
             offer_elements = self.driver.find_elements(By.XPATH, XPATH_FREE_RESULTS)
             for offer_element in offer_elements:
