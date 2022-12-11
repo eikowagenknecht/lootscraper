@@ -553,7 +553,7 @@ class TelegramBot:
             await update.message.reply_text(MESSAGE_NO_SUBSCRIPTIONS)
             return
 
-        if not self.send_new_offers(db_user):
+        if not await self.send_new_offers(db_user):
             await update.message.reply_text(MESSAGE_NO_NEW_OFFERS)
 
     async def start_command(self, update: Update, context: CallbackContext) -> None:  # type: ignore
