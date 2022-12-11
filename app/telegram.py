@@ -91,7 +91,7 @@ class TelegramBot:
     def __init__(self, config: ParsedConfig, session: orm.Session):
         self.config = config
         self.Session = session
-        self.application: Application | None = None  # type: ignore # TODO: Fix this
+        self.application: Application | None = None  # type: ignore
 
     async def __aenter__(self) -> TelegramBot:
         if self.config.telegram_bot:
@@ -108,13 +108,15 @@ class TelegramBot:
             await self.stop()
 
     async def start(self) -> None:
-        """Start the bot."""
+        """
+        Start the bot.
+        """
         # Register commands
         self.application = (
             Application.builder().token(self.config.telegram_access_token).build()
         )
 
-        await self.application.initialize()
+        # Register cmmands to be shown in the menu in telegram
         await self.application.bot.set_my_commands(
             [
                 telegram.BotCommand("start", "Register and start the bot"),
@@ -124,6 +126,7 @@ class TelegramBot:
             ]
         )
 
+        # Register "/..." commands
         self.application.add_handler(CommandHandler("announce", self.announce_command))
         self.application.add_handler(CommandHandler("channel", self.channel_command))
         self.application.add_handler(CommandHandler("debug", self.debug_command))
@@ -135,7 +138,12 @@ class TelegramBot:
         self.application.add_handler(CommandHandler("start", self.start_command))
         self.application.add_handler(CommandHandler("status", self.status_command))
         self.application.add_handler(CommandHandler("timezone", self.timezone_command))
+        # Fallback for all other messages starting with "/"
+        self.application.add_handler(
+            MessageHandler(filters.COMMAND, self.unknown_command)
+        )
 
+        # Register callback handlers
         self.application.add_handler(
             CallbackQueryHandler(self.toggle_subscription_callback, pattern="toggle")
         )
@@ -152,23 +160,28 @@ class TelegramBot:
             CallbackQueryHandler(self.close_callback, pattern="close")
         )
 
-        self.application.add_handler(
-            MessageHandler(filters.COMMAND, self.unknown_command)
-        )
+        # Register error handler
         self.application.add_error_handler(self.error_handler)  # type: ignore
 
-        logger.info("Starting listening for messages from Telegram")
-        if self.application.updater:
+        # Start the bot
+        await self.application.initialize()
+        await self.application.start()
+        if self.application.updater is not None:
             await self.application.updater.start_polling()
+            logger.info("Started listening for messages from Telegram")
 
     async def stop(self) -> None:
         """Stop the bot."""
-        logger.info("Stopping listening for messages from Telegram")
-        if self.application and self.application.updater:
+        if self.application is not None and self.application.updater is not None:
             await self.application.updater.stop()
+            await self.application.stop()
+            await self.application.shutdown()
+            logger.info("Stopped listening for messages from Telegram")
 
     async def error_handler(self, update: Update, context: CallbackContext) -> None:  # type: ignore
-        """Log the error and send a telegram message to notify the developer chat."""
+        """
+        Log the error and send a telegram message to notify the developer chat.
+        """
 
         # Log the error before we do anything else, so we can see it even if something breaks.
         logger.error(msg="Exception while handling an update:", exc_info=context.error)
@@ -1519,7 +1532,7 @@ class TelegramBot:
             else:
                 content = "without content"
 
-            message = f"{type_} from {user} {content}"
+            message = markdown_escape(f"{type_} from {user} {content}")
             logger.debug(message)
             await self.send_message(
                 chat_id=Config.get().telegram_developer_chat_id,
