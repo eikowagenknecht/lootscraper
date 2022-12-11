@@ -48,7 +48,7 @@ class SteamGamesScraper(Scraper):
     def get_duration() -> OfferDuration:
         return OfferDuration.CLAIMABLE
 
-    def read_offers_from_page(self) -> list[Offer]:
+    async def read_offers_from_page(self) -> list[Offer]:
         self.driver.get(ROOT_URL)
         try:
             # Wait until the page loaded

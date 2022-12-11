@@ -124,8 +124,6 @@ class TelegramBot:
             ]
         )
 
-        logger.info("Telegram Bot: Initialized")
-
         self.application.add_handler(CommandHandler("announce", self.announce_command))
         self.application.add_handler(CommandHandler("channel", self.channel_command))
         self.application.add_handler(CommandHandler("debug", self.debug_command))
@@ -159,13 +157,13 @@ class TelegramBot:
         )
         self.application.add_error_handler(self.error_handler)  # type: ignore
 
-        logger.info("Telegram Bot: Starting polling")
+        logger.info("Starting listening for messages from Telegram")
         if self.application.updater:
             await self.application.updater.start_polling()
 
     async def stop(self) -> None:
         """Stop the bot."""
-        logger.info("Telegram Bot: Stopping polling")
+        logger.info("Stopping listening for messages from Telegram")
         if self.application and self.application.updater:
             await self.application.updater.stop()
 

@@ -35,15 +35,15 @@ class GoogleGamesScraper(Scraper):
     def get_duration() -> OfferDuration:
         return OfferDuration.CLAIMABLE
 
-    def scrape(self) -> list[Offer]:
-        offers = self.read_offers_from_page()
+    async def scrape(self) -> list[Offer]:
+        offers = await self.read_offers_from_page()
         categorized_offers = self.categorize_offers(offers)
         filtered = list(
             filter(lambda offer: offer.category != Category.DEMO, categorized_offers)
         )
         return filtered
 
-    def read_offers_from_page(self) -> list[Offer]:
+    async def read_offers_from_page(self) -> list[Offer]:
         self.driver.get(ROOT_URL)
         raw_offers: list[RawOffer] = []
 
