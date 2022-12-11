@@ -40,6 +40,13 @@ except ImportError:
 
 EXAMPLE_CONFIG_FILE = "config.default.ini"
 
+# TODO:
+# - Switch from synchronous selenium to asynchronous framework,
+# e.g. playwright (or if that doesn't work pyppeeter)
+# - Switch from synchronous database access to asynchronous
+# - Make file writing asynchronous
+# - Look for TODOs in the code
+
 
 async def main() -> None:
     # Synchronously set up the basics we need to run anything
@@ -116,6 +123,9 @@ def setup_logging() -> None:
 
 
 def get_streamhandler() -> logging.StreamHandler:  # type: ignore
+    """
+    Get a handler handler for the console output.
+    """
     stream_handler = logging.StreamHandler(sys.stdout)
     stream_handler.setFormatter(
         logging.Formatter("%(asctime)s %(name)s [%(levelname)-5s] %(message)s")
@@ -127,6 +137,10 @@ async def run_telegram_bot(
     db: LootDatabase,
     queue: asyncio.Queue[int],
 ) -> None:
+    """
+    Run the Telegram bot and send new offers when there is a new entry in the
+    queue.
+    """
     async with TelegramBot(Config.get(), db.Session) as bot:
         # The bot is running now and will stop when the context exits
         while True:
@@ -154,8 +168,8 @@ async def run_scraper_loop(
     telegram_queue: asyncio.Queue[int],
 ) -> None:
     """
-    Run the job in a loop with a waiting time of x seconds (set in the config
-    file) between the runs.
+    Run the scraping job in a loop with a waiting time of x seconds (set in the
+    config file) between the runs.
     """
     with ExitStack() as stack:
         # Check the "global" variable (set on import) to see if we can use a virtual display
@@ -198,6 +212,9 @@ async def run_scraper_loop(
 
 
 async def scrape_new_offers(db: LootDatabase) -> None:
+    """
+    Do the actual scraping and processing of new offers.
+    """
     webdriver: WebDriver
     cfg = Config.get()
 
