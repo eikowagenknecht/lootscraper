@@ -1,6 +1,6 @@
 import logging
+from asyncio import sleep
 from datetime import datetime, timezone
-from time import sleep
 
 from selenium.common.exceptions import WebDriverException
 from selenium.webdriver.common.by import By
@@ -41,7 +41,7 @@ class GogGamesAlwaysFreeScraper(Scraper):
     def get_duration() -> OfferDuration:
         return OfferDuration.ALWAYS
 
-    def read_offers_from_page(self) -> list[Offer]:
+    async def read_offers_from_page(self) -> list[Offer]:
         self.driver.get(ROOT_URL)
         try:
             # Wait until the page loaded
@@ -58,7 +58,7 @@ class GogGamesAlwaysFreeScraper(Scraper):
             # Switch to english version
             en = self.driver.find_element(By.XPATH, XPATH_SWITCH_TO_ENGLISH)
             en.click()
-            sleep(2)  # Wait for the language switching to begin
+            await sleep(2)  # Wait for the language switching to begin
             # Check if it's really english now
             en_test = self.driver.find_element(By.XPATH, XPATH_SELECTED_LANGUAGE)
             if en_test.text != "English":
