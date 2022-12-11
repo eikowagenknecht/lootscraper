@@ -47,7 +47,7 @@ class EpicGamesScraper(Scraper):
     def get_duration() -> OfferDuration:
         return OfferDuration.CLAIMABLE
 
-    def read_offers_from_page(self) -> list[Offer]:
+    async def read_offers_from_page(self) -> list[Offer]:
         self.driver.get(ROOT_URL)
         try:
             # Wait until the page loaded
@@ -57,7 +57,7 @@ class EpicGamesScraper(Scraper):
                 )
             )
 
-            Scraper.scroll_page_to_bottom(self.driver)
+            await Scraper.scroll_page_to_bottom(self.driver)
         except WebDriverException:
             filename = (
                 Config.data_path()

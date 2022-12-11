@@ -1,4 +1,7 @@
 # Runtime
+# Sometimes lxml wheels are not available yet and compilation fails on Windows
+# see https://www.lfd.uci.edu/~gohlke/pythonlibs/#lxml and install with
+# pip install <path to whl> as a workaround.
 alembic >= 1.8.1
 chromedriver-autoinstaller >= 0.4.0
 feedgen >= 0.9.0
