@@ -13,8 +13,8 @@ from app.sqlalchemy import IgdbInfo
 logger = logging.getLogger(__name__)
 
 
-def get_igdb_id(search_string: str) -> int | None:
-    igdb = get_igdb_wrapper()
+async def get_igdb_id(search_string: str) -> int | None:
+    igdb = await get_igdb_wrapper()
 
     if igdb is None:
         return None
@@ -68,7 +68,7 @@ def get_igdb_id(search_string: str) -> int | None:
     return None
 
 
-def get_igdb_details(
+async def get_igdb_details(
     id_: int | None = None, title: str | None = None
 ) -> IgdbInfo | None:
     igdb_game_id: int | None = None
@@ -77,7 +77,7 @@ def get_igdb_details(
         igdb_game_id = id_
 
     if not igdb_game_id and title:
-        igdb_game_id = get_igdb_id(title)
+        igdb_game_id = await get_igdb_id(title)
 
     if not igdb_game_id:
         # No entry found, not adding any data
@@ -88,7 +88,7 @@ def get_igdb_details(
     igdb_info = IgdbInfo()
     igdb_info.id = igdb_game_id
 
-    igdb = get_igdb_wrapper()
+    igdb = await get_igdb_wrapper()
 
     if igdb is None:
         return None
@@ -153,10 +153,11 @@ def get_igdb_details(
 
 
 # TODO: Only use one connection, rate limit to < 4 per second
-def get_igdb_wrapper() -> IGDBWrapper | None:
+async def get_igdb_wrapper() -> IGDBWrapper | None:
     client_id = Config.get().igdb_client_id
     client_secret = Config.get().igdb_client_secret
 
+    # TODO: Make this asynchronously and add timeout
     r = requests.post(
         f"https://id.twitch.tv/oauth2/token?client_id={client_id}&client_secret={client_secret}&grant_type=client_credentials"
     )

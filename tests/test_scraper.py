@@ -25,20 +25,30 @@ class ScraperTests(unittest.TestCase):
     def test_pagedriver(self) -> None:
         self.assertIsNotNone(self.driver)
 
-    def test_steam_appid_resolution(self) -> None:
+
+class AsyncScraperTests(unittest.IsolatedAsyncioTestCase):
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls.driver = get_pagedriver()
+
+    @classmethod
+    def tearDownClass(cls) -> None:
+        cls.driver.quit()
+
+    async def test_steam_appid_resolution(self) -> None:
         expected_id: int = 359550  # Tom Clancy's Rainbow Six® Siege
-        scraped_id: int = get_steam_id("Rainbow Six Siege", driver=self.driver)
+        scraped_id: int = await get_steam_id("Rainbow Six Siege", driver=self.driver)
         self.assertEqual(expected_id, scraped_id)
 
-    def test_steam_appid_resolution_with_special_chars(self) -> None:
+    async def test_steam_appid_resolution_with_special_chars(self) -> None:
         expected_id: int = 32460
-        scraped_id: int = get_steam_id(
+        scraped_id: int = await get_steam_id(
             "Monkey Island 2 Special Edition: LeChuck’s Revenge", driver=self.driver
         )
         self.assertEqual(expected_id, scraped_id)
 
-    def test_steam_appinfo(self) -> None:
-        steam_info = get_steam_details(self.driver, title="Counter-Strike")
+    async def test_steam_appinfo(self) -> None:
+        steam_info = await get_steam_details(self.driver, title="Counter-Strike")
         self.assertIsNotNone(steam_info)
         self.assertEqual(steam_info.name, "Counter-Strike")
         self.assertIsNotNone(steam_info.short_description)
@@ -57,8 +67,10 @@ class ScraperTests(unittest.TestCase):
             """https://www.metacritic.com/game/pc/counter-strike?ftag=MCD-06-10aaa1f""",
         )
 
-    def test_steam_appinfo2(self) -> None:
-        steam_info = get_steam_details(title="Rainbow Six Siege", driver=self.driver)
+    async def test_steam_appinfo2(self) -> None:
+        steam_info = await get_steam_details(
+            title="Rainbow Six Siege", driver=self.driver
+        )
         self.assertIsNotNone(steam_info)
         self.assertEqual(steam_info.name, "Tom Clancy's Rainbow Six® Siege")
         self.assertIsNotNone(steam_info.short_description)
@@ -74,8 +86,8 @@ class ScraperTests(unittest.TestCase):
         self.assertEqual(steam_info.metacritic_score, None)
         self.assertEqual(steam_info.metacritic_url, None)
 
-    def test_steam_appinfo_releasedate(self) -> None:
-        steam_info = get_steam_details(title="Riverbond", driver=self.driver)
+    async def test_steam_appinfo_releasedate(self) -> None:
+        steam_info = await get_steam_details(title="Riverbond", driver=self.driver)
         self.assertIsNotNone(steam_info)
         self.assertEqual(steam_info.name, "Riverbond")
         self.assertIsNotNone(steam_info.release_date)
@@ -83,36 +95,38 @@ class ScraperTests(unittest.TestCase):
             steam_info.release_date.isoformat(), "2019-06-09T00:00:00+00:00"
         )
 
-    def test_steam_appinfo_recommendations(self) -> None:
-        steam_info = get_steam_details(title="Riverbond", driver=self.driver)
+    async def test_steam_appinfo_recommendations(self) -> None:
+        steam_info = await get_steam_details(title="Riverbond", driver=self.driver)
         self.assertIsNotNone(steam_info)
         self.assertEqual(steam_info.name, "Riverbond")
         self.assertIsNotNone(steam_info.recommendations)
 
     # This is a weird one where the price is shown in "KWR" in the JSON, so the
     # store page has to be used instead to get the price in EUR
-    def test_steam_appinfo_price(self) -> None:
-        steam_info = get_steam_details(title="Cities: Skylines", driver=self.driver)
+    async def test_steam_appinfo_price(self) -> None:
+        steam_info = await get_steam_details(
+            title="Cities: Skylines", driver=self.driver
+        )
         self.assertIsNotNone(steam_info)
         self.assertEqual(steam_info.name, "Cities: Skylines")
         self.assertEqual(steam_info.recommended_price_eur, 27.99)
 
-    def test_steam_appinfo_language(self) -> None:
-        steam_info = get_steam_details(title="Warframe", driver=self.driver)
+    async def test_steam_appinfo_language(self) -> None:
+        steam_info = await get_steam_details(title="Warframe", driver=self.driver)
         self.assertIsNotNone(steam_info)
         self.assertEqual(steam_info.name, "Warframe")
         self.assertEqual(steam_info.short_description[0:6], "Awaken")
 
-    def test_steam_appinfo_ageverify(self) -> None:
-        steam_info = get_steam_details(title="Doom Eternal", driver=self.driver)
+    async def test_steam_appinfo_ageverify(self) -> None:
+        steam_info = await get_steam_details(title="Doom Eternal", driver=self.driver)
         self.assertIsNotNone(steam_info)
         self.assertEqual(steam_info.name, "DOOM Eternal")
         self.assertEqual(
             steam_info.release_date.isoformat(), "2020-03-19T00:00:00+00:00"
         )
 
-    def test_steam_json_multiple_genres(self) -> None:
-        steam_info = get_steam_details(id_=1424910, driver=self.driver)
+    async def test_steam_json_multiple_genres(self) -> None:
+        steam_info = await get_steam_details(id_=1424910, driver=self.driver)
         self.assertIsNotNone(steam_info)
         self.assertEqual(steam_info.genres, "Action, Indie, Racing, Early Access")
 

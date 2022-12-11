@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import logging
 import re
+from asyncio import sleep
 from dataclasses import dataclass
-from time import sleep
 
 from selenium.webdriver.chrome.webdriver import WebDriver
 
@@ -27,8 +27,8 @@ class Scraper(object):
     def __init__(self, driver: WebDriver):
         self.driver = driver
 
-    def scrape(self) -> list[Offer]:
-        offers = self.read_offers_from_page()
+    async def scrape(self) -> list[Offer]:
+        offers = await self.read_offers_from_page()
         return self.categorize_offers(offers)
 
     @staticmethod
@@ -43,7 +43,7 @@ class Scraper(object):
     def get_duration() -> OfferDuration:
         raise NotImplementedError("Please implement this method")
 
-    def read_offers_from_page(self) -> list[Offer]:
+    async def read_offers_from_page(self) -> list[Offer]:
         raise NotImplementedError("Please implement this method")
 
     @staticmethod
@@ -68,7 +68,7 @@ class Scraper(object):
         return False
 
     @staticmethod
-    def scroll_element_to_bottom(driver: WebDriver, element_id: str) -> None:
+    async def scroll_element_to_bottom(driver: WebDriver, element_id: str) -> None:
         """Scroll down to the bottom of the given alement. Useful for pages with infinite scrolling."""
 
         selector = f'document.getElementById("{element_id}")'
@@ -83,7 +83,7 @@ class Scraper(object):
 
         while True:
             # Wait to load page. We do this first to give the page time for the initial load
-            sleep(SCROLL_PAUSE_SECONDS)
+            await sleep(SCROLL_PAUSE_SECONDS)
 
             # Scroll down to bottom
             driver.execute_script(f"{selector}.scrollTo(0, {position + scroll_amount});")  # type: ignore
@@ -99,10 +99,10 @@ class Scraper(object):
                 break
 
         # One final wait so the content may load
-        sleep(SCROLL_PAUSE_SECONDS)
+        await sleep(SCROLL_PAUSE_SECONDS)
 
     @staticmethod
-    def scroll_page_to_bottom(driver: WebDriver) -> None:
+    async def scroll_page_to_bottom(driver: WebDriver) -> None:
         """Scroll down to the bottom of the current page. Useful for pages with infinite scrolling."""
 
         # Get scroll height
@@ -112,7 +112,7 @@ class Scraper(object):
 
         while True:
             # Wait to load page. We do this first to give the page time for the initial load
-            sleep(SCROLL_PAUSE_SECONDS)
+            await sleep(SCROLL_PAUSE_SECONDS)
 
             # Scroll down to bottom
             driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")  # type: ignore
@@ -128,4 +128,4 @@ class Scraper(object):
                 break
 
         # One final wait so the content may load
-        sleep(SCROLL_PAUSE_SECONDS)
+        await sleep(SCROLL_PAUSE_SECONDS)

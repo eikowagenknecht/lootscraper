@@ -18,7 +18,7 @@ from app.configparser import Config
 logger = logging.getLogger(__name__)
 
 mapper_registry = orm.registry()
-Base = mapper_registry.generate_base()  # type: Any
+Base: Any = mapper_registry.generate_base()
 
 
 class AwareDateTime(sa.TypeDecorator):
