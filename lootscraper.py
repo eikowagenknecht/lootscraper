@@ -8,6 +8,7 @@ import shutil
 import sys
 from contextlib import ExitStack
 from datetime import datetime, timedelta
+from logging.handlers import RotatingFileHandler
 from pathlib import Path
 
 from selenium.webdriver.chrome.webdriver import WebDriver
@@ -103,17 +104,23 @@ def setup_logging() -> None:
     filename = Config.data_path() / Path(Config.get().log_file)
     loglevel = Config.get().log_level
     logging.basicConfig(
-        filename=filename,
+        handlers=[
+            RotatingFileHandler(filename, maxBytes=10 * 1024 ^ 2, backupCount=10),
+            get_streamhandler(),
+        ],
         encoding="utf-8",
         level=logging.getLevelName(loglevel),
         format="%(asctime)s %(name)s [%(levelname)-5s] %(message)s",
         datefmt=TIMESTAMP_LONG,
     )
+
+
+def get_streamhandler() -> logging.StreamHandler:  # type: ignore
     stream_handler = logging.StreamHandler(sys.stdout)
     stream_handler.setFormatter(
         logging.Formatter("%(asctime)s %(name)s [%(levelname)-5s] %(message)s")
     )
-    logging.getLogger().addHandler(stream_handler)
+    return stream_handler
 
 
 async def run_telegram_bot(
