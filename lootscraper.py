@@ -42,10 +42,14 @@ EXAMPLE_CONFIG_FILE = "config.default.ini"
 
 # TODO:
 # - Switch from synchronous selenium to asynchronous framework,
-# e.g. playwright (or if that doesn't work pyppeeter)
+#   e.g. playwright (or if that doesn't work pyppeeter).
+#   This should allow us to still respond to Telegram messages while
+#   scraping is running.
 # - Switch from synchronous database access to asynchronous
 # - Make file writing asynchronous
 # - Look for TODOs in the code
+# - Check all warnings and errors in the code
+# - Add code coverage and way more tests (plus a mocking framework?)
 
 
 async def main() -> None:
