@@ -46,7 +46,6 @@ EXAMPLE_CONFIG_FILE = "config.default.ini"
 #   This should allow us to still respond to Telegram messages while
 #   scraping is running.
 # - Switch from synchronous database access to asynchronous
-# - Make file writing asynchronous
 # - Look for TODOs in the code
 # - Check all warnings and errors in the code
 # - Add code coverage and way more tests (plus a mocking framework?)
@@ -239,7 +238,7 @@ async def scrape_new_offers(db: LootDatabase) -> None:
             raise
 
     if cfg.generate_feed:
-        action_generate_feed(all_offers)
+        await action_generate_feed(all_offers)
     else:
         logging.info("Skipping feed generation, disabled")
 
@@ -353,7 +352,7 @@ async def rebuild_game_infos(
         await add_game_info(db_offer, session, webdriver)
 
 
-def action_generate_feed(loot_offers_in_db: list[Offer]) -> None:
+async def action_generate_feed(loot_offers_in_db: list[Offer]) -> None:
     cfg = Config.get()
     feed_file_base = Config.data_path() / Path(cfg.feed_file_prefix + ".xml")
 
@@ -389,7 +388,7 @@ def action_generate_feed(loot_offers_in_db: list[Offer]) -> None:
             cfg.feed_file_prefix + feed_file_core + ".xml"
         )
         old_hash = hash_file(feed_file)
-        generate_feed(
+        await generate_feed(
             offers=offers,
             file=feed_file,
             author_name=cfg.feed_author_name,
@@ -408,12 +407,12 @@ def action_generate_feed(loot_offers_in_db: list[Offer]) -> None:
             any_feed_changed = True
 
         if feed_changed and cfg.upload_feed:
-            upload_to_server(feed_file)
+            await asyncio.to_thread(upload_to_server, feed_file)
 
     # Generate and upload cumulated feed
     if any_feed_changed:
         feed_file = Config.data_path() / Path(cfg.feed_file_prefix + ".xml")
-        generate_feed(
+        await generate_feed(
             offers=loot_offers_in_db,
             file=feed_file,
             author_name=cfg.feed_author_name,
@@ -424,7 +423,7 @@ def action_generate_feed(loot_offers_in_db: list[Offer]) -> None:
             feed_id_prefix=cfg.feed_id_prefix,
         )
         if cfg.upload_feed:
-            upload_to_server(feed_file_base)
+            await asyncio.to_thread(upload_to_server, feed_file_base)
         else:
             logging.info("Skipping upload, disabled")
 

@@ -7,6 +7,9 @@ from app.configparser import Config
 logger = logging.getLogger(__name__)
 
 
+# TODO: This could be made async by switching to aioftp.
+# Unfortunately, the current version of aioftp does not support
+# TLS explicit encryption. For now it's run in a separate thread.
 def upload_to_server(file: Path) -> None:
     host = Config.get().ftp_host
     user = Config.get().ftp_username
