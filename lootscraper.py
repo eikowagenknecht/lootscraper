@@ -51,7 +51,6 @@ EXAMPLE_CONFIG_FILE = "config.default.ini"
 # - Check all warnings and errors in the code
 # - Add code coverage and way more tests (plus a mocking framework?)
 # - Make logging asynchronous (?)
-# - Use rate limiter for Telegram
 
 
 async def main() -> None:
