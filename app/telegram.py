@@ -18,6 +18,7 @@ from sqlalchemy import orm
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Message, Update
 from telegram.error import TelegramError
 from telegram.ext import (
+    AIORateLimiter,
     Application,
     CallbackContext,
     CallbackQueryHandler,
@@ -111,9 +112,11 @@ class TelegramBot:
         """
         Start the bot.
         """
-        # Register commands
+        # Build application
+        token = self.config.telegram_access_token
+        rate_limiter = AIORateLimiter(max_retries=3)
         self.application = (
-            Application.builder().token(self.config.telegram_access_token).build()
+            Application.builder().token(token).rate_limiter(rate_limiter).build()
         )
 
         # Register cmmands to be shown in the menu in telegram
@@ -1422,7 +1425,9 @@ class TelegramBot:
         parse_mode: str | None = telegram.constants.ParseMode.MARKDOWN_V2,
         **kwargs: Any,
     ) -> Message | None:  # type: ignore
-        """Wrapper around the message sending to handle exceptions."""
+        """
+        Wrapper around the message sending to handle exceptions.
+        """
         if self.application is None:
             logger.error(
                 "Tried to send message while the application is not initialized."
@@ -1431,12 +1436,10 @@ class TelegramBot:
 
         message_handled = False
         send_attempt = 0
-        retry_in_seconds = 0.0
 
         while not message_handled:
             try:
                 send_attempt = send_attempt + 1
-                await asyncio.sleep(retry_in_seconds)
                 message = await self.application.bot.send_message(
                     chat_id=chat_id,
                     text=text,
@@ -1445,6 +1448,13 @@ class TelegramBot:
                 )
                 message_handled = True
                 return message
+            except telegram.error.TimedOut as e:
+                # Telegram is not responding. This is not handled by the AIORateLimiter.
+                if send_attempt > 3:
+                    logger.error(e)
+                    return None
+                retry_in_seconds = 5.0
+                await asyncio.sleep(retry_in_seconds)
             except telegram.error.Forbidden:
                 message_handled = True
                 # The user blocked the chat.
@@ -1452,18 +1462,6 @@ class TelegramBot:
                     f"Deactivating user with chat id {chat_id} because he blocked the chat."
                 )
                 self.deactivate_user(chat_id, "blocked chat")
-            except telegram.error.RetryAfter as e:
-                # Telegram is rate limiting us.
-                if send_attempt > 3:
-                    logger.error(e)
-                    return None
-                retry_in_seconds = e.retry_after
-            except telegram.error.TimedOut as e:
-                # Telegram is not responding.
-                if send_attempt > 3:
-                    logger.error(e)
-                    return None
-                retry_in_seconds = 5
             except TelegramError as e:
                 message_handled = True
                 # The chat could not be found
