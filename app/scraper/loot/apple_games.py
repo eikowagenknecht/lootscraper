@@ -1,12 +1,6 @@
 import logging
 from datetime import datetime, timezone
 
-from selenium.common.exceptions import WebDriverException
-from selenium.webdriver.common.by import By
-from selenium.webdriver.remote.webelement import WebElement
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.support.ui import WebDriverWait
-
 from app.common import OfferDuration, OfferType, Source
 from app.scraper.loot.scraper import RawOffer, Scraper
 from app.sqlalchemy import Offer
