@@ -5,6 +5,7 @@
 alembic >= 1.8.1
 feedgen >= 0.9.0
 humanize >= 4.4.0
+httpx >= 0.23.1
 igdb-api-v4 >= 0.1.0
 python-telegram-bot[rate-limiter] >= 20.0a6
 pytz >= 2022.6
