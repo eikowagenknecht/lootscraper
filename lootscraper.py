@@ -49,7 +49,7 @@ EXAMPLE_CONFIG_FILE = "config.default.ini"
 # - Look for TODOs in the code
 # - Check all warnings and errors in the code
 # - Add code coverage and way more tests (plus a mocking framework?)
-# - Make logging asynchronous (?)
+# - Check why log files are only 10KB
 
 
 async def main() -> None:
