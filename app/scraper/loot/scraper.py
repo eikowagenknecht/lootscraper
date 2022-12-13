@@ -5,7 +5,7 @@ import re
 from asyncio import sleep
 from dataclasses import dataclass
 
-from selenium.webdriver.chrome.webdriver import WebDriver
+from playwright.async_api import BrowserContext
 
 from app.common import Category, OfferDuration, OfferType, Source
 from app.sqlalchemy import Offer
@@ -24,7 +24,7 @@ class RawOffer:
 
 
 class Scraper(object):
-    def __init__(self, driver: WebDriver):
+    def __init__(self, driver: BrowserContext):
         self.driver = driver
 
     async def scrape(self) -> list[Offer]:
@@ -68,7 +68,7 @@ class Scraper(object):
         return False
 
     @staticmethod
-    async def scroll_element_to_bottom(driver: WebDriver, element_id: str) -> None:
+    async def scroll_element_to_bottom(driver: BrowserContext, element_id: str) -> None:
         """Scroll down to the bottom of the given alement. Useful for pages with infinite scrolling."""
 
         selector = f'document.getElementById("{element_id}")'
@@ -102,7 +102,7 @@ class Scraper(object):
         await sleep(SCROLL_PAUSE_SECONDS)
 
     @staticmethod
-    async def scroll_page_to_bottom(driver: WebDriver) -> None:
+    async def scroll_page_to_bottom(driver: BrowserContext) -> None:
         """Scroll down to the bottom of the current page. Useful for pages with infinite scrolling."""
 
         # Get scroll height

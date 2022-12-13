@@ -77,9 +77,9 @@ class SteamGamesScraper(Scraper):
         for raw_offer in raw_offers:
             try:
                 self.driver.get(raw_offer.url)
-                skip_age_verification(
+                await skip_age_verification(
                     self.driver, raw_offer.appid if raw_offer.appid else 0
-                )
+                )  # TODO: Error handling
                 WebDriverWait(self.driver, Scraper.get_max_wait_seconds()).until(
                     EC.presence_of_element_located(
                         (By.CLASS_NAME, "game_area_purchase")

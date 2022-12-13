@@ -4,12 +4,7 @@ import urllib.parse
 import urllib.request
 from datetime import datetime, timezone
 
-from selenium.common.exceptions import WebDriverException
-from selenium.webdriver.chrome.webdriver import WebDriver
-from selenium.webdriver.common.by import By
-from selenium.webdriver.remote.webelement import WebElement
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.support.ui import Select, WebDriverWait
+from playwright.async_api import BrowserContext, Error, Page
 
 from app.scraper.info.utils import RESULT_MATCH_THRESHOLD, get_match_score
 from app.sqlalchemy import SteamInfo
@@ -17,15 +12,10 @@ from app.sqlalchemy import SteamInfo
 logger = logging.getLogger(__name__)
 
 STEAM_SEARCH_URL = "https://store.steampowered.com/search/?term="
-STEAM_SEARCH_OPTIONS = "&category1=998"  # Games only
-STEAM_SEARCH_RESULTS_CONTAINER = '//div[@id = "search_results"]'
-STEAM_SEARCH_RESULTS = (
-    '//div[@id = "search_result_container"]//a'  # data-ds-appid contains the steam id
-)
+STEAM_SEARCH_URL_OPTIONS = "&category1=998"  # Games only
+STEAM_DETAILS_JSON_URL = "https://store.steampowered.com/api/appdetails?appids="
+STEAM_DETAILS_STORE_URL = "https://store.steampowered.com/app/"
 
-STEAM_DETAILS_JSON = "https://store.steampowered.com/api/appdetails?appids="
-
-STEAM_DETAILS_STORE = "https://store.steampowered.com/app/"
 STEAM_DETAILS_REVIEW_SCORE = '//div[@id="userReviews"]/div[@itemprop="aggregateRating"]'  # data-tooltip-html attribute
 STEAM_DETAILS_REVIEW_SCORE_VALUE = '//div[@id="userReviews"]/div[@itemprop="aggregateRating"]//meta[@itemprop="ratingValue"]'  # content attribute
 STEAM_DETAILS_REVIEW_COUNT = '//div[@id="userReviews"]/div[@itemprop="aggregateRating"]//meta[@itemprop="reviewCount"]'  # content attribute
@@ -34,99 +24,105 @@ STEAM_PRICE_FULL = '(//div[contains(concat(" ", normalize-space(@class), " "), "
 STEAM_PRICE_DISCOUNTED_ORIGINAL = '(//div[contains(concat(" ", normalize-space(@class), " "), " game_area_purchase_game ")])[1]//div[contains(concat(" ", normalize-space(@class), " "), " game_purchase_action")]//div[contains(concat(" ", normalize-space(@class), " "), " discount_original_price")]'  # text=" 27,99€ "
 STEAM_RELEASE_DATE = '//div[@id="genresAndManufacturer"]'
 
+# TODO: Check if this still needs to be set so high with Playwright
 MAX_WAIT_SECONDS = 30  # Needs to be quite high in Docker for first run
 
 
-async def get_steam_id(search_string: str, driver: WebDriver) -> int | None:
-    logger.info(f"Getting id for {search_string}")
+async def get_steam_id(search_string: str, context: BrowserContext) -> int | None:
+    logger.info(f"Getting id for {search_string}.")
 
     encoded_searchstring = urllib.parse.quote_plus(search_string, safe="")
 
-    url = STEAM_SEARCH_URL + encoded_searchstring + STEAM_SEARCH_OPTIONS
-    driver.get(url)
+    url = STEAM_SEARCH_URL + encoded_searchstring + STEAM_SEARCH_URL_OPTIONS
 
+    # TODO: Put this into a context manager to make sure the page is always closed after usage
+    page = await context.new_page()
+    await page.goto(url)
+
+    # TODO:Maybe not needed any more with Playright auto-waiting?
     try:
-        # Wait until the page loaded
-        WebDriverWait(driver, MAX_WAIT_SECONDS).until(
-            EC.presence_of_element_located((By.XPATH, STEAM_SEARCH_RESULTS_CONTAINER))
-        )
-
-    except WebDriverException:
-        logger.error(
-            f"Problem loading search results for {search_string} after waiting {MAX_WAIT_SECONDS}s"
-        )
-        return 0
+        await page.wait_for_selector("#search_results")
+    except Error:
+        logger.error(f"Problem loading search results for {search_string}.")
+        return None
 
     # Read all results and use the one with the highest difflib score (lower cased!)
     best_appid: int | None = None
-    best_score: float = 0
+    best_score: float | None = None
     best_title: str | None = None
-    try:
-        elements: list[WebElement] = driver.find_elements(
-            By.XPATH, STEAM_SEARCH_RESULTS
-        )
-        for element in elements:
-            try:
-                title_element = element.find_element(By.CLASS_NAME, "title")
-                result: str = title_element.text
 
-                score = get_match_score(search_string, result)
+    elements = (
+        page.locator("#search_result_container")
+        .locator("a")
+        .filter(has=page.locator(".title"))
+    )
 
-                if score >= RESULT_MATCH_THRESHOLD and score > best_score:
-                    best_appid = int(element.get_attribute("data-ds-appid"))  # type: ignore
-                    best_score = score
-                    best_title = result
-                    logger.debug(
-                        f"Steam: Found match {result} with a score of {(score*100):.0f} %"
-                    )
-                else:
-                    logger.debug(
-                        f"Steam: Ignoring {result} as it's score of {(score*100):.0f} % is too low"
-                    )
-            except WebDriverException:
-                continue
-            except ValueError:
-                continue
+    no_res = await elements.count()
 
-    except WebDriverException:
-        logger.info("Steam: No search results found for {title}!")
+    for i in range(no_res):
+        element = elements.nth(i)
+        try:
+            result = await element.locator(".title").text_content()
+            appid = await element.get_attribute("data-ds-appid")
 
-    if best_appid is not None:
+            if not result or not appid:
+                raise ValueError("Result does not contain a title or appid.")
+
+            score = get_match_score(search_string, result)
+
+            if best_score is None or (
+                score >= RESULT_MATCH_THRESHOLD and score > best_score
+            ):
+                best_appid = int(appid)
+                best_score = score
+                best_title = result
+                logger.debug(
+                    f"Steam: Found match {result} with a score of {(score*100):.0f} %."
+                )
+            else:
+                logger.debug(
+                    f"Steam: Ignoring {result} as it's score of {(score*100):.0f} % is too low."
+                )
+        except Error as e:
+            # Log problem with reading a result, but continue with the next one
+            logger.warning(str(e))
+            continue
+        except ValueError as e:
+            # Log problem with reading a result, but continue with the next one
+            logger.warning(str(e))
+            continue
+
+    if best_appid is not None and best_score is not None and best_title is not None:
         logger.info(
-            f"Steam: Search for {search_string} resulted in {best_title} ({best_appid}) as the best match with a score of {(best_score*100):.0f} %"
+            f"Steam: Search for {search_string} resulted in {best_title} ({best_appid}) as the best match with a score of {(best_score*100):.0f} %."
         )
         return best_appid
 
-    logger.info(f"Steam: Search for {search_string} found no result")
+    logger.info(f"Steam: Search for {search_string} found no result.")
 
     return None
 
 
-def skip_age_verification(driver: WebDriver, steam_app_id: int) -> None:
-    # For some games an age verification is needed. We have to skip that to see
-    # the interesting parts. So enter a valid date and then move on.
-    # (use e.g. 12 July 1990), then move on to the actual shop page
-    if "agecheck" in driver.current_url:
+async def skip_age_verification(page: Page, steam_app_id: int) -> None:
+    """
+    For some games an age verification is needed. Skip this to see the
+    interesting parts. We do this by entering the static date of 12 July 1990,
+    then click the button to continue.
+    """
+    if "agecheck" in page.url:
         logger.debug(f"Trying to pass age verification for {steam_app_id}")
-        try:
-            select_field = Select(driver.find_element_by_id("ageDay"))
-            select_field.select_by_value("12")
-            select_field = Select(driver.find_element_by_id("ageMonth"))
-            select_field.select_by_value("March")
-            select_field = Select(driver.find_element_by_id("ageYear"))
-            select_field.select_by_value("1990")
-            driver.find_element(By.ID, "view_product_page_btn").click()
-            WebDriverWait(driver, MAX_WAIT_SECONDS).until(
-                EC.presence_of_element_located((By.XPATH, STEAM_DETAILS_REVIEW_SCORE))
-            )
-            logger.debug(f"Passed age verification for {steam_app_id}")
-        except (WebDriverException, AttributeError):
-            # TODO: Sometimes AttributeErrors occur on NAS. Why?
-            logger.error("Something went wrong trying to pass the age verification")
+        await page.select_option("#ageDay", "12")
+        await page.select_option("#ageMonth", "March")
+        await page.select_option("#ageYear", "1990")
+        await page.click("#view_product_page_btn")
+        await page.wait_for_selector(
+            "#userReviews"
+        )  # TODO: Maybe not needed any more with Playright auto-waiting?
+        logger.debug(f"Passed age verification for {steam_app_id}")
 
 
 async def get_steam_details(
-    driver: WebDriver, id_: int | None = None, title: str | None = None
+    context: BrowserContext, id_: int | None = None, title: str | None = None
 ) -> SteamInfo | None:
     steam_app_id: int | None = None
 
@@ -134,18 +130,22 @@ async def get_steam_details(
         steam_app_id = id_
 
     if not steam_app_id and title:
-        steam_app_id = await get_steam_id(title, driver)
+        steam_app_id = await get_steam_id(title, context)
 
     if not steam_app_id:
         # No entry found, not adding any data
         return None
 
-    logger.info(f"Steam: Reading details for app id {steam_app_id}")
+    logger.info(f"Steam: Reading details for app id {steam_app_id}.")
 
     steam_info = SteamInfo()
     steam_info.id = steam_app_id
+    steam_info.url = STEAM_DETAILS_STORE_URL + str(steam_info.id)
 
-    with urllib.request.urlopen(STEAM_DETAILS_JSON + str(steam_app_id)) as url:  # nosec
+    # TODO: Use an asynchronous http client
+    with urllib.request.urlopen(
+        STEAM_DETAILS_JSON_URL + str(steam_app_id)
+    ) as url:  # nosec
         data = json.loads(url.read().decode())
         try:
             steam_info.name = data[str(steam_app_id)]["data"]["name"]
@@ -228,111 +228,135 @@ async def get_steam_details(
             pass
 
     logger.debug(
-        f"Steam: Now also checking the store details page for app id {steam_app_id}"
+        f"Steam: Now also checking the store details page for app id {steam_app_id}."
     )
 
-    steam_info.url = STEAM_DETAILS_STORE + str(steam_info.id)
-    driver.get(steam_info.url)
+    page = await context.new_page()
+    await page.goto(steam_info.url)
 
     try:
-        # Wait until the page loaded
-        WebDriverWait(driver, MAX_WAIT_SECONDS).until(
-            EC.presence_of_element_located((By.XPATH, STEAM_DETAILS_LOADED))
-        )
-
-    except WebDriverException:
-        logger.error(
-            f"Steam store page for {steam_app_id} didn't load after waiting for {MAX_WAIT_SECONDS}s"
-        )
-
-    skip_age_verification(driver, steam_app_id)
+        await page.wait_for_selector(STEAM_DETAILS_LOADED)
+    except Error:
+        logger.error(f"Steam store page for {steam_app_id} didn't load.")
+        return steam_info
 
     try:
-        element: WebElement = driver.find_element(By.XPATH, STEAM_DETAILS_REVIEW_SCORE)
-        rating_str: str = element.get_attribute("data-tooltip-html")  # type: ignore
-        # No percentage, but this reason is fine
-        if not rating_str.startswith("Need more user reviews"):
-            steam_info.percent = int(rating_str.split("%")[0].strip())
-    except WebDriverException:
-        logger.error(f"No Steam percentage found for {steam_app_id}!")
-    except ValueError:
-        logger.error(f"Invalid Steam percentage {rating_str} for {steam_app_id}!")
+        await skip_age_verification(page, steam_app_id)
+    except Error:
+        logger.error(f"Steam age verification for {steam_app_id} failed.")
+        return steam_info
 
+    # Get the review score percentage (if available)
     try:
-        element2: WebElement = driver.find_element(
-            By.XPATH, STEAM_DETAILS_REVIEW_SCORE_VALUE
+        review_score_percent = (
+            await page.locator("#userReviews")
+            .locator('div[itemprop="aggregateRating"]')
+            .get_attribute("data-tooltip-html")
         )
-        rating2_str: str = element2.get_attribute("content")  # type: ignore
-        steam_info.score = int(rating2_str)
-    except WebDriverException:
-        logger.error(f"No Steam rating found for {steam_app_id}!")
-    except ValueError:
-        logger.error(f"Invalid Steam rating {rating2_str} for {steam_app_id}!")
+        if review_score_percent is None:
+            logger.warning(f"No Steam percentage found for {steam_app_id}.")
+        elif review_score_percent.startswith("Need more user reviews"):
+            # No percentage, but this reason is fine
+            pass
+        else:
+            steam_info.percent = int(review_score_percent.split("%")[0].strip())
+    except Error:
+        logger.warning(f"No Steam percentage found for {steam_app_id}.")
+    except ValueError as e:
+        logger.error(f"Invalid Steam percentage for {steam_app_id} ({str(e)}).")
 
+    # Get the review score (if available)
+    try:
+        review_score = await page.locator(
+            STEAM_DETAILS_REVIEW_SCORE_VALUE
+        ).get_attribute("content")
+        if review_score is None:
+            logger.warning(f"No Steam rating found for {steam_app_id}.")
+        else:
+            steam_info.score = int(review_score)
+    except Error:
+        logger.warning(f"No Steam rating found for {steam_app_id}!")
+    except ValueError as e:
+        logger.error(f"Invalid Steam rating for {steam_app_id} ({str(e)}).")
+
+    # Get the number of recommendations (if they were not filled by the API call)
     if steam_info.recommendations is None:
         try:
-            element6: WebElement = driver.find_element(
-                By.XPATH, STEAM_DETAILS_REVIEW_COUNT
+            recommendations = await page.locator(
+                STEAM_DETAILS_REVIEW_COUNT
+            ).get_attribute("content")
+            if recommendations is None:
+                logger.warning(f"No Steam rating found for {steam_app_id}.")
+            else:
+                steam_info.recommendations = int(recommendations)
+        except Error:
+            logger.warning(f"No Steam rating found for {steam_app_id}!")
+        except ValueError as e:
+            logger.error(f"Invalid Steam rating for {steam_app_id} ({str(e)}).")
+
+    # Get the recommended price (if it was not filled by the API call)
+    if steam_info.recommended_price_eur is None:
+        try:
+            recommended_price = await page.locator(
+                STEAM_PRICE_DISCOUNTED_ORIGINAL
+            ).text_content()
+            if recommended_price is None:
+                logger.info(
+                    f"No Steam original price found on shop page for {steam_app_id}."
+                )
+            else:
+                steam_info.recommended_price_eur = float(
+                    recommended_price.replace("€", "").replace(",", ".").strip()
+                )
+        except Error:
+            logger.info(
+                f"No Steam original price found on shop page for {steam_app_id}."
             )
-            recommendations_str: str = element6.get_attribute("content")  # type: ignore
-            steam_info.recommendations = int(recommendations_str)
-        except WebDriverException:
-            logger.error(f"No Steam rating found for {steam_app_id}!")
-        except ValueError:
+        except ValueError as e:
             logger.error(
-                f"Invalid Steam rating {recommendations_str} for {steam_app_id}!"
+                f"Steam original price has wrong format for {steam_app_id} ({str(e)})."
             )
 
+    # Get the recommended price (if it was not filled by the API call or the other search)
     if steam_info.recommended_price_eur is None:
         try:
-            element3: WebElement = driver.find_element(
-                By.XPATH, STEAM_PRICE_DISCOUNTED_ORIGINAL
-            )
-            price_str: str = element3.text
-            steam_info.recommended_price_eur = float(
-                price_str.replace("€", "").replace(",", ".").strip()
-            )
-        except WebDriverException:
-            logger.debug(
-                f"No Steam discounted original price found on shop page for {steam_app_id}"
-            )
-        except ValueError:
-            logger.debug(
-                f"Steam discounted original price has wrong format for {steam_app_id}"
-            )
-
-    if steam_info.recommended_price_eur is None:
-        try:
-            element4: WebElement = driver.find_element(By.XPATH, STEAM_PRICE_FULL)
-            price2_str: str = element4.text
-            if "free" in price2_str.lower():
+            recommended_price = await page.locator(STEAM_PRICE_FULL).text_content()
+            if recommended_price is None:
+                logger.info(
+                    f"No Steam recommended price found on shop page for {steam_app_id}."
+                )
+            elif "free" in recommended_price.lower():
                 steam_info.recommended_price_eur = 0
             else:
                 steam_info.recommended_price_eur = float(
-                    price2_str.replace("€", "").replace(",", ".").strip()
+                    recommended_price.replace("€", "").replace(",", ".").strip()
                 )
-        except WebDriverException:
-            logger.debug(f"No Steam full price found on shop page for {steam_app_id}")
-        except ValueError:
-            logger.debug(f"Steam full price has wrong format for {steam_app_id}")
+        except Error:
+            logger.error(
+                f"No Steam recommended price found on shop page for {steam_app_id}."
+            )
+        except ValueError as e:
+            logger.error(
+                f"Steam recommended price has wrong format for {steam_app_id} ({str(e)})."
+            )
 
-    if steam_info.recommended_price_eur is None:
-        logger.error(f"No Steam price found for {steam_app_id}")
-
+    # Get the release date (if it was not filled by the API call)
     if steam_info.release_date is None:
         try:
-            element5: WebElement = driver.find_element(By.XPATH, STEAM_RELEASE_DATE)
-            release_date_str: str = element5.text
-            release_date_str = release_date_str.split("RELEASE DATE:")[1].strip()
-            release_date: datetime = datetime.strptime(
-                release_date_str, "%d %b, %Y"
-            ).replace(tzinfo=timezone.utc)
-            steam_info.release_date = release_date
+            release_date_str = await page.locator(STEAM_RELEASE_DATE).text_content()
+            if release_date_str is None:
+                logger.debug(f"No release date found on shop page for {steam_app_id}")
+            else:
+                release_date_str = release_date_str.split("RELEASE DATE:")[1].strip()
+                release_date = datetime.strptime(release_date_str, "%d %b, %Y").replace(
+                    tzinfo=timezone.utc
+                )
+                steam_info.release_date = release_date
 
-        except WebDriverException:
-            logger.debug(f"No release date found on shop page for {steam_app_id}")
-        except (IndexError, ValueError):
-            logger.debug(
-                f"Release date in wrong format on shop page for {steam_app_id}"
+        except Error:
+            logger.debug(f"No release date found on shop page for {steam_app_id}.")
+        except (IndexError, ValueError) as e:
+            logger.error(
+                f"Release date in wrong format on shop page for {steam_app_id} ({str(e)})."
             )
     return steam_info
