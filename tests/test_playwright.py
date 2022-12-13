@@ -1,9 +1,6 @@
 # type: ignore
-import asyncio
 import logging
 import unittest
-
-from playwright.async_api import async_playwright
 
 from app.common import TIMESTAMP_LONG
 from app.pagedriver import get_browser_context
@@ -16,23 +13,15 @@ logging.basicConfig(
 )
 
 
-class AsyncPlaywrightTests(unittest.IsolatedAsyncioTestCase):
-    async def test_playwright_installation(self) -> None:
-        async with async_playwright() as playwright:
-            browser = await playwright.chromium.launch(headless=False)
-            context = await browser.new_context()
-            page = await context.new_page()
-            await page.goto("https://google.com/")
-
-            await asyncio.sleep(3)
-            await context.close()
-
+class PlaywrightTests(unittest.IsolatedAsyncioTestCase):
     async def test_pagedriver(self) -> None:
         async with get_browser_context() as context:
             page = await context.new_page()
             res = await page.goto("https://google.com/")
             self.assertEqual(res.status, 200)
 
+
+class SteamGameInfoTests(unittest.IsolatedAsyncioTestCase):
     async def test_steam_appid_resolution(self) -> None:
         async with get_browser_context() as context:
             expected_id: int = 359550  # Tom Clancy's Rainbow Six® Siege
@@ -75,7 +64,6 @@ class AsyncPlaywrightTests(unittest.IsolatedAsyncioTestCase):
                 """https://www.metacritic.com/game/pc/counter-strike?ftag=MCD-06-10aaa1f""",
             )
 
-    # TODO: Check why this takes so long, maxbe running into a timeout somewhere?
     async def test_steam_appinfo2(self) -> None:
         async with get_browser_context() as context:
             steam_info = await get_steam_details(

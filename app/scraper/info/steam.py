@@ -24,9 +24,6 @@ STEAM_PRICE_FULL = '(//div[contains(concat(" ", normalize-space(@class), " "), "
 STEAM_PRICE_DISCOUNTED_ORIGINAL = '(//div[contains(concat(" ", normalize-space(@class), " "), " game_area_purchase_game ")])[1]//div[contains(concat(" ", normalize-space(@class), " "), " game_purchase_action")]//div[contains(concat(" ", normalize-space(@class), " "), " discount_original_price")]'  # text=" 27,99€ "
 STEAM_RELEASE_DATE = '//div[@id="genresAndManufacturer"]'
 
-# TODO: Check if this still needs to be set so high with Playwright
-MAX_WAIT_SECONDS = 30  # Needs to be quite high in Docker for first run
-
 
 async def get_steam_id(search_string: str, context: BrowserContext) -> int | None:
     logger.info(f"Getting id for {search_string}.")
@@ -38,13 +35,6 @@ async def get_steam_id(search_string: str, context: BrowserContext) -> int | Non
     # TODO: Put this into a context manager to make sure the page is always closed after usage
     page = await context.new_page()
     await page.goto(url)
-
-    # TODO:Maybe not needed any more with Playright auto-waiting?
-    try:
-        await page.wait_for_selector("#search_results")
-    except Error:
-        logger.error(f"Problem loading search results for {search_string}.")
-        return None
 
     # Read all results and use the one with the highest difflib score (lower cased!)
     best_appid: int | None = None
@@ -115,9 +105,6 @@ async def skip_age_verification(page: Page, steam_app_id: int) -> None:
         await page.select_option("#ageMonth", "March")
         await page.select_option("#ageYear", "1990")
         await page.click("#view_product_page_btn")
-        await page.wait_for_selector(
-            "#userReviews"
-        )  # TODO: Maybe not needed any more with Playright auto-waiting?
         logger.debug(f"Passed age verification for {steam_app_id}")
 
 
