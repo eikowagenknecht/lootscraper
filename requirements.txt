@@ -3,13 +3,12 @@
 # see https://www.lfd.uci.edu/~gohlke/pythonlibs/#lxml and install with
 # pip install <path to whl> as a workaround.
 alembic >= 1.8.1
-chromedriver-autoinstaller >= 0.4.0
 feedgen >= 0.9.0
 humanize >= 4.4.0
 igdb-api-v4 >= 0.1.0
 python-telegram-bot[rate-limiter] >= 20.0a6
 pytz >= 2022.6
-selenium >= 4.7.2
+playwright >= 1.28.0
 SQLAlchemy >= 1.4.45
 Unidecode >= 1.3.6
 xvfbwrapper >= 0.2.9
