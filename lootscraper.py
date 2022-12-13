@@ -11,7 +11,7 @@ from datetime import datetime, timedelta
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
 
-from selenium.webdriver.chrome.webdriver import WebDriver
+from playwright.async_api import BrowserContext
 from sqlalchemy import select
 from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import Session
@@ -19,7 +19,7 @@ from sqlalchemy.orm import Session
 from app.common import TIMESTAMP_LONG, OfferDuration, OfferType, Source
 from app.configparser import Config
 from app.feed import generate_feed
-from app.pagedriver import get_pagedriver
+from app.pagedriver import get_browser_context
 from app.scraper.info.igdb import get_igdb_details, get_igdb_id
 from app.scraper.info.steam import get_steam_details, get_steam_id
 from app.scraper.loot.scraperhelper import get_all_scrapers
@@ -219,10 +219,10 @@ async def scrape_new_offers(db: LootDatabase) -> None:
     """
     Do the actual scraping and processing of new offers.
     """
-    webdriver: WebDriver
+    webdriver: BrowserContext
     cfg = Config.get()
 
-    with get_pagedriver() as webdriver:
+    async with get_browser_context() as webdriver:
         session: Session = db.Session()
         try:
             scraped_offers = await scrape_offers(webdriver)
@@ -240,10 +240,10 @@ async def scrape_new_offers(db: LootDatabase) -> None:
     if cfg.generate_feed:
         await action_generate_feed(all_offers)
     else:
-        logging.info("Skipping feed generation, disabled")
+        logging.info("Skipping feed generation because it is disabled.")
 
 
-async def scrape_offers(webdriver: WebDriver) -> list[Offer]:
+async def scrape_offers(webdriver: BrowserContext) -> list[Offer]:
     cfg = Config.get()
 
     scraped_offers: list[Offer] = []
@@ -253,7 +253,7 @@ async def scrape_offers(webdriver: WebDriver) -> list[Offer]:
             and scraperType.get_duration() in cfg.enabled_offer_durations
             and scraperType.get_source() in cfg.enabled_offer_sources
         ):
-            scraper = scraperType(webdriver)
+            scraper = scraperType(driver=webdriver)
             scraper_duration = scraper.get_duration().value
             scraper_source = scraper.get_source().value
 
@@ -274,7 +274,7 @@ async def scrape_offers(webdriver: WebDriver) -> list[Offer]:
 
 async def process_new_offers(
     db: LootDatabase,
-    webdriver: WebDriver,
+    webdriver: BrowserContext,
     session: Session,
     scraped_offers: list[Offer],
 ) -> None:
@@ -340,7 +340,7 @@ async def send_new_offers_telegram(db: LootDatabase, bot: TelegramBot) -> None:
 
 
 async def rebuild_game_infos(
-    webdriver: WebDriver, session: Session, all_offers: list[Offer]
+    webdriver: BrowserContext, session: Session, all_offers: list[Offer]
 ) -> None:
     # Remove all game info first
     logging.info("Force update enabled - removing all game info")
@@ -428,7 +428,9 @@ async def action_generate_feed(loot_offers_in_db: list[Offer]) -> None:
             logging.info("Skipping upload, disabled")
 
 
-async def add_game_info(offer: Offer, session: Session, webdriver: WebDriver) -> None:
+async def add_game_info(
+    offer: Offer, session: Session, webdriver: BrowserContext
+) -> None:
     """Updated an offer with game information. If the offer already has some
     information, just try to update the missing parts. Otherwise, create a new
     Game and try to populate it with information."""
@@ -480,7 +482,7 @@ async def add_game_info(offer: Offer, session: Session, webdriver: WebDriver) ->
 
     # Use the api if no local entry exists
     if steam_id is None:
-        steam_id = await get_steam_id(offer.probable_game_name, driver=webdriver)
+        steam_id = await get_steam_id(offer.probable_game_name, context=webdriver)
 
     if steam_id is not None:
         existing_game = (
@@ -503,7 +505,7 @@ async def add_game_info(offer: Offer, session: Session, webdriver: WebDriver) ->
     if igdb_id:
         offer.game.igdb_info = await get_igdb_details(id_=igdb_id)
     if steam_id:
-        offer.game.steam_info = await get_steam_details(id_=steam_id, driver=webdriver)
+        offer.game.steam_info = await get_steam_details(id_=steam_id, context=webdriver)
 
 
 def log_new_offer(offer: Offer) -> None:
