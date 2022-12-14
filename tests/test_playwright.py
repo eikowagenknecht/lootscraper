@@ -7,6 +7,7 @@ from app.pagedriver import get_browser_context
 from app.scraper.info.steam import get_steam_details, get_steam_id
 from app.scraper.loot.amazon_games import AmazonGamesScraper
 from app.scraper.loot.amazon_loot import AmazonLootScraper
+from app.scraper.loot.apple_games import AppleGamesScraper
 
 logging.basicConfig(
     level=logging.INFO,
@@ -45,6 +46,19 @@ class AmazonLootTests(unittest.IsolatedAsyncioTestCase):
                 self.assertIsNotNone(res.probable_game_name)
                 self.assertIsNotNone(res.title)
                 self.assertIsNotNone(res.valid_to)
+                self.assertIsNotNone(res.img_url)
+
+
+class AppleGamesTest(unittest.IsolatedAsyncioTestCase):
+    async def test_loot(self) -> None:
+        async with get_browser_context() as context:
+            scraper = AppleGamesScraper(context=context)
+            scraper_results = await scraper.scrape()
+            self.assertGreater(len(scraper_results), 0)
+            for res in scraper_results:
+                self.assertIsNotNone(res.probable_game_name)
+                self.assertIsNotNone(res.title)
+                self.assertIsNotNone(res.url)
                 self.assertIsNotNone(res.img_url)
 
 
