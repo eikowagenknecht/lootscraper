@@ -47,6 +47,7 @@ class IGDBWrapper:
 
         async with httpx.AsyncClient() as client:
             result = await client.post(url, data=request_params)
+            result.raise_for_status()
             self.auth_token = result.json()["access_token"]
 
     # TODO: Only use one connection, rate limit to < 4 per second
@@ -66,14 +67,8 @@ class IGDBWrapper:
 
         async with httpx.AsyncClient() as client:
             result = await client.post(url, headers=request_headers, content=query)
-            json = result.json()
-            if (
-                isinstance(json, dict)
-                and json["message"] is not None
-                and json["message"].startswith("Authorization Failure")
-            ):
-                raise httpx.HTTPError("Authorization Failure.")
-            return json
+            result.raise_for_status()
+            return result.json()
 
 
 async def get_igdb_id(search_string: str) -> int | None:
