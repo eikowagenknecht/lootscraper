@@ -11,7 +11,8 @@ from app.sqlalchemy import Offer
 
 logger = logging.getLogger(__name__)
 
-ROOT_URL = "https://www.gog.com/partner/free_games"
+BASE_URL = "https://www.gog.com"
+OFFER_URL = BASE_URL + "/partner/free_games"
 
 
 class GogGamesAlwaysFreeScraper(GogBaseScraper):
@@ -23,7 +24,7 @@ class GogGamesAlwaysFreeScraper(GogBaseScraper):
         raw_offers: list[RawOffer] = []
 
         async with get_new_page(self.context) as page:
-            await page.goto(ROOT_URL)
+            await page.goto(OFFER_URL)
             try:
                 await page.wait_for_selector(".content.cf")
             except Error as e:
@@ -64,21 +65,18 @@ class GogGamesAlwaysFreeScraper(GogBaseScraper):
 
     @staticmethod
     async def read_raw_offer(element: Locator) -> RawOffer:
-        title_str = await element.locator(".product-title__text").text_content()
-        url_str = await element.get_attribute("href")
-        img_url_str = await element.locator("img").get_attribute("srcset")
-        if img_url_str is not None:
-            img_url_str = "https:" + (
-                img_url_str.split(",", maxsplit=1)[0]
-                .strip()
-                .removesuffix(" 2x")
-                .removesuffix(" 1x")
-            )
+        title = await element.locator(".product-title__text").text_content()
+        url = await element.get_attribute("href")
+        if url is not None:
+            url = BASE_URL + url
+        img_url = GogGamesAlwaysFreeScraper.sanitize_img_url(
+            await element.locator("img").get_attribute("srcset")
+        )
 
         return RawOffer(
-            title=title_str,
-            url=url_str,
-            img_url=img_url_str,
+            title=title,
+            url=url,
+            img_url=img_url,
         )
 
     @staticmethod
@@ -98,7 +96,7 @@ class GogGamesAlwaysFreeScraper(GogBaseScraper):
             title = raw_offer.title
 
             # Valid to
-            nearest_url = raw_offer.url if raw_offer.url else ROOT_URL
+            nearest_url = raw_offer.url if raw_offer.url else OFFER_URL
             offer = Offer(
                 source=GogGamesAlwaysFreeScraper.get_source(),
                 duration=GogGamesAlwaysFreeScraper.get_duration(),

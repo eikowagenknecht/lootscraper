@@ -40,6 +40,7 @@ class AmazonGamesTests(unittest.IsolatedAsyncioTestCase):
                 self.assertIsNotNone(res.title)
                 self.assertIsNotNone(res.valid_to)
                 self.assertIsNotNone(res.img_url)
+                self.assertTrue(res.img_url.startswith("https://"))
 
 
 class AmazonLootTests(unittest.IsolatedAsyncioTestCase):
@@ -52,7 +53,10 @@ class AmazonLootTests(unittest.IsolatedAsyncioTestCase):
                 self.assertIsNotNone(res.probable_game_name)
                 self.assertIsNotNone(res.title)
                 self.assertIsNotNone(res.valid_to)
+                if res.url is not None:
+                    self.assertTrue(res.url.startswith("https://gaming.amazon.com"))
                 self.assertIsNotNone(res.img_url)
+                self.assertTrue(res.img_url.startswith("https://"))
 
 
 class AppleGamesTest(unittest.IsolatedAsyncioTestCase):
@@ -65,7 +69,9 @@ class AppleGamesTest(unittest.IsolatedAsyncioTestCase):
                 self.assertIsNotNone(res.probable_game_name)
                 self.assertIsNotNone(res.title)
                 self.assertIsNotNone(res.url)
+                self.assertTrue(res.url.startswith("https://"))
                 self.assertIsNotNone(res.img_url)
+                self.assertTrue(res.img_url.startswith("https://"))
 
 
 class EpicGamesTest(unittest.IsolatedAsyncioTestCase):
@@ -78,8 +84,9 @@ class EpicGamesTest(unittest.IsolatedAsyncioTestCase):
                 self.assertIsNotNone(res.valid_to)
                 self.assertIsNotNone(res.title)
                 self.assertIsNotNone(res.url)
+                self.assertTrue(res.url.startswith("https://store.epicgames.com/"))
                 self.assertIsNotNone(res.img_url)
-                self.assertFalse(res.img_url.startswith("data"))
+                self.assertTrue(res.img_url.startswith("https://"))
 
 
 class GogGamesFreeTest(unittest.IsolatedAsyncioTestCase):
@@ -91,7 +98,9 @@ class GogGamesFreeTest(unittest.IsolatedAsyncioTestCase):
             for res in scraper_results:
                 self.assertIsNotNone(res.title)
                 self.assertIsNotNone(res.url)
+                self.assertTrue(res.url.startswith("https://www.gog.com/"))
                 self.assertIsNotNone(res.img_url)
+                self.assertTrue(res.img_url.startswith("https://"))
 
 
 class GogGamesTest(unittest.IsolatedAsyncioTestCase):
@@ -103,7 +112,9 @@ class GogGamesTest(unittest.IsolatedAsyncioTestCase):
             for res in scraper_results:
                 self.assertIsNotNone(res.title)
                 self.assertIsNotNone(res.url)
+                self.assertTrue(res.url.startswith("https://www.gog.com/"))
                 self.assertIsNotNone(res.img_url)
+                self.assertTrue(res.img_url.startswith("https://"))
 
 
 class SteamGameInfoTests(unittest.IsolatedAsyncioTestCase):
