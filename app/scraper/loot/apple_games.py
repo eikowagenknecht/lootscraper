@@ -1,21 +1,17 @@
 import logging
+import urllib.parse
 from datetime import datetime, timezone
 
+from playwright.async_api import Error, Locator
+
 from app.common import OfferDuration, OfferType, Source
+from app.pagedriver import get_new_page
 from app.scraper.loot.scraper import RawOffer, Scraper
 from app.sqlalchemy import Offer
 
 logger = logging.getLogger(__name__)
 
-ROOT_URL = (
-    "https://appsliced.co/apps/iphone?sort=latest&price=free&cat%5B0%5D=6014&page=1"
-)
-
-XPATH_SEARCH_RESULTS = (
-    """//article[contains(concat(" ", normalize-space(@class), " "), " app ")]"""
-)
-SUBPATH_TITLE = """.//div[contains(concat(" ", normalize-space(@class), " "), " title ")]//a"""  # /text()
-SUBPATH_IMAGE = """.//div[contains(concat(" ", normalize-space(@class), " "), " icon ")]//img"""  # Attr "src"
+ROOT_URL = "https://appsliced.co/apps/iphone"
 
 
 class AppleGamesScraper(Scraper):
@@ -32,23 +28,38 @@ class AppleGamesScraper(Scraper):
         return OfferDuration.CLAIMABLE
 
     async def read_offers_from_page(self) -> list[Offer]:
-        self.context.get(ROOT_URL)
+        params = {
+            "sort": "latest",
+            "price": "free",
+            "cat[]": 6014,
+            "page": 1,
+        }
+        url = f"{ROOT_URL}?{urllib.parse.urlencode(params)}"
         raw_offers: list[RawOffer] = []
 
-        try:
-            # Wait until the page loaded
-            WebDriverWait(self.context, Scraper.get_max_wait_seconds()).until(
-                EC.presence_of_element_located((By.XPATH, XPATH_SEARCH_RESULTS))
-            )
+        async with get_new_page(self.context) as page:
+            await page.goto(url)
 
-            offer_elements = self.context.find_elements(By.XPATH, XPATH_SEARCH_RESULTS)
-            for offer_element in offer_elements:
-                raw_offers.append(AppleGamesScraper.read_raw_offer(offer_element))
+            try:
+                await page.wait_for_selector("article.app")
+            except Error as e:
+                logger.error(
+                    f"Error loading search result page. Maybe we are blocked: {e}"
+                )
 
-        except WebDriverException:
-            logger.info(
-                f"Free search results took longer than {Scraper.get_max_wait_seconds()} to load, probably there are none"
-            )
+            elements = page.locator("article.app")
+            try:
+                no_res = await elements.count()
+
+                for i in range(no_res):
+                    element = elements.nth(i)
+                    try:
+                        raw_offer = await AppleGamesScraper.read_raw_offer(element)
+                        raw_offers.append(raw_offer)
+                    except Error as e:
+                        logger.error(f"Error loading offer: {e}")
+            except Error as e:
+                logger.error(f"Error loading offers: {e}")
 
         normalized_offers = AppleGamesScraper.normalize_offers(raw_offers)
         categorized_offers = self.categorize_offers(normalized_offers)
@@ -56,37 +67,15 @@ class AppleGamesScraper(Scraper):
         return categorized_offers
 
     @staticmethod
-    def read_raw_offer(element: WebElement) -> RawOffer:
-        title_str = None
-        url_str = None
-        img_url_str = None
-
-        try:
-            title_str = str(
-                element.find_element(By.XPATH, SUBPATH_TITLE).get_attribute("title")
-            )
-        except WebDriverException:
-            # Nothing to do here, string stays empty
-            pass
-
-        try:
-            url_str = str(element.find_element(By.XPATH, SUBPATH_TITLE).get_attribute("href"))  # type: ignore
-        except WebDriverException:
-            # Nothing to do here, string stays empty
-            pass
-
-        try:
-            img_url_str = str(
-                element.find_element(By.XPATH, SUBPATH_IMAGE).get_attribute("src")
-            )
-        except WebDriverException:
-            # Nothing to do here, string stays empty
-            pass
+    async def read_raw_offer(element: Locator) -> RawOffer:
+        title = await element.locator(".title a").get_attribute("title")
+        url = await element.locator(".title a").get_attribute("href")
+        img_url = await element.locator(".icon img").get_attribute("src")
 
         return RawOffer(
-            title=title_str,
-            url=url_str,
-            img_url=img_url_str,
+            title=title,
+            url=url,
+            img_url=img_url,
         )
 
     @staticmethod
@@ -94,11 +83,6 @@ class AppleGamesScraper(Scraper):
         normalized_offers: list[Offer] = []
 
         for raw_offer in raw_offers:
-            # Raw text
-            if not raw_offer.title:
-                logger.error(f"Error with offer, has no title: {raw_offer}")
-                continue
-
             # Raw text
             rawtext = f"<title>{raw_offer.title}</title>"
 
