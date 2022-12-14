@@ -49,10 +49,10 @@ class SteamGamesScraper(Scraper):
         return OfferDuration.CLAIMABLE
 
     async def read_offers_from_page(self) -> list[Offer]:
-        self.driver.get(ROOT_URL)
+        self.context.get(ROOT_URL)
         try:
             # Wait until the page loaded
-            WebDriverWait(self.driver, Scraper.get_max_wait_seconds()).until(
+            WebDriverWait(self.context, Scraper.get_max_wait_seconds()).until(
                 EC.presence_of_element_located(
                     (By.XPATH, STEAM_SEARCH_RESULTS_CONTAINER)
                 )
@@ -65,7 +65,7 @@ class SteamGamesScraper(Scraper):
 
         elements: list[WebElement] = []
         try:
-            elements.extend(self.driver.find_elements(By.XPATH, STEAM_SEARCH_RESULTS))
+            elements.extend(self.context.find_elements(By.XPATH, STEAM_SEARCH_RESULTS))
         except WebDriverException:
             logger.info("No current offer found.")
 
@@ -76,17 +76,17 @@ class SteamGamesScraper(Scraper):
 
         for raw_offer in raw_offers:
             try:
-                self.driver.get(raw_offer.url)
+                self.context.get(raw_offer.url)
                 await skip_age_verification(
-                    self.driver, raw_offer.appid if raw_offer.appid else 0
+                    self.context, raw_offer.appid if raw_offer.appid else 0
                 )  # TODO: Error handling
-                WebDriverWait(self.driver, Scraper.get_max_wait_seconds()).until(
+                WebDriverWait(self.context, Scraper.get_max_wait_seconds()).until(
                     EC.presence_of_element_located(
                         (By.CLASS_NAME, "game_area_purchase")
                     )
                 )
 
-                element = self.driver.find_element(
+                element = self.context.find_element(
                     By.CLASS_NAME, "game_purchase_discount_quantity"
                 )
                 raw_offer.text = element.text

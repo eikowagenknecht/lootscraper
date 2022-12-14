@@ -52,10 +52,10 @@ class GogGamesScraper(Scraper):
         return OfferDuration.CLAIMABLE
 
     async def read_offers_from_page(self) -> list[Offer]:
-        self.driver.get(ROOT_URL)
+        self.context.get(ROOT_URL)
         try:
             # Wait until the page loaded
-            WebDriverWait(self.driver, Scraper.get_max_wait_seconds()).until(
+            WebDriverWait(self.context, Scraper.get_max_wait_seconds()).until(
                 EC.presence_of_element_located((By.XPATH, XPATH_PAGE_LOADED))
             )
         except WebDriverException:
@@ -66,11 +66,11 @@ class GogGamesScraper(Scraper):
 
         try:
             # Switch to english version
-            en = self.driver.find_element(By.XPATH, XPATH_SWITCH_TO_ENGLISH)
+            en = self.context.find_element(By.XPATH, XPATH_SWITCH_TO_ENGLISH)
             en.click()
             await sleep(2)  # Wait for the language switching to begin
             # Check if it's really english now
-            en_test = self.driver.find_element(By.XPATH, XPATH_SELECTED_LANGUAGE)
+            en_test = self.context.find_element(By.XPATH, XPATH_SELECTED_LANGUAGE)
             if en_test.text != "English":
                 logger.error(
                     f"Tried switching to English, but {en_test.text} is active instead"
@@ -85,11 +85,11 @@ class GogGamesScraper(Scraper):
         # Check giveaway variant 1
         try:
             # Wait until the page loaded
-            WebDriverWait(self.driver, Scraper.get_max_wait_seconds()).until(
+            WebDriverWait(self.context, Scraper.get_max_wait_seconds()).until(
                 EC.presence_of_element_located((By.XPATH, XPATH_GIVEAWAY))
             )
 
-            offer_element = self.driver.find_element(By.XPATH, XPATH_GIVEAWAY)
+            offer_element = self.context.find_element(By.XPATH, XPATH_GIVEAWAY)
             raw_offers.append(GogGamesScraper.read_raw_offer(offer_element))
         except WebDriverException:
             logger.info(
@@ -99,11 +99,11 @@ class GogGamesScraper(Scraper):
         # Check giveaway variant 2
         try:
             # Wait until the page loaded
-            WebDriverWait(self.driver, Scraper.get_max_wait_seconds()).until(
+            WebDriverWait(self.context, Scraper.get_max_wait_seconds()).until(
                 EC.presence_of_element_located((By.XPATH, XPATH_BB_GIVEAWAY))
             )
 
-            offer_elements = self.driver.find_elements(By.XPATH, XPATH_BB_GIVEAWAY)
+            offer_elements = self.context.find_elements(By.XPATH, XPATH_BB_GIVEAWAY)
             offer_urls: list[str] = []
             for el in offer_elements:
                 try:
@@ -191,11 +191,11 @@ class GogGamesScraper(Scraper):
         title_str = None
         img_url_str = None
 
-        self.driver.get(url)
+        self.context.get(url)
 
         try:
             title_str = str(
-                self.driver.find_element(
+                self.context.find_element(
                     By.CLASS_NAME, "productcard-basics__title"
                 ).text
             )
@@ -205,7 +205,7 @@ class GogGamesScraper(Scraper):
 
         try:
             img_url_str = str(
-                self.driver.find_element(
+                self.context.find_element(
                     By.CLASS_NAME, "productcard-player__logo"
                 ).get_attribute(
                     "srcset"

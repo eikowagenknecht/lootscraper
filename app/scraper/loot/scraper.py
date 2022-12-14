@@ -5,14 +5,13 @@ import re
 from asyncio import sleep
 from dataclasses import dataclass
 
-from playwright.async_api import BrowserContext
+from playwright.async_api import BrowserContext, Page
 
 from app.common import Category, OfferDuration, OfferType, Source
 from app.sqlalchemy import Offer
 
 logger = logging.getLogger(__name__)
 
-MAX_WAIT_SECONDS = 15  # Needs to be quite high in Docker for first run
 SCROLL_PAUSE_SECONDS = 1  # Long enough so even Amazons JS can catch up
 
 
@@ -24,8 +23,8 @@ class RawOffer:
 
 
 class Scraper(object):
-    def __init__(self, driver: BrowserContext):
-        self.driver = driver
+    def __init__(self, context: BrowserContext):
+        self.context = context
 
     async def scrape(self) -> list[Offer]:
         offers = await self.read_offers_from_page()
@@ -46,10 +45,6 @@ class Scraper(object):
     async def read_offers_from_page(self) -> list[Offer]:
         raise NotImplementedError("Please implement this method")
 
-    @staticmethod
-    def get_max_wait_seconds() -> int:
-        return MAX_WAIT_SECONDS
-
     def categorize_offers(self, offers: list[Offer]) -> list[Offer]:
         for offer in offers:
 
@@ -68,28 +63,26 @@ class Scraper(object):
         return False
 
     @staticmethod
-    async def scroll_element_to_bottom(driver: BrowserContext, element_id: str) -> None:
-        """Scroll down to the bottom of the given alement. Useful for pages with infinite scrolling."""
+    async def scroll_element_to_bottom(page: Page, element_id: str) -> None:
+        """
+        Scroll down to the bottom of the given alement.
+        Useful for pages with infinite scrolling.
+        """
 
         selector = f'document.getElementById("{element_id}")'
 
         # Get scroll height
-        position = driver.execute_script(f"return {selector}.scrollTop")  # type: ignore
-        scroll_amount = int(
-            driver.execute_script(f"return {selector}.clientHeight") * 0.8  # type: ignore
-        )
+        position = await page.evaluate(f"{selector}.scrollTop")
+        scroll_amount = int(await page.evaluate(f"{selector}.clientHeight") * 0.8)
 
         scolled_x_times = 0
 
         while True:
-            # Wait to load page. We do this first to give the page time for the initial load
-            await sleep(SCROLL_PAUSE_SECONDS)
-
             # Scroll down to bottom
-            driver.execute_script(f"{selector}.scrollTo(0, {position + scroll_amount});")  # type: ignore
+            await page.evaluate(f"{selector}.scrollTo(0, {position + scroll_amount});")
 
             # Calculate new scroll height and compare with last scroll height
-            new_position = driver.execute_script(f"return {selector}.scrollTop")  # type: ignore
+            new_position = await page.evaluate(f"{selector}.scrollTop")
             if new_position == position:
                 break
             position = new_position
@@ -98,15 +91,21 @@ class Scraper(object):
             if scolled_x_times > 100:
                 break
 
+            # Wait to load page
+            await sleep(SCROLL_PAUSE_SECONDS)
+
         # One final wait so the content may load
         await sleep(SCROLL_PAUSE_SECONDS)
 
     @staticmethod
-    async def scroll_page_to_bottom(driver: BrowserContext) -> None:
-        """Scroll down to the bottom of the current page. Useful for pages with infinite scrolling."""
+    async def scroll_page_to_bottom(page: Page) -> None:
+        """
+        Scroll down to the bottom of the current page.
+        Useful for pages with infinite scrolling.
+        """
 
         # Get scroll height
-        height = driver.execute_script("return document.body.scrollHeight")  # type: ignore
+        height = await page.evaluate("return document.body.scrollHeight")
 
         scolled_x_times = 0
 
@@ -115,10 +114,10 @@ class Scraper(object):
             await sleep(SCROLL_PAUSE_SECONDS)
 
             # Scroll down to bottom
-            driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")  # type: ignore
+            await page.evaluate("window.scrollTo(0, document.body.scrollHeight);")
 
             # Calculate new scroll height and compare with last scroll height
-            new_height = driver.execute_script("return document.body.scrollHeight")  # type: ignore
+            new_height = await page.evaluate("return document.body.scrollHeight")
             if new_height == height:
                 break
             height = new_height

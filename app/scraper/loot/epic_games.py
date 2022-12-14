@@ -42,16 +42,16 @@ class EpicGamesScraper(Scraper):
         return OfferDuration.CLAIMABLE
 
     async def read_offers_from_page(self) -> list[Offer]:
-        self.driver.get(ROOT_URL)
+        self.context.get(ROOT_URL)
         try:
             # Wait until the page loaded
-            WebDriverWait(self.driver, Scraper.get_max_wait_seconds()).until(
+            WebDriverWait(self.context, Scraper.get_max_wait_seconds()).until(
                 EC.presence_of_element_located(
                     (By.XPATH, """//h2[text()="Free Games"]""")
                 )
             )
 
-            await Scraper.scroll_page_to_bottom(self.driver)
+            await Scraper.scroll_page_to_bottom(self.context)
         except WebDriverException:
             filename = (
                 Config.data_path()
@@ -60,12 +60,12 @@ class EpicGamesScraper(Scraper):
             logger.error(
                 f"Page took longer than {Scraper.get_max_wait_seconds()} to load. Saving Screenshot to {filename}."
             )
-            self.driver.save_screenshot(str(filename.resolve()))
+            self.context.save_screenshot(str(filename.resolve()))
             return []
 
         elements: list[WebElement] = []
         try:
-            elements.extend(self.driver.find_elements(By.XPATH, XPATH_CURRENT))
+            elements.extend(self.context.find_elements(By.XPATH, XPATH_CURRENT))
         except WebDriverException:
             logger.warning("No current offer found.")
 
