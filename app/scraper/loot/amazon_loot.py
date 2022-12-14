@@ -2,7 +2,10 @@ import logging
 from dataclasses import dataclass
 from datetime import date, datetime, time, timedelta, timezone
 
+from playwright.async_api import Error
+
 from app.common import OfferDuration, OfferType, Source
+from app.pagedriver import get_new_page
 from app.scraper.info.utils import clean_loot_title
 from app.scraper.loot.scraper import RawOffer, Scraper
 from app.sqlalchemy import Offer
@@ -10,9 +13,7 @@ from app.sqlalchemy import Offer
 logger = logging.getLogger(__name__)
 
 ROOT_URL = "https://gaming.amazon.com/home"
-XPATH_LOOT = (
-    '//div[@data-a-target="offer-list-IN_GAME_LOOT"]//div[@class="item-card__action"]'
-)
+
 SUBPATH_GAME_TITLE = './/div[contains(concat(" ", normalize-space(@class), " "), " item-card-details__body ")]//p'
 SUBPATH_TITLE = './/div[contains(concat(" ", normalize-space(@class), " "), " item-card-details__body__primary ")]//h3'
 SUBPATH_ENDDATE = './/div[contains(concat(" ", normalize-space(@class), " "), " item-card__availability-date ")]//p'
@@ -40,87 +41,86 @@ class AmazonLootScraper(Scraper):
         return OfferDuration.CLAIMABLE
 
     async def read_offers_from_page(self) -> list[Offer]:
-        self.context.get(ROOT_URL)
-        try:
-            # Wait until the page loaded
-            WebDriverWait(self.context, Scraper.get_max_wait_seconds()).until(
-                EC.presence_of_element_located((By.CLASS_NAME, "offer-list__content"))
+        async with get_new_page(self.context) as page:
+            await page.goto(ROOT_URL)
+            try:
+                await page.wait_for_selector(".offer-list__content")
+                await AmazonLootScraper.scroll_element_to_bottom(page, "root")
+
+            except Error as e:
+                logger.error(f"Page could not be read: {e}")
+                return []
+
+            elements = page.locator(
+                '[data-a-target="offer-list-IN_GAME_LOOT"] .item-card__action'
             )
 
-            # Scroll slowly to the bottom to load all offers
-            await AmazonLootScraper.scroll_element_to_bottom(self.context, "root")
-
-        except WebDriverException:
-            logger.error(
-                f"Page took longer than {Scraper.get_max_wait_seconds()} to load"
-            )
-            return []
-
-        try:
-            elements: list[WebElement] = self.context.find_elements(
-                By.XPATH, XPATH_LOOT
-            )
-        except WebDriverException:
-            logger.error("Root element not found, could not scrape!")
-            return []
-
-        raw_offers: list[AmazonLootRawOffer] = []
-        game_title_str: str | None
-        title_str: str | None
-        valid_to_str: str | None
-        url_str: str | None
-
-        for element in elements:
             try:
-                game_title: WebElement = element.find_element(
-                    By.XPATH, SUBPATH_GAME_TITLE
-                )
-                game_title_str = game_title.text
-            except WebDriverException:
-                # Nothing to do here, string stays empty
-                game_title_str = None
+                no_res = await elements.count()
+            except Error as e:
+                logger.error(f"Root element not found, could not scrape: {e}")
+                return []
 
-            try:
-                title: WebElement = element.find_element(By.XPATH, SUBPATH_TITLE)
-                title_str = title.text
-            except WebDriverException:
-                # Nothing to do here, string stays empty
-                title_str = None
+            raw_offers: list[AmazonLootRawOffer] = []
 
-            try:
-                enddate: WebElement = element.find_element(By.XPATH, SUBPATH_ENDDATE)
-                valid_to_str = enddate.text
-            except WebDriverException:
-                # Nothing to do here, string stays empty
-                valid_to_str = None
+            for i in range(no_res):
+                element = elements.nth(i)
 
-            try:
-                url: WebElement = element.find_element(By.XPATH, SUBPATH_LINK)
-                link: str | None = url.get_attribute("href")  # type: ignore
-                if link is not None:
-                    url_str = link
-            except WebDriverException:
-                # Nothing to do here, string stays empty
-                url_str = None
+                try:
+                    game_title = await element.locator(
+                        ".item-card-details__body p"
+                    ).text_content()
+                    if not game_title:
+                        # Skip offers with empty titles
+                        continue
+                except Error:
+                    # Skip offers without titles
+                    continue
 
-            try:
-                img_url: WebElement = element.find_element(By.XPATH, SUBPATH_IMG)
-                link2: str | None = img_url.get_attribute("src")  # type: ignore
-                if link2 is not None:
-                    img_url_str = link2
-            except WebDriverException:
-                # Nothing to do here, string stays empty
-                img_url_str = None
+                try:
+                    title = await element.locator(
+                        ".item-card-details__body__primary h3"
+                    ).text_content()
+                    if not title:
+                        # Skip offers with empty titles
+                        continue
+                except Error:
+                    # Skip offers without titles
+                    continue
 
-            raw_offers.append(
-                AmazonLootRawOffer(
-                    game_title=game_title_str,
-                    title=title_str,
-                    valid_to=valid_to_str,
-                    url=url_str,
-                    img_url=img_url_str,
-                )
-            )
+                # Skip duplicates (everything is contained twice on the page for weird JS reasons)
+                if any(
+                    x.title == title and x.game_title == game_title for x in raw_offers
+                ):
+                    continue
+
+                raw_offer = AmazonLootRawOffer(title, game_title=game_title)
+
+                try:
+                    raw_offer.valid_to = await element.locator(
+                        ".item-card__availability-date p"
+                    ).text_content(timeout=500)
+                except Error:
+                    # Nothing to do here, string stays empty
+                    pass
+
+                try:
+                    raw_offer.url = await element.locator(
+                        '[data-a-target="learn-more-card"]'
+                    ).get_attribute("href", timeout=500)
+                except Error:
+                    # Nothing to do here, string stays empty
+                    pass
+
+                try:
+                    raw_offer.img_url = await element.locator(
+                        '[data-a-target="card-image"] img'
+                    ).get_attribute("src", timeout=500)
+                except Error:
+                    # Nothing to do here, string stays empty
+                    pass
+
+                raw_offers.append(raw_offer)
 
         normalized_offers = AmazonLootScraper.normalize_offers(raw_offers)
 
