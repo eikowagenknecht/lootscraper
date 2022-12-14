@@ -38,8 +38,6 @@ class AmazonGamesScraper(Scraper):
             await page.goto(ROOT_URL)
             try:
                 await page.wait_for_selector(".offer-list__content")
-
-                # Scroll slowly to the bottom to load all offers
                 await AmazonGamesScraper.scroll_element_to_bottom(page, "root")
             except Error as e:
                 logger.error(f"Page could not be read: {e}")
@@ -71,11 +69,11 @@ class AmazonGamesScraper(Scraper):
                     # Skip offers without titles
                     continue
 
-                raw_offer = AmazonRawOffer(title)
-
                 # Skip duplicates (everything is contained twice on the page for weird JS reasons)
                 if any(x.title == title for x in raw_offers):
                     continue
+
+                raw_offer = AmazonRawOffer(title)
 
                 try:
                     raw_offer.valid_to = await element.locator(
