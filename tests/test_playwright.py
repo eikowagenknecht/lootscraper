@@ -8,6 +8,7 @@ from app.scraper.info.steam import get_steam_details, get_steam_id
 from app.scraper.loot.amazon_games import AmazonGamesScraper
 from app.scraper.loot.amazon_loot import AmazonLootScraper
 from app.scraper.loot.apple_games import AppleGamesScraper
+from app.scraper.loot.epic_games import EpicGamesScraper
 
 logging.basicConfig(
     level=logging.INFO,
@@ -60,6 +61,20 @@ class AppleGamesTest(unittest.IsolatedAsyncioTestCase):
                 self.assertIsNotNone(res.title)
                 self.assertIsNotNone(res.url)
                 self.assertIsNotNone(res.img_url)
+
+
+class EpicGamesTest(unittest.IsolatedAsyncioTestCase):
+    async def test_loot(self) -> None:
+        async with get_browser_context() as context:
+            scraper = EpicGamesScraper(context=context)
+            scraper_results = await scraper.scrape()
+            self.assertGreater(len(scraper_results), 0)
+            for res in scraper_results:
+                self.assertIsNotNone(res.valid_to)
+                self.assertIsNotNone(res.title)
+                self.assertIsNotNone(res.url)
+                self.assertIsNotNone(res.img_url)
+                self.assertFalse(res.img_url.startswith("data"))
 
 
 class SteamGameInfoTests(unittest.IsolatedAsyncioTestCase):

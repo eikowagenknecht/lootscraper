@@ -105,7 +105,7 @@ class Scraper(object):
         """
 
         # Get scroll height
-        height = await page.evaluate("return document.body.scrollHeight")
+        height = await page.evaluate("document.body.scrollHeight")
 
         scolled_x_times = 0
 
@@ -117,7 +117,7 @@ class Scraper(object):
             await page.evaluate("window.scrollTo(0, document.body.scrollHeight);")
 
             # Calculate new scroll height and compare with last scroll height
-            new_height = await page.evaluate("return document.body.scrollHeight")
+            new_height = await page.evaluate("document.body.scrollHeight")
             if new_height == height:
                 break
             height = new_height

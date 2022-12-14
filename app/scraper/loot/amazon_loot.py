@@ -14,12 +14,6 @@ logger = logging.getLogger(__name__)
 
 ROOT_URL = "https://gaming.amazon.com/home"
 
-SUBPATH_GAME_TITLE = './/div[contains(concat(" ", normalize-space(@class), " "), " item-card-details__body ")]//p'
-SUBPATH_TITLE = './/div[contains(concat(" ", normalize-space(@class), " "), " item-card-details__body__primary ")]//h3'
-SUBPATH_ENDDATE = './/div[contains(concat(" ", normalize-space(@class), " "), " item-card__availability-date ")]//p'
-SUBPATH_LINK = './a[@data-a-target="learn-more-card"]'
-SUBPATH_IMG = './/div[@data-a-target="card-image"]//img'
-
 
 @dataclass
 class AmazonLootRawOffer(RawOffer):

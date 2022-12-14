@@ -2,24 +2,17 @@ import logging
 from dataclasses import dataclass
 from datetime import datetime, timezone
 
+from playwright.async_api import Error, Locator
+
 from app.common import OfferDuration, OfferType, Source
 from app.configparser import Config
+from app.pagedriver import get_new_page
 from app.scraper.loot.scraper import RawOffer, Scraper
 from app.sqlalchemy import Offer
 
 logger = logging.getLogger(__name__)
 
 ROOT_URL = "https://store.epicgames.com/en-US/"
-
-XPATH_CURRENT = (
-    """//span[text()="Free Now"]//ancestor::a"""  # xpath href attr is the link
-)
-# XPATH_COMING_SOON = """//span[text()="Coming Soon"]//ancestor::a"""
-
-SUBPATH_TITLE = """.//*[@data-testid="offer-title-info-title"]/div"""  # /text()
-SUBPATH_TIME_FROM = """.//*[@data-testid="offer-title-info-subtitle"]//time[1]"""  # /@datetime  # format 2022-02-24T16:00:00.000Z
-SUBPATH_TIME_TO = """.//*[@data-testid="offer-title-info-subtitle"]//time[2]"""  # /@datetime  # format 2022-02-24T16:00:00.000Z
-SUBPATH_IMG = """.//img"""
 
 
 @dataclass
@@ -42,96 +35,64 @@ class EpicGamesScraper(Scraper):
         return OfferDuration.CLAIMABLE
 
     async def read_offers_from_page(self) -> list[Offer]:
-        self.context.get(ROOT_URL)
-        try:
-            # Wait until the page loaded
-            WebDriverWait(self.context, Scraper.get_max_wait_seconds()).until(
-                EC.presence_of_element_located(
-                    (By.XPATH, """//h2[text()="Free Games"]""")
-                )
-            )
-
-            await Scraper.scroll_page_to_bottom(self.context)
-        except WebDriverException:
-            filename = (
-                Config.data_path()
-                / f'screenshot_error_{datetime.now().isoformat().replace(".", "_").replace(":", "_")}.png'
-            )
-            logger.error(
-                f"Page took longer than {Scraper.get_max_wait_seconds()} to load. Saving Screenshot to {filename}."
-            )
-            self.context.save_screenshot(str(filename.resolve()))
-            return []
-
-        elements: list[WebElement] = []
-        try:
-            elements.extend(self.context.find_elements(By.XPATH, XPATH_CURRENT))
-        except WebDriverException:
-            logger.warning("No current offer found.")
-
-        # try:
-        #     elements.extend(self.driver.find_elements(By.XPATH, XPATH_COMING_SOON))
-        # except WebDriverException:
-        #     logger.warning("No coming offer found.")
-
         raw_offers: list[EpicRawOffer] = []
-        for element in elements:
-            raw_offers.append(EpicGamesScraper.read_raw_offer(element))
+
+        async with get_new_page(self.context) as page:
+            await page.goto(ROOT_URL)
+
+            try:
+                await page.wait_for_selector("h2:has-text('Free Games')")
+            except Error:
+                filename = (
+                    Config.data_path()
+                    / f'screenshot_error_{datetime.now().isoformat().replace(".", "_").replace(":", "_")}.png'
+                )
+                logger.error(
+                    f"Error loading the page. Saving Screenshot to {filename}."
+                )
+                await page.screenshot(path=str(filename.resolve()))
+                return []
+
+            elements = page.locator('//span[text()="Free Now"]//ancestor::a')
+
+            try:
+                no_res = await elements.count()
+                for i in range(no_res):
+                    element = elements.nth(i)
+                    try:
+                        raw_offer = await EpicGamesScraper.read_raw_offer(element)
+                        raw_offers.append(raw_offer)
+                    except Error as e:
+                        logger.error(f"Error loading offer: {e}")
+
+            except Error as e:
+                logger.error(f"No current offers found: {e}")
+                return []
 
         normalized_offers = EpicGamesScraper.normalize_offers(raw_offers)
 
         return normalized_offers
 
     @staticmethod
-    def read_raw_offer(element: WebElement) -> EpicRawOffer:
-        title_str = None
-        valid_from_str = None
-        valid_to_str = None
-        url_str = None
-        img_url_str = None
+    async def read_raw_offer(element: Locator) -> EpicRawOffer:
+        # Scroll element into view to load img url
+        await element.scroll_into_view_if_needed()
 
-        try:
-            title_str = str(element.find_element(By.XPATH, SUBPATH_TITLE).text)
-        except WebDriverException:
-            # Nothing to do here, string stays empty
-            pass
-
-        try:
-            valid_from_str = str(
-                element.find_element(By.XPATH, SUBPATH_TIME_FROM).get_attribute(
-                    "datetime"
-                )
-            )
-        except WebDriverException:
-            # Nothing to do here, string stays empty
-            pass
-
-        try:
-            valid_to_str = str(
-                element.find_element(By.XPATH, SUBPATH_TIME_TO).get_attribute(
-                    "datetime"
-                )
-            )
-        except WebDriverException:
-            # Nothing to do here, string stays empty
-            pass
-
-        try:
-            url_str = str(element.get_attribute("href"))  # type: ignore
-            # Ignore embedded img url
-            if url_str.startswith("data"):
-                url_str = None
-        except WebDriverException:
-            # Nothing to do here, string stays empty
-            pass
-
-        try:
-            img_url_str = str(
-                element.find_element(By.XPATH, SUBPATH_IMG).get_attribute("src")
-            )
-        except WebDriverException:
-            # Nothing to do here, string stays empty
-            pass
+        title_str = await element.locator(
+            '[data-testid="offer-title-info-title"] div'
+        ).text_content()
+        valid_from_str = (
+            await element.locator('[data-testid="offer-title-info-subtitle"] time')
+            .nth(0)
+            .get_attribute("datetime")
+        )  # format 2022-02-24T16:00:00.000Z
+        valid_to_str = (
+            await element.locator('[data-testid="offer-title-info-subtitle"] time')
+            .nth(1)
+            .get_attribute("datetime")
+        )
+        url_str = await element.get_attribute("href")
+        img_url_str = await element.locator("img").get_attribute("src")
 
         # For current offers, the date is included twice but only means the enddate
         if valid_from_str == valid_to_str:
