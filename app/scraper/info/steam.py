@@ -8,23 +8,15 @@ from typing import Any
 import httpx
 from playwright.async_api import BrowserContext, Error, Page
 
+from app.pagedriver import get_new_page
 from app.scraper.info.utils import RESULT_MATCH_THRESHOLD, get_match_score
 from app.sqlalchemy import SteamInfo
 
 logger = logging.getLogger(__name__)
 
-STEAM_SEARCH_URL = "https://store.steampowered.com/search/?term="
-STEAM_SEARCH_URL_OPTIONS = "&category1=998"  # Games only
-STEAM_DETAILS_JSON_URL = "https://store.steampowered.com/api/appdetails?appids="
+STEAM_SEARCH_URL = "https://store.steampowered.com/search/"
+STEAM_DETAILS_JSON_URL = "https://store.steampowered.com/api/appdetails"
 STEAM_DETAILS_STORE_URL = "https://store.steampowered.com/app/"
-
-STEAM_DETAILS_REVIEW_SCORE = '//div[@id="userReviews"]/div[@itemprop="aggregateRating"]'  # data-tooltip-html attribute
-STEAM_DETAILS_REVIEW_SCORE_VALUE = '//div[@id="userReviews"]/div[@itemprop="aggregateRating"]//meta[@itemprop="ratingValue"]'  # content attribute
-STEAM_DETAILS_REVIEW_COUNT = '//div[@id="userReviews"]/div[@itemprop="aggregateRating"]//meta[@itemprop="reviewCount"]'  # content attribute
-STEAM_DETAILS_LOADED = '//div[contains(concat(" ", normalize-space(@class), " "), " game_page_background ")]'
-STEAM_PRICE_FULL = '(//div[contains(concat(" ", normalize-space(@class), " "), " game_area_purchase_game ")])[1]//div[contains(concat(" ", normalize-space(@class), " "), " game_purchase_action")]//div[contains(concat(" ", normalize-space(@class), " "), " game_purchase_price")]'  # text=" 27,99€ "
-STEAM_PRICE_DISCOUNTED_ORIGINAL = '(//div[contains(concat(" ", normalize-space(@class), " "), " game_area_purchase_game ")])[1]//div[contains(concat(" ", normalize-space(@class), " "), " game_purchase_action")]//div[contains(concat(" ", normalize-space(@class), " "), " discount_original_price")]'  # text=" 27,99€ "
-STEAM_RELEASE_DATE = '//div[@id="genresAndManufacturer"]'
 
 
 @dataclass
@@ -46,12 +38,13 @@ async def get_steam_id(
 
     logger.info(f"Getting Steam id for {search_string}.")
 
-    encoded_searchstring = urllib.parse.quote_plus(search_string, safe="")
-    url = STEAM_SEARCH_URL + encoded_searchstring + STEAM_SEARCH_URL_OPTIONS
+    params = {
+        "term": search_string,
+        "category1": 998,  # Games
+    }
+    url = f"{STEAM_SEARCH_URL}?{urllib.parse.urlencode(params)}"
 
-    page = await context.new_page()
-
-    try:
+    async with get_new_page(context) as page:
         await page.goto(url)
 
         elements = (
@@ -93,8 +86,6 @@ async def get_steam_id(
                 # Log problem with reading a result, but continue with the next one
                 logger.warning(str(e))
                 continue
-    finally:
-        await page.close()
 
     if best_match is None:
         logger.info(f"Search for {search_string} found no result.")
@@ -213,7 +204,9 @@ async def add_data_from_steam_api(steam_info: SteamInfo) -> None:
 async def read_from_steam_api(steam_app_id: int) -> dict[str, Any] | None:
     async with httpx.AsyncClient() as client:
         try:
-            response = await client.get(STEAM_DETAILS_JSON_URL + str(steam_app_id))
+            response = await client.get(
+                STEAM_DETAILS_JSON_URL, params={"appids": steam_app_id}
+            )
             response.raise_for_status()
             return response.json()
         except httpx.HTTPError as e:
@@ -228,137 +221,144 @@ async def add_data_from_steam_store_page(
     *,
     context: BrowserContext,
 ) -> None:
-    page = await context.new_page()
-    # TODO: Put this in a try/finally block and make it reusable (see get_steam_id method)
-    await page.goto(steam_info.url)
+    async with get_new_page(context) as page:
+        await page.goto(steam_info.url)
 
-    try:
-        await page.wait_for_selector(STEAM_DETAILS_LOADED)
-    except Error:
-        logger.error(f"Steam store page for {steam_info.id} didn't load.")
-        return None
-
-    try:
-        await skip_age_verification(page)
-    except Error:
-        logger.error(f"Steam age verification for {steam_info.id} failed.")
-        return None
-
-    # Add the review score percentage if available
-    if steam_info.percent is None:
         try:
-            review_score_percent = (
-                await page.locator("#userReviews")
-                .locator('div[itemprop="aggregateRating"]')
-                .get_attribute("data-tooltip-html")
-            )
-            if review_score_percent is None:
+            await page.wait_for_selector(".game_page_background")
+        except Error:
+            logger.error(f"Steam store page for {steam_info.id} didn't load.")
+            return None
+
+        try:
+            await skip_age_verification(page)
+        except Error:
+            logger.error(f"Steam age verification for {steam_info.id} failed.")
+            return None
+
+        # Add the review score percentage if available
+        if steam_info.percent is None:
+            try:
+                review_score_percent = (
+                    await page.locator("#userReviews")
+                    .locator('div[itemprop="aggregateRating"]')
+                    .get_attribute("data-tooltip-html")
+                )
+                if review_score_percent is None:
+                    logger.warning(f"No Steam percentage found for {steam_info.id}.")
+                elif review_score_percent.startswith("Need more user reviews"):
+                    # No percentage, but this reason is fine
+                    pass
+                else:
+                    steam_info.percent = int(review_score_percent.split("%")[0].strip())
+            except Error:
                 logger.warning(f"No Steam percentage found for {steam_info.id}.")
-            elif review_score_percent.startswith("Need more user reviews"):
-                # No percentage, but this reason is fine
-                pass
-            else:
-                steam_info.percent = int(review_score_percent.split("%")[0].strip())
-        except Error:
-            logger.warning(f"No Steam percentage found for {steam_info.id}.")
-        except ValueError as e:
-            logger.error(f"Invalid Steam percentage for {steam_info.id} ({str(e)}).")
+            except ValueError as e:
+                logger.error(f"Invalid Steam percentage for {steam_info.id}: {e}")
 
-    # Add the review score if available
-    if steam_info.score is None:
-        try:
-            review_score = await page.locator(
-                STEAM_DETAILS_REVIEW_SCORE_VALUE
-            ).get_attribute("content")
-            if review_score is None:
+        # Add the review score if available
+        if steam_info.score is None:
+            try:
+                review_score = await page.locator(
+                    '#userReviews [itemprop="aggregateRating"] [itemprop="ratingValue"]'
+                ).get_attribute("content")
+                if review_score is None:
+                    logger.warning(f"No Steam rating found for {steam_info.id}.")
+                else:
+                    steam_info.score = int(review_score)
+            except Error:
+                logger.warning(f"No Steam rating found for {steam_info.id}!")
+            except ValueError as e:
+                logger.error(f"Invalid Steam rating for {steam_info.id}: {e}")
+
+        # Add the number of recommendations if available
+        if steam_info.recommendations is None:
+            try:
+                recommendations = await page.locator(
+                    '#userReviews [itemprop="aggregateRating"] [itemprop="reviewCount"]'
+                ).get_attribute("content")
+                if recommendations is None:
+                    logger.warning(f"No Steam rating found for {steam_info.id}.")
+                else:
+                    steam_info.recommendations = int(recommendations)
+            except Error:
                 logger.warning(f"No Steam rating found for {steam_info.id}.")
-            else:
-                steam_info.score = int(review_score)
-        except Error:
-            logger.warning(f"No Steam rating found for {steam_info.id}!")
-        except ValueError as e:
-            logger.error(f"Invalid Steam rating for {steam_info.id} ({str(e)}).")
+            except ValueError as e:
+                logger.error(f"Invalid Steam rating for {steam_info.id}: {e}")
 
-    # Add the number of recommendations if available
-    if steam_info.recommendations is None:
-        try:
-            recommendations = await page.locator(
-                STEAM_DETAILS_REVIEW_COUNT
-            ).get_attribute("content")
-            if recommendations is None:
-                logger.warning(f"No Steam rating found for {steam_info.id}.")
-            else:
-                steam_info.recommendations = int(recommendations)
-        except Error:
-            logger.warning(f"No Steam rating found for {steam_info.id}!")
-        except ValueError as e:
-            logger.error(f"Invalid Steam rating for {steam_info.id} ({str(e)}).")
-
-    # First source to add the recommended price if available
-    if steam_info.recommended_price_eur is None:
-        try:
-            recommended_price = await page.locator(
-                STEAM_PRICE_DISCOUNTED_ORIGINAL
-            ).text_content()
-            if recommended_price is None:
+        # First source to add the recommended price if available
+        if steam_info.recommended_price_eur is None:
+            try:
+                recommended_price = await page.locator(
+                    ".game_area_purchase_game .game_purchase_action .discount_original_price"
+                ).text_content()
+                if recommended_price is None:
+                    logger.info(
+                        f"No Steam original price found on shop page for {steam_info.id}."
+                    )
+                else:
+                    steam_info.recommended_price_eur = float(
+                        recommended_price.replace("€", "").replace(",", ".").strip()
+                    )
+            except Error as e:
                 logger.info(
-                    f"No Steam original price found on shop page for {steam_info.id}."
+                    f"No Steam original price found on shop page for {steam_info.id}: {e}"
                 )
-            else:
-                steam_info.recommended_price_eur = float(
-                    recommended_price.replace("€", "").replace(",", ".").strip()
+            except ValueError as e:
+                logger.error(
+                    f"Steam original price has wrong format for {steam_info.id}: {e}"
                 )
-        except Error:
-            logger.info(
-                f"No Steam original price found on shop page for {steam_info.id}."
-            )
-        except ValueError as e:
-            logger.error(
-                f"Steam original price has wrong format for {steam_info.id} ({str(e)})."
-            )
 
-    # Second source to add the recommended price if available
-    if steam_info.recommended_price_eur is None:
-        try:
-            recommended_price = await page.locator(STEAM_PRICE_FULL).text_content()
-            if recommended_price is None:
-                logger.info(
-                    f"No Steam recommended price found on shop page for {steam_info.id}."
+        # Second source to add the recommended price if available
+        if steam_info.recommended_price_eur is None:
+            try:
+                recommended_price = await page.locator(
+                    ".game_area_purchase_game .game_purchase_action .game_purchase_price"
+                ).first.text_content()
+                if recommended_price is None:
+                    logger.info(
+                        f"No Steam recommended price found on shop page for {steam_info.id}."
+                    )
+                elif "free" in recommended_price.lower():
+                    steam_info.recommended_price_eur = 0
+                else:
+                    steam_info.recommended_price_eur = float(
+                        recommended_price.replace("€", "").replace(",", ".").strip()
+                    )
+            except Error as e:
+                logger.error(
+                    f"No Steam recommended price found on shop page for {steam_info.id}: {e}"
                 )
-            elif "free" in recommended_price.lower():
-                steam_info.recommended_price_eur = 0
-            else:
-                steam_info.recommended_price_eur = float(
-                    recommended_price.replace("€", "").replace(",", ".").strip()
+            except ValueError as e:
+                logger.error(
+                    f"Steam recommended price has wrong format for {steam_info.id}: {e}."
                 )
-        except Error:
-            logger.error(
-                f"No Steam recommended price found on shop page for {steam_info.id}."
-            )
-        except ValueError as e:
-            logger.error(
-                f"Steam recommended price has wrong format for {steam_info.id} ({str(e)})."
-            )
 
-    # Add the release date if available
-    if steam_info.release_date is None:
-        try:
-            release_date_str = await page.locator(STEAM_RELEASE_DATE).text_content()
-            if release_date_str is None:
-                logger.debug(f"No release date found on shop page for {steam_info.id}")
-            else:
-                release_date_str = release_date_str.split("RELEASE DATE:")[1].strip()
-                release_date = datetime.strptime(release_date_str, "%d %b, %Y").replace(
-                    tzinfo=timezone.utc
-                )
-                steam_info.release_date = release_date
+        # Add the release date if available
+        if steam_info.release_date is None:
+            try:
+                release_date_str = await page.locator(
+                    "#genresAndManufacturer"
+                ).text_content()
+                if release_date_str is None:
+                    logger.debug(
+                        f"No release date found on shop page for {steam_info.id}"
+                    )
+                else:
+                    release_date_str = release_date_str.split("RELEASE DATE:")[
+                        1
+                    ].strip()
+                    release_date = datetime.strptime(
+                        release_date_str, "%d %b, %Y"
+                    ).replace(tzinfo=timezone.utc)
+                    steam_info.release_date = release_date
 
-        except Error:
-            logger.debug(f"No release date found on shop page for {steam_info.id}.")
-        except (IndexError, ValueError) as e:
-            logger.error(
-                f"Release date in wrong format on shop page for {steam_info.id} ({str(e)})."
-            )
+            except Error:
+                logger.debug(f"No release date found on shop page for {steam_info.id}.")
+            except (IndexError, ValueError) as e:
+                logger.error(
+                    f"Release date in wrong format on shop page for {steam_info.id} ({str(e)})."
+                )
 
 
 async def skip_age_verification(page: Page) -> None:
