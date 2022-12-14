@@ -253,7 +253,7 @@ async def scrape_offers(webdriver: BrowserContext) -> list[Offer]:
             and scraperType.get_duration() in cfg.enabled_offer_durations
             and scraperType.get_source() in cfg.enabled_offer_sources
         ):
-            scraper = scraperType(driver=webdriver)
+            scraper = scraperType(context=webdriver)
             scraper_duration = scraper.get_duration().value
             scraper_source = scraper.get_source().value
 

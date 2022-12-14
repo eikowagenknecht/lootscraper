@@ -40,15 +40,15 @@ class AmazonLootScraper(Scraper):
         return OfferDuration.CLAIMABLE
 
     async def read_offers_from_page(self) -> list[Offer]:
-        self.driver.get(ROOT_URL)
+        self.context.get(ROOT_URL)
         try:
             # Wait until the page loaded
-            WebDriverWait(self.driver, Scraper.get_max_wait_seconds()).until(
+            WebDriverWait(self.context, Scraper.get_max_wait_seconds()).until(
                 EC.presence_of_element_located((By.CLASS_NAME, "offer-list__content"))
             )
 
             # Scroll slowly to the bottom to load all offers
-            await AmazonLootScraper.scroll_element_to_bottom(self.driver, "root")
+            await AmazonLootScraper.scroll_element_to_bottom(self.context, "root")
 
         except WebDriverException:
             logger.error(
@@ -57,7 +57,9 @@ class AmazonLootScraper(Scraper):
             return []
 
         try:
-            elements: list[WebElement] = self.driver.find_elements(By.XPATH, XPATH_LOOT)
+            elements: list[WebElement] = self.context.find_elements(
+                By.XPATH, XPATH_LOOT
+            )
         except WebDriverException:
             logger.error("Root element not found, could not scrape!")
             return []

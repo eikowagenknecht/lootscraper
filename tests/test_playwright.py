@@ -5,6 +5,7 @@ import unittest
 from app.common import TIMESTAMP_LONG
 from app.pagedriver import get_browser_context
 from app.scraper.info.steam import get_steam_details, get_steam_id
+from app.scraper.loot.amazon_games import AmazonGamesScraper
 
 logging.basicConfig(
     level=logging.INFO,
@@ -19,6 +20,14 @@ class PlaywrightTests(unittest.IsolatedAsyncioTestCase):
             page = await context.new_page()
             res = await page.goto("https://google.com/")
             self.assertEqual(res.status, 200)
+
+
+class AmazonGamesTests(unittest.IsolatedAsyncioTestCase):
+    async def test_any_games(self) -> None:
+        async with get_browser_context() as context:
+            scraper = AmazonGamesScraper(context=context)
+            scraper_results = await scraper.scrape()
+            self.assertGreater(len(scraper_results), 0)
 
 
 class SteamGameInfoTests(unittest.IsolatedAsyncioTestCase):
