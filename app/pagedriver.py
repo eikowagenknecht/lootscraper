@@ -22,7 +22,7 @@ async def get_browser_context() -> AsyncGenerator[BrowserContext, None]:
                 headless=Config.get().headless_chrome,
             )
             context = await browser.new_context()
-            context.set_default_timeout(5000)  # Milliseconds
+            context.set_default_timeout(Config.get().web_timeout * 1000)  # Milliseconds
 
             with open(INJECTION_FILE, "r", encoding="utf-8") as file:
                 js_to_inject = file.read()

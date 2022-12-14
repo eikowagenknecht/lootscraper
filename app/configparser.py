@@ -33,6 +33,7 @@ class ParsedConfig:
     force_update: bool = False
     db_echo: bool = False
     headless_chrome: bool = True
+    web_timeout: int = 5
 
     # Sources: Offers
     enabled_offer_sources: list[Source] = field(default_factory=list)
@@ -120,6 +121,7 @@ class Config:
             parsed_config.headless_chrome = config.getboolean(
                 "expert", "HeadlessChrome"
             )
+            parsed_config.web_timeout = int(config["expert"]["WebTimeout"])
 
             if config.getboolean("offer_sources", "Amazon"):
                 parsed_config.enabled_offer_sources.append(Source.AMAZON)
