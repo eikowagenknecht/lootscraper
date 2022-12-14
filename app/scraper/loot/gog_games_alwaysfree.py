@@ -42,10 +42,10 @@ class GogGamesAlwaysFreeScraper(Scraper):
         return OfferDuration.ALWAYS
 
     async def read_offers_from_page(self) -> list[Offer]:
-        self.driver.get(ROOT_URL)
+        self.context.get(ROOT_URL)
         try:
             # Wait until the page loaded
-            WebDriverWait(self.driver, Scraper.get_max_wait_seconds()).until(
+            WebDriverWait(self.context, Scraper.get_max_wait_seconds()).until(
                 EC.presence_of_element_located((By.XPATH, XPATH_PAGE_LOADED))
             )
         except WebDriverException:
@@ -56,11 +56,11 @@ class GogGamesAlwaysFreeScraper(Scraper):
 
         try:
             # Switch to english version
-            en = self.driver.find_element(By.XPATH, XPATH_SWITCH_TO_ENGLISH)
+            en = self.context.find_element(By.XPATH, XPATH_SWITCH_TO_ENGLISH)
             en.click()
             await sleep(2)  # Wait for the language switching to begin
             # Check if it's really english now
-            en_test = self.driver.find_element(By.XPATH, XPATH_SELECTED_LANGUAGE)
+            en_test = self.context.find_element(By.XPATH, XPATH_SELECTED_LANGUAGE)
             if en_test.text != "English":
                 logger.error(
                     f"Tried switching to English, but {en_test.text} is active instead"
@@ -74,11 +74,11 @@ class GogGamesAlwaysFreeScraper(Scraper):
 
         try:
             # Wait until the page loaded
-            WebDriverWait(self.driver, Scraper.get_max_wait_seconds()).until(
+            WebDriverWait(self.context, Scraper.get_max_wait_seconds()).until(
                 EC.presence_of_element_located((By.XPATH, XPATH_GAMES))
             )
 
-            offer_elements = self.driver.find_elements(By.XPATH, SUBPATH_OFFERS)
+            offer_elements = self.context.find_elements(By.XPATH, SUBPATH_OFFERS)
             for offer_element in offer_elements:
                 raw_offers.append(
                     GogGamesAlwaysFreeScraper.read_raw_offer(offer_element)

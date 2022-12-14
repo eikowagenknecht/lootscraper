@@ -35,19 +35,19 @@ class ItchGamesScraper(Scraper):
         return OfferDuration.CLAIMABLE
 
     async def read_offers_from_page(self) -> list[Offer]:
-        self.driver.get(ROOT_URL)
+        self.context.get(ROOT_URL)
 
         raw_offers: list[RawOffer] = []
 
         try:
             # Wait until the page loaded
-            WebDriverWait(self.driver, Scraper.get_max_wait_seconds()).until(
+            WebDriverWait(self.context, Scraper.get_max_wait_seconds()).until(
                 EC.presence_of_element_located((By.XPATH, XPATH_FREE_RESULTS))
             )
 
-            await ItchGamesScraper.scroll_page_to_bottom(self.driver)
+            await ItchGamesScraper.scroll_page_to_bottom(self.context)
 
-            offer_elements = self.driver.find_elements(By.XPATH, XPATH_FREE_RESULTS)
+            offer_elements = self.context.find_elements(By.XPATH, XPATH_FREE_RESULTS)
             for offer_element in offer_elements:
                 raw_offers.append(ItchGamesScraper.read_raw_offer(offer_element))
         except WebDriverException:
