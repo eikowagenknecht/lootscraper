@@ -3,11 +3,20 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import AsyncGenerator
 
-from playwright.async_api import Browser, BrowserContext, async_playwright
+from playwright.async_api import Browser, BrowserContext, Page, async_playwright
 
 from app.configparser import Config
 
 INJECTION_FILE = Path("js/inject.js")
+
+
+@asynccontextmanager
+async def get_new_page(context: BrowserContext) -> AsyncGenerator[Page, None]:
+    page = await context.new_page()
+    try:
+        yield page
+    finally:
+        await page.close()
 
 
 @asynccontextmanager
