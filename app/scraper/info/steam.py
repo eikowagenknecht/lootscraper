@@ -41,7 +41,7 @@ async def get_steam_id(
 ) -> int | None:
     """
     Search Steam via the web page and return the best match in the results.
-    The omparison is done with difflib, lower cased.
+    The comparison is done with difflib, lower cased.
     """
 
     logger.info(f"Getting Steam id for {search_string}.")
@@ -54,8 +54,6 @@ async def get_steam_id(
     try:
         await page.goto(url)
 
-        best_match: SteamEntry | None = None
-
         elements = (
             page.locator("#search_result_container")
             .locator("a")
@@ -63,28 +61,29 @@ async def get_steam_id(
         )
 
         no_res = await elements.count()
+        best_match: SteamEntry | None = None
 
         for i in range(no_res):
             element = elements.nth(i)
             try:
-                result = await element.locator(".title").text_content()
+                title = await element.locator(".title").text_content()
                 appid = await element.get_attribute("data-ds-appid")
 
-                if not result or not appid:
+                if not title or not appid:
                     raise ValueError("Result does not contain a title or appid.")
 
-                score = get_match_score(search_string, result)
+                score = get_match_score(search_string, title)
 
                 if best_match is None or (
                     score >= RESULT_MATCH_THRESHOLD and score > best_match.score
                 ):
                     logger.debug(
-                        f"Steam: Found match {result} with a score of {(score*100):.0f} %."
+                        f"Found match {title} with a score of {(score*100):.0f} %."
                     )
-                    best_match = SteamEntry(appid=int(appid), score=score, title=result)
+                    best_match = SteamEntry(int(appid), score, title)
                 else:
                     logger.debug(
-                        f"Steam: Ignoring {result} as it's score of {(score*100):.0f} % is too low."
+                        f"Ignoring {title} as it's score of {(score*100):.0f} % is too low."
                     )
             except Error as e:
                 # Log problem with reading a result, but continue with the next one
@@ -98,20 +97,20 @@ async def get_steam_id(
         await page.close()
 
     if best_match is None:
-        logger.info(f"Steam: Search for {search_string} found no result.")
-
+        logger.info(f"Search for {search_string} found no result.")
         return None
 
     logger.info(
-        f"Steam: Search for {search_string} resulted in {best_match.title} ({best_match.appid}) as the best match with a score of {(best_match.score*100):.0f} %."
+        f"Search for {search_string} resulted in {best_match.title} ({best_match.appid}) as the best match with a score of {(best_match.score*100):.0f} %."
     )
     return best_match.appid
 
 
 async def get_steam_details(
-    context: BrowserContext,
     id_: int | None = None,
     title: str | None = None,
+    *,
+    context: BrowserContext,
 ) -> SteamInfo | None:
     steam_app_id: int | None = None
 
@@ -121,7 +120,7 @@ async def get_steam_details(
         steam_app_id = await get_steam_id(title, context=context)
 
     if not steam_app_id:
-        # No entry found, not adding any data
+        # No entry found
         return None
 
     logger.info(f"Reading Steam details for app id {steam_app_id}.")
