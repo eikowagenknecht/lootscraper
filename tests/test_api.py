@@ -12,22 +12,37 @@ logging.basicConfig(
 )
 
 
-class ApiTests(unittest.IsolatedAsyncioTestCase):
-    async def test_igdb_id(self) -> None:
-        id_ = await get_igdb_id("Cities: Skylines")
-        self.assertEqual(id_, 9066)
-
-    async def test_igdb_id_resolution_with_special_chars(self) -> None:
-        searchstring = "Monkey Island 2 Special Edition: LeChuck’s Revenge"
-        expected_id: int = 66
-        scraped_id: int = await get_igdb_id(searchstring)
+class IGDBGameInfoTests(unittest.IsolatedAsyncioTestCase):
+    async def test_igdb_id_resolution(self) -> None:
+        expected_id: int = 7360  # Tom Clancy's Rainbow Six® Siege
+        scraped_id: int = await get_igdb_id(
+            "Rainbow Six Siege",
+        )
         self.assertEqual(expected_id, scraped_id)
 
-    async def test_igdb_details(self) -> None:
-        game = await get_igdb_details(title="Cities: Skylines")
-        self.assertEqual(game.name, "Cities: Skylines")
-        self.assertIsNotNone(game.release_date)
-        self.assertEqual(game.release_date.isoformat(), "2015-03-10T00:00:00+00:00")
+    async def test_igdb_id_resolution_with_special_chars(self) -> None:
+        expected_id: int = 66
+        scraped_id: int = await get_igdb_id(
+            "Monkey Island 2 Special Edition: LeChuck’s Revenge",
+        )
+        self.assertEqual(expected_id, scraped_id)
+
+    async def test_igdb_details_counterstrike(self) -> None:
+        igdb_info = await get_igdb_details(
+            title="Counter-Strike",
+        )
+        self.assertIsNotNone(igdb_info)
+        self.assertEqual(igdb_info.name, "Counter-Strike")
+        self.assertIsNotNone(igdb_info.short_description)
+        self.assertEqual(
+            igdb_info.release_date.isoformat(), "2000-11-09T00:00:00+00:00"
+        )
+        self.assertGreater(igdb_info.meta_ratings, 1)
+        self.assertGreater(igdb_info.meta_score, 50)
+
+        self.assertGreater(igdb_info.user_ratings, 400)
+        self.assertGreater(igdb_info.user_score, 50)
+        self.assertEqual(igdb_info.url, "https://www.igdb.com/games/counter-strike")
 
 
 if __name__ == "__main__":
