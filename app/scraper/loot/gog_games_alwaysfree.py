@@ -1,39 +1,20 @@
 import logging
-from asyncio import sleep
 from datetime import datetime, timezone
 
 from playwright.async_api import Error, Locator
 
-from app.common import OfferDuration, OfferType, Source
+from app.common import OfferDuration
 from app.pagedriver import get_new_page
-from app.scraper.loot.scraper import RawOffer, Scraper
+from app.scraper.loot.gog_base import GogBaseScraper
+from app.scraper.loot.scraper import RawOffer
 from app.sqlalchemy import Offer
 
 logger = logging.getLogger(__name__)
 
 ROOT_URL = "https://www.gog.com/partner/free_games"
 
-# XPATH_PAGE_LOADED = """//div[@class="content cf"]"""
 
-# XPATH_SWITCH_TO_ENGLISH = """//li[contains(concat(" ", normalize-space(@class), " "), " footer-microservice-language__item ")][1]"""
-# XPATH_SELECTED_LANGUAGE = """//li[contains(concat(" ", normalize-space(@class), " "), " footer-microservice-language__item is-selected ")]"""
-
-# Variant 1
-# XPATH_GAMES = """//ul[contains(concat(" ", normalize-space(@class), " "), " partners__game-list ")]"""
-# SUBPATH_OFFERS = """.//a"""  # URL: Attribute href
-# SUBPATH_TITLE = """.//span[contains(concat(" ", normalize-space(@class), " "), " product-title__text ")]"""
-# SUBPATH_IMAGE = """.//img"""  # Attribute srcset, first entry
-
-
-class GogGamesAlwaysFreeScraper(Scraper):
-    @staticmethod
-    def get_source() -> Source:
-        return Source.GOG
-
-    @staticmethod
-    def get_type() -> OfferType:
-        return OfferType.GAME
-
+class GogGamesAlwaysFreeScraper(GogBaseScraper):
     @staticmethod
     def get_duration() -> OfferDuration:
         return OfferDuration.ALWAYS
@@ -50,20 +31,8 @@ class GogGamesAlwaysFreeScraper(Scraper):
                 return []
 
             try:
-                # Switch to english version
-                en = page.locator("li.footer-microservice-language__item").first
-                await en.click()
-                await sleep(2)  # Wait for the language switching to begin
-                # Check if it's really english now
-                current_language = await page.locator(
-                    "li.footer-microservice-language__item.is-selected"
-                ).text_content()
-                if current_language != "English":
-                    logger.error(
-                        f"Tried switching to English, but {current_language} is active instead."
-                    )
-                    return []
-            except Error as e:
+                await GogGamesAlwaysFreeScraper.switch_to_english(page)
+            except (Error, ValueError) as e:
                 logger.error(f"Couldn't switch to English: {e}")
                 return []
 
