@@ -2,13 +2,10 @@ import logging
 from asyncio import sleep
 from datetime import datetime, timezone
 
-from selenium.common.exceptions import WebDriverException
-from selenium.webdriver.common.by import By
-from selenium.webdriver.remote.webelement import WebElement
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.support.ui import WebDriverWait
+from playwright.async_api import Error, Locator
 
 from app.common import OfferDuration, OfferType, Source
+from app.pagedriver import get_new_page
 from app.scraper.loot.scraper import RawOffer, Scraper
 from app.sqlalchemy import Offer
 
@@ -16,16 +13,16 @@ logger = logging.getLogger(__name__)
 
 ROOT_URL = "https://www.gog.com/partner/free_games"
 
-XPATH_PAGE_LOADED = """//div[@class="content cf"]"""
+# XPATH_PAGE_LOADED = """//div[@class="content cf"]"""
 
-XPATH_SWITCH_TO_ENGLISH = """//li[contains(concat(" ", normalize-space(@class), " "), " footer-microservice-language__item ")][1]"""
-XPATH_SELECTED_LANGUAGE = """//li[contains(concat(" ", normalize-space(@class), " "), " footer-microservice-language__item is-selected ")]"""
+# XPATH_SWITCH_TO_ENGLISH = """//li[contains(concat(" ", normalize-space(@class), " "), " footer-microservice-language__item ")][1]"""
+# XPATH_SELECTED_LANGUAGE = """//li[contains(concat(" ", normalize-space(@class), " "), " footer-microservice-language__item is-selected ")]"""
 
 # Variant 1
-XPATH_GAMES = """//ul[contains(concat(" ", normalize-space(@class), " "), " partners__game-list ")]"""
-SUBPATH_OFFERS = """.//a"""  # URL: Attribute href
-SUBPATH_TITLE = """.//span[contains(concat(" ", normalize-space(@class), " "), " product-title__text ")]"""
-SUBPATH_IMAGE = """.//img"""  # Attribute srcset, first entry
+# XPATH_GAMES = """//ul[contains(concat(" ", normalize-space(@class), " "), " partners__game-list ")]"""
+# SUBPATH_OFFERS = """.//a"""  # URL: Attribute href
+# SUBPATH_TITLE = """.//span[contains(concat(" ", normalize-space(@class), " "), " product-title__text ")]"""
+# SUBPATH_IMAGE = """.//img"""  # Attribute srcset, first entry
 
 
 class GogGamesAlwaysFreeScraper(Scraper):
@@ -42,89 +39,72 @@ class GogGamesAlwaysFreeScraper(Scraper):
         return OfferDuration.ALWAYS
 
     async def read_offers_from_page(self) -> list[Offer]:
-        self.context.get(ROOT_URL)
-        try:
-            # Wait until the page loaded
-            WebDriverWait(self.context, Scraper.get_max_wait_seconds()).until(
-                EC.presence_of_element_located((By.XPATH, XPATH_PAGE_LOADED))
-            )
-        except WebDriverException:
-            logger.error(
-                f"Page took longer than {Scraper.get_max_wait_seconds()} to load"
-            )
-            return []
-
-        try:
-            # Switch to english version
-            en = self.context.find_element(By.XPATH, XPATH_SWITCH_TO_ENGLISH)
-            en.click()
-            await sleep(2)  # Wait for the language switching to begin
-            # Check if it's really english now
-            en_test = self.context.find_element(By.XPATH, XPATH_SELECTED_LANGUAGE)
-            if en_test.text != "English":
-                logger.error(
-                    f"Tried switching to English, but {en_test.text} is active instead"
-                )
-                return []
-        except WebDriverException:
-            logger.error("Couldn't switch to English")
-            return []
-
         raw_offers: list[RawOffer] = []
 
-        try:
-            # Wait until the page loaded
-            WebDriverWait(self.context, Scraper.get_max_wait_seconds()).until(
-                EC.presence_of_element_located((By.XPATH, XPATH_GAMES))
-            )
+        async with get_new_page(self.context) as page:
+            await page.goto(ROOT_URL)
+            try:
+                await page.wait_for_selector(".content.cf")
+            except Error as e:
+                logger.error(f"Page could not be read: {e}")
+                return []
 
-            offer_elements = self.context.find_elements(By.XPATH, SUBPATH_OFFERS)
-            for offer_element in offer_elements:
-                raw_offers.append(
-                    GogGamesAlwaysFreeScraper.read_raw_offer(offer_element)
-                )
-        except WebDriverException:
-            logger.info(
-                f"Giveaways took longer than {Scraper.get_max_wait_seconds()} to load, probably there are none"
-            )
+            try:
+                # Switch to english version
+                en = page.locator("li.footer-microservice-language__item").first
+                await en.click()
+                await sleep(2)  # Wait for the language switching to begin
+                # Check if it's really english now
+                current_language = await page.locator(
+                    "li.footer-microservice-language__item.is-selected"
+                ).text_content()
+                if current_language != "English":
+                    logger.error(
+                        f"Tried switching to English, but {current_language} is active instead."
+                    )
+                    return []
+            except Error as e:
+                logger.error(f"Couldn't switch to English: {e}")
+                return []
+
+            try:
+                await page.wait_for_selector(".partners__game-list")
+            except Error as e:
+                logger.info(f"Giveaways couldn't load, probably there are none: {e}")
+
+            elements = page.locator(".partners__game-list a")
+
+            try:
+                no_res = await elements.count()
+
+                for i in range(no_res):
+                    element = elements.nth(i)
+                    try:
+                        raw_offer = await GogGamesAlwaysFreeScraper.read_raw_offer(
+                            element
+                        )
+                        raw_offers.append(raw_offer)
+                    except Error as e:
+                        logger.error(f"Error loading offer: {e}")
+            except Error as e:
+                logger.error(f"Error loading offers: {e}")
 
         normalized_offers = GogGamesAlwaysFreeScraper.normalize_offers(raw_offers)
 
         return normalized_offers
 
     @staticmethod
-    def read_raw_offer(element: WebElement) -> RawOffer:
-        title_str = None
-        url_str = None
-        img_url_str = None
-
-        try:
-            title_str = str(element.find_element(By.XPATH, SUBPATH_TITLE).text)
-        except WebDriverException:
-            # Nothing to do here, string stays empty
-            pass
-
-        try:
-            url_str = str(element.get_attribute("href"))  # type: ignore
-        except WebDriverException:
-            # Nothing to do here, string stays empty
-            pass
-
-        try:
-            img_url_str = str(
-                element.find_element(By.XPATH, SUBPATH_IMAGE).get_attribute("srcset")
-            )
+    async def read_raw_offer(element: Locator) -> RawOffer:
+        title_str = await element.locator(".product-title__text").text_content()
+        url_str = await element.get_attribute("href")
+        img_url_str = await element.locator("img").get_attribute("srcset")
+        if img_url_str is not None:
             img_url_str = "https:" + (
                 img_url_str.split(",", maxsplit=1)[0]
                 .strip()
                 .removesuffix(" 2x")
                 .removesuffix(" 1x")
             )
-        except WebDriverException:
-            # Nothing to do here, string stays empty
-            pass
-
-        # For current offers, the date is included twice but only means the enddate
 
         return RawOffer(
             title=title_str,
