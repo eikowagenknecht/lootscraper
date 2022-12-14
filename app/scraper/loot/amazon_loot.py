@@ -12,7 +12,8 @@ from app.sqlalchemy import Offer
 
 logger = logging.getLogger(__name__)
 
-ROOT_URL = "https://gaming.amazon.com/home"
+BASE_URL = "https://gaming.amazon.com"
+OFFER_URL = BASE_URL + "/home"
 
 
 @dataclass
@@ -36,7 +37,7 @@ class AmazonLootScraper(Scraper):
 
     async def read_offers_from_page(self) -> list[Offer]:
         async with get_new_page(self.context) as page:
-            await page.goto(ROOT_URL)
+            await page.goto(OFFER_URL)
             try:
                 await page.wait_for_selector(".offer-list__content")
                 await AmazonLootScraper.scroll_element_to_bottom(page, "root")
@@ -99,9 +100,11 @@ class AmazonLootScraper(Scraper):
                     pass
 
                 try:
-                    raw_offer.url = await element.locator(
+                    url = await element.locator(
                         '[data-a-target="learn-more-card"]'
                     ).get_attribute("href", timeout=500)
+                    if url is not None:
+                        raw_offer.url = BASE_URL + url
                 except Error:
                     # Nothing to do here, string stays empty
                     pass
@@ -209,7 +212,7 @@ class AmazonLootScraper(Scraper):
                 except (ValueError, IndexError):
                     logger.warning(f"Date parsing failed for {raw_offer.title}")
 
-            nearest_url = raw_offer.url if raw_offer.url else ROOT_URL
+            nearest_url = raw_offer.url if raw_offer.url else OFFER_URL
             offer = Offer(
                 source=AmazonLootScraper.get_source(),
                 duration=AmazonLootScraper.get_duration(),

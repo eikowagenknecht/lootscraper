@@ -12,7 +12,8 @@ from app.sqlalchemy import Offer
 
 logger = logging.getLogger(__name__)
 
-ROOT_URL = "https://store.epicgames.com/en-US/"
+BASE_URL = "https://store.epicgames.com"
+OFFER_URL = BASE_URL + "/en-US/"
 
 
 @dataclass
@@ -38,7 +39,7 @@ class EpicGamesScraper(Scraper):
         raw_offers: list[EpicRawOffer] = []
 
         async with get_new_page(self.context) as page:
-            await page.goto(ROOT_URL)
+            await page.goto(OFFER_URL)
 
             try:
                 await page.wait_for_selector("h2:has-text('Free Games')")
@@ -91,8 +92,10 @@ class EpicGamesScraper(Scraper):
             .nth(1)
             .get_attribute("datetime")
         )
-        url_str = await element.get_attribute("href")
-        img_url_str = await element.locator("img").get_attribute("src")
+        url = await element.get_attribute("href")
+        if url is not None:
+            url = BASE_URL + url
+        img_url = await element.locator("img").get_attribute("src")
 
         # For current offers, the date is included twice but only means the enddate
         if valid_from_str == valid_to_str:
@@ -102,8 +105,8 @@ class EpicGamesScraper(Scraper):
             title=title_str,
             valid_from=valid_from_str,
             valid_to=valid_to_str,
-            url=url_str,
-            img_url=img_url_str,
+            url=url,
+            img_url=img_url,
         )
 
     @staticmethod
@@ -149,7 +152,7 @@ class EpicGamesScraper(Scraper):
                 except ValueError:
                     utc_valid_to = None
 
-            nearest_url = raw_offer.url if raw_offer.url else ROOT_URL
+            nearest_url = raw_offer.url if raw_offer.url else OFFER_URL
             offer = Offer(
                 source=EpicGamesScraper.get_source(),
                 duration=EpicGamesScraper.get_duration(),
