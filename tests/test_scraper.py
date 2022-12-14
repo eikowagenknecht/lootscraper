@@ -9,8 +9,7 @@ from app.scraper.loot.amazon_games import AmazonGamesScraper
 from app.scraper.loot.amazon_loot import AmazonLootScraper
 from app.scraper.loot.apple_games import AppleGamesScraper
 from app.scraper.loot.epic_games import EpicGamesScraper
-
-# from app.scraper.loot.gog_games import GogGamesScraper
+from app.scraper.loot.gog_games import GogGamesScraper
 from app.scraper.loot.gog_games_alwaysfree import GogGamesAlwaysFreeScraper
 
 # from app.scraper.loot.steam_games import SteamGamesScraper
@@ -87,6 +86,18 @@ class GogGamesFreeTest(unittest.IsolatedAsyncioTestCase):
     async def test_loot(self) -> None:
         async with get_browser_context() as context:
             scraper = GogGamesAlwaysFreeScraper(context=context)
+            scraper_results = await scraper.scrape()
+            self.assertGreater(len(scraper_results), 40)
+            for res in scraper_results:
+                self.assertIsNotNone(res.title)
+                self.assertIsNotNone(res.url)
+                self.assertIsNotNone(res.img_url)
+
+
+class GogGamesTest(unittest.IsolatedAsyncioTestCase):
+    async def test_loot(self) -> None:
+        async with get_browser_context() as context:
+            scraper = GogGamesScraper(context=context)
             scraper_results = await scraper.scrape()
             self.assertGreater(len(scraper_results), 0)
             for res in scraper_results:
