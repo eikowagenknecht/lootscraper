@@ -22,13 +22,7 @@ SEARCH_URL_PARAMS = {
     "specials": 1,
 }
 
-
 DETAILS_URL = BASE_URL + "/app/"
-
-STEAM_SEARCH_RESULTS_CONTAINER = '//div[@id = "search_results"]'
-STEAM_SEARCH_RESULTS = (
-    '//div[@id = "search_result_container"]//a'  # data-ds-appid contains the steam id
-)
 
 
 @dataclass
@@ -58,16 +52,15 @@ class SteamGamesScraper(Scraper):
             await page.goto(url)
 
             try:
-                await page.wait_for_selector(STEAM_SEARCH_RESULTS_CONTAINER)
+                await page.wait_for_selector("#search_results")
             except Error as e:
                 logger.error(f"Couldn't load offers: {e}")
                 return []
 
-            elements = page.locator(STEAM_SEARCH_RESULTS)
+            elements = page.locator("#search_results a")
 
             try:
                 no_res = await elements.count()
-
             except Error as e:
                 logger.error(f"Couldn't load search results: {e}")
                 return []
@@ -106,7 +99,6 @@ class SteamGamesScraper(Scraper):
             appid=int(appid),
             title=title,
             url=url,
-            img_url=None,
             text=text,
         )
 
@@ -118,10 +110,6 @@ class SteamGamesScraper(Scraper):
 
         for raw_offer in raw_offers:
             # Raw text
-            if not raw_offer.title:
-                logger.error(f"Error with offer, has no title: {raw_offer}")
-                continue
-
             rawtext = f"<title>{raw_offer.title}</title>"
 
             if raw_offer.appid:
@@ -163,11 +151,9 @@ class SteamGamesScraper(Scraper):
                 title=raw_offer.title,
                 probable_game_name=probable_game_name,
                 seen_last=now,
-                valid_from=None,
                 valid_to=valid_to,
                 rawtext=rawtext,
                 url=nearest_url,
-                img_url=None,
             )
 
             normalized_offers.append(offer)
