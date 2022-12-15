@@ -12,6 +12,7 @@ from app.scraper.loot.epic_games import EpicGamesScraper
 from app.scraper.loot.gog_games import GogGamesScraper
 from app.scraper.loot.gog_games_alwaysfree import GogGamesAlwaysFreeScraper
 from app.scraper.loot.google_games import GoogleGamesScraper
+from app.scraper.loot.humble_games import HumbleGamesScraper
 
 # from app.scraper.loot.steam_games import SteamGamesScraper
 # from app.scraper.loot.steam_loot import SteamLootScraper
@@ -128,6 +129,20 @@ class GoogleGamesTest(unittest.IsolatedAsyncioTestCase):
                 self.assertIsNotNone(res.title)
                 self.assertIsNotNone(res.url)
                 self.assertTrue(res.url.startswith("https://appagg.com/"))
+                self.assertIsNotNone(res.img_url)
+                self.assertTrue(res.img_url.startswith("https://"))
+
+
+class HumbleGamesTest(unittest.IsolatedAsyncioTestCase):
+    async def test_loot(self) -> None:
+        async with get_browser_context() as context:
+            scraper = HumbleGamesScraper(context=context)
+            scraper_results = await scraper.scrape()
+            self.assertGreater(len(scraper_results), 0)
+            for res in scraper_results:
+                self.assertIsNotNone(res.title)
+                self.assertIsNotNone(res.url)
+                self.assertTrue(res.url.startswith("https://humblebundle.com/"))
                 self.assertIsNotNone(res.img_url)
                 self.assertTrue(res.img_url.startswith("https://"))
 

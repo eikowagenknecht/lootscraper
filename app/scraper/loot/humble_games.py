@@ -1,27 +1,19 @@
 import logging
+import urllib.parse
 from dataclasses import dataclass
 from datetime import datetime, timezone
 
-from selenium.common.exceptions import WebDriverException
-from selenium.webdriver.common.by import By
-from selenium.webdriver.remote.webelement import WebElement
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.support.ui import WebDriverWait
+from playwright.async_api import Error, Locator
 
 from app.common import Category, OfferDuration, OfferType, Source
+from app.pagedriver import get_new_page
 from app.scraper.loot.scraper import RawOffer, Scraper
 from app.sqlalchemy import Offer
 
 logger = logging.getLogger(__name__)
 
-ROOT_URL = "https://de.humblebundle.com/store/search?sort=discount&filter=onsale"
-
-XPATH_SEARCH_RESULTS = (
-    """//ul[contains(concat(" ", normalize-space(@class), " "), " entities-list ")]"""
-)
-XPATH_FREE_RESULTS = """//ul[contains(concat(" ", normalize-space(@class), " "), " entities-list ")]/li[.//div[contains(concat(" ", normalize-space(@class), " "), " discount-amount ") and contains(text(), "100")]]//a"""  # URL: Attribute href
-SUBPATH_TITLE = """.//span[contains(concat(" ", normalize-space(@class), " "), " entity-title ")]"""  # /text()
-SUBPATH_IMAGE = """.//img"""  # Attr "src"
+BASE_URL = "https://humblebundle.com"
+SEARCH_URL = BASE_URL + "/store/search"
 
 
 @dataclass
@@ -51,60 +43,45 @@ class HumbleGamesScraper(Scraper):
         return filtered
 
     async def read_offers_from_page(self) -> list[Offer]:
-        self.context.get(ROOT_URL)
         raw_offers: list[HumbleRawOffer] = []
 
-        try:
-            # Wait until the page loaded
-            WebDriverWait(self.context, Scraper.get_max_wait_seconds()).until(
-                EC.presence_of_element_located((By.XPATH, XPATH_FREE_RESULTS))
+        params = {
+            "sort": "discount",
+            "filter": "onsale",
+        }
+        url = f"{SEARCH_URL}?{urllib.parse.urlencode(params)}"
+
+        async with get_new_page(self.context) as page:
+            await page.goto(url)
+
+            # XPATH_FREE_RESULTS = """//li[.//div[contains(concat(" ", normalize-space(@class), " "), " discount-amount ") and contains(text(), "100")]]//a"""  # URL: Attribute href
+            elements = page.locator(
+                "li", has=page.locator("div.discount-amount", has_text="100")
             )
 
-            offer_elements = self.context.find_elements(By.XPATH, XPATH_FREE_RESULTS)
-            for offer_element in offer_elements:
-                raw_offers.append(HumbleGamesScraper.read_raw_offer(offer_element))
+            try:
+                await page.wait_for_selector("li div.discount-amount")
+                no_res = await elements.count()
 
-        except WebDriverException:
-            logger.info(
-                f"Free search results took longer than {Scraper.get_max_wait_seconds()} to load, probably there are none"
-            )
+                for i in range(no_res):
+                    element = elements.nth(i)
+                    raw_offers.append(await HumbleGamesScraper.read_raw_offer(element))
+            except Error as e:
+                logger.info(f"Could not find any results: {e}")
 
         normalized_offers = HumbleGamesScraper.normalize_offers(raw_offers)
 
         return normalized_offers
 
     @staticmethod
-    def read_raw_offer(element: WebElement) -> HumbleRawOffer:
-        title_str = None
-        url_str = None
-        img_url_str = None
+    async def read_raw_offer(element: Locator) -> HumbleRawOffer:
+        title_str = await element.locator("span.entity-title").text_content()
+        url_str = await element.locator("a").get_attribute("href")
+        if url_str is not None:
+            url_str = BASE_URL + url_str
+        img_url_str = await element.locator("img.entity-image").get_attribute("src")
 
-        try:
-            # We use .get_attribute("textContent") instead of .text here,
-            # because .text applies uppercase CSS formatting
-            title_str = str(
-                element.find_element(By.XPATH, SUBPATH_TITLE).get_attribute(
-                    "textContent"
-                )
-            )
-        except WebDriverException:
-            # Nothing to do here, string stays empty
-            pass
-
-        try:
-            url_str = str(element.get_attribute("href"))  # type: ignore
-        except WebDriverException:
-            # Nothing to do here, string stays empty
-            pass
-
-        try:
-            img_url_str = str(
-                element.find_element(By.XPATH, SUBPATH_IMAGE).get_attribute("src")
-            )
-        except WebDriverException:
-            # Nothing to do here, string stays empty
-            pass
-
+        # TODO: Check details page for valid_to (makes it easier to filter out nonsense entries that are valid "forever")
         return HumbleRawOffer(
             title=title_str,
             url=url_str,
@@ -126,7 +103,7 @@ class HumbleGamesScraper(Scraper):
             # Title
             title = raw_offer.title
 
-            nearest_url = raw_offer.url if raw_offer.url else ROOT_URL
+            nearest_url = raw_offer.url if raw_offer.url else SEARCH_URL
             offer = Offer(
                 source=HumbleGamesScraper.get_source(),
                 duration=HumbleGamesScraper.get_duration(),
