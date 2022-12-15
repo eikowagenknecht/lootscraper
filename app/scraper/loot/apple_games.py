@@ -12,6 +12,12 @@ from app.sqlalchemy import Offer
 logger = logging.getLogger(__name__)
 
 ROOT_URL = "https://appsliced.co/apps/iphone"
+SEARCH_PARAMS = {
+    "sort": "latest",
+    "price": "free",
+    "cat[]": 6014,
+    "page": 1,
+}
 
 
 class AppleGamesScraper(Scraper):
@@ -28,13 +34,7 @@ class AppleGamesScraper(Scraper):
         return OfferDuration.CLAIMABLE
 
     async def read_offers_from_page(self) -> list[Offer]:
-        params = {
-            "sort": "latest",
-            "price": "free",
-            "cat[]": 6014,
-            "page": 1,
-        }
-        url = f"{ROOT_URL}?{urllib.parse.urlencode(params)}"
+        url = f"{ROOT_URL}?{urllib.parse.urlencode(SEARCH_PARAMS)}"
         raw_offers: list[RawOffer] = []
 
         async with get_new_page(self.context) as page:
@@ -69,8 +69,16 @@ class AppleGamesScraper(Scraper):
     @staticmethod
     async def read_raw_offer(element: Locator) -> RawOffer:
         title = await element.locator(".title a").get_attribute("title")
+        if title is None:
+            raise ValueError("Couldn't find title.")
+
         url = await element.locator(".title a").get_attribute("href")
+        if url is None:
+            raise ValueError("Couldn't find url.")
+
         img_url = await element.locator(".icon img").get_attribute("src")
+        if img_url is None:
+            raise ValueError("Couldn't find img_url.")
 
         return RawOffer(
             title=title,
