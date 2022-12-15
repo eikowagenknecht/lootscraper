@@ -18,7 +18,6 @@ OFFER_URL = BASE_URL + "/en-US/"
 
 @dataclass
 class EpicRawOffer(RawOffer):
-    valid_from: str | None = None
     valid_to: str | None = None
 
 
@@ -79,15 +78,15 @@ class EpicGamesScraper(Scraper):
         # Scroll element into view to load img url
         await element.scroll_into_view_if_needed()
 
-        title_str = await element.locator(
+        title = await element.locator(
             '[data-testid="offer-title-info-title"] div'
         ).text_content()
-        valid_from_str = (
-            await element.locator('[data-testid="offer-title-info-subtitle"] time')
-            .nth(0)
-            .get_attribute("datetime")
-        )  # format 2022-02-24T16:00:00.000Z
-        valid_to_str = (
+        if title is None:
+            raise ValueError("No title found.")
+
+        # For current offers, the date is included twice but only means the enddate
+        # format 2022-02-24T16:00:00.000Z
+        valid_to = (
             await element.locator('[data-testid="offer-title-info-subtitle"] time')
             .nth(1)
             .get_attribute("datetime")
@@ -97,14 +96,9 @@ class EpicGamesScraper(Scraper):
             url = BASE_URL + url
         img_url = await element.locator("img").get_attribute("src")
 
-        # For current offers, the date is included twice but only means the enddate
-        if valid_from_str == valid_to_str:
-            valid_from_str = None
-
         return EpicRawOffer(
-            title=title_str,
-            valid_from=valid_from_str,
-            valid_to=valid_to_str,
+            title=title,
+            valid_to=valid_to,
             url=url,
             img_url=img_url,
         )
@@ -121,25 +115,11 @@ class EpicGamesScraper(Scraper):
 
             rawtext = f"<title>{raw_offer.title}</title>"
 
-            if raw_offer.valid_from:
-                rawtext += f"<startdate>{raw_offer.valid_from}</startdate>"
-
             if raw_offer.valid_to:
                 rawtext += f"<enddate>{raw_offer.valid_to}</enddate>"
 
             # Title
             title = raw_offer.title
-
-            # Valid from
-            utc_valid_from = None
-            if raw_offer.valid_from:
-                try:
-                    utc_valid_from = datetime.strptime(
-                        raw_offer.valid_from,
-                        "%Y-%m-%dT%H:%M:%S.000Z",
-                    ).replace(tzinfo=timezone.utc)
-                except ValueError:
-                    utc_valid_from = None
 
             # Valid to
             utc_valid_to = None
@@ -160,7 +140,6 @@ class EpicGamesScraper(Scraper):
                 title=title,
                 probable_game_name=title,
                 seen_last=datetime.now(timezone.utc),
-                valid_from=utc_valid_from,
                 valid_to=utc_valid_to,
                 rawtext=rawtext,
                 url=nearest_url,
