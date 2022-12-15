@@ -34,6 +34,8 @@ class AmazonGamesScraper(Scraper):
         return OfferDuration.CLAIMABLE
 
     async def read_offers_from_page(self) -> list[Offer]:
+        raw_offers: list[AmazonRawOffer] = []
+
         async with get_new_page(self.context) as page:
             await page.goto(ROOT_URL)
             try:
@@ -52,8 +54,6 @@ class AmazonGamesScraper(Scraper):
             except Error as e:
                 logger.error(f"Root element not found, could not scrape: {e}")
                 return []
-
-            raw_offers: list[AmazonRawOffer] = []
 
             for i in range(no_res):
                 element = elements.nth(i)
@@ -101,9 +101,9 @@ class AmazonGamesScraper(Scraper):
 
                 raw_offers.append(raw_offer)
 
-            normalized_offers = AmazonGamesScraper.normalize_offers(raw_offers)
+        normalized_offers = AmazonGamesScraper.normalize_offers(raw_offers)
 
-            return normalized_offers
+        return normalized_offers
 
     @staticmethod
     def normalize_offers(raw_offers: list[AmazonRawOffer]) -> list[Offer]:
