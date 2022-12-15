@@ -38,6 +38,9 @@ class AmazonGamesTests(unittest.IsolatedAsyncioTestCase):
                 self.assertIsNotNone(res.valid_to)
                 self.assertIsNotNone(res.img_url)
                 self.assertTrue(res.img_url.startswith("https://"))
+                self.assertGreater(
+                    res.valid_to, datetime.now().replace(tzinfo=timezone.utc)
+                )
 
 
 class AmazonLootTests(unittest.IsolatedAsyncioTestCase):
@@ -55,6 +58,9 @@ class AmazonLootTests(unittest.IsolatedAsyncioTestCase):
                     self.assertTrue(res.url.startswith("https://gaming.amazon.com"))
                 self.assertIsNotNone(res.img_url)
                 self.assertTrue(res.img_url.startswith("https://"))
+                self.assertGreater(
+                    res.valid_to, datetime.now().replace(tzinfo=timezone.utc)
+                )
 
 
 class AppleGamesTest(unittest.IsolatedAsyncioTestCase):
@@ -117,6 +123,9 @@ class GogGamesTest(unittest.IsolatedAsyncioTestCase):
                 self.assertTrue(res.url.startswith("https://www.gog.com/"))
                 self.assertIsNotNone(res.img_url)
                 self.assertTrue(res.img_url.startswith("https://"))
+                self.assertGreater(
+                    res.valid_to, datetime.now().replace(tzinfo=timezone.utc)
+                )
 
 
 class GoogleGamesTest(unittest.IsolatedAsyncioTestCase):
@@ -178,7 +187,7 @@ class SteamGamesTest(unittest.IsolatedAsyncioTestCase):
                 self.assertTrue(res.url.startswith("https://store.steampowered.com/"))
                 self.assertIsNotNone(res.img_url)
                 self.assertTrue(res.img_url.startswith("https://"))
-                                self.assertGreater(
+                self.assertGreater(
                     res.valid_to, datetime.now().replace(tzinfo=timezone.utc)
                 )
 
