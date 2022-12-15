@@ -1,25 +1,17 @@
 import logging
 from datetime import datetime, timezone
 
-from selenium.common.exceptions import WebDriverException
-from selenium.webdriver.common.by import By
-from selenium.webdriver.remote.webelement import WebElement
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.support.ui import WebDriverWait
+from playwright.async_api import Error, Locator
 
 from app.common import Category, OfferDuration, OfferType, Source
+from app.pagedriver import get_new_page
 from app.scraper.loot.scraper import RawOffer, Scraper
 from app.sqlalchemy import Offer
 
 logger = logging.getLogger(__name__)
 
-ROOT_URL = "https://appagg.com/sale/android-games/free/?hl=en"
-
-XPATH_SEARCH_RESULTS = (
-    """//li//div[contains(concat(" ", normalize-space(@class), " "), " short_info ")]"""
-)
-SUBPATH_TITLE = """.//a"""  # /text()
-SUBPATH_IMAGE = """.//span[contains(concat(" ", normalize-space(@class), " "), " pic_div ")]"""  # Attr "style"
+BASE_URL = "https://appagg.com"
+OFFER_URL = BASE_URL + "/sale/android-games/free/?hl=en"
 
 
 class GoogleGamesScraper(Scraper):
@@ -44,63 +36,46 @@ class GoogleGamesScraper(Scraper):
         return filtered
 
     async def read_offers_from_page(self) -> list[Offer]:
-        self.context.get(ROOT_URL)
-        raw_offers: list[RawOffer] = []
+        async with get_new_page(self.context) as page:
+            await page.goto(OFFER_URL)
+            raw_offers: list[RawOffer] = []
 
-        try:
-            # Wait until the page loaded
-            WebDriverWait(self.context, Scraper.get_max_wait_seconds()).until(
-                EC.presence_of_element_located((By.XPATH, XPATH_SEARCH_RESULTS))
-            )
+            elements = page.locator("div.short_info")
 
-            offer_elements = self.context.find_elements(By.XPATH, XPATH_SEARCH_RESULTS)
-            for offer_element in offer_elements:
-                raw_offers.append(GoogleGamesScraper.read_raw_offer(offer_element))
+            try:
+                no_res = await elements.count()
 
-        except WebDriverException:
-            logger.info(
-                f"Free search results took longer than {Scraper.get_max_wait_seconds()} to load, probably there are none"
-            )
+                for i in range(no_res):
+                    element = elements.nth(i)
+
+                    raw_offers.append(await GoogleGamesScraper.read_raw_offer(element))
+
+            except Error as e:
+                logger.error(f"Page could not be read: {e}")
+                return []
 
         normalized_offers = GoogleGamesScraper.normalize_offers(raw_offers)
 
         return normalized_offers
 
     @staticmethod
-    def read_raw_offer(element: WebElement) -> RawOffer:
-        title_str = None
-        url_str = None
-        img_url_str = None
-
-        try:
-            title_str = str(
-                element.find_element(By.XPATH, SUBPATH_TITLE).get_attribute("text")
+    async def read_raw_offer(element: Locator) -> RawOffer:
+        # Scroll into view for images to load
+        await element.scroll_into_view_if_needed()
+        title = await element.locator("a.nwel").text_content()
+        url = await element.locator("a.nwel").get_attribute("href")
+        if url is not None:
+            url = BASE_URL + url
+        img_url = await element.locator("span.pic_div").get_attribute("style")
+        if img_url is not None:
+            img_url = img_url.removeprefix('background-image: url("').removesuffix(
+                '");'
             )
-        except WebDriverException:
-            # Nothing to do here, string stays empty
-            pass
-
-        try:
-            url_str = str(element.find_element(By.XPATH, SUBPATH_TITLE).get_attribute("href"))  # type: ignore
-        except WebDriverException:
-            # Nothing to do here, string stays empty
-            pass
-
-        try:
-            img_url_str = str(
-                element.find_element(By.XPATH, SUBPATH_IMAGE).get_attribute("style")
-            )
-            img_url_str = img_url_str.removeprefix(
-                'background-image: url("'
-            ).removesuffix('");')
-        except WebDriverException:
-            # Nothing to do here, string stays empty
-            pass
 
         return RawOffer(
-            title=title_str,
-            url=url_str,
-            img_url=img_url_str,
+            title=title,
+            url=url,
+            img_url=img_url,
         )
 
     @staticmethod
@@ -118,7 +93,7 @@ class GoogleGamesScraper(Scraper):
             # Title
             title = raw_offer.title
 
-            nearest_url = raw_offer.url if raw_offer.url else ROOT_URL
+            nearest_url = raw_offer.url if raw_offer.url else OFFER_URL
             offer = Offer(
                 source=GoogleGamesScraper.get_source(),
                 duration=GoogleGamesScraper.get_duration(),
