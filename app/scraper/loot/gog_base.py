@@ -32,15 +32,24 @@ class GogBaseScraper(Scraper):  # pylint: disable=W0223
 
     @staticmethod
     async def switch_to_english(page: Page) -> None:
-        # Switch to english version
-        en = page.locator("li.footer-microservice-language__item").first
-        await en.click()
-        await asyncio.sleep(2)  # Wait for the language switching to begin
-        # Check if it's really english now
-        current_language = await page.locator(
-            "li.footer-microservice-language__item.is-selected"
-        ).text_content()
+        # Check if we're already on English version
+        current_language = await GogBaseScraper.get_current_language(page)
+        if current_language == "English":
+            return
+
+        await page.locator("li.footer-microservice-language__item").first.click()
+        # Give the language switching some time
+        await asyncio.sleep(1)
+
+        # Check if it's really English now
+        current_language = await GogBaseScraper.get_current_language(page)
         if current_language != "English":
             raise ValueError(
                 f"Tried switching to English, but {current_language} is active instead."
             )
+
+    @staticmethod
+    async def get_current_language(page: Page) -> str | None:
+        return await page.locator(
+            "li.footer-microservice-language__item.is-selected"
+        ).text_content()
