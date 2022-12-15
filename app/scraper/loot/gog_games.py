@@ -54,14 +54,13 @@ class GogGamesScraper(GogBaseScraper):
                 )
 
             # Check giveaway variant 2
-            try:
-                # await page.wait_for_selector("a.big-spot")
-                elements = page.locator(
-                    "a.big-spot",
-                    has=page.locator('[ng-if="tile.isFreeVisible"]'),
-                )
-                no_res = await elements.count()
+            elements = page.locator(
+                "a.big-spot",
+                has=page.locator('[ng-if="tile.isFreeVisible"]'),
+            )
 
+            try:
+                no_res = await elements.count()
                 offer_urls: list[str] = []
                 for i in range(no_res):
                     element = elements.nth(i)
