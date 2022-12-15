@@ -1,8 +1,6 @@
 # type: ignore
-import logging
 import unittest
 
-from app.common import TIMESTAMP_LONG
 from app.pagedriver import get_browser_context
 from app.scraper.info.steam import get_steam_details, get_steam_id
 from app.scraper.loot.amazon_games import AmazonGamesScraper
@@ -17,12 +15,6 @@ from app.scraper.loot.humble_games import HumbleGamesScraper
 # from app.scraper.loot.steam_games import SteamGamesScraper
 # from app.scraper.loot.steam_loot import SteamLootScraper
 
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s [%(levelname)-5s] %(message)s",
-    datefmt=TIMESTAMP_LONG,
-)
-
 
 class PlaywrightTests(unittest.IsolatedAsyncioTestCase):
     async def test_pagedriver(self) -> None:
@@ -36,7 +28,9 @@ class AmazonGamesTests(unittest.IsolatedAsyncioTestCase):
     async def test_games(self) -> None:
         async with get_browser_context() as context:
             scraper = AmazonGamesScraper(context=context)
-            scraper_results = await scraper.scrape()
+            with self.assertNoLogs(level="ERROR"):
+                scraper_results = await scraper.scrape()
+            self.assertNoLogs(level="ERROR")
             self.assertGreater(len(scraper_results), 0)
             for res in scraper_results:
                 self.assertIsNotNone(res.title)
@@ -49,7 +43,8 @@ class AmazonLootTests(unittest.IsolatedAsyncioTestCase):
     async def test_loot(self) -> None:
         async with get_browser_context() as context:
             scraper = AmazonLootScraper(context=context)
-            scraper_results = await scraper.scrape()
+            with self.assertNoLogs(level="ERROR"):
+                scraper_results = await scraper.scrape()
             self.assertGreater(len(scraper_results), 0)
             for res in scraper_results:
                 self.assertIsNotNone(res.probable_game_name)
@@ -65,7 +60,8 @@ class AppleGamesTest(unittest.IsolatedAsyncioTestCase):
     async def test_loot(self) -> None:
         async with get_browser_context() as context:
             scraper = AppleGamesScraper(context=context)
-            scraper_results = await scraper.scrape()
+            with self.assertNoLogs(level="ERROR"):
+                scraper_results = await scraper.scrape()
             self.assertGreater(len(scraper_results), 0)
             for res in scraper_results:
                 self.assertIsNotNone(res.probable_game_name)
@@ -80,7 +76,8 @@ class EpicGamesTest(unittest.IsolatedAsyncioTestCase):
     async def test_loot(self) -> None:
         async with get_browser_context() as context:
             scraper = EpicGamesScraper(context=context)
-            scraper_results = await scraper.scrape()
+            with self.assertNoLogs(level="ERROR"):
+                scraper_results = await scraper.scrape()
             self.assertGreater(len(scraper_results), 0)
             for res in scraper_results:
                 self.assertIsNotNone(res.valid_to)
@@ -95,7 +92,8 @@ class GogGamesFreeTest(unittest.IsolatedAsyncioTestCase):
     async def test_loot(self) -> None:
         async with get_browser_context() as context:
             scraper = GogGamesAlwaysFreeScraper(context=context)
-            scraper_results = await scraper.scrape()
+            with self.assertNoLogs(level="ERROR"):
+                scraper_results = await scraper.scrape()
             self.assertGreater(len(scraper_results), 40)
             for res in scraper_results:
                 self.assertIsNotNone(res.title)
@@ -109,7 +107,8 @@ class GogGamesTest(unittest.IsolatedAsyncioTestCase):
     async def test_loot(self) -> None:
         async with get_browser_context() as context:
             scraper = GogGamesScraper(context=context)
-            scraper_results = await scraper.scrape()
+            with self.assertNoLogs(level="ERROR"):
+                scraper_results = await scraper.scrape()
             self.assertGreater(len(scraper_results), 0)
             for res in scraper_results:
                 self.assertIsNotNone(res.title)
@@ -123,7 +122,8 @@ class GoogleGamesTest(unittest.IsolatedAsyncioTestCase):
     async def test_loot(self) -> None:
         async with get_browser_context() as context:
             scraper = GoogleGamesScraper(context=context)
-            scraper_results = await scraper.scrape()
+            with self.assertNoLogs(level="ERROR"):
+                scraper_results = await scraper.scrape()
             self.assertGreater(len(scraper_results), 0)
             for res in scraper_results:
                 self.assertIsNotNone(res.title)
@@ -137,7 +137,8 @@ class HumbleGamesTest(unittest.IsolatedAsyncioTestCase):
     async def test_loot(self) -> None:
         async with get_browser_context() as context:
             scraper = HumbleGamesScraper(context=context)
-            scraper_results = await scraper.scrape()
+            with self.assertNoLogs(level="ERROR"):
+                scraper_results = await scraper.scrape()
             self.assertGreater(len(scraper_results), 0)
             for res in scraper_results:
                 self.assertIsNotNone(res.title)
@@ -151,27 +152,30 @@ class SteamGameInfoTests(unittest.IsolatedAsyncioTestCase):
     async def test_steam_appid_resolution(self) -> None:
         async with get_browser_context() as context:
             expected_id: int = 359550  # Tom Clancy's Rainbow Six® Siege
-            scraped_id: int = await get_steam_id(
-                "Rainbow Six Siege",
-                context=context,
-            )
+            with self.assertNoLogs(level="ERROR"):
+                scraped_id: int = await get_steam_id(
+                    "Rainbow Six Siege",
+                    context=context,
+                )
             self.assertEqual(expected_id, scraped_id)
 
     async def test_steam_appid_resolution_with_special_chars(self) -> None:
         async with get_browser_context() as context:
             expected_id: int = 32460
-            scraped_id: int = await get_steam_id(
-                "Monkey Island 2 Special Edition: LeChuck’s Revenge",
-                context=context,
-            )
+            with self.assertNoLogs(level="ERROR"):
+                scraped_id: int = await get_steam_id(
+                    "Monkey Island 2 Special Edition: LeChuck’s Revenge",
+                    context=context,
+                )
             self.assertEqual(expected_id, scraped_id)
 
     async def test_steam_details_counterstrike(self) -> None:
         async with get_browser_context() as context:
-            steam_info = await get_steam_details(
-                title="Counter-Strike",
-                context=context,
-            )
+            with self.assertNoLogs(level="ERROR"):
+                steam_info = await get_steam_details(
+                    title="Counter-Strike",
+                    context=context,
+                )
             self.assertIsNotNone(steam_info)
             self.assertEqual(steam_info.name, "Counter-Strike")
             self.assertIsNotNone(steam_info.short_description)
@@ -192,10 +196,11 @@ class SteamGameInfoTests(unittest.IsolatedAsyncioTestCase):
 
     async def test_steam_details_rainbowsix(self) -> None:
         async with get_browser_context() as context:
-            steam_info = await get_steam_details(
-                title="Rainbow Six Siege",
-                context=context,
-            )
+            with self.assertNoLogs(level="ERROR"):
+                steam_info = await get_steam_details(
+                    title="Rainbow Six Siege",
+                    context=context,
+                )
             self.assertIsNotNone(steam_info)
             self.assertEqual(steam_info.name, "Tom Clancy's Rainbow Six® Siege")
             self.assertIsNotNone(steam_info.short_description)
@@ -213,7 +218,11 @@ class SteamGameInfoTests(unittest.IsolatedAsyncioTestCase):
 
     async def test_steam_appinfo_releasedate(self) -> None:
         async with get_browser_context() as context:
-            steam_info = await get_steam_details(title="Riverbond", context=context)
+            with self.assertNoLogs(level="ERROR"):
+                steam_info = await get_steam_details(
+                    title="Riverbond",
+                    context=context,
+                )
             self.assertIsNotNone(steam_info)
             self.assertEqual(steam_info.name, "Riverbond")
             self.assertIsNotNone(steam_info.release_date)
@@ -223,7 +232,11 @@ class SteamGameInfoTests(unittest.IsolatedAsyncioTestCase):
 
     async def test_steam_appinfo_recommendations(self) -> None:
         async with get_browser_context() as context:
-            steam_info = await get_steam_details(title="Riverbond", context=context)
+            with self.assertNoLogs(level="ERROR"):
+                steam_info = await get_steam_details(
+                    title="Riverbond",
+                    context=context,
+                )
             self.assertIsNotNone(steam_info)
             self.assertEqual(steam_info.name, "Riverbond")
             self.assertIsNotNone(steam_info.recommendations)
@@ -232,23 +245,33 @@ class SteamGameInfoTests(unittest.IsolatedAsyncioTestCase):
     # store page has to be used instead to get the price in EUR
     async def test_steam_appinfo_price(self) -> None:
         async with get_browser_context() as context:
-            steam_info = await get_steam_details(
-                title="Cities: Skylines", context=context
-            )
+            with self.assertNoLogs(level="ERROR"):
+                steam_info = await get_steam_details(
+                    title="Cities: Skylines",
+                    context=context,
+                )
             self.assertIsNotNone(steam_info)
             self.assertEqual(steam_info.name, "Cities: Skylines")
             self.assertEqual(steam_info.recommended_price_eur, 27.99)
 
     async def test_steam_appinfo_language(self) -> None:
         async with get_browser_context() as context:
-            steam_info = await get_steam_details(title="Warframe", context=context)
+            with self.assertNoLogs(level="ERROR"):
+                steam_info = await get_steam_details(
+                    title="Warframe",
+                    context=context,
+                )
             self.assertIsNotNone(steam_info)
             self.assertEqual(steam_info.name, "Warframe")
             self.assertEqual(steam_info.short_description[0:6], "Awaken")
 
     async def test_steam_appinfo_ageverify(self) -> None:
         async with get_browser_context() as context:
-            steam_info = await get_steam_details(title="Doom Eternal", context=context)
+            with self.assertNoLogs(level="ERROR"):
+                steam_info = await get_steam_details(
+                    title="Doom Eternal",
+                    context=context,
+                )
             self.assertIsNotNone(steam_info)
             self.assertEqual(steam_info.name, "DOOM Eternal")
             self.assertEqual(
@@ -257,7 +280,11 @@ class SteamGameInfoTests(unittest.IsolatedAsyncioTestCase):
 
     async def test_steam_json_multiple_genres(self) -> None:
         async with get_browser_context() as context:
-            steam_info = await get_steam_details(id_=1424910, context=context)
+            with self.assertNoLogs(level="ERROR"):
+                steam_info = await get_steam_details(
+                    id_=1424910,
+                    context=context,
+                )
             self.assertIsNotNone(steam_info)
             self.assertEqual(steam_info.genres, "Action, Indie, Racing, Early Access")
 

@@ -1,15 +1,6 @@
-# type: ignore
-import logging
 import unittest
 
-from app.common import TIMESTAMP_LONG
 from app.scraper.info.utils import get_match_score
-
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s [%(levelname)-5s] %(message)s",
-    datefmt=TIMESTAMP_LONG,
-)
 
 
 class LocalTests(unittest.TestCase):

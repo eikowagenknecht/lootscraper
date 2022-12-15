@@ -28,16 +28,23 @@ async def get_browser_context() -> AsyncGenerator[BrowserContext, None]:
     try:
         async with async_playwright() as playwright:
             browser = await playwright.chromium.launch(
+                # Headful is needed for Epic Games
                 headless=Config.get().headless_chrome,
+                # Needed for docker
+                chromium_sandbox=False,
             )
-            context = await browser.new_context()
+            context = await browser.new_context(
+                # We want english pages
+                locale="en-US",
+                # Seems not to be needed with PlayWright
+                # user_agent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/64.0.3282.39 Safari/537.36"
+            )
             context.set_default_timeout(Config.get().web_timeout * 1000)  # Milliseconds
 
-            with open(INJECTION_FILE, "r", encoding="utf-8") as file:
-                js_to_inject = file.read()
-
             # TODO: Check if this is needed and comment, why if it is
-            await context.add_init_script(js_to_inject)
+            # with open(INJECTION_FILE, "r", encoding="utf-8") as file:
+            #     js_to_inject = file.read()
+            # await context.add_init_script(js_to_inject)
 
             # TODO: See which of these options (if any) are needed for playwright
             # # https://stackoverflow.com/a/50725918/1689770
@@ -63,9 +70,6 @@ async def get_browser_context() -> AsyncGenerator[BrowserContext, None]:
             # # Loglevel
             # options.add_argument("--log-level=3")
             # options.add_argument("--silent")
-            # # options.add_argument(
-            # #     "--user-agent=Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/64.0.3282.39 Safari/537.36"
-            # # )
 
             yield context
     finally:

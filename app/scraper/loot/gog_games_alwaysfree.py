@@ -42,7 +42,7 @@ class GogGamesAlwaysFreeScraper(GogBaseScraper):
             except Error as e:
                 logger.info(f"Giveaways couldn't load, probably there are none: {e}")
 
-            elements = page.locator(".partners__game-list a")
+            elements = page.locator(".product-row__link")
 
             try:
                 no_res = await elements.count()
