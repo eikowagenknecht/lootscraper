@@ -36,6 +36,8 @@ async def get_browser_context() -> AsyncGenerator[BrowserContext, None]:
             context = await browser.new_context(
                 # We want english pages
                 locale="en-US",
+                # Use Reykjavik timezone (=UTC) because UTC is not supported directly
+                timezone_id="Atlantic/Reykjavik"
                 # Seems not to be needed with PlayWright
                 # user_agent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/64.0.3282.39 Safari/537.36"
             )
