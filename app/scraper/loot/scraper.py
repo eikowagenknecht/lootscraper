@@ -17,7 +17,7 @@ SCROLL_PAUSE_SECONDS = 1  # Long enough so even Amazons JS can catch up
 
 @dataclass
 class RawOffer:
-    title: str | None
+    title: str
     url: str | None = None
     img_url: str | None = None
 
