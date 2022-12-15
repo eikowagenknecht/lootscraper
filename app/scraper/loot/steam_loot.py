@@ -1,14 +1,12 @@
 import logging
+import urllib.parse
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 
-from selenium.common.exceptions import WebDriverException
-from selenium.webdriver.common.by import By
-from selenium.webdriver.remote.webelement import WebElement
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.support.ui import WebDriverWait
+from playwright.async_api import Error, Locator
 
 from app.common import OfferDuration, OfferType, Source
+from app.pagedriver import get_new_page
 from app.scraper.info.steam import skip_age_verification
 from app.scraper.info.utils import clean_loot_title
 from app.scraper.loot.scraper import RawOffer, Scraper
@@ -16,16 +14,15 @@ from app.sqlalchemy import Offer
 
 logger = logging.getLogger(__name__)
 
-ROOT_URL = (
-    "https://store.steampowered.com/search/?maxprice=free&category1=21&specials=1"
-)
+BASE_URL = "https://store.steampowered.com"
+SEARCH_URL = BASE_URL + "/search/"
+SEARCH_URL_PARAMS = {
+    "maxprice": "free",
+    "category1": 21,  # DLC
+    "specials": 1,
+}
 
-DETAILS_URL = "https://store.steampowered.com/app/"
-
-STEAM_SEARCH_RESULTS_CONTAINER = '//div[@id = "search_results"]'
-STEAM_SEARCH_RESULTS = (
-    '//div[@id = "search_result_container"]//a'  # data-ds-appid contains the steam id
-)
+DETAILS_URL = BASE_URL + "/app/"
 
 
 @dataclass
@@ -48,76 +45,70 @@ class SteamLootScraper(Scraper):
         return OfferDuration.CLAIMABLE
 
     async def read_offers_from_page(self) -> list[Offer]:
-        self.context.get(ROOT_URL)
-        try:
-            # Wait until the page loaded
-            WebDriverWait(self.context, Scraper.get_max_wait_seconds()).until(
-                EC.presence_of_element_located(
-                    (By.XPATH, STEAM_SEARCH_RESULTS_CONTAINER)
-                )
-            )
-        except WebDriverException:
-            logger.error(
-                f"Page took longer than {Scraper.get_max_wait_seconds()} to load"
-            )
-            return []
-
-        elements: list[WebElement] = []
-        try:
-            elements.extend(self.context.find_elements(By.XPATH, STEAM_SEARCH_RESULTS))
-        except WebDriverException:
-            logger.info("No current offer found.")
-
+        url = f"{SEARCH_URL}?{urllib.parse.urlencode(SEARCH_URL_PARAMS)}"
         raw_offers: list[SteamRawOffer] = []
-        for element in elements:
-            raw_offer = SteamLootScraper.read_raw_offer(element)
-            raw_offers.append(raw_offer)
 
-        for raw_offer in raw_offers:
+        async with get_new_page(self.context) as page:
+            await page.goto(url)
+
             try:
-                self.context.get(raw_offer.url)
-                await skip_age_verification(
-                    self.context, raw_offer.appid if raw_offer.appid else 0
-                )  # TODO: Error handling
-                WebDriverWait(self.context, Scraper.get_max_wait_seconds()).until(
-                    EC.presence_of_element_located(
-                        (By.CLASS_NAME, "game_area_purchase")
-                    )
-                )
+                await page.wait_for_selector("#search_results")
+            except Error as e:
+                logger.error(f"Couldn't load offers: {e}")
+                return []
 
-                element = self.context.find_element(
-                    By.CLASS_NAME, "game_purchase_discount_quantity"
-                )
-                raw_offer.text = element.text
-            except WebDriverException:
-                # Text is optional, continue away
-                pass
+            elements = page.locator("#search_results a")
+
+            try:
+                no_res = await elements.count()
+            except Error as e:
+                logger.error(f"Couldn't load search results: {e}")
+                return []
+
+            for i in range(no_res):
+                try:
+                    element = elements.nth(i)
+                    raw_offers.append(await self.read_raw_offer(element))
+                except Error as e:
+                    logger.error(f"Couldn't load offer {i}: {e}")
 
         normalized_offers = SteamLootScraper.normalize_offers(raw_offers)
 
         return normalized_offers
 
-    @staticmethod
-    def read_raw_offer(element: WebElement) -> SteamRawOffer:
-        title_str: str | None = None
-        appid: int | None = None
-        url_str: str | None = None
+    async def read_raw_offer(self, element: Locator) -> SteamRawOffer:
+        title = await element.locator(".title").text_content()
+        if title is None:
+            raise ValueError("Couldn't find title.")
 
-        try:
-            title_element = element.find_element(By.CLASS_NAME, "title")
-            title_str = title_element.text
-        except WebDriverException:
-            # Nothing to do here, string stays empty
-            pass
+        appid = await element.get_attribute("data-ds-appid")
+        if appid is None:
+            raise ValueError(f"Couldn't find appid for {title}")
 
-        try:
-            appid = int(element.get_attribute("data-ds-appid"))  # type: ignore
-            url_str = DETAILS_URL + str(appid)
-        except (WebDriverException, ValueError):
-            # Nothing to do here, string stays empty
-            pass
+        url = DETAILS_URL + str(appid)
 
-        return SteamRawOffer(appid=appid, title=title_str, url=url_str)
+        async with get_new_page(self.context) as page:
+            await page.goto(url)
+
+            await skip_age_verification(page)
+            await page.wait_for_selector(".game_area_purchase")
+
+            img_url = await page.locator(".game_header_image_full").get_attribute("src")
+            if img_url is None:
+                raise ValueError(f"Couldn't find image for {title}")
+
+            # Get the resolved text here because the text_content() contains special characters
+            text = await page.locator(".game_purchase_discount_quantity").inner_text()
+            if text is None:
+                raise ValueError(f"Couldn't find valid date for {title}")
+
+        return SteamRawOffer(
+            appid=int(appid),
+            title=title,
+            url=url,
+            img_url=img_url,
+            text=text,
+        )
 
     @staticmethod
     def normalize_offers(raw_offers: list[SteamRawOffer]) -> list[Offer]:
@@ -127,10 +118,6 @@ class SteamLootScraper(Scraper):
 
         for raw_offer in raw_offers:
             # Raw text
-            if not raw_offer.title:
-                logger.error(f"Error with offer, has no title: {raw_offer}")
-                continue
-
             rawtext = f"<title>{raw_offer.title}</title>"
 
             if raw_offer.appid:
@@ -164,7 +151,7 @@ class SteamLootScraper(Scraper):
             else:
                 probable_game_name = clean_loot_title(raw_offer.title)
 
-            nearest_url = raw_offer.url if raw_offer.url else ROOT_URL
+            nearest_url = raw_offer.url if raw_offer.url else SEARCH_URL
             offer = Offer(
                 source=SteamLootScraper.get_source(),
                 duration=SteamLootScraper.get_duration(),
@@ -172,11 +159,10 @@ class SteamLootScraper(Scraper):
                 title=raw_offer.title,
                 probable_game_name=probable_game_name,
                 seen_last=now,
-                valid_from=None,
                 valid_to=valid_to,
                 rawtext=rawtext,
                 url=nearest_url,
-                img_url=None,
+                img_url=raw_offer.img_url,
             )
 
             normalized_offers.append(offer)

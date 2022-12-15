@@ -1,5 +1,6 @@
 # type: ignore
 import unittest
+from datetime import datetime, timezone
 
 from app.pagedriver import get_browser_context
 from app.scraper.info.steam import get_steam_details, get_steam_id
@@ -13,8 +14,7 @@ from app.scraper.loot.google_games import GoogleGamesScraper
 from app.scraper.loot.humble_games import HumbleGamesScraper
 from app.scraper.loot.itch_games import ItchGamesScraper
 from app.scraper.loot.steam_games import SteamGamesScraper
-
-# from app.scraper.loot.steam_loot import SteamLootScraper
+from app.scraper.loot.steam_loot import SteamLootScraper
 
 
 class PlaywrightTests(unittest.IsolatedAsyncioTestCase):
@@ -178,6 +178,27 @@ class SteamGamesTest(unittest.IsolatedAsyncioTestCase):
                 self.assertTrue(res.url.startswith("https://store.steampowered.com/"))
                 self.assertIsNotNone(res.img_url)
                 self.assertTrue(res.img_url.startswith("https://"))
+                                self.assertGreater(
+                    res.valid_to, datetime.now().replace(tzinfo=timezone.utc)
+                )
+
+
+class SteamLootTest(unittest.IsolatedAsyncioTestCase):
+    async def test_loot(self) -> None:
+        async with get_browser_context() as context:
+            scraper = SteamLootScraper(context=context)
+            with self.assertNoLogs(level="ERROR"):
+                scraper_results = await scraper.scrape()
+            self.assertGreater(len(scraper_results), 0)
+            for res in scraper_results:
+                self.assertIsNotNone(res.title)
+                self.assertIsNotNone(res.url)
+                self.assertTrue(res.url.startswith("https://store.steampowered.com/"))
+                self.assertIsNotNone(res.img_url)
+                self.assertTrue(res.img_url.startswith("https://"))
+                self.assertGreater(
+                    res.valid_to, datetime.now().replace(tzinfo=timezone.utc)
+                )
 
 
 class SteamGameInfoTests(unittest.IsolatedAsyncioTestCase):
