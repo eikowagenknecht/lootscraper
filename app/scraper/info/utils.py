@@ -2,6 +2,8 @@ import difflib
 import re
 from typing import Any
 
+from app.common import OfferType
+
 RESULT_MATCH_THRESHOLD = 0.85
 
 
@@ -53,10 +55,21 @@ def clean_nones(value: dict[str, Any]) -> dict[str, Any]:
     """
     if isinstance(value, list):
         return [clean_nones(x) for x in value if x is not None]
-    elif isinstance(value, dict):
+
+    if isinstance(value, dict):
         return {key: clean_nones(val) for key, val in value.items() if val is not None}
-    else:
-        return value
+
+    return value
+
+
+def clean_title(title: str, type_: OfferType) -> str:
+    if type_ == OfferType.GAME:
+        return clean_game_title(title)
+
+    if type_ == OfferType.LOOT:
+        return clean_loot_title(title)
+
+    raise ValueError(f"Unknown type {type_}")
 
 
 def clean_game_title(title: str) -> str:
