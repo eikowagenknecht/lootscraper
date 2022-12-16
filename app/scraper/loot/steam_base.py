@@ -38,7 +38,13 @@ class SteamBaseScraper(Scraper):  # pylint: disable=W0223
         raise NotImplementedError("Please implement this method")
 
     def get_offer_handlers(self, page: Page) -> list[OfferHandler]:
-        return [OfferHandler(page.locator("#search_results a"), self.read_raw_offer)]
+        return [
+            OfferHandler(
+                page.locator("#search_results a"),
+                self.read_raw_offer,
+                self.normalize_offer,
+            )
+        ]
 
     def get_offers_url(self) -> str:
         params = {
@@ -89,48 +95,43 @@ class SteamBaseScraper(Scraper):  # pylint: disable=W0223
             text=text,
         )
 
-    def normalize_offers(self, raw_offers: list[SteamRawOffer]) -> list[Offer]:  # type: ignore
-        normalized_offers: list[Offer] = []
-
+    def normalize_offer(self, raw_offer: RawOffer) -> Offer:
+        if not isinstance(raw_offer, SteamRawOffer):
+            raise ValueError("Wrong type of raw offer.")
         now = datetime.now(timezone.utc)
 
-        for raw_offer in raw_offers:
-            rawtext = f"<title>{raw_offer.title}</title>"
-            rawtext += f"<appid>{raw_offer.appid}</appid>"
-            rawtext += f"<text>{raw_offer.text}</text>"
+        rawtext = f"<title>{raw_offer.title}</title>"
+        rawtext += f"<appid>{raw_offer.appid}</appid>"
+        rawtext += f"<text>{raw_offer.text}</text>"
 
-            valid_to: datetime | None = None
-            if raw_offer.text:
-                maybe_date = raw_offer.text.removeprefix(
-                    "Free to keep when you get it before "
-                ).removesuffix(". Some limitations apply. (?)")
-                try:
-                    valid_to = (
-                        datetime.strptime(maybe_date, "%d %b @ %I:%M%p")
-                        .replace(tzinfo=timezone.utc)
-                        .replace(year=now.year)
-                    )
-                    # Date has to be in the future, adjust the year accordingly
-                    yesterday = now - timedelta(days=1)
-                    if valid_to < yesterday:
-                        valid_to = valid_to.replace(year=valid_to.year + 1)
-                except ValueError:
-                    logger.warning(f"Couldn't parse date {maybe_date}.")
+        valid_to: datetime | None = None
+        if raw_offer.text:
+            maybe_date = raw_offer.text.removeprefix(
+                "Free to keep when you get it before "
+            ).removesuffix(". Some limitations apply. (?)")
+            try:
+                valid_to = (
+                    datetime.strptime(maybe_date, "%d %b @ %I:%M%p")
+                    .replace(tzinfo=timezone.utc)
+                    .replace(year=now.year)
+                )
+                # Date has to be in the future, adjust the year accordingly
+                yesterday = now - timedelta(days=1)
+                if valid_to < yesterday:
+                    valid_to = valid_to.replace(year=valid_to.year + 1)
+            except ValueError:
+                logger.warning(f"Couldn't parse date {maybe_date}.")
 
-            probable_game_name = clean_title(raw_offer.title, self.get_type())
+        probable_game_name = clean_title(raw_offer.title, self.get_type())
 
-            offer = Offer(
-                source=self.get_source(),
-                duration=self.get_duration(),
-                type=self.get_type(),
-                title=raw_offer.title,
-                probable_game_name=probable_game_name,
-                seen_last=now,
-                valid_to=valid_to,
-                rawtext=rawtext,
-                url=raw_offer.url,
-            )
-
-            normalized_offers.append(offer)
-
-        return normalized_offers
+        return Offer(
+            source=self.get_source(),
+            duration=self.get_duration(),
+            type=self.get_type(),
+            title=raw_offer.title,
+            probable_game_name=probable_game_name,
+            seen_last=now,
+            valid_to=valid_to,
+            rawtext=rawtext,
+            url=raw_offer.url,
+        )

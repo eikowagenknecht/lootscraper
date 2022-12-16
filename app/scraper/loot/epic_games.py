@@ -43,6 +43,7 @@ class EpicGamesScraper(Scraper):
             OfferHandler(
                 page.locator('//span[text()="Free Now"]//ancestor::a'),
                 self.read_raw_offer,
+                self.normalize_offer,
             ),
         ]
 
@@ -82,39 +83,34 @@ class EpicGamesScraper(Scraper):
             img_url=img_url,
         )
 
-    def normalize_offers(self, raw_offers: list[EpicRawOffer]) -> list[Offer]:  # type: ignore
-        normalized_offers: list[Offer] = []
+    def normalize_offer(self, raw_offer: RawOffer) -> Offer:
+        if not isinstance(raw_offer, EpicRawOffer):
+            raise ValueError("Wrong type of raw offer.")
 
-        for raw_offer in raw_offers:
-            rawtext = f"<title>{raw_offer.title}</title>"
-            rawtext += f"<enddate>{raw_offer.valid_to}</enddate>"
-            title = raw_offer.title
+        rawtext = f"<title>{raw_offer.title}</title>"
+        rawtext += f"<enddate>{raw_offer.valid_to}</enddate>"
+        title = raw_offer.title
 
-            utc_valid_to = None
-            if raw_offer.valid_to:
-                try:
-                    utc_valid_to = datetime.strptime(
-                        raw_offer.valid_to,
-                        "%Y-%m-%dT%H:%M:%S.000Z",
-                    ).replace(tzinfo=timezone.utc)
-                except ValueError:
-                    # TODO: Error handling, put main loop into Scraper and handle normalization here for each entry
-                    utc_valid_to = None
+        utc_valid_to = None
+        if raw_offer.valid_to:
+            try:
+                utc_valid_to = datetime.strptime(
+                    raw_offer.valid_to,
+                    "%Y-%m-%dT%H:%M:%S.000Z",
+                ).replace(tzinfo=timezone.utc)
+            except ValueError:
+                # TODO: Error handling, put main loop into Scraper and handle normalization here for each entry
+                utc_valid_to = None
 
-            nearest_url = raw_offer.url if raw_offer.url else OFFER_URL
-            offer = Offer(
-                source=EpicGamesScraper.get_source(),
-                duration=EpicGamesScraper.get_duration(),
-                type=EpicGamesScraper.get_type(),
-                title=title,
-                probable_game_name=title,
-                seen_last=datetime.now(timezone.utc),
-                valid_to=utc_valid_to,
-                rawtext=rawtext,
-                url=nearest_url,
-                img_url=raw_offer.img_url,
-            )
-
-            normalized_offers.append(offer)
-
-        return normalized_offers
+        return Offer(
+            source=EpicGamesScraper.get_source(),
+            duration=EpicGamesScraper.get_duration(),
+            type=EpicGamesScraper.get_type(),
+            title=title,
+            probable_game_name=title,
+            seen_last=datetime.now(timezone.utc),
+            valid_to=utc_valid_to,
+            rawtext=rawtext,
+            url=raw_offer.url,
+            img_url=raw_offer.img_url,
+        )
