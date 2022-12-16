@@ -288,9 +288,11 @@ async def add_data_from_steam_store_page(
         # First source to add the recommended price if available
         if steam_info.recommended_price_eur is None:
             try:
-                recommended_price = await page.locator(
-                    ".game_area_purchase_game .game_purchase_action .discount_original_price"
-                ).text_content()
+                recommended_price = (
+                    await page.locator(".game_area_purchase_game")
+                    .first.locator(".game_purchase_action .discount_original_price")
+                    .text_content()
+                )
                 if recommended_price is None:
                     logger.info(
                         f"No Steam original price found on shop page for {steam_info.id}."
@@ -311,11 +313,13 @@ async def add_data_from_steam_store_page(
         # Second source to add the recommended price if available
         if steam_info.recommended_price_eur is None:
             try:
-                recommended_price = await page.locator(
-                    ".game_area_purchase_game .game_purchase_action .game_purchase_price"
-                ).first.text_content()
+                recommended_price = (
+                    await page.locator(".game_area_purchase_game")
+                    .first.locator(".game_purchase_action .game_purchase_price")
+                    .text_content()
+                )
                 if recommended_price is None:
-                    logger.info(
+                    logger.error(
                         f"No Steam recommended price found on shop page for {steam_info.id}."
                     )
                 elif "free" in recommended_price.lower():
