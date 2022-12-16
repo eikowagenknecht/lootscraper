@@ -2,12 +2,12 @@ import logging
 from dataclasses import dataclass
 from datetime import datetime, timezone
 
-from playwright.async_api import Error, Locator
+from playwright.async_api import Error, Locator, Page
 
 from app.common import OfferDuration
 from app.pagedriver import get_new_page
 from app.scraper.loot.gog_base import GogBaseScraper
-from app.scraper.loot.scraper import RawOffer
+from app.scraper.loot.scraper import OfferHandler, RawOffer
 from app.sqlalchemy import Offer
 
 logger = logging.getLogger(__name__)
@@ -16,7 +16,7 @@ BASE_URL = "https://www.gog.com"
 OFFER_URL = BASE_URL + "/#giveaway"
 
 
-@dataclass
+@dataclass(kw_only=True)
 class GogRawOffer(RawOffer):
     valid_to: str | None = None
 
@@ -26,87 +26,39 @@ class GogGamesScraper(GogBaseScraper):
     def get_duration() -> OfferDuration:
         return OfferDuration.CLAIMABLE
 
-    async def read_offers_from_page(self) -> list[Offer]:
-        raw_offers: list[GogRawOffer] = []
+    def get_offers_url(self) -> str:
+        return OFFER_URL
 
-        async with get_new_page(self.context) as page:
-            await page.goto(OFFER_URL)
-            try:
-                await page.wait_for_selector(".content.cf")
-            except Error as e:
-                logger.error(f"Page could not be read: {e}")
-                return []
+    def get_page_ready_selector(self) -> str:
+        return ".content.cf"
 
-            try:
-                await GogGamesScraper.switch_to_english(page)
-            except (Error, ValueError) as e:
-                logger.error(f"Couldn't switch to English: {e}")
-                return []
+    def get_offer_handlers(self, page: Page) -> list[OfferHandler]:
+        return [
+            OfferHandler(
+                page.locator("a.giveaway-banner"),
+                self.read_raw_offer_v1,
+            ),
+            OfferHandler(
+                page.locator(
+                    "a.big-spot",
+                    has=page.locator('[ng-if="tile.isFreeVisible"]'),
+                ),
+                self.read_raw_offer_v2,
+            ),
+        ]
 
-            # Check giveaway variant 1
-            try:
-                await page.wait_for_selector("a.giveaway-banner")
-                element = page.locator("a.giveaway-banner").first
-                raw_offers.append(await GogGamesScraper.read_raw_offer(element))
-            except Error as e:
-                logger.info(
-                    f"Couldn't fine any giveaways (v1). Probably there are none: {e}"
-                )
+    async def page_loaded_hook(self, page: Page) -> None:
+        await GogBaseScraper.switch_to_english(page)
 
-            # Check giveaway variant 2
-            elements = page.locator(
-                "a.big-spot",
-                has=page.locator('[ng-if="tile.isFreeVisible"]'),
-            )
-
-            try:
-                no_res = await elements.count()
-                offer_urls: list[str] = []
-                for i in range(no_res):
-                    element = elements.nth(i)
-                    try:
-                        price = element.locator('[ng-if="tile.isFreeVisible"]')
-                        value = await price.text_content()
-                    except Error:
-                        logger.debug("Element doesn't seem to be free.")
-                        continue
-
-                    if value is None:
-                        logger.debug("Element doesn't seem to be free.")
-                        continue
-                    if "free" not in value:
-                        # Skip special offers that are not free
-                        continue
-
-                    try:
-                        relative_path = str(await element.get_attribute("href"))
-                        url = BASE_URL + relative_path
-                        # Do not add duplicates
-                        if url not in offer_urls:
-                            offer_urls.append(url)
-                    except Error:
-                        logger.warning("Could not read url for GOG variant 2")
-                        continue
-                for url in offer_urls:
-                    raw_offers.append(await self.read_offer_from_details_page(url))
-            except Error as e:
-                logger.info(
-                    f"Couldn't fine any giveaways (v2). Probably there are none: {e}"
-                )
-
-        normalized_offers = GogGamesScraper.normalize_offers(raw_offers)
-
-        return normalized_offers
-
-    @staticmethod
-    async def read_raw_offer(element: Locator) -> GogRawOffer:
+    async def read_raw_offer_v1(self, element: Locator) -> GogRawOffer:
         title = await element.locator(".giveaway-banner__title").text_content()
-        if title is not None:
-            title = (
-                title.strip()
-                .removeprefix("Claim ")
-                .removesuffix(" and don't miss the best GOG offers in the future!")
-            )
+        if title is None:
+            raise ValueError("Could not read title")
+        title = (
+            title.strip()
+            .removeprefix("Claim ")
+            .removesuffix(" and don't miss the best GOG offers in the future!")
+        )
         valid_to = await element.locator("gog-countdown-timer").get_attribute(
             "end-date"
         )
@@ -126,52 +78,66 @@ class GogGamesScraper(GogBaseScraper):
             img_url=img_url,
         )
 
+    async def read_raw_offer_v2(self, element: Locator) -> GogRawOffer | None:
+        try:
+            price = element.locator('[ng-if="tile.isFreeVisible"]')
+            value = await price.text_content()
+        except Error:
+            logger.debug("Element doesn't seem to be free. Skipping.")
+            return None
+        if value is None or "free" not in value:
+            logger.debug("Element doesn't seem to be free.")
+            return None
+
+        try:
+            relative_path = str(await element.get_attribute("href"))
+            url = BASE_URL + relative_path
+            return await self.read_offer_from_details_page(url)
+        except Error:
+            logger.warning("Could not read url for GOG variant 2.")
+            return None
+
     async def read_offer_from_details_page(self, url: str) -> GogRawOffer:
         async with get_new_page(self.context) as page:
             await page.goto(url)
 
             title = await page.locator(".productcard-basics__title").text_content()
+            if title is None:
+                raise ValueError("Couldn't find title.")
+
             img_url = GogGamesScraper.sanitize_img_url(
                 await page.locator(".productcard-player__logo").get_attribute("srcset")
             )
+            if img_url is None:
+                raise ValueError(f"Couldn't find image for {title}.")
 
             return GogRawOffer(
-                url=url,
                 title=title,
+                url=url,
                 img_url=img_url,
             )
 
-    @staticmethod
-    def normalize_offers(raw_offers: list[GogRawOffer]) -> list[Offer]:
+    def normalize_offers(self, raw_offers: list[GogRawOffer]) -> list[Offer]:  # type: ignore
         normalized_offers: list[Offer] = []
 
         for raw_offer in raw_offers:
-            # Raw text
-            if not raw_offer.title:
-                logger.error(f"Error with offer, has no title: {raw_offer}")
-                continue
-
             rawtext = f"<title>{raw_offer.title}</title>"
-
             if raw_offer.valid_to:
                 rawtext += f"<enddate>{raw_offer.valid_to}</enddate>"
-
-            # Title
-            # Contains additional text that needs to be stripped
             title = raw_offer.title
 
-            # Valid to
-            valid_to_stamp = None
+            valid_to = None
             if raw_offer.valid_to:
                 try:
                     valid_to_unix = int(raw_offer.valid_to) / 1000
-                    valid_to_stamp = datetime.utcfromtimestamp(valid_to_unix).replace(
+                    valid_to = datetime.utcfromtimestamp(valid_to_unix).replace(
                         tzinfo=timezone.utc
                     )
                 except ValueError:
-                    valid_to_stamp = None
+                    valid_to = None
 
             nearest_url = raw_offer.url if raw_offer.url else OFFER_URL
+
             offer = Offer(
                 source=GogGamesScraper.get_source(),
                 duration=GogGamesScraper.get_duration(),
@@ -179,7 +145,7 @@ class GogGamesScraper(GogBaseScraper):
                 title=title,
                 probable_game_name=title,
                 seen_last=datetime.now(timezone.utc),
-                valid_to=valid_to_stamp,
+                valid_to=valid_to,
                 rawtext=rawtext,
                 url=nearest_url,
                 img_url=raw_offer.img_url,

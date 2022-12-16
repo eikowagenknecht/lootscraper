@@ -2,17 +2,17 @@ import logging
 from dataclasses import dataclass
 from datetime import date, datetime, time, timedelta, timezone
 
-from playwright.async_api import Error
+from playwright.async_api import Error, Locator, Page
 
 from app.common import OfferDuration, OfferType, Source
-from app.pagedriver import get_new_page
 from app.scraper.info.utils import clean_game_title
-from app.scraper.loot.scraper import RawOffer, Scraper
+from app.scraper.loot.scraper import OfferHandler, RawOffer, Scraper
 from app.sqlalchemy import Offer
 
 logger = logging.getLogger(__name__)
 
-ROOT_URL = "https://gaming.amazon.com/home"
+BASE_URL = "https://gaming.amazon.com"
+OFFER_URL = BASE_URL + "/home"
 
 
 @dataclass
@@ -33,80 +33,65 @@ class AmazonGamesScraper(Scraper):
     def get_duration() -> OfferDuration:
         return OfferDuration.CLAIMABLE
 
-    async def read_offers_from_page(self) -> list[Offer]:
-        raw_offers: list[AmazonRawOffer] = []
+    def get_offers_url(self) -> str:
+        return OFFER_URL
 
-        async with get_new_page(self.context) as page:
-            await page.goto(ROOT_URL)
-            try:
-                await page.wait_for_selector(".offer-list__content")
-                await AmazonGamesScraper.scroll_element_to_bottom(page, "root")
-            except Error as e:
-                logger.error(f"Page could not be read: {e}")
-                return []
+    def get_page_ready_selector(self) -> str:
+        return ".offer-list__content"
 
-            elements = page.locator(
-                '[data-a-target="offer-list-FGWP_FULL"] .item-card__action'
-            )
+    def get_offer_handlers(self, page: Page) -> list[OfferHandler]:
+        return [
+            OfferHandler(
+                page.locator(
+                    '[data-a-target="offer-list-FGWP_FULL"] .item-card__action'
+                ),
+                self.read_raw_offer,
+            ),
+        ]
 
-            try:
-                no_res = await elements.count()
-            except Error as e:
-                logger.error(f"Root element not found, could not scrape: {e}")
-                return []
+    async def page_loaded_hook(self, page: Page) -> None:
+        await Scraper.scroll_element_to_bottom(page, "root")
 
-            for i in range(no_res):
-                element = elements.nth(i)
+    async def read_raw_offer(self, element: Locator) -> AmazonRawOffer:
+        title = await element.locator(
+            ".item-card-details__body__primary h3"
+        ).text_content()
+        if title is None:
+            raise ValueError("Couldn't find title.")
 
-                try:
-                    title = await element.locator(
-                        ".item-card-details__body__primary h3"
-                    ).text_content()
-                    if not title:
-                        # Skip offers with empty titles
-                        continue
-                except Error:
-                    # Skip offers without titles
-                    continue
+        valid_to = await element.locator(
+            ".item-card__availability-date p"
+        ).text_content()
+        if valid_to is None:
+            raise ValueError(f"Couldn't find valid to for {title}.")
 
-                # Skip duplicates (everything is contained twice on the page for weird JS reasons)
-                if any(x.title == title for x in raw_offers):
-                    continue
+        img_url = await element.locator(
+            '[data-a-target="card-image"] img'
+        ).get_attribute("src")
+        if img_url is None:
+            raise ValueError(f"Couldn't find image for {title}.")
 
-                raw_offer = AmazonRawOffer(title)
+        url = BASE_URL
 
-                try:
-                    raw_offer.valid_to = await element.locator(
-                        ".item-card__availability-date p"
-                    ).text_content(timeout=500)
-                except Error:
-                    # Nothing to do here, string stays empty
-                    pass
+        try:
+            path = await element.locator(
+                '[data-a-target="learn-more-card"]'
+            ).get_attribute("href", timeout=500)
+            if path is not None:
+                url += path
+        except Error:
+            # Some offers are claimed on site and don't have a specific path.
+            # That's fine.
+            pass
 
-                try:
-                    raw_offer.url = await element.locator(
-                        '[data-a-target="learn-more-card"]'
-                    ).get_attribute("href", timeout=500)
-                except Error:
-                    # Nothing to do here, string stays empty
-                    pass
+        return AmazonRawOffer(
+            title=title,
+            valid_to=valid_to,
+            url=url,
+            img_url=img_url,
+        )
 
-                try:
-                    raw_offer.img_url = await element.locator(
-                        '[data-a-target="card-image"] img'
-                    ).get_attribute("src", timeout=500)
-                except Error:
-                    # Nothing to do here, string stays empty
-                    pass
-
-                raw_offers.append(raw_offer)
-
-        normalized_offers = AmazonGamesScraper.normalize_offers(raw_offers)
-
-        return normalized_offers
-
-    @staticmethod
-    def normalize_offers(raw_offers: list[AmazonRawOffer]) -> list[Offer]:
+    def normalize_offers(self, raw_offers: list[AmazonRawOffer]) -> list[Offer]:  # type: ignore
         normalized_offers: list[Offer] = []
 
         for raw_offer in raw_offers:
@@ -185,7 +170,6 @@ class AmazonGamesScraper(Scraper):
                 except (ValueError, IndexError):
                     logger.warning(f"Date parsing failed for {raw_offer.title}")
 
-            nearest_url = raw_offer.url if raw_offer.url else ROOT_URL
             offer = Offer(
                 source=AmazonGamesScraper.get_source(),
                 duration=AmazonGamesScraper.get_duration(),
@@ -195,7 +179,7 @@ class AmazonGamesScraper(Scraper):
                 seen_last=datetime.now(timezone.utc),
                 valid_to=end_date,
                 rawtext=rawtext,
-                url=nearest_url,
+                url=raw_offer.url,
                 img_url=raw_offer.img_url,
             )
 

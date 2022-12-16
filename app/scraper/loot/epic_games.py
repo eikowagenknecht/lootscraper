@@ -2,12 +2,10 @@ import logging
 from dataclasses import dataclass
 from datetime import datetime, timezone
 
-from playwright.async_api import Error, Locator
+from playwright.async_api import Locator, Page
 
 from app.common import OfferDuration, OfferType, Source
-from app.configparser import Config
-from app.pagedriver import get_new_page
-from app.scraper.loot.scraper import RawOffer, Scraper
+from app.scraper.loot.scraper import OfferHandler, RawOffer, Scraper
 from app.sqlalchemy import Offer
 
 logger = logging.getLogger(__name__)
@@ -16,9 +14,9 @@ BASE_URL = "https://store.epicgames.com"
 OFFER_URL = BASE_URL + "/en-US/"
 
 
-@dataclass
+@dataclass(kw_only=True)
 class EpicRawOffer(RawOffer):
-    valid_to: str | None = None
+    valid_to: str
 
 
 class EpicGamesScraper(Scraper):
@@ -34,47 +32,21 @@ class EpicGamesScraper(Scraper):
     def get_duration() -> OfferDuration:
         return OfferDuration.CLAIMABLE
 
-    async def read_offers_from_page(self) -> list[Offer]:
-        raw_offers: list[EpicRawOffer] = []
+    def get_offers_url(self) -> str:
+        return OFFER_URL
 
-        async with get_new_page(self.context) as page:
-            await page.goto(OFFER_URL)
+    def get_page_ready_selector(self) -> str:
+        return "h2:has-text('Free Games')"
 
-            try:
-                await page.wait_for_selector("h2:has-text('Free Games')")
-            except Error:
-                filename = (
-                    Config.data_path()
-                    / f'screenshot_error_{datetime.now().isoformat().replace(".", "_").replace(":", "_")}.png'
-                )
-                logger.error(
-                    f"Error loading the page. Saving Screenshot to {filename}."
-                )
-                await page.screenshot(path=str(filename.resolve()))
-                return []
+    def get_offer_handlers(self, page: Page) -> list[OfferHandler]:
+        return [
+            OfferHandler(
+                page.locator('//span[text()="Free Now"]//ancestor::a'),
+                self.read_raw_offer,
+            ),
+        ]
 
-            elements = page.locator('//span[text()="Free Now"]//ancestor::a')
-
-            try:
-                no_res = await elements.count()
-                for i in range(no_res):
-                    element = elements.nth(i)
-                    try:
-                        raw_offer = await EpicGamesScraper.read_raw_offer(element)
-                        raw_offers.append(raw_offer)
-                    except Error as e:
-                        logger.error(f"Error loading offer: {e}")
-
-            except Error as e:
-                logger.error(f"No current offers found: {e}")
-                return []
-
-        normalized_offers = EpicGamesScraper.normalize_offers(raw_offers)
-
-        return normalized_offers
-
-    @staticmethod
-    async def read_raw_offer(element: Locator) -> EpicRawOffer:
+    async def read_raw_offer(self, element: Locator) -> RawOffer:
         # Scroll element into view to load img url
         await element.scroll_into_view_if_needed()
 
@@ -82,7 +54,7 @@ class EpicGamesScraper(Scraper):
             '[data-testid="offer-title-info-title"] div'
         ).text_content()
         if title is None:
-            raise ValueError("No title found.")
+            raise ValueError("Couldn't find title.")
 
         # For current offers, the date is included twice but only means the enddate
         # format 2022-02-24T16:00:00.000Z
@@ -91,10 +63,17 @@ class EpicGamesScraper(Scraper):
             .nth(1)
             .get_attribute("datetime")
         )
+        if valid_to is None:
+            raise ValueError(f"Couldn't find valid to for {title}.")
+
         url = await element.get_attribute("href")
-        if url is not None:
-            url = BASE_URL + url
+        if url is None:
+            raise ValueError(f"Couldn't find url for {title}.")
+        url = BASE_URL + url
+
         img_url = await element.locator("img").get_attribute("src")
+        if img_url is None:
+            raise ValueError(f"Couldn't find image for {title}.")
 
         return EpicRawOffer(
             title=title,
@@ -103,25 +82,14 @@ class EpicGamesScraper(Scraper):
             img_url=img_url,
         )
 
-    @staticmethod
-    def normalize_offers(raw_offers: list[EpicRawOffer]) -> list[Offer]:
+    def normalize_offers(self, raw_offers: list[EpicRawOffer]) -> list[Offer]:  # type: ignore
         normalized_offers: list[Offer] = []
 
         for raw_offer in raw_offers:
-            # Raw text
-            if not raw_offer.title:
-                logger.error(f"Error with offer, has no title: {raw_offer}")
-                continue
-
             rawtext = f"<title>{raw_offer.title}</title>"
-
-            if raw_offer.valid_to:
-                rawtext += f"<enddate>{raw_offer.valid_to}</enddate>"
-
-            # Title
+            rawtext += f"<enddate>{raw_offer.valid_to}</enddate>"
             title = raw_offer.title
 
-            # Valid to
             utc_valid_to = None
             if raw_offer.valid_to:
                 try:
@@ -130,6 +98,7 @@ class EpicGamesScraper(Scraper):
                         "%Y-%m-%dT%H:%M:%S.000Z",
                     ).replace(tzinfo=timezone.utc)
                 except ValueError:
+                    # TODO: Error handling, put main loop into Scraper and handle normalization here for each entry
                     utc_valid_to = None
 
             nearest_url = raw_offer.url if raw_offer.url else OFFER_URL
