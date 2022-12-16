@@ -1,11 +1,10 @@
 import logging
 from datetime import datetime, timezone
 
-from playwright.async_api import Error, Locator
+from playwright.async_api import Locator, Page
 
 from app.common import OfferDuration, OfferType, Source
-from app.pagedriver import get_new_page
-from app.scraper.loot.scraper import RawOffer, Scraper
+from app.scraper.loot.scraper import OfferHandler, RawOffer, Scraper
 from app.sqlalchemy import Offer
 
 logger = logging.getLogger(__name__)
@@ -27,59 +26,41 @@ class ItchGamesScraper(Scraper):
     def get_duration() -> OfferDuration:
         return OfferDuration.CLAIMABLE
 
-    async def read_offers_from_page(self) -> list[Offer]:
-        raw_offers: list[RawOffer] = []
+    def get_offers_url(self) -> str:
+        return OFFER_URL
 
-        async with get_new_page(self.context) as page:
-            await page.goto(OFFER_URL)
+    def get_page_ready_selector(self) -> str:
+        return ".game_grid_widget .game_cell"
 
-            try:
-                await page.wait_for_selector(".game_grid_widget .game_cell")
-                await ItchGamesScraper.scroll_page_to_bottom(page)
-
-                # XPATH_FREE_RESULTS = """//div[contains(concat(" ", normalize-space(@class), " "), " game_cell ") and .//div[@class="sale_tag" and contains(text(), "100")]]"""  # URL: Attribute href
-
-                elements = page.locator(
+    def get_offer_handlers(self, page: Page) -> list[OfferHandler]:
+        return [
+            OfferHandler(
+                page.locator(
                     ".game_grid_widget .game_cell",
                     has=page.locator(".sale_tag", has_text="100"),
-                )
+                ),
+                self.read_raw_offer,
+            )
+        ]
 
-                try:
-                    no_res = await elements.count()
-                except Error as e:
-                    logger.error(f"Root element not found, could not scrape: {e}")
-                    return []
+    async def page_loaded_hook(self, page: Page) -> None:
+        await Scraper.scroll_page_to_bottom(page)
 
-                for i in range(no_res):
-                    element = elements.nth(i)
-                    try:
-                        raw_offers.append(
-                            await ItchGamesScraper.read_raw_offer(element)
-                        )
-                    except (Error, ValueError) as e:
-                        logger.error(f"Element could not be read: {e}")
-                        continue
-            except Error as e:
-                logger.error(f"Page could not be read, could not scrape: {e}")
-                return []
-
-        normalized_offers = ItchGamesScraper.normalize_offers(raw_offers)
-
-        return normalized_offers
-
-    @staticmethod
-    async def read_raw_offer(element: Locator) -> RawOffer:
+    async def read_raw_offer(self, element: Locator) -> RawOffer:
         # Scroll into view to mage sure the image is loaded
         await element.scroll_into_view_if_needed()
+
         title = await element.locator("a.title").text_content()
         if title is None:
-            raise ValueError("a.title is None")
+            raise ValueError("Couldn't find title.")
+
         url = await element.locator("a.title").get_attribute("href")
         if url is None:
-            raise ValueError("a.title[href] is None")
+            raise ValueError(f"Couldn't find url for {title}.")
+
         img_url = await element.locator("img").get_attribute("src")
         if img_url is None:
-            raise ValueError("img[src] is None")
+            raise ValueError(f"Couldn't find image for {title}.")
 
         return RawOffer(
             title=title,
@@ -87,20 +68,14 @@ class ItchGamesScraper(Scraper):
             img_url=img_url,
         )
 
-    @staticmethod
-    def normalize_offers(raw_offers: list[RawOffer]) -> list[Offer]:
+    def normalize_offers(self, raw_offers: list[RawOffer]) -> list[Offer]:
         normalized_offers: list[Offer] = []
 
         for raw_offer in raw_offers:
-            # Raw text
             rawtext = f"<title>{raw_offer.title}</title>"
-
-            # Title
-            # Contains additional text that needs to be stripped
             title = raw_offer.title
-
-            # Valid to
             nearest_url = raw_offer.url if raw_offer.url else OFFER_URL
+
             offer = Offer(
                 source=ItchGamesScraper.get_source(),
                 duration=ItchGamesScraper.get_duration(),

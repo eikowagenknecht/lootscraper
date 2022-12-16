@@ -2,11 +2,10 @@ import logging
 import urllib.parse
 from datetime import datetime, timezone
 
-from playwright.async_api import Error, Locator
+from playwright.async_api import Locator, Page
 
 from app.common import OfferDuration, OfferType, Source
-from app.pagedriver import get_new_page
-from app.scraper.loot.scraper import RawOffer, Scraper
+from app.scraper.loot.scraper import OfferHandler, RawOffer, Scraper
 from app.sqlalchemy import Offer
 
 logger = logging.getLogger(__name__)
@@ -33,52 +32,32 @@ class AppleGamesScraper(Scraper):
     def get_duration() -> OfferDuration:
         return OfferDuration.CLAIMABLE
 
-    async def read_offers_from_page(self) -> list[Offer]:
-        url = f"{ROOT_URL}?{urllib.parse.urlencode(SEARCH_PARAMS)}"
-        raw_offers: list[RawOffer] = []
+    def get_offers_url(self) -> str:
+        return f"{ROOT_URL}?{urllib.parse.urlencode(SEARCH_PARAMS)}"
 
-        async with get_new_page(self.context) as page:
-            await page.goto(url)
+    def get_page_ready_selector(self) -> str:
+        return "article.app"
 
-            try:
-                await page.wait_for_selector("article.app")
-            except Error as e:
-                logger.error(
-                    f"Error loading search result page. Maybe we are blocked: {e}"
-                )
+    def get_offer_handlers(self, page: Page) -> list[OfferHandler]:
+        return [
+            OfferHandler(
+                page.locator("article.app"),
+                self.read_raw_offer,
+            ),
+        ]
 
-            elements = page.locator("article.app")
-            try:
-                no_res = await elements.count()
-
-                for i in range(no_res):
-                    element = elements.nth(i)
-                    try:
-                        raw_offer = await AppleGamesScraper.read_raw_offer(element)
-                        raw_offers.append(raw_offer)
-                    except Error as e:
-                        logger.error(f"Error loading offer: {e}")
-            except Error as e:
-                logger.error(f"Error loading offers: {e}")
-
-        normalized_offers = AppleGamesScraper.normalize_offers(raw_offers)
-        categorized_offers = self.categorize_offers(normalized_offers)
-
-        return categorized_offers
-
-    @staticmethod
-    async def read_raw_offer(element: Locator) -> RawOffer:
+    async def read_raw_offer(self, element: Locator) -> RawOffer:
         title = await element.locator(".title a").get_attribute("title")
         if title is None:
             raise ValueError("Couldn't find title.")
 
         url = await element.locator(".title a").get_attribute("href")
         if url is None:
-            raise ValueError("Couldn't find url.")
+            raise ValueError(f"Couldn't find url for {title}.")
 
         img_url = await element.locator(".icon img").get_attribute("src")
         if img_url is None:
-            raise ValueError("Couldn't find img_url.")
+            raise ValueError(f"Couldn't find image for {title}.")
 
         return RawOffer(
             title=title,
@@ -86,8 +65,7 @@ class AppleGamesScraper(Scraper):
             img_url=img_url,
         )
 
-    @staticmethod
-    def normalize_offers(raw_offers: list[RawOffer]) -> list[Offer]:
+    def normalize_offers(self, raw_offers: list[RawOffer]) -> list[Offer]:
         normalized_offers: list[Offer] = []
 
         for raw_offer in raw_offers:

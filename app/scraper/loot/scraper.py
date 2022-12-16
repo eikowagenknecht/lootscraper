@@ -4,10 +4,14 @@ import logging
 import re
 from asyncio import sleep
 from dataclasses import dataclass
+from datetime import datetime
+from typing import Awaitable, Callable
 
-from playwright.async_api import BrowserContext, Page
+from playwright.async_api import BrowserContext, Error, Locator, Page
 
 from app.common import Category, OfferDuration, OfferType, Source
+from app.configparser import Config
+from app.pagedriver import get_new_page
 from app.sqlalchemy import Offer
 
 logger = logging.getLogger(__name__)
@@ -15,11 +19,17 @@ logger = logging.getLogger(__name__)
 SCROLL_PAUSE_SECONDS = 1  # Long enough so even Amazons JS can catch up
 
 
-@dataclass
+@dataclass(kw_only=True)
 class RawOffer:
     title: str
     url: str | None = None
     img_url: str | None = None
+
+
+@dataclass
+class OfferHandler:
+    locator: Locator
+    read_offer_func: Callable[[Locator], Awaitable[RawOffer | None]]
 
 
 class Scraper(object):
@@ -27,8 +37,15 @@ class Scraper(object):
         self.context = context
 
     async def scrape(self) -> list[Offer]:
-        offers = await self.read_offers_from_page()
-        return self.categorize_offers(offers)
+        raw_offers = await self.read_raw_offers()
+        normalized_offers = self.normalize_offers(raw_offers)
+        categorized_offers = self.categorize_offers(normalized_offers)
+        # TODO: Check what this does.
+        # Originates from HumbleGamesScraper and GoogleGamesScraper
+        filtered_offers = list(
+            filter(lambda offer: offer.category != Category.DEMO, categorized_offers)
+        )
+        return filtered_offers
 
     @staticmethod
     def get_type() -> OfferType:
@@ -42,17 +59,93 @@ class Scraper(object):
     def get_duration() -> OfferDuration:
         raise NotImplementedError("Please implement this method")
 
-    async def read_offers_from_page(self) -> list[Offer]:
+    def get_offers_url(self) -> str:
+        raise NotImplementedError("Please implement this method")
+
+    def get_page_ready_selector(self) -> str:
+        raise NotImplementedError("Please implement this method")
+
+    def get_offer_handlers(self, page: Page) -> list[OfferHandler]:
+        raise NotImplementedError("Please implement this method")
+
+    async def page_loaded_hook(self, page: Page) -> None:
+        pass
+
+    async def read_raw_offers(self) -> list[RawOffer]:
+        raw_offers: list[RawOffer] = []
+
+        async with get_new_page(self.context) as page:
+            await page.goto(self.get_offers_url())
+
+            try:
+                await page.wait_for_selector(self.get_page_ready_selector())
+                await self.page_loaded_hook(page)
+            except Error as e:
+                # Without offers we can't do anything
+                logger.error(f"The page didn't get ready to be parsed: {e}")
+                filename = (
+                    Config.data_path()
+                    / f'error_{datetime.now().isoformat().replace(".", "_").replace(":", "_")}.png'
+                )
+                await page.screenshot(path=str(filename.resolve()))
+                return []
+
+            for handler in self.get_offer_handlers(page):
+                offers_locator = handler.locator
+
+                try:
+                    no_res = await offers_locator.count()
+                except Error as e:
+                    # Without offers we can't do anything
+                    logger.error(f"Couldn't find any offers: {e}")
+                    return []
+
+                for i in range(no_res):
+                    try:
+                        element = offers_locator.nth(i)
+                        raw_offer = await handler.read_offer_func(element)
+                        if raw_offer is not None:
+                            raw_offers.append(raw_offer)
+                    except (ValueError, Error) as e:
+                        # Skip offers that can't be loaded
+                        logger.error(f"Couldn't parse offer {i}: {e}")
+                        continue
+
+        # TODO: Filter for duplicates (by title)
+        return raw_offers
+
+    def normalize_offers(self, raw_offers: list[RawOffer]) -> list[Offer]:
+        """
+        Warning: The input list type needs to match the type returned by read_raw_offer!
+        """
         raise NotImplementedError("Please implement this method")
 
     def categorize_offers(self, offers: list[Offer]) -> list[Offer]:
+        """
+        Categorize offers by title (demo, etc.)
+        """
         for offer in offers:
-
             if Scraper.is_demo(offer.title):
                 offer.category = Category.DEMO
                 continue
 
         return offers
+
+    def deduplicate_offers(self, offers: list[Offer]) -> list[Offer]:
+        """
+        Remove duplicate offers by title.
+        """
+        titles = set()
+        new_offers = []
+
+        for offer in offers:
+            if offer.title not in titles:
+                titles.add(offer.title)
+                new_offers.append(offer)
+            else:
+                logger.debug(f"Duplicate offer: {offer.title}")
+
+        return new_offers
 
     @staticmethod
     def is_demo(title: str) -> bool:

@@ -1,11 +1,10 @@
 import logging
 from datetime import datetime, timezone
 
-from playwright.async_api import Error, Locator
+from playwright.async_api import Locator, Page
 
-from app.common import Category, OfferDuration, OfferType, Source
-from app.pagedriver import get_new_page
-from app.scraper.loot.scraper import RawOffer, Scraper
+from app.common import OfferDuration, OfferType, Source
+from app.scraper.loot.scraper import OfferHandler, RawOffer, Scraper
 from app.sqlalchemy import Offer
 
 logger = logging.getLogger(__name__)
@@ -27,50 +26,42 @@ class GoogleGamesScraper(Scraper):
     def get_duration() -> OfferDuration:
         return OfferDuration.CLAIMABLE
 
-    async def scrape(self) -> list[Offer]:
-        offers = await self.read_offers_from_page()
-        categorized_offers = self.categorize_offers(offers)
-        filtered = list(
-            filter(lambda offer: offer.category != Category.DEMO, categorized_offers)
-        )
-        return filtered
+    def get_offers_url(self) -> str:
+        return OFFER_URL
 
-    async def read_offers_from_page(self) -> list[Offer]:
-        async with get_new_page(self.context) as page:
-            await page.goto(OFFER_URL)
-            raw_offers: list[RawOffer] = []
+    def get_page_ready_selector(self) -> str:
+        return "div.short_info"
 
-            elements = page.locator("div.short_info")
+    def get_offer_handlers(self, page: Page) -> list[OfferHandler]:
+        return [
+            OfferHandler(
+                page.locator(
+                    "div.short_info",
+                ),
+                self.read_raw_offer,
+            )
+        ]
 
-            try:
-                no_res = await elements.count()
+    async def page_loaded_hook(self, page: Page) -> None:
+        await Scraper.scroll_page_to_bottom(page)
 
-                for i in range(no_res):
-                    element = elements.nth(i)
-
-                    raw_offers.append(await GoogleGamesScraper.read_raw_offer(element))
-
-            except Error as e:
-                logger.error(f"Page could not be read: {e}")
-                return []
-
-        normalized_offers = GoogleGamesScraper.normalize_offers(raw_offers)
-
-        return normalized_offers
-
-    @staticmethod
-    async def read_raw_offer(element: Locator) -> RawOffer:
+    async def read_raw_offer(self, element: Locator) -> RawOffer:
         # Scroll into view for images to load
         await element.scroll_into_view_if_needed()
+
         title = await element.locator("a.nwel").text_content()
+        if title is None:
+            raise ValueError("Couldn't find title.")
+
         url = await element.locator("a.nwel").get_attribute("href")
-        if url is not None:
-            url = BASE_URL + url
+        if url is None:
+            raise ValueError(f"Couldn't find url for {title}.")
+        url = BASE_URL + url
+
         img_url = await element.locator("span.pic_div").get_attribute("style")
-        if img_url is not None:
-            img_url = img_url.removeprefix('background-image: url("').removesuffix(
-                '");'
-            )
+        if img_url is None:
+            raise ValueError(f"Couldn't find image for {title}.")
+        img_url = img_url.removeprefix('background-image: url("').removesuffix('");')
 
         return RawOffer(
             title=title,
@@ -78,22 +69,14 @@ class GoogleGamesScraper(Scraper):
             img_url=img_url,
         )
 
-    @staticmethod
-    def normalize_offers(raw_offers: list[RawOffer]) -> list[Offer]:
+    def normalize_offers(self, raw_offers: list[RawOffer]) -> list[Offer]:
         normalized_offers: list[Offer] = []
 
         for raw_offer in raw_offers:
-            # Raw text
-            if not raw_offer.title:
-                logger.error(f"Error with offer, has no title: {raw_offer}")
-                continue
-
             rawtext = f"<title>{raw_offer.title}</title>"
-
-            # Title
             title = raw_offer.title
-
             nearest_url = raw_offer.url if raw_offer.url else OFFER_URL
+
             offer = Offer(
                 source=GoogleGamesScraper.get_source(),
                 duration=GoogleGamesScraper.get_duration(),

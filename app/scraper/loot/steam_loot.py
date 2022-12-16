@@ -3,13 +3,13 @@ import urllib.parse
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 
-from playwright.async_api import Error, Locator
+from playwright.async_api import Locator, Page
 
 from app.common import OfferDuration, OfferType, Source
 from app.pagedriver import get_new_page
 from app.scraper.info.steam import skip_age_verification
 from app.scraper.info.utils import clean_loot_title
-from app.scraper.loot.scraper import RawOffer, Scraper
+from app.scraper.loot.scraper import OfferHandler, RawOffer, Scraper
 from app.sqlalchemy import Offer
 
 logger = logging.getLogger(__name__)
@@ -25,10 +25,10 @@ SEARCH_URL_PARAMS = {
 DETAILS_URL = BASE_URL + "/app/"
 
 
-@dataclass
+@dataclass(kw_only=True)
 class SteamRawOffer(RawOffer):
-    appid: int | None = None
-    text: str | None = None
+    appid: int
+    text: str
 
 
 class SteamLootScraper(Scraper):
@@ -44,37 +44,14 @@ class SteamLootScraper(Scraper):
     def get_duration() -> OfferDuration:
         return OfferDuration.CLAIMABLE
 
-    async def read_offers_from_page(self) -> list[Offer]:
-        url = f"{SEARCH_URL}?{urllib.parse.urlencode(SEARCH_URL_PARAMS)}"
-        raw_offers: list[SteamRawOffer] = []
+    def get_offers_url(self) -> str:
+        return f"{SEARCH_URL}?{urllib.parse.urlencode(SEARCH_URL_PARAMS)}"
 
-        async with get_new_page(self.context) as page:
-            await page.goto(url)
+    def get_page_ready_selector(self) -> str:
+        return "#search_results"
 
-            try:
-                await page.wait_for_selector("#search_results")
-            except Error as e:
-                logger.error(f"Couldn't load offers: {e}")
-                return []
-
-            elements = page.locator("#search_results a")
-
-            try:
-                no_res = await elements.count()
-            except Error as e:
-                logger.error(f"Couldn't load search results: {e}")
-                return []
-
-            for i in range(no_res):
-                try:
-                    element = elements.nth(i)
-                    raw_offers.append(await self.read_raw_offer(element))
-                except Error as e:
-                    logger.error(f"Couldn't load offer {i}: {e}")
-
-        normalized_offers = SteamLootScraper.normalize_offers(raw_offers)
-
-        return normalized_offers
+    def get_offer_handlers(self, page: Page) -> list[OfferHandler]:
+        return [OfferHandler(page.locator("#search_results a"), self.read_raw_offer)]
 
     async def read_raw_offer(self, element: Locator) -> SteamRawOffer:
         title = await element.locator(".title").text_content()
@@ -83,7 +60,7 @@ class SteamLootScraper(Scraper):
 
         appid = await element.get_attribute("data-ds-appid")
         if appid is None:
-            raise ValueError(f"Couldn't find appid for {title}")
+            raise ValueError(f"Couldn't find appid for {title}.")
 
         url = DETAILS_URL + str(appid)
 
@@ -95,63 +72,51 @@ class SteamLootScraper(Scraper):
 
             img_url = await page.locator(".game_header_image_full").get_attribute("src")
             if img_url is None:
-                raise ValueError(f"Couldn't find image for {title}")
+                raise ValueError(f"Couldn't find image for {title}.")
 
             # Get the resolved text here because the text_content() contains special characters
             text = await page.locator(".game_purchase_discount_quantity").inner_text()
             if text is None:
-                raise ValueError(f"Couldn't find valid date for {title}")
+                raise ValueError(f"Couldn't find valid date for {title}.")
 
         return SteamRawOffer(
-            appid=int(appid),
             title=title,
             url=url,
             img_url=img_url,
+            appid=int(appid),
             text=text,
         )
 
-    @staticmethod
-    def normalize_offers(raw_offers: list[SteamRawOffer]) -> list[Offer]:
+    def normalize_offers(self, raw_offers: list[SteamRawOffer]) -> list[Offer]:  # type: ignore
         normalized_offers: list[Offer] = []
 
         now = datetime.now(timezone.utc)
 
         for raw_offer in raw_offers:
-            # Raw text
             rawtext = f"<title>{raw_offer.title}</title>"
+            rawtext += f"<appid>{raw_offer.appid}</appid>"
+            rawtext += f"<text>{raw_offer.text}</text>"
 
-            if raw_offer.appid:
-                rawtext += f"<appid>{raw_offer.appid}</appid>"
-
-            if raw_offer.text:
-                rawtext += f"<text>{raw_offer.text}</text>"
-
-            # Valid from date
             valid_to: datetime | None = None
-            if raw_offer.text:
-                maybe_date = raw_offer.text.removeprefix(
-                    "Free to keep when you get it before "
-                ).removesuffix(". Some limitations apply. (?)")
-                try:
-                    valid_to = (
-                        datetime.strptime(maybe_date, "%d %b @ %I:%M%p")
-                        .replace(tzinfo=timezone.utc)
-                        .replace(year=now.year)
-                    )
-                    # Date has to be in the future, adjust the year accordingly
-                    yesterday = now - timedelta(days=1)
-                    if valid_to < yesterday:
-                        valid_to = valid_to.replace(year=valid_to.year + 1)
-                except ValueError:
-                    logger.warning(f"Couldn't parse date {maybe_date}.")
+            maybe_date = raw_offer.text.removeprefix(
+                "Free to keep when you get it before "
+            ).removesuffix(". Some limitations apply. (?)")
+            try:
+                valid_to = (
+                    datetime.strptime(maybe_date, "%d %b @ %I:%M%p")
+                    .replace(tzinfo=timezone.utc)
+                    .replace(year=now.year)
+                )
+                # Date has to be in the future, adjust the year accordingly
+                yesterday = now - timedelta(days=1)
+                if valid_to < yesterday:
+                    valid_to = valid_to.replace(year=valid_to.year + 1)
+            except ValueError:
+                logger.warning(f"Couldn't parse date {maybe_date}.")
 
-            # Probable game name
-            if not raw_offer.title:
-                probable_game_name = None
-            else:
-                probable_game_name = clean_loot_title(raw_offer.title)
-
+            probable_game_name = clean_loot_title(raw_offer.title)
             nearest_url = raw_offer.url if raw_offer.url else SEARCH_URL
+
             offer = Offer(
                 source=SteamLootScraper.get_source(),
                 duration=SteamLootScraper.get_duration(),

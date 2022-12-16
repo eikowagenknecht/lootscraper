@@ -26,6 +26,8 @@ class PlaywrightTests(unittest.IsolatedAsyncioTestCase):
 
 
 class AmazonGamesTests(unittest.IsolatedAsyncioTestCase):
+    # TODO: Check for duplicates
+    # TODO: Factor out base class
     async def test_games(self) -> None:
         async with get_browser_context() as context:
             scraper = AmazonGamesScraper(context=context)
@@ -44,6 +46,7 @@ class AmazonGamesTests(unittest.IsolatedAsyncioTestCase):
 
 
 class AmazonLootTests(unittest.IsolatedAsyncioTestCase):
+    # TODO: Check for duplicates
     async def test_loot(self) -> None:
         async with get_browser_context() as context:
             scraper = AmazonLootScraper(context=context)
@@ -123,9 +126,11 @@ class GogGamesTest(unittest.IsolatedAsyncioTestCase):
                 self.assertTrue(res.url.startswith("https://www.gog.com/"))
                 self.assertIsNotNone(res.img_url)
                 self.assertTrue(res.img_url.startswith("https://"))
-                self.assertGreater(
-                    res.valid_to, datetime.now().replace(tzinfo=timezone.utc)
-                )
+                # Some offer types do not contain a date
+                if res.valid_to is not None:
+                    self.assertGreater(
+                        res.valid_to, datetime.now().replace(tzinfo=timezone.utc)
+                    )
 
 
 class GoogleGamesTest(unittest.IsolatedAsyncioTestCase):
@@ -144,6 +149,7 @@ class GoogleGamesTest(unittest.IsolatedAsyncioTestCase):
 
 
 class HumbleGamesTest(unittest.IsolatedAsyncioTestCase):
+    # TODO: Check if the demos are included and if they should be
     async def test_loot(self) -> None:
         async with get_browser_context() as context:
             scraper = HumbleGamesScraper(context=context)
