@@ -26,8 +26,6 @@ class PlaywrightTests(unittest.IsolatedAsyncioTestCase):
 
 
 class AmazonGamesTests(unittest.IsolatedAsyncioTestCase):
-    # TODO: Check for duplicates
-    # TODO: Factor out base class
     async def test_games(self) -> None:
         async with get_browser_context() as context:
             scraper = AmazonGamesScraper(context=context)
@@ -46,7 +44,6 @@ class AmazonGamesTests(unittest.IsolatedAsyncioTestCase):
 
 
 class AmazonLootTests(unittest.IsolatedAsyncioTestCase):
-    # TODO: Check for duplicates
     async def test_loot(self) -> None:
         async with get_browser_context() as context:
             scraper = AmazonLootScraper(context=context)

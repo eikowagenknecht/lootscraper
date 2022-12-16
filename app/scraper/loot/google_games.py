@@ -39,6 +39,7 @@ class GoogleGamesScraper(Scraper):
                     "div.short_info",
                 ),
                 self.read_raw_offer,
+                self.normalize_offer,
             )
         ]
 
@@ -69,26 +70,18 @@ class GoogleGamesScraper(Scraper):
             img_url=img_url,
         )
 
-    def normalize_offers(self, raw_offers: list[RawOffer]) -> list[Offer]:
-        normalized_offers: list[Offer] = []
+    def normalize_offer(self, raw_offer: RawOffer) -> Offer:
+        rawtext = f"<title>{raw_offer.title}</title>"
+        title = raw_offer.title
 
-        for raw_offer in raw_offers:
-            rawtext = f"<title>{raw_offer.title}</title>"
-            title = raw_offer.title
-            nearest_url = raw_offer.url if raw_offer.url else OFFER_URL
-
-            offer = Offer(
-                source=GoogleGamesScraper.get_source(),
-                duration=GoogleGamesScraper.get_duration(),
-                type=GoogleGamesScraper.get_type(),
-                title=title,
-                probable_game_name=title,
-                seen_last=datetime.now(timezone.utc),
-                rawtext=rawtext,
-                url=nearest_url,
-                img_url=raw_offer.img_url,
-            )
-
-            normalized_offers.append(offer)
-
-        return normalized_offers
+        return Offer(
+            source=GoogleGamesScraper.get_source(),
+            duration=GoogleGamesScraper.get_duration(),
+            type=GoogleGamesScraper.get_type(),
+            title=title,
+            probable_game_name=title,
+            seen_last=datetime.now(timezone.utc),
+            rawtext=rawtext,
+            url=raw_offer.url,
+            img_url=raw_offer.img_url,
+        )
