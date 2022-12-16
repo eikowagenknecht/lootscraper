@@ -16,7 +16,7 @@ from app.sqlalchemy import Offer
 
 logger = logging.getLogger(__name__)
 
-SCROLL_PAUSE_SECONDS = 1  # Long enough so even Amazons JS can catch up
+SCROLL_PAUSE_SECONDS = 1  # Long enough so even slow JS can catch up
 
 
 @dataclass(kw_only=True)
@@ -30,16 +30,17 @@ class RawOffer:
 class OfferHandler:
     locator: Locator
     read_offer_func: Callable[[Locator], Awaitable[RawOffer | None]]
+    normalize_offer_func: Callable[[RawOffer], Offer]
 
 
-class Scraper(object):
+class Scraper:
     def __init__(self, context: BrowserContext):
         self.context = context
 
     async def scrape(self) -> list[Offer]:
-        raw_offers = await self.read_raw_offers()
-        normalized_offers = self.normalize_offers(raw_offers)
-        categorized_offers = self.categorize_offers(normalized_offers)
+        offers = await self.read_offers()
+        unique_offers = self.deduplicate_offers(offers)
+        categorized_offers = self.categorize_offers(unique_offers)
         # TODO: Check what this does.
         # Originates from HumbleGamesScraper and GoogleGamesScraper
         filtered_offers = list(
@@ -71,8 +72,8 @@ class Scraper(object):
     async def page_loaded_hook(self, page: Page) -> None:
         pass
 
-    async def read_raw_offers(self) -> list[RawOffer]:
-        raw_offers: list[RawOffer] = []
+    async def read_offers(self) -> list[Offer]:
+        offers: list[Offer] = []
 
         async with get_new_page(self.context) as page:
             await page.goto(self.get_offers_url())
@@ -104,21 +105,17 @@ class Scraper(object):
                     try:
                         element = offers_locator.nth(i)
                         raw_offer = await handler.read_offer_func(element)
-                        if raw_offer is not None:
-                            raw_offers.append(raw_offer)
+                        if raw_offer is None:
+                            continue
                     except (ValueError, Error) as e:
                         # Skip offers that can't be loaded
                         logger.error(f"Couldn't parse offer {i}: {e}")
                         continue
 
-        # TODO: Filter for duplicates (by title)
-        return raw_offers
+                    normalized_offer = handler.normalize_offer_func(raw_offer)
+                    offers.append(normalized_offer)
 
-    def normalize_offers(self, raw_offers: list[RawOffer]) -> list[Offer]:
-        """
-        Warning: The input list type needs to match the type returned by read_raw_offer!
-        """
-        raise NotImplementedError("Please implement this method")
+        return offers
 
     def categorize_offers(self, offers: list[Offer]) -> list[Offer]:
         """

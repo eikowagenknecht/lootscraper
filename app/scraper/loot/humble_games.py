@@ -52,6 +52,7 @@ class HumbleGamesScraper(Scraper):
                     "li", has=page.locator("div.discount-amount", has_text="100")
                 ),
                 self.read_raw_offer,
+                self.normalize_offer,
             )
         ]
 
@@ -75,26 +76,21 @@ class HumbleGamesScraper(Scraper):
             img_url=img_url,
         )
 
-    def normalize_offers(self, raw_offers: list[HumbleRawOffer]) -> list[Offer]:  # type: ignore
-        normalized_offers: list[Offer] = []
+    def normalize_offer(self, raw_offer: RawOffer) -> Offer:
+        if not isinstance(raw_offer, HumbleRawOffer):
+            raise ValueError("Wrong type of raw offer.")
 
-        for raw_offer in raw_offers:
-            rawtext = f"<title>{raw_offer.title}</title>"
-            title = raw_offer.title
-            nearest_url = raw_offer.url if raw_offer.url else SEARCH_URL
+        rawtext = f"<title>{raw_offer.title}</title>"
+        title = raw_offer.title
 
-            offer = Offer(
-                source=HumbleGamesScraper.get_source(),
-                duration=HumbleGamesScraper.get_duration(),
-                type=HumbleGamesScraper.get_type(),
-                title=title,
-                probable_game_name=title,
-                seen_last=datetime.now(timezone.utc),
-                rawtext=rawtext,
-                url=nearest_url,
-                img_url=raw_offer.img_url,
-            )
-
-            normalized_offers.append(offer)
-
-        return normalized_offers
+        return Offer(
+            source=HumbleGamesScraper.get_source(),
+            duration=HumbleGamesScraper.get_duration(),
+            type=HumbleGamesScraper.get_type(),
+            title=title,
+            probable_game_name=title,
+            seen_last=datetime.now(timezone.utc),
+            rawtext=rawtext,
+            url=raw_offer.url,
+            img_url=raw_offer.img_url,
+        )

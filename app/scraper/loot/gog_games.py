@@ -37,6 +37,7 @@ class GogGamesScraper(GogBaseScraper):
             OfferHandler(
                 page.locator("a.giveaway-banner"),
                 self.read_raw_offer_v1,
+                self.normalize_offer,
             ),
             OfferHandler(
                 page.locator(
@@ -44,6 +45,7 @@ class GogGamesScraper(GogBaseScraper):
                     has=page.locator('[ng-if="tile.isFreeVisible"]'),
                 ),
                 self.read_raw_offer_v2,
+                self.normalize_offer,
             ),
         ]
 
@@ -117,40 +119,36 @@ class GogGamesScraper(GogBaseScraper):
                 img_url=img_url,
             )
 
-    def normalize_offers(self, raw_offers: list[GogRawOffer]) -> list[Offer]:  # type: ignore
-        normalized_offers: list[Offer] = []
+    def normalize_offer(self, raw_offer: RawOffer) -> Offer:
+        if not isinstance(raw_offer, GogRawOffer):
+            raise ValueError("Wrong type of raw offer.")
 
-        for raw_offer in raw_offers:
-            rawtext = f"<title>{raw_offer.title}</title>"
-            if raw_offer.valid_to:
-                rawtext += f"<enddate>{raw_offer.valid_to}</enddate>"
-            title = raw_offer.title
+        rawtext = f"<title>{raw_offer.title}</title>"
+        if raw_offer.valid_to:
+            rawtext += f"<enddate>{raw_offer.valid_to}</enddate>"
+        title = raw_offer.title
 
-            valid_to = None
-            if raw_offer.valid_to:
-                try:
-                    valid_to_unix = int(raw_offer.valid_to) / 1000
-                    valid_to = datetime.utcfromtimestamp(valid_to_unix).replace(
-                        tzinfo=timezone.utc
-                    )
-                except ValueError:
-                    valid_to = None
+        valid_to = None
+        if raw_offer.valid_to:
+            try:
+                valid_to_unix = int(raw_offer.valid_to) / 1000
+                valid_to = datetime.utcfromtimestamp(valid_to_unix).replace(
+                    tzinfo=timezone.utc
+                )
+            except ValueError:
+                valid_to = None
 
-            nearest_url = raw_offer.url if raw_offer.url else OFFER_URL
+        nearest_url = raw_offer.url if raw_offer.url else OFFER_URL
 
-            offer = Offer(
-                source=GogGamesScraper.get_source(),
-                duration=GogGamesScraper.get_duration(),
-                type=GogGamesScraper.get_type(),
-                title=title,
-                probable_game_name=title,
-                seen_last=datetime.now(timezone.utc),
-                valid_to=valid_to,
-                rawtext=rawtext,
-                url=nearest_url,
-                img_url=raw_offer.img_url,
-            )
-
-            normalized_offers.append(offer)
-
-        return normalized_offers
+        return Offer(
+            source=GogGamesScraper.get_source(),
+            duration=GogGamesScraper.get_duration(),
+            type=GogGamesScraper.get_type(),
+            title=title,
+            probable_game_name=title,
+            seen_last=datetime.now(timezone.utc),
+            valid_to=valid_to,
+            rawtext=rawtext,
+            url=nearest_url,
+            img_url=raw_offer.img_url,
+        )
