@@ -116,18 +116,22 @@ class Scraper:
         offers: list[Offer] = []
 
         async with get_new_page(self.context) as page:
-
             try:
                 await page.goto(self.get_offers_url())
+            except Error as e:
+                logger.error(f"Couldn't load page: {e}")
+                return []
+
+            try:
                 await page.wait_for_selector(self.get_page_ready_selector())
                 await self.page_loaded_hook(page)
             except Error as e:
-                # Without offers we can't do anything
                 logger.error(f"The page didn't get ready to be parsed: {e}")
                 filename = (
                     Config.data_path()
                     / f'error_{datetime.now().isoformat().replace(".", "_").replace(":", "_")}.png'
                 )
+                logger.error(f"Saving screenshot to {filename}.")
                 await page.screenshot(path=str(filename.resolve()))
                 return []
 
