@@ -1,31 +1,28 @@
 import logging
+import urllib.parse
 from dataclasses import dataclass
 from datetime import datetime, timezone
 
-from selenium.common.exceptions import WebDriverException
-from selenium.webdriver.common.by import By
-from selenium.webdriver.remote.webelement import WebElement
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.support.ui import WebDriverWait
+from playwright.async_api import Locator, Page
 
-from app.common import Category, OfferDuration, OfferType, Source
-from app.scraper.loot.scraper import RawOffer, Scraper
+from app.common import OfferDuration, OfferType, Source
+from app.scraper.loot.scraper import OfferHandler, RawOffer, Scraper
 from app.sqlalchemy import Offer
 
 logger = logging.getLogger(__name__)
 
-ROOT_URL = "https://de.humblebundle.com/store/search?sort=discount&filter=onsale"
-
-XPATH_SEARCH_RESULTS = (
-    """//ul[contains(concat(" ", normalize-space(@class), " "), " entities-list ")]"""
-)
-XPATH_FREE_RESULTS = """//ul[contains(concat(" ", normalize-space(@class), " "), " entities-list ")]/li[.//div[contains(concat(" ", normalize-space(@class), " "), " discount-amount ") and contains(text(), "100")]]//a"""  # URL: Attribute href
-SUBPATH_TITLE = """.//span[contains(concat(" ", normalize-space(@class), " "), " entity-title ")]"""  # /text()
-SUBPATH_IMAGE = """.//img"""  # Attr "src"
+BASE_URL = "https://humblebundle.com"
+SEARCH_URL = BASE_URL + "/store/search"
+SEARCH_URL_PARAMS = {
+    "sort": "discount",
+    "filter": "onsale",
+}
 
 
-@dataclass
+@dataclass(kw_only=True)
 class HumbleRawOffer(RawOffer):
+    # TODO: This is unused for now!
+    # Check details page for valid_to (makes it easier to filter out nonsense entries that are valid "forever")
     valid_to: str | None = None
 
 
@@ -42,103 +39,58 @@ class HumbleGamesScraper(Scraper):
     def get_duration() -> OfferDuration:
         return OfferDuration.CLAIMABLE
 
-    def scrape(self) -> list[Offer]:
-        offers = self.read_offers_from_page()
-        categorized_offers = self.categorize_offers(offers)
-        filtered = list(
-            filter(lambda offer: offer.category != Category.DEMO, categorized_offers)
-        )
-        return filtered
+    def get_offers_url(self) -> str:
+        return f"{SEARCH_URL}?{urllib.parse.urlencode(SEARCH_URL_PARAMS)}"
 
-    def read_offers_from_page(self) -> list[Offer]:
-        self.driver.get(ROOT_URL)
-        raw_offers: list[HumbleRawOffer] = []
+    def get_page_ready_selector(self) -> str:
+        return "li div.discount-amount"
 
-        try:
-            # Wait until the page loaded
-            WebDriverWait(self.driver, Scraper.get_max_wait_seconds()).until(
-                EC.presence_of_element_located((By.XPATH, XPATH_FREE_RESULTS))
+    def get_offer_handlers(self, page: Page) -> list[OfferHandler]:
+        return [
+            OfferHandler(
+                page.locator(
+                    "li", has=page.locator("div.discount-amount", has_text="100")
+                ),
+                self.read_raw_offer,
+                self.normalize_offer,
             )
+        ]
 
-            offer_elements = self.driver.find_elements(By.XPATH, XPATH_FREE_RESULTS)
-            for offer_element in offer_elements:
-                raw_offers.append(HumbleGamesScraper.read_raw_offer(offer_element))
+    async def read_raw_offer(self, element: Locator) -> HumbleRawOffer:
+        title = await element.locator("span.entity-title").text_content()
+        if title is None:
+            raise ValueError("Couldn't find title.")
 
-        except WebDriverException:
-            logger.info(
-                f"Free search results took longer than {Scraper.get_max_wait_seconds()} to load, probably there are none"
-            )
+        url = await element.locator("a").get_attribute("href")
+        if url is None:
+            raise ValueError(f"Couldn't find url for {title}.")
+        url = BASE_URL + url
 
-        normalized_offers = HumbleGamesScraper.normalize_offers(raw_offers)
-
-        return normalized_offers
-
-    @staticmethod
-    def read_raw_offer(element: WebElement) -> HumbleRawOffer:
-        title_str = None
-        url_str = None
-        img_url_str = None
-
-        try:
-            # We use .get_attribute("textContent") instead of .text here,
-            # because .text applies uppercase CSS formatting
-            title_str = str(
-                element.find_element(By.XPATH, SUBPATH_TITLE).get_attribute(
-                    "textContent"
-                )
-            )
-        except WebDriverException:
-            # Nothing to do here, string stays empty
-            pass
-
-        try:
-            url_str = str(element.get_attribute("href"))  # type: ignore
-        except WebDriverException:
-            # Nothing to do here, string stays empty
-            pass
-
-        try:
-            img_url_str = str(
-                element.find_element(By.XPATH, SUBPATH_IMAGE).get_attribute("src")
-            )
-        except WebDriverException:
-            # Nothing to do here, string stays empty
-            pass
+        img_url = await element.locator("img.entity-image").get_attribute("src")
+        if img_url is None:
+            raise ValueError(f"Couldn't find image for {title}.")
 
         return HumbleRawOffer(
-            title=title_str,
-            url=url_str,
-            img_url=img_url_str,
+            title=title,
+            url=url,
+            img_url=img_url,
         )
 
-    @staticmethod
-    def normalize_offers(raw_offers: list[HumbleRawOffer]) -> list[Offer]:
-        normalized_offers: list[Offer] = []
+    def normalize_offer(self, raw_offer: RawOffer) -> Offer:
+        if not isinstance(raw_offer, HumbleRawOffer):
+            raise ValueError("Wrong type of raw offer.")
 
-        for raw_offer in raw_offers:
-            # Raw text
-            if not raw_offer.title:
-                logger.error(f"Error with offer, has no title: {raw_offer}")
-                continue
+        rawtext = f"<title>{raw_offer.title}</title>"
+        title = raw_offer.title
 
-            rawtext = f"<title>{raw_offer.title}</title>"
-
-            # Title
-            title = raw_offer.title
-
-            nearest_url = raw_offer.url if raw_offer.url else ROOT_URL
-            offer = Offer(
-                source=HumbleGamesScraper.get_source(),
-                duration=HumbleGamesScraper.get_duration(),
-                type=HumbleGamesScraper.get_type(),
-                title=title,
-                probable_game_name=title,
-                seen_last=datetime.now(timezone.utc),
-                rawtext=rawtext,
-                url=nearest_url,
-                img_url=raw_offer.img_url,
-            )
-
-            normalized_offers.append(offer)
-
-        return normalized_offers
+        return Offer(
+            source=HumbleGamesScraper.get_source(),
+            duration=HumbleGamesScraper.get_duration(),
+            type=HumbleGamesScraper.get_type(),
+            title=title,
+            probable_game_name=title,
+            seen_last=datetime.now(timezone.utc),
+            rawtext=rawtext,
+            url=raw_offer.url,
+            img_url=raw_offer.img_url,
+        )

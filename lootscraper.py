@@ -1,17 +1,17 @@
 __version__ = "0.6.0"
 __author__ = "Eiko Wagenknecht"
 
+import asyncio
 import hashlib
 import logging
 import shutil
 import sys
 from contextlib import ExitStack
 from datetime import datetime, timedelta
+from logging.handlers import RotatingFileHandler
 from pathlib import Path
-from threading import Event
-from types import FrameType
 
-from selenium.webdriver.chrome.webdriver import WebDriver
+from playwright.async_api import BrowserContext
 from sqlalchemy import select
 from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import Session
@@ -19,7 +19,7 @@ from sqlalchemy.orm import Session
 from app.common import TIMESTAMP_LONG, OfferDuration, OfferType, Source
 from app.configparser import Config
 from app.feed import generate_feed
-from app.pagedriver import get_pagedriver
+from app.pagedriver import get_browser_context
 from app.scraper.info.igdb import get_igdb_details, get_igdb_id
 from app.scraper.info.steam import get_steam_details, get_steam_id
 from app.scraper.loot.scraperhelper import get_all_scrapers
@@ -30,25 +30,50 @@ from app.upload import upload_to_server
 try:
     from xvfbwrapper import Xvfb
 
-    print("Using virtual display")  # Logging not initialized yet, so we print to stdout
+    # Logging not initialized yet, so we print to stdout
+    print("Using virtual display")
     use_virtual_display = True
 except ImportError:
     print("Using real display")
     use_virtual_display = False
 
-exit_ = Event()
-
 
 EXAMPLE_CONFIG_FILE = "config.default.ini"
 
+# TODO:
+# - Switch from synchronous selenium to asynchronous framework,
+#   e.g. playwright (or if that doesn't work pyppeeter).
+#   This should allow us to still respond to Telegram messages while
+#   scraping is running.
+# - Switch from synchronous database access to asynchronous
+# - Look for TODOs in the code
+# - Check all warnings and errors in the code
+# - Add code coverage and way more tests (plus a mocking framework?)
+# - Check why log files are only 10KB
 
-def main() -> None:
+
+async def main() -> None:
+    # Synchronously set up the basics we need to run anything
     initialize_config_file()
     check_config_file()
     setup_logging()
 
     logging.info(f"Starting LootScraper v{__version__}")
-    run_main_loop()
+
+    # Run the various parts of the bot asynchronously (so we don't block)
+    # and communicate using a queue.
+    telegram_queue: asyncio.Queue[int] = asyncio.Queue()
+
+    try:
+        with LootDatabase(echo=Config.get().db_echo) as db:
+            async with asyncio.TaskGroup() as tg:  # type: ignore
+                tg.create_task(run_scraper_loop(db, telegram_queue))
+                if Config.get().telegram_bot:
+                    tg.create_task(run_telegram_bot(db, telegram_queue))
+    except OperationalError as db_error:
+        logging.error(f"Database error, exiting application: {db_error}")
+        sys.exit()
+
     logging.info(f"Exiting LootScraper v{__version__}")
 
 
@@ -62,12 +87,18 @@ def initialize_config_file() -> None:
 
 
 def create_config_file(config_file: Path) -> None:
+    """
+    Create a new config file from the example config file.
+    """
     print(f"Config file {config_file} not found, creating a new one")
     config_file.parent.mkdir(exist_ok=True, parents=True)
     shutil.copy(EXAMPLE_CONFIG_FILE, config_file)
 
 
 def check_config_file() -> None:
+    """
+    Check if the config file is valid and can be read.
+    """
     # Now we can try to read the config file. In case anything goes wrong, we
     # terminate because without a valid config continuing is useless.
     try:
@@ -78,93 +109,141 @@ def check_config_file() -> None:
 
 
 def setup_logging() -> None:
+    """
+    Set up the logging system.
+    """
     filename = Config.data_path() / Path(Config.get().log_file)
     loglevel = Config.get().log_level
     logging.basicConfig(
-        filename=filename,
+        handlers=[
+            RotatingFileHandler(filename, maxBytes=10 * 1024 ^ 2, backupCount=10),
+            get_streamhandler(),
+        ],
         encoding="utf-8",
         level=logging.getLevelName(loglevel),
         format="%(asctime)s %(name)s [%(levelname)-5s] %(message)s",
         datefmt=TIMESTAMP_LONG,
     )
+
+
+def get_streamhandler() -> logging.StreamHandler:  # type: ignore
+    """
+    Get a handler handler for the console output.
+    """
     stream_handler = logging.StreamHandler(sys.stdout)
     stream_handler.setFormatter(
         logging.Formatter("%(asctime)s %(name)s [%(levelname)-5s] %(message)s")
     )
-    logging.getLogger().addHandler(stream_handler)
+    return stream_handler
 
 
-def run_main_loop() -> None:
+async def run_telegram_bot(
+    db: LootDatabase,
+    queue: asyncio.Queue[int],
+) -> None:
     """
-    Run the job every hour (or whatever is set in the config file). This is
-    not exact because it does not account for the execution time, but that
-    doesn't matter in our context.
+    Run the Telegram bot and send new offers when there is a new entry in the
+    queue.
+    """
+    async with TelegramBot(Config.get(), db.Session) as bot:
+        # The bot is running now and will stop when the context exits
+        while True:
+            run = await queue.get()
+            logging.info(
+                f"Sending offers on Telegram that were found in scraping run #{run}."
+            )
+
+            try:
+                await send_new_offers_telegram(db, bot)
+            except OperationalError:
+                # We handle DB errors on a higher level
+                raise
+            except Exception as e:  # pylint: disable=broad-except
+                # This is our catch-all. Something really unexpected occurred.
+                # Log it with the highest priority and continue with the
+                # next run.
+                logging.critical(e)
+
+            queue.task_done()
+
+
+async def run_scraper_loop(
+    db: LootDatabase,
+    telegram_queue: asyncio.Queue[int],
+) -> None:
+    """
+    Run the scraping job in a loop with a waiting time of x seconds (set in the
+    config file) between the runs.
     """
     with ExitStack() as stack:
-        db = stack.enter_context(LootDatabase(echo=Config.get().db_echo))
-        bot = stack.enter_context(TelegramBot(Config.get(), db.Session))
+        # Check the "global" variable (set on import) to see if we can use a virtual display
         if use_virtual_display:
             stack.enter_context(Xvfb())
 
-        run = 1
         time_between_runs = int(Config.get().wait_between_runs)
 
-        while not exit_.is_set():
-            logging.info(f"Starting Run # {run}")
+        # Loop forever (until terminated by external events)
+        run = 0
+        while True:
+            run += 1
+
+            logging.info(f"Starting scraping run #{run}.")
 
             try:
-                job(db)
-                if Config.get().telegram_bot:
-                    telegram_job(db, bot)
-            except OperationalError as oe:
-                logging.error(f"Database error, exiting application: {oe}")
-                sys.exit()
+                await scrape_new_offers(db)
+            except OperationalError:
+                # We handle DB errors on a higher level
+                raise
             except Exception as e:  # pylint: disable=broad-except
                 # This is our catch-all. Something really unexpected occurred.
-                # Log it and continue with the next run as if nothing happened.
-                logging.exception(e)
+                # Log it with the highest priority and continue with the
+                # next run.
+                logging.critical(e)
 
             if time_between_runs == 0:
                 break
 
             next_execution = datetime.now() + timedelta(seconds=time_between_runs)
 
-            logging.info(
-                f"Waiting until {next_execution.isoformat()} for next execution"
-            )
+            logging.info(f"Next scraping run will be at {next_execution.isoformat()}.")
 
-            run += 1
-            exit_.wait(time_between_runs)
+            if Config.get().telegram_bot:
+                await telegram_queue.put(run)
+
+            await asyncio.sleep(time_between_runs)
 
         logging.info(f"Finished {run} runs")
 
 
-def job(db: LootDatabase) -> None:
-    webdriver: WebDriver
+async def scrape_new_offers(db: LootDatabase) -> None:
+    """
+    Do the actual scraping and processing of new offers.
+    """
+    webdriver: BrowserContext
     cfg = Config.get()
 
-    with get_pagedriver() as webdriver:
+    async with get_browser_context() as webdriver:
         session: Session = db.Session()
         try:
-            scraped_offers = scrape_offers(webdriver)
-            process_new_offers(db, webdriver, session, scraped_offers)
+            scraped_offers = await scrape_offers(webdriver)
+            await process_new_offers(db, webdriver, session, scraped_offers)
 
             all_offers = db.read_all()
 
             if cfg.force_update and cfg.scrape_info:
-                rebuild_game_infos(webdriver, session, all_offers)
+                await rebuild_game_infos(webdriver, session, all_offers)
             session.commit()
         except Exception:
             session.rollback()
             raise
 
     if cfg.generate_feed:
-        action_generate_feed(all_offers)
+        await action_generate_feed(all_offers)
     else:
-        logging.info("Skipping feed generation, disabled")
+        logging.info("Skipping feed generation because it is disabled.")
 
 
-def scrape_offers(webdriver: WebDriver) -> list[Offer]:
+async def scrape_offers(webdriver: BrowserContext) -> list[Offer]:
     cfg = Config.get()
 
     scraped_offers: list[Offer] = []
@@ -174,14 +253,14 @@ def scrape_offers(webdriver: WebDriver) -> list[Offer]:
             and scraperType.get_duration() in cfg.enabled_offer_durations
             and scraperType.get_source() in cfg.enabled_offer_sources
         ):
-            scraper = scraperType(webdriver)
+            scraper = scraperType(context=webdriver)
             scraper_duration = scraper.get_duration().value
             scraper_source = scraper.get_source().value
 
             logging.info(
                 f"Analyzing {scraper_source} for offers: {scraper.get_type().value} / {scraper_duration}."
             )
-            scraper_results = scraper.scrape()
+            scraper_results = await scraper.scrape()
 
             if scraper_results:
                 titles = ", ".join([offer.title for offer in scraper_results])
@@ -193,9 +272,9 @@ def scrape_offers(webdriver: WebDriver) -> list[Offer]:
     return scraped_offers
 
 
-def process_new_offers(
+async def process_new_offers(
     db: LootDatabase,
-    webdriver: WebDriver,
+    webdriver: BrowserContext,
     session: Session,
     scraped_offers: list[Offer],
 ) -> None:
@@ -229,7 +308,7 @@ def process_new_offers(
                 # get information about it (if it's a game)
                 # and insert it into the database
             if cfg.scrape_info:
-                add_game_info(scraped_offer, session, webdriver)
+                await add_game_info(scraped_offer, session, webdriver)
             db.add_offer(scraped_offer)
             nr_of_new_offers += 1
         else:
@@ -247,21 +326,21 @@ def process_new_offers(
         )
 
 
-def telegram_job(db: LootDatabase, bot: TelegramBot) -> None:
+async def send_new_offers_telegram(db: LootDatabase, bot: TelegramBot) -> None:
     session: Session = db.Session()
     try:
         user: User
         for user in session.execute(select(User)).scalars().all():
             if not user.inactive:
-                bot.send_new_announcements(user)
-                bot.send_new_offers(user)
+                await bot.send_new_announcements(user)
+                await bot.send_new_offers(user)
     except Exception:
         session.rollback()
         raise
 
 
-def rebuild_game_infos(
-    webdriver: WebDriver, session: Session, all_offers: list[Offer]
+async def rebuild_game_infos(
+    webdriver: BrowserContext, session: Session, all_offers: list[Offer]
 ) -> None:
     # Remove all game info first
     logging.info("Force update enabled - removing all game info")
@@ -270,10 +349,10 @@ def rebuild_game_infos(
 
     # Then add new game info
     for db_offer in all_offers:
-        add_game_info(db_offer, session, webdriver)
+        await add_game_info(db_offer, session, webdriver)
 
 
-def action_generate_feed(loot_offers_in_db: list[Offer]) -> None:
+async def action_generate_feed(loot_offers_in_db: list[Offer]) -> None:
     cfg = Config.get()
     feed_file_base = Config.data_path() / Path(cfg.feed_file_prefix + ".xml")
 
@@ -309,7 +388,7 @@ def action_generate_feed(loot_offers_in_db: list[Offer]) -> None:
             cfg.feed_file_prefix + feed_file_core + ".xml"
         )
         old_hash = hash_file(feed_file)
-        generate_feed(
+        await generate_feed(
             offers=offers,
             file=feed_file,
             author_name=cfg.feed_author_name,
@@ -328,12 +407,12 @@ def action_generate_feed(loot_offers_in_db: list[Offer]) -> None:
             any_feed_changed = True
 
         if feed_changed and cfg.upload_feed:
-            upload_to_server(feed_file)
+            await asyncio.to_thread(upload_to_server, feed_file)
 
     # Generate and upload cumulated feed
     if any_feed_changed:
         feed_file = Config.data_path() / Path(cfg.feed_file_prefix + ".xml")
-        generate_feed(
+        await generate_feed(
             offers=loot_offers_in_db,
             file=feed_file,
             author_name=cfg.feed_author_name,
@@ -344,12 +423,14 @@ def action_generate_feed(loot_offers_in_db: list[Offer]) -> None:
             feed_id_prefix=cfg.feed_id_prefix,
         )
         if cfg.upload_feed:
-            upload_to_server(feed_file_base)
+            await asyncio.to_thread(upload_to_server, feed_file_base)
         else:
             logging.info("Skipping upload, disabled")
 
 
-def add_game_info(offer: Offer, session: Session, webdriver: WebDriver) -> None:
+async def add_game_info(
+    offer: Offer, session: Session, webdriver: BrowserContext
+) -> None:
     """Updated an offer with game information. If the offer already has some
     information, just try to update the missing parts. Otherwise, create a new
     Game and try to populate it with information."""
@@ -377,7 +458,7 @@ def add_game_info(offer: Offer, session: Session, webdriver: WebDriver) -> None:
 
     # Use the api if no local entry exists
     if igdb_id is None:
-        igdb_id = get_igdb_id(offer.probable_game_name)
+        igdb_id = await get_igdb_id(offer.probable_game_name)
 
     if igdb_id is not None:
         existing_game = (
@@ -401,7 +482,7 @@ def add_game_info(offer: Offer, session: Session, webdriver: WebDriver) -> None:
 
     # Use the api if no local entry exists
     if steam_id is None:
-        steam_id = get_steam_id(offer.probable_game_name, driver=webdriver)
+        steam_id = await get_steam_id(offer.probable_game_name, context=webdriver)
 
     if steam_id is not None:
         existing_game = (
@@ -422,9 +503,9 @@ def add_game_info(offer: Offer, session: Session, webdriver: WebDriver) -> None:
     # We have some new match. Create a new game and attach it to the offer
     offer.game = Game()
     if igdb_id:
-        offer.game.igdb_info = get_igdb_details(id_=igdb_id)
+        offer.game.igdb_info = await get_igdb_details(id_=igdb_id)
     if steam_id:
-        offer.game.steam_info = get_steam_details(id_=steam_id, driver=webdriver)
+        offer.game.steam_info = await get_steam_details(id_=steam_id, context=webdriver)
 
 
 def log_new_offer(offer: Offer) -> None:
@@ -451,15 +532,12 @@ def hash_file(file: Path) -> str:
     return hash_.hexdigest()
 
 
-def quit_(signo: int, _frame: FrameType | None) -> None:
-    print(f"Interrupted by signal {signo}, shutting down")
-    exit_.set()
-
-
 if __name__ == "__main__":
-    import signal
-
-    signal.signal(signal.SIGTERM, quit_)
-    signal.signal(signal.SIGINT, quit_)
-
-    main()
+    # TODO: Test this, see https://stackoverflow.com/questions/37417595/graceful-shutdown-of-asyncio-coroutines
+    try:
+        asyncio.run(main())
+    except KeyboardInterrupt:
+        pass
+    finally:
+        # Shutdown here
+        pass

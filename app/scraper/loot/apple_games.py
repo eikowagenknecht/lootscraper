@@ -1,27 +1,22 @@
 import logging
+import urllib.parse
 from datetime import datetime, timezone
 
-from selenium.common.exceptions import WebDriverException
-from selenium.webdriver.common.by import By
-from selenium.webdriver.remote.webelement import WebElement
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.support.ui import WebDriverWait
+from playwright.async_api import Locator, Page
 
 from app.common import OfferDuration, OfferType, Source
-from app.scraper.loot.scraper import RawOffer, Scraper
+from app.scraper.loot.scraper import OfferHandler, RawOffer, Scraper
 from app.sqlalchemy import Offer
 
 logger = logging.getLogger(__name__)
 
-ROOT_URL = (
-    "https://appsliced.co/apps/iphone?sort=latest&price=free&cat%5B0%5D=6014&page=1"
-)
-
-XPATH_SEARCH_RESULTS = (
-    """//article[contains(concat(" ", normalize-space(@class), " "), " app ")]"""
-)
-SUBPATH_TITLE = """.//div[contains(concat(" ", normalize-space(@class), " "), " title ")]//a"""  # /text()
-SUBPATH_IMAGE = """.//div[contains(concat(" ", normalize-space(@class), " "), " icon ")]//img"""  # Attr "src"
+ROOT_URL = "https://appsliced.co/apps/iphone"
+SEARCH_PARAMS = {
+    "sort": "latest",
+    "price": "free",
+    "cat[]": 6014,
+    "page": 1,
+}
 
 
 class AppleGamesScraper(Scraper):
@@ -37,94 +32,52 @@ class AppleGamesScraper(Scraper):
     def get_duration() -> OfferDuration:
         return OfferDuration.CLAIMABLE
 
-    def read_offers_from_page(self) -> list[Offer]:
-        self.driver.get(ROOT_URL)
-        raw_offers: list[RawOffer] = []
+    def get_offers_url(self) -> str:
+        return f"{ROOT_URL}?{urllib.parse.urlencode(SEARCH_PARAMS)}"
 
-        try:
-            # Wait until the page loaded
-            WebDriverWait(self.driver, Scraper.get_max_wait_seconds()).until(
-                EC.presence_of_element_located((By.XPATH, XPATH_SEARCH_RESULTS))
-            )
+    def get_page_ready_selector(self) -> str:
+        return "article.app"
 
-            offer_elements = self.driver.find_elements(By.XPATH, XPATH_SEARCH_RESULTS)
-            for offer_element in offer_elements:
-                raw_offers.append(AppleGamesScraper.read_raw_offer(offer_element))
+    def get_offer_handlers(self, page: Page) -> list[OfferHandler]:
+        return [
+            OfferHandler(
+                page.locator("article.app"),
+                self.read_raw_offer,
+                self.normalize_offer,
+            ),
+        ]
 
-        except WebDriverException:
-            logger.info(
-                f"Free search results took longer than {Scraper.get_max_wait_seconds()} to load, probably there are none"
-            )
+    async def read_raw_offer(self, element: Locator) -> RawOffer:
+        title = await element.locator(".title a").get_attribute("title")
+        if title is None:
+            raise ValueError("Couldn't find title.")
 
-        normalized_offers = AppleGamesScraper.normalize_offers(raw_offers)
-        categorized_offers = self.categorize_offers(normalized_offers)
+        url = await element.locator(".title a").get_attribute("href")
+        if url is None:
+            raise ValueError(f"Couldn't find url for {title}.")
 
-        return categorized_offers
-
-    @staticmethod
-    def read_raw_offer(element: WebElement) -> RawOffer:
-        title_str = None
-        url_str = None
-        img_url_str = None
-
-        try:
-            title_str = str(
-                element.find_element(By.XPATH, SUBPATH_TITLE).get_attribute("title")
-            )
-        except WebDriverException:
-            # Nothing to do here, string stays empty
-            pass
-
-        try:
-            url_str = str(element.find_element(By.XPATH, SUBPATH_TITLE).get_attribute("href"))  # type: ignore
-        except WebDriverException:
-            # Nothing to do here, string stays empty
-            pass
-
-        try:
-            img_url_str = str(
-                element.find_element(By.XPATH, SUBPATH_IMAGE).get_attribute("src")
-            )
-        except WebDriverException:
-            # Nothing to do here, string stays empty
-            pass
+        img_url = await element.locator(".icon img").get_attribute("src")
+        if img_url is None:
+            raise ValueError(f"Couldn't find image for {title}.")
 
         return RawOffer(
-            title=title_str,
-            url=url_str,
-            img_url=img_url_str,
+            title=title,
+            url=url,
+            img_url=img_url,
         )
 
-    @staticmethod
-    def normalize_offers(raw_offers: list[RawOffer]) -> list[Offer]:
-        normalized_offers: list[Offer] = []
+    def normalize_offer(self, raw_offer: RawOffer) -> Offer:
+        rawtext = f"<title>{raw_offer.title}</title>"
+        title = raw_offer.title
 
-        for raw_offer in raw_offers:
-            # Raw text
-            if not raw_offer.title:
-                logger.error(f"Error with offer, has no title: {raw_offer}")
-                continue
-
-            # Raw text
-            rawtext = f"<title>{raw_offer.title}</title>"
-
-            # Title
-            title = raw_offer.title
-
-            nearest_url = raw_offer.url if raw_offer.url else ROOT_URL
-            offer = Offer(
-                source=AppleGamesScraper.get_source(),
-                duration=AppleGamesScraper.get_duration(),
-                type=AppleGamesScraper.get_type(),
-                title=title,
-                probable_game_name=title,
-                seen_last=datetime.now(timezone.utc),
-                rawtext=rawtext,
-                url=nearest_url,
-                img_url=raw_offer.img_url,
-            )
-
-            if title is not None and len(title) > 0:
-                normalized_offers.append(offer)
-
-        return normalized_offers
+        return Offer(
+            source=AppleGamesScraper.get_source(),
+            duration=AppleGamesScraper.get_duration(),
+            type=AppleGamesScraper.get_type(),
+            title=title,
+            probable_game_name=title,
+            seen_last=datetime.now(timezone.utc),
+            rawtext=rawtext,
+            url=raw_offer.url,
+            img_url=raw_offer.img_url,
+        )

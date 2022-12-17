@@ -1,24 +1,16 @@
 import logging
 from datetime import datetime, timezone
 
-from selenium.common.exceptions import WebDriverException
-from selenium.webdriver.common.by import By
-from selenium.webdriver.remote.webelement import WebElement
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.support.ui import WebDriverWait
+from playwright.async_api import Locator, Page
 
 from app.common import OfferDuration, OfferType, Source
-from app.scraper.loot.scraper import RawOffer, Scraper
+from app.scraper.loot.scraper import OfferHandler, RawOffer, Scraper
 from app.sqlalchemy import Offer
 
 logger = logging.getLogger(__name__)
 
-ROOT_URL = "https://itch.io/games/new-and-popular/on-sale"
-
-# XPATH_SEARCH_RESULTS = """//div[contains(concat(" ", normalize-space(@class), " "), " game_grid_widget ")]"""
-XPATH_FREE_RESULTS = """//div[contains(concat(" ", normalize-space(@class), " "), " game_grid_widget ")]//div[contains(concat(" ", normalize-space(@class), " "), " game_cell ") and .//div[@class="sale_tag" and contains(text(), "100")]]"""  # URL: Attribute href
-SUBPATH_TITLE = """.//a[contains(concat(" ", normalize-space(@class), " "), " title ")]"""  # /text(), URL: Attribute href
-SUBPATH_IMAGE = """.//img"""  # Attribute src
+BASE_URL = "https://itch.io"
+OFFER_URL = BASE_URL + "/games/new-and-popular/on-sale"
 
 
 class ItchGamesScraper(Scraper):
@@ -34,96 +26,61 @@ class ItchGamesScraper(Scraper):
     def get_duration() -> OfferDuration:
         return OfferDuration.CLAIMABLE
 
-    def read_offers_from_page(self) -> list[Offer]:
-        self.driver.get(ROOT_URL)
+    def get_offers_url(self) -> str:
+        return OFFER_URL
 
-        raw_offers: list[RawOffer] = []
+    def get_page_ready_selector(self) -> str:
+        return ".game_grid_widget .game_cell"
 
-        try:
-            # Wait until the page loaded
-            WebDriverWait(self.driver, Scraper.get_max_wait_seconds()).until(
-                EC.presence_of_element_located((By.XPATH, XPATH_FREE_RESULTS))
+    def get_offer_handlers(self, page: Page) -> list[OfferHandler]:
+        return [
+            OfferHandler(
+                page.locator(
+                    ".game_grid_widget .game_cell",
+                    has=page.locator(".sale_tag", has_text="100"),
+                ),
+                self.read_raw_offer,
+                self.normalize_offer,
             )
+        ]
 
-            ItchGamesScraper.scroll_page_to_bottom(self.driver)
+    async def page_loaded_hook(self, page: Page) -> None:
+        await Scraper.scroll_page_to_bottom(page)
 
-            offer_elements = self.driver.find_elements(By.XPATH, XPATH_FREE_RESULTS)
-            for offer_element in offer_elements:
-                raw_offers.append(ItchGamesScraper.read_raw_offer(offer_element))
-        except WebDriverException:
-            logger.error(
-                f"Page took longer than {Scraper.get_max_wait_seconds()} to load"
-            )
-            return []
+    async def read_raw_offer(self, element: Locator) -> RawOffer:
+        # Scroll into view to mage sure the image is loaded
+        await element.scroll_into_view_if_needed()
 
-        normalized_offers = ItchGamesScraper.normalize_offers(raw_offers)
+        title = await element.locator("a.title").text_content()
+        if title is None:
+            raise ValueError("Couldn't find title.")
 
-        return normalized_offers
+        url = await element.locator("a.title").get_attribute("href")
+        if url is None:
+            raise ValueError(f"Couldn't find url for {title}.")
 
-    @staticmethod
-    def read_raw_offer(element: WebElement) -> RawOffer:
-        title_str = None
-        url_str = None
-        img_url_str = None
-
-        try:
-            title_str = str(element.find_element(By.XPATH, SUBPATH_TITLE).text)
-        except WebDriverException:
-            # Nothing to do here, string stays empty
-            pass
-
-        try:
-            url_str = str(element.find_element(By.XPATH, SUBPATH_TITLE).get_attribute("href"))  # type: ignore
-        except WebDriverException:
-            # Nothing to do here, string stays empty
-            pass
-
-        try:
-            img_url_str = str(
-                element.find_element(By.XPATH, SUBPATH_IMAGE).get_attribute("src")
-            )
-        except WebDriverException:
-            # Nothing to do here, string stays empty
-            pass
-
-        # For current offers, the date is included twice but only means the enddate
+        img_url = await element.locator("img").get_attribute("src")
+        if img_url is None:
+            raise ValueError(f"Couldn't find image for {title}.")
 
         return RawOffer(
-            title=title_str,
-            url=url_str,
-            img_url=img_url_str,
+            title=title,
+            url=url,
+            img_url=img_url,
         )
 
-    @staticmethod
-    def normalize_offers(raw_offers: list[RawOffer]) -> list[Offer]:
-        normalized_offers: list[Offer] = []
+    def normalize_offer(self, raw_offer: RawOffer) -> Offer:
+        rawtext = f"<title>{raw_offer.title}</title>"
+        title = raw_offer.title
 
-        for raw_offer in raw_offers:
-            # Raw text
-            if not raw_offer.title:
-                logger.error(f"Error with offer, has no title: {raw_offer}")
-                continue
-
-            rawtext = f"<title>{raw_offer.title}</title>"
-
-            # Title
-            # Contains additional text that needs to be stripped
-            title = raw_offer.title
-
-            # Valid to
-            nearest_url = raw_offer.url if raw_offer.url else ROOT_URL
-            offer = Offer(
-                source=ItchGamesScraper.get_source(),
-                duration=ItchGamesScraper.get_duration(),
-                type=ItchGamesScraper.get_type(),
-                title=title,
-                probable_game_name=title,
-                seen_last=datetime.now(timezone.utc),
-                rawtext=rawtext,
-                url=nearest_url,
-                img_url=raw_offer.img_url,
-            )
-
-            normalized_offers.append(offer)
-
-        return normalized_offers
+        return Offer(
+            source=ItchGamesScraper.get_source(),
+            duration=ItchGamesScraper.get_duration(),
+            type=ItchGamesScraper.get_type(),
+            title=title,
+            probable_game_name=title,
+            seen_last=datetime.now(timezone.utc),
+            rawtext=rawtext,
+            url=raw_offer.url,
+            img_url=raw_offer.img_url,
+        )

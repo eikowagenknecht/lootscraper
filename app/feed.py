@@ -1,4 +1,6 @@
 # mypy: ignore-errors
+import asyncio
+import functools
 import html
 from datetime import datetime
 from pathlib import Path
@@ -17,7 +19,7 @@ from .common import (
 )
 
 
-def generate_feed(
+async def generate_feed(
     offers: list[Offer],
     file: Path,
     author_name: str,
@@ -202,7 +204,7 @@ def generate_feed(
     # - Subtitle
 
     # Write the ATOM feed to a file
-    feed_generator.atom_file(filename=str(file), pretty=True)
+    await asyncio.to_thread(feed_generator.atom_file, filename=str(file), pretty=True)
 
 
 def get_feed_id(filename: str) -> str:

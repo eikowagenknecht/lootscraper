@@ -2,36 +2,21 @@ import logging
 from dataclasses import dataclass
 from datetime import datetime, timezone
 
-from selenium.common.exceptions import WebDriverException
-from selenium.webdriver.common.by import By
-from selenium.webdriver.remote.webelement import WebElement
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.support.ui import WebDriverWait
+from playwright.async_api import Locator, Page
 
 from app.common import OfferDuration, OfferType, Source
-from app.configparser import Config
-from app.scraper.loot.scraper import RawOffer, Scraper
+from app.scraper.loot.scraper import OfferHandler, RawOffer, Scraper
 from app.sqlalchemy import Offer
 
 logger = logging.getLogger(__name__)
 
-ROOT_URL = "https://store.epicgames.com/en-US/"
-
-XPATH_CURRENT = (
-    """//span[text()="Free Now"]//ancestor::a"""  # xpath href attr is the link
-)
-# XPATH_COMING_SOON = """//span[text()="Coming Soon"]//ancestor::a"""
-
-SUBPATH_TITLE = """.//*[@data-testid="offer-title-info-title"]/div"""  # /text()
-SUBPATH_TIME_FROM = """.//*[@data-testid="offer-title-info-subtitle"]//time[1]"""  # /@datetime  # format 2022-02-24T16:00:00.000Z
-SUBPATH_TIME_TO = """.//*[@data-testid="offer-title-info-subtitle"]//time[2]"""  # /@datetime  # format 2022-02-24T16:00:00.000Z
-SUBPATH_IMG = """.//img"""
+BASE_URL = "https://store.epicgames.com"
+OFFER_URL = BASE_URL + "/en-US/"
 
 
-@dataclass
+@dataclass(kw_only=True)
 class EpicRawOffer(RawOffer):
-    valid_from: str | None = None
-    valid_to: str | None = None
+    valid_to: str
 
 
 class EpicGamesScraper(Scraper):
@@ -47,168 +32,85 @@ class EpicGamesScraper(Scraper):
     def get_duration() -> OfferDuration:
         return OfferDuration.CLAIMABLE
 
-    def read_offers_from_page(self) -> list[Offer]:
-        self.driver.get(ROOT_URL)
-        try:
-            # Wait until the page loaded
-            WebDriverWait(self.driver, Scraper.get_max_wait_seconds()).until(
-                EC.presence_of_element_located(
-                    (By.XPATH, """//h2[text()="Free Games"]""")
-                )
-            )
+    def get_offers_url(self) -> str:
+        return OFFER_URL
 
-            Scraper.scroll_page_to_bottom(self.driver)
-        except WebDriverException:
-            filename = (
-                Config.data_path()
-                / f'screenshot_error_{datetime.now().isoformat().replace(".", "_").replace(":", "_")}.png'
-            )
-            logger.error(
-                f"Page took longer than {Scraper.get_max_wait_seconds()} to load. Saving Screenshot to {filename}."
-            )
-            self.driver.save_screenshot(str(filename.resolve()))
-            return []
+    def get_page_ready_selector(self) -> str:
+        return "h2:has-text('Free Games')"
 
-        elements: list[WebElement] = []
-        try:
-            elements.extend(self.driver.find_elements(By.XPATH, XPATH_CURRENT))
-        except WebDriverException:
-            logger.warning("No current offer found.")
+    def get_offer_handlers(self, page: Page) -> list[OfferHandler]:
+        return [
+            OfferHandler(
+                page.locator('//span[text()="Free Now"]//ancestor::a'),
+                self.read_raw_offer,
+                self.normalize_offer,
+            ),
+        ]
 
-        # try:
-        #     elements.extend(self.driver.find_elements(By.XPATH, XPATH_COMING_SOON))
-        # except WebDriverException:
-        #     logger.warning("No coming offer found.")
+    async def read_raw_offer(self, element: Locator) -> RawOffer:
+        # Scroll element into view to load img url
+        await element.scroll_into_view_if_needed()
 
-        raw_offers: list[EpicRawOffer] = []
-        for element in elements:
-            raw_offers.append(EpicGamesScraper.read_raw_offer(element))
-
-        normalized_offers = EpicGamesScraper.normalize_offers(raw_offers)
-
-        return normalized_offers
-
-    @staticmethod
-    def read_raw_offer(element: WebElement) -> EpicRawOffer:
-        title_str = None
-        valid_from_str = None
-        valid_to_str = None
-        url_str = None
-        img_url_str = None
-
-        try:
-            title_str = str(element.find_element(By.XPATH, SUBPATH_TITLE).text)
-        except WebDriverException:
-            # Nothing to do here, string stays empty
-            pass
-
-        try:
-            valid_from_str = str(
-                element.find_element(By.XPATH, SUBPATH_TIME_FROM).get_attribute(
-                    "datetime"
-                )
-            )
-        except WebDriverException:
-            # Nothing to do here, string stays empty
-            pass
-
-        try:
-            valid_to_str = str(
-                element.find_element(By.XPATH, SUBPATH_TIME_TO).get_attribute(
-                    "datetime"
-                )
-            )
-        except WebDriverException:
-            # Nothing to do here, string stays empty
-            pass
-
-        try:
-            url_str = str(element.get_attribute("href"))  # type: ignore
-            # Ignore embedded img url
-            if url_str.startswith("data"):
-                url_str = None
-        except WebDriverException:
-            # Nothing to do here, string stays empty
-            pass
-
-        try:
-            img_url_str = str(
-                element.find_element(By.XPATH, SUBPATH_IMG).get_attribute("src")
-            )
-        except WebDriverException:
-            # Nothing to do here, string stays empty
-            pass
+        title = await element.locator(
+            '[data-testid="offer-title-info-title"] div'
+        ).text_content()
+        if title is None:
+            raise ValueError("Couldn't find title.")
 
         # For current offers, the date is included twice but only means the enddate
-        if valid_from_str == valid_to_str:
-            valid_from_str = None
+        # format 2022-02-24T16:00:00.000Z
+        valid_to = (
+            await element.locator('[data-testid="offer-title-info-subtitle"] time')
+            .nth(1)
+            .get_attribute("datetime")
+        )
+        if valid_to is None:
+            raise ValueError(f"Couldn't find valid to for {title}.")
+
+        url = await element.get_attribute("href")
+        if url is None:
+            raise ValueError(f"Couldn't find url for {title}.")
+        url = BASE_URL + url
+
+        img_url = await element.locator("img").get_attribute("src")
+        if img_url is None:
+            raise ValueError(f"Couldn't find image for {title}.")
 
         return EpicRawOffer(
-            title=title_str,
-            valid_from=valid_from_str,
-            valid_to=valid_to_str,
-            url=url_str,
-            img_url=img_url_str,
+            title=title,
+            valid_to=valid_to,
+            url=url,
+            img_url=img_url,
         )
 
-    @staticmethod
-    def normalize_offers(raw_offers: list[EpicRawOffer]) -> list[Offer]:
-        normalized_offers: list[Offer] = []
+    def normalize_offer(self, raw_offer: RawOffer) -> Offer:
+        if not isinstance(raw_offer, EpicRawOffer):
+            raise ValueError("Wrong type of raw offer.")
 
-        for raw_offer in raw_offers:
-            # Raw text
-            if not raw_offer.title:
-                logger.error(f"Error with offer, has no title: {raw_offer}")
-                continue
+        rawtext = f"<title>{raw_offer.title}</title>"
+        rawtext += f"<enddate>{raw_offer.valid_to}</enddate>"
+        title = raw_offer.title
 
-            rawtext = f"<title>{raw_offer.title}</title>"
+        utc_valid_to = None
+        if raw_offer.valid_to:
+            try:
+                utc_valid_to = datetime.strptime(
+                    raw_offer.valid_to,
+                    "%Y-%m-%dT%H:%M:%S.000Z",
+                ).replace(tzinfo=timezone.utc)
+            except ValueError:
+                # TODO: Error handling, put main loop into Scraper and handle normalization here for each entry
+                utc_valid_to = None
 
-            if raw_offer.valid_from:
-                rawtext += f"<startdate>{raw_offer.valid_from}</startdate>"
-
-            if raw_offer.valid_to:
-                rawtext += f"<enddate>{raw_offer.valid_to}</enddate>"
-
-            # Title
-            title = raw_offer.title
-
-            # Valid from
-            utc_valid_from = None
-            if raw_offer.valid_from:
-                try:
-                    utc_valid_from = datetime.strptime(
-                        raw_offer.valid_from,
-                        "%Y-%m-%dT%H:%M:%S.000Z",
-                    ).replace(tzinfo=timezone.utc)
-                except ValueError:
-                    utc_valid_from = None
-
-            # Valid to
-            utc_valid_to = None
-            if raw_offer.valid_to:
-                try:
-                    utc_valid_to = datetime.strptime(
-                        raw_offer.valid_to,
-                        "%Y-%m-%dT%H:%M:%S.000Z",
-                    ).replace(tzinfo=timezone.utc)
-                except ValueError:
-                    utc_valid_to = None
-
-            nearest_url = raw_offer.url if raw_offer.url else ROOT_URL
-            offer = Offer(
-                source=EpicGamesScraper.get_source(),
-                duration=EpicGamesScraper.get_duration(),
-                type=EpicGamesScraper.get_type(),
-                title=title,
-                probable_game_name=title,
-                seen_last=datetime.now(timezone.utc),
-                valid_from=utc_valid_from,
-                valid_to=utc_valid_to,
-                rawtext=rawtext,
-                url=nearest_url,
-                img_url=raw_offer.img_url,
-            )
-
-            normalized_offers.append(offer)
-
-        return normalized_offers
+        return Offer(
+            source=EpicGamesScraper.get_source(),
+            duration=EpicGamesScraper.get_duration(),
+            type=EpicGamesScraper.get_type(),
+            title=title,
+            probable_game_name=title,
+            seen_last=datetime.now(timezone.utc),
+            valid_to=utc_valid_to,
+            rawtext=rawtext,
+            url=raw_offer.url,
+            img_url=raw_offer.img_url,
+        )
