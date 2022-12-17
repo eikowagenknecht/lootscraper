@@ -146,7 +146,6 @@ class GoogleGamesTest(unittest.IsolatedAsyncioTestCase):
 
 
 class HumbleGamesTest(unittest.IsolatedAsyncioTestCase):
-    # TODO: Check if the demos are included and if they should be
     async def test_loot(self) -> None:
         async with get_browser_context() as context:
             scraper = HumbleGamesScraper(context=context)
@@ -177,7 +176,6 @@ class ItchGamesTest(unittest.IsolatedAsyncioTestCase):
 
 
 class SteamGamesTest(unittest.IsolatedAsyncioTestCase):
-    # TODO: Run this again when games are available
     async def test_loot(self) -> None:
         async with get_browser_context() as context:
             scraper = SteamGamesScraper(context=context)

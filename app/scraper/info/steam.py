@@ -331,7 +331,7 @@ async def add_data_from_steam_store_page(
             except ValueError as e:
                 logger.error(f"Invalid rating for {steam_info.id}: {e}")
 
-        # TODO: Currently would also get the price from the first bundle which is
+        # This currently would also get the price from the first bundle which is
         # incorrect. Commented out for now because the API seems to be more reliable.
         #
         # # Add the original price if available
