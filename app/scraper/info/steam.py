@@ -36,7 +36,7 @@ async def get_steam_id(
     of at least 75 % are returned.
     """
 
-    logger.info(f"Getting Steam id for {search_string}.")
+    logger.info(f"Getting id for {search_string}.")
 
     params = {
         "term": search_string,
@@ -92,7 +92,7 @@ async def get_steam_id(
         return None
 
     logger.info(
-        f"Search for {search_string} resulted in {best_match.title} ({best_match.appid}) as the best match with a score of {(best_match.score*100):.0f} %."
+        f"{best_match.title} ({best_match.appid}) is the best match ({(best_match.score*100):.0f} %)."
     )
     return best_match.appid
 
@@ -192,9 +192,10 @@ async def add_data_from_steam_api(steam_info: SteamInfo) -> None:
             else:
                 steam_info.recommended_price_eur = recommended_price_value / 100
         except (KeyError, ValueError) as e:
-            # I a game with release date has no price, that's an error
-            if steam_info.release_date is not None:
-                logger.error(f"No price found for Steam app id {steam_info.id}: {e}")
+            # Sometimes games are not available for purchase on steam or
+            # not released yet or only available as a bundle, so this might be
+            # correct.
+            logger.info(f"No price found for Steam app id {steam_info.id}: {e}")
 
     try:
         steam_info.recommendations = content["recommendations"]["total"]
@@ -328,75 +329,78 @@ async def add_data_from_steam_store_page(
             except ValueError as e:
                 logger.error(f"Invalid rating for {steam_info.id}: {e}")
 
-        # Source then the game is currently discounted
-        # Should be filled from the API already, but just in case
-        if steam_info.recommended_price_eur is None:
-            try:
-                recommended_price = (
-                    await page.locator(".game_area_purchase_game")
-                    .filter(has=page.locator(".platform_img"))
-                    .filter(has_text="Add to Cart")
-                    .first.locator(".game_purchase_action .discount_original_price")
-                    .text_content(timeout=1000)
-                )
-                if recommended_price is None:
-                    logger.info(
-                        f"No original price found on shop page for {steam_info.id}."
-                    )
-                else:
-                    steam_info.recommended_price_eur = float(
-                        recommended_price.replace("€", "").replace(",", ".").strip()
-                    )
-            except Error as e:
-                logger.info(
-                    f"No original price found on shop page for {steam_info.id}: {e}"
-                )
-            except ValueError as e:
-                logger.error(
-                    f"Original price has wrong format for {steam_info.id}: {e}"
-                )
+        # TODO: Currently would also get the price from the first bundle which is
+        # incorrect. Commented out for now because the API seems to be more reliable.
+        #
+        # # Add the original price if available
+        # # Should be filled from the API already, but just in case
+        # if steam_info.recommended_price_eur is None:
+        #     try:
+        #         recommended_price = (
+        #             await page.locator(".game_area_purchase_game")
+        #             .filter(has=page.locator(".platform_img"))
+        #             .filter(has_text="Add to Cart")
+        #             .first.locator(".game_purchase_action .discount_original_price")
+        #             .text_content(timeout=1000)
+        #         )
+        #         if recommended_price is None:
+        #             logger.info(
+        #                 f"No original price found on shop page for {steam_info.id}."
+        #             )
+        #         else:
+        #             steam_info.recommended_price_eur = float(
+        #                 recommended_price.replace("€", "").replace(",", ".").strip()
+        #             )
+        #     except Error as e:
+        #         logger.info(
+        #             f"No original price found on shop page for {steam_info.id}: {e}"
+        #         )
+        #     except ValueError as e:
+        #         logger.error(
+        #             f"Original price has wrong format for {steam_info.id}: {e}"
+        #         )
 
-        # Source when the game is not discounted
-        # Should be filled from the API already, but just in case
-        if steam_info.recommended_price_eur is None:
-            try:
-                recommended_price = (
-                    await page.locator(".game_area_purchase_game")
-                    .filter(has=page.locator(".platform_img"))
-                    .filter(has_text="Add to Cart")
-                    .first.locator(".game_purchase_action .game_purchase_price")
-                    .text_content(timeout=1000)
-                )
-                if recommended_price is None:
-                    logger.info(
-                        f"No recommended price found on shop page for {steam_info.id}."
-                    )
-                elif "free" in recommended_price.lower():
-                    steam_info.recommended_price_eur = 0
-                else:
-                    steam_info.recommended_price_eur = float(
-                        recommended_price.replace("€", "").replace(",", ".").strip()
-                    )
-            except Error as e:
-                logger.info(
-                    f"No recommended price found on shop page for {steam_info.id}: {e}"
-                )
-            except ValueError as e:
-                logger.error(
-                    f"Recommended price has wrong format for {steam_info.id}: {e}"
-                )
+        # # Source when the game is not discounted
+        # # Should be filled from the API already, but just in case
+        # if steam_info.recommended_price_eur is None:
+        #     try:
+        #         recommended_price = (
+        #             await page.locator(".game_area_purchase_game")
+        #             .filter(has=page.locator(".platform_img"))
+        #             .filter(has_text="Add to Cart")
+        #             .first.locator(".game_purchase_action .game_purchase_price")
+        #             .text_content(timeout=1000)
+        #         )
+        #         if recommended_price is None:
+        #             logger.info(
+        #                 f"No recommended price found on shop page for {steam_info.id}."
+        #             )
+        #         elif "free" in recommended_price.lower():
+        #             steam_info.recommended_price_eur = 0
+        #         else:
+        #             steam_info.recommended_price_eur = float(
+        #                 recommended_price.replace("€", "").replace(",", ".").strip()
+        #             )
+        #     except Error as e:
+        #         logger.info(
+        #             f"No recommended price found on shop page for {steam_info.id}: {e}"
+        #         )
+        #     except ValueError as e:
+        #         logger.error(
+        #             f"Recommended price has wrong format for {steam_info.id}: {e}"
+        #         )
 
-        # If there is a "Free game" button, the game is free
-        # Should be filled from the API already, but just in case
-        if steam_info.recommended_price_eur is None:
-            try:
-                free_games_button = await page.locator("#freeGameBtn").is_visible(
-                    timeout=1000
-                )
-                if free_games_button:
-                    steam_info.recommended_price_eur = 0
-            except Error as e:
-                logger.debug(f"Game {steam_info.id} is not free: {e}")
+        # # If there is a "Free game" button, the game is free
+        # # Should be filled from the API already, but just in case
+        # if steam_info.recommended_price_eur is None:
+        #     try:
+        #         free_games_button = await page.locator("#freeGameBtn").is_visible(
+        #             timeout=1000
+        #         )
+        #         if free_games_button:
+        #             steam_info.recommended_price_eur = 0
+        #     except Error as e:
+        #         logger.debug(f"Game {steam_info.id} is not free: {e}")
 
         # Add the release date if available
         # Should be filled from the API already, but just in case
