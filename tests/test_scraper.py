@@ -306,6 +306,17 @@ class SteamGameInfoTests(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(steam_info.name, "Riverbond")
             self.assertIsNotNone(steam_info.recommendations)
 
+    async def test_steam_no_rating(self) -> None:
+        async with get_browser_context() as context:
+            with self.assertNoLogs(level="ERROR"):
+                steam_info = await get_steam_details(
+                    title="Project Malice",
+                    context=context,
+                )
+            self.assertIsNotNone(steam_info)
+            self.assertEqual(steam_info.name, "Project Malice")
+            self.assertIsNotNone(steam_info.recommendations)
+
     # This is a weird one where without the cc parameter the price had been
     # shown in "KWR" in the JSON, so the store page had to be used instead to
     # get the price in EUR. Hopefully not needed any more.
