@@ -116,7 +116,8 @@ def setup_logging() -> None:
     loglevel = Config.get().log_level
     logging.basicConfig(
         handlers=[
-            RotatingFileHandler(filename, maxBytes=10 * 1024 ^ 2, backupCount=10),
+            # 5MB per log file, 10 log files
+            RotatingFileHandler(filename, maxBytes=5 * 1024**2, backupCount=10),
             get_streamhandler(),
         ],
         encoding="utf-8",
