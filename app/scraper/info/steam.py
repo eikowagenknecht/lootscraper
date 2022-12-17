@@ -32,7 +32,8 @@ async def get_steam_id(
 ) -> int | None:
     """
     Search Steam via the web page and return the best match in the results.
-    The comparison is done with difflib, lower cased.
+    The comparison is done with difflib, lower cased. Only matches with a score
+    of at least 75 % are returned.
     """
 
     logger.info(f"Getting Steam id for {search_string}.")
@@ -66,8 +67,8 @@ async def get_steam_id(
 
                 score = get_match_score(search_string, title)
 
-                if best_match is None or (
-                    score >= RESULT_MATCH_THRESHOLD and score > best_match.score
+                if score >= RESULT_MATCH_THRESHOLD and (
+                    best_match is None or score > best_match.score
                 ):
                     logger.debug(
                         f"Found match {title} with a score of {(score*100):.0f} %."
