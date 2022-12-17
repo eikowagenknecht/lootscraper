@@ -37,7 +37,6 @@ COPY lootscraper.py \
     /app/
 COPY app /app/app/
 COPY alembic /app/alembic/
-COPY js /app/js/
 
 # Lootscraper: Run
 CMD [ "python", "lootscraper.py", "--docker" ]
