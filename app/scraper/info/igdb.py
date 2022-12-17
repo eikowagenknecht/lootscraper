@@ -50,8 +50,6 @@ class IGDBWrapper:
             result.raise_for_status()
             self.auth_token = result.json()["access_token"]
 
-    # TODO: Only use one connection, rate limit to < 4 per second
-    # TODO: Automatically refresh token when it expires
     async def api_request(self, endpoint: str, query: str) -> Any:
         """
         Takes an endpoint and the Apicalypse query and returns the api response as a json object.

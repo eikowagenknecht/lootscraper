@@ -21,8 +21,8 @@ SEARCH_URL_PARAMS = {
 
 @dataclass(kw_only=True)
 class HumbleRawOffer(RawOffer):
-    # TODO: This is unused for now!
-    # Check details page for valid_to (makes it easier to filter out nonsense entries that are valid "forever")
+    # This is unused for now!
+    # TODO: Check details page for valid_to (makes it easier to filter out nonsense entries that are valid "forever")
     valid_to: str | None = None
 
 
