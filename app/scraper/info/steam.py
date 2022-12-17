@@ -7,7 +7,7 @@ from typing import Any
 import httpx
 from playwright.async_api import BrowserContext, Error, Page
 
-from app.pagedriver import get_new_page
+from app.browser import get_new_page
 from app.scraper.info.utils import RESULT_MATCH_THRESHOLD, get_match_score
 from app.sqlalchemy import SteamInfo
 

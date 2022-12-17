@@ -21,8 +21,10 @@ mapper_registry = orm.registry()
 Base: Any = mapper_registry.generate_base()
 
 
-class AwareDateTime(sa.TypeDecorator):
-    """Results returned as aware datetimes, not naive ones."""
+class AwareDateTime(sa.TypeDecorator):  # pylint: disable=W0223
+    """
+    Results returned as aware datetimes, not naive ones.
+    """
 
     impl = sa.DateTime
     cache_ok = True
@@ -54,7 +56,9 @@ class Announcement(Base):
 
 
 class Game(Base):
-    """A game (e.g. "The Witcher 3")."""
+    """
+    A game (e.g. "The Witcher 3").
+    """
 
     __tablename__ = "games"
 
@@ -78,7 +82,9 @@ class Game(Base):
 
 
 class IgdbInfo(Base):
-    """Information about a Game, gathered from IDGB."""
+    """
+    Information about a Game, gathered from IDGB.
+    """
 
     __tablename__ = "igdb_info"
 
@@ -112,7 +118,9 @@ class IgdbInfo(Base):
 
 
 class SteamInfo(Base):
-    """Information about a Game, gathered from Steam."""
+    """
+    Information about a Game, gathered from Steam.
+    """
 
     __tablename__ = "steam_info"
 
@@ -157,7 +165,9 @@ class SteamInfo(Base):
 
 
 class Offer(Base):
-    """An offer, can be for a game or some other game related content (loot)."""
+    """
+    An offer, can be for a game or some other game related content (loot).
+    """
 
     __tablename__ = "offers"
 
@@ -203,7 +213,9 @@ class Offer(Base):
 
 
 class User(Base):
-    """A user of the website."""
+    """
+    A user of the application.
+    """
 
     __tablename__ = "users"
 
@@ -226,7 +238,9 @@ class User(Base):
 
 
 class TelegramSubscription(Base):
-    """Subscription of a user to a category for Telegram notifications."""
+    """
+    Subscription of a user to a category for Telegram notifications.
+    """
 
     __tablename__ = "telegram_subscriptions"
 
@@ -317,9 +331,11 @@ class LootDatabase:
         title: str,
         valid_to: datetime | None,
     ) -> Offer | None:
-        """Find an offer by its title and valid_to date. Valid_to is interpreded as
+        """
+        Find an offer by its title and valid_to date. Valid_to is interpreted as
         "at most 1 day older or 1 day newer" to avoid getting duplicates for offers
-        where the exact end date is not clear (looking at you, Amazon!)"""
+        where the exact end date is not clear (looking at you, Amazon!)
+        """
         statement = (
             sa.select(Offer)
             .where(Offer.source == source)

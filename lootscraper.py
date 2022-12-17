@@ -16,10 +16,10 @@ from sqlalchemy import select
 from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import Session
 
+from app.browser import get_browser_context
 from app.common import TIMESTAMP_LONG, OfferDuration, OfferType, Source
 from app.configparser import Config
 from app.feed import generate_feed
-from app.pagedriver import get_browser_context
 from app.scraper.info.igdb import get_igdb_details, get_igdb_id
 from app.scraper.info.steam import get_steam_details, get_steam_id
 from app.scraper.loot.scraperhelper import get_all_scrapers
@@ -47,6 +47,7 @@ EXAMPLE_CONFIG_FILE = "config.default.ini"
 # - Add Telegram command for complete refresh of all metadata
 #   Drop all metadata and re-download it from IGDB and Steam
 # - Remove duplicate offers in production database
+# - Reactivate Telegram tests
 
 
 async def main() -> None:

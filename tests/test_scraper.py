@@ -2,7 +2,7 @@
 import unittest
 from datetime import datetime, timezone
 
-from app.pagedriver import get_browser_context
+from app.browser import get_browser_context
 from app.scraper.info.steam import get_steam_details, get_steam_id
 from app.scraper.loot.amazon_games import AmazonGamesScraper
 from app.scraper.loot.amazon_loot import AmazonLootScraper
