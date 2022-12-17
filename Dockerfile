@@ -28,6 +28,7 @@ RUN pip install --upgrade pip \
     && pip install -r requirements.txt \
     && pip freeze > installed_packages.txt
 RUN playwright install chromium
+RUN playwright install-deps
 
 # Lootscraper: Add
 COPY lootscraper.py \
