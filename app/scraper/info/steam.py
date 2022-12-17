@@ -289,7 +289,7 @@ async def add_data_from_steam_store_page(
         if steam_info.recommended_price_eur is None:
             try:
                 recommended_price = (
-                    await page.locator(".game_area_purchase_game")
+                    await page.locator(".game_area_purchase_game_wrapper")
                     .first.locator(".game_purchase_action .discount_original_price")
                     .text_content()
                 )
@@ -314,7 +314,7 @@ async def add_data_from_steam_store_page(
         if steam_info.recommended_price_eur is None:
             try:
                 recommended_price = (
-                    await page.locator(".game_area_purchase_game")
+                    await page.locator(".game_area_purchase_game_wrapper")
                     .first.locator(".game_purchase_action .game_purchase_price")
                     .text_content()
                 )
