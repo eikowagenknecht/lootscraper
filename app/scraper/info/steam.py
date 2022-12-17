@@ -63,7 +63,7 @@ async def get_steam_id(
                 appid = await element.get_attribute("data-ds-appid")
 
                 if not title or not appid:
-                    raise ValueError("Result does not contain a title or appid.")
+                    raise ValueError("Result needs a title and appid.")
 
                 score = get_match_score(search_string, title)
 
@@ -124,6 +124,10 @@ async def get_steam_details(
     await add_data_from_steam_api(steam_info)
     await add_data_from_steam_store_page(steam_info, context=context)
 
+    # Name is mandatory
+    if not steam_info.name:
+        return None
+
     return steam_info
 
 
@@ -134,6 +138,9 @@ async def add_data_from_steam_api(steam_info: SteamInfo) -> None:
 
     try:
         app_id = list(data.keys())[0]
+        if data[app_id]["success"] == "false":
+            logger.error(f"Could not read data for app id {steam_info.id}: {data}")
+            return
         content = data[app_id]["data"]
     except KeyError:
         logger.error(f"Could not read data for app id {steam_info.id}: {data}")
@@ -142,12 +149,14 @@ async def add_data_from_steam_api(steam_info: SteamInfo) -> None:
     try:
         steam_info.name = content["name"]
     except KeyError:
-        pass
+        logging.error(f"Could not read name for app id {steam_info.id}: {data}")
 
     try:
         steam_info.short_description = content["short_description"]
     except KeyError:
-        pass
+        logging.error(
+            f"Could not read short description for app id {steam_info.id}: {data}"
+        )
 
     try:
         genres: list[str] = []
@@ -165,19 +174,27 @@ async def add_data_from_steam_api(steam_info: SteamInfo) -> None:
         pass
 
     try:
-        # We do not save prices in any other currency than EUR (or free)
-        recommended_price_value: int = content["price_overview"]["initial"]
-        if recommended_price_value == 0:
+        if content["is_free"]:
             steam_info.recommended_price_eur = 0
-        elif content["price_overview"]["currency"] != "EUR":
-            logger.warning(
-                f'Steam app id {steam_info.id} has a currency other than EUR ({content["price_overview"]["currency"]}).'
-            )
-        else:
-            steam_info.recommended_price_eur = recommended_price_value / 100
-    except (KeyError, ValueError) as e:
-        # Some games have no price (e.g. not yet released games)
-        logger.info(f"No price found for Steam app id {steam_info.id}: {e}")
+    except KeyError:
+        pass
+
+    if steam_info.recommended_price_eur is None:
+        try:
+            # We do not save prices in any other currency than EUR (or free)
+            recommended_price_value: int = content["price_overview"]["initial"]
+            if recommended_price_value == 0:
+                steam_info.recommended_price_eur = 0
+            elif content["price_overview"]["currency"] != "EUR":
+                logger.error(
+                    f'Steam app id {steam_info.id} has a currency other than EUR ({content["price_overview"]["currency"]}).'
+                )
+            else:
+                steam_info.recommended_price_eur = recommended_price_value / 100
+        except (KeyError, ValueError) as e:
+            # I a game with release date has no price, that's an error
+            if steam_info.release_date is not None:
+                logger.error(f"No price found for Steam app id {steam_info.id}: {e}")
 
     try:
         steam_info.recommendations = content["recommendations"]["total"]
@@ -186,10 +203,6 @@ async def add_data_from_steam_api(steam_info: SteamInfo) -> None:
 
     try:
         steam_info.metacritic_score = content["metacritic"]["score"]
-    except KeyError:
-        pass
-
-    try:
         steam_info.metacritic_url = content["metacritic"]["url"].replace(R"\/", "/")
     except KeyError:
         pass
@@ -210,10 +223,28 @@ async def add_data_from_steam_api(steam_info: SteamInfo) -> None:
 
 
 async def read_from_steam_api(steam_app_id: int) -> dict[str, Any] | None:
+    FILTERS = ",".join(
+        [
+            "basic",  # name, short_description, header_image, is_free
+            "price_overview",
+            "release_date",
+            "genres",
+            "recommendations",
+            "publishers",
+            "metacritic",
+            "screenshots",
+        ]
+    )
     async with httpx.AsyncClient() as client:
         try:
             response = await client.get(
-                STEAM_DETAILS_JSON_URL, params={"appids": steam_app_id}
+                STEAM_DETAILS_JSON_URL,
+                params={
+                    "appids": steam_app_id,
+                    "filters": FILTERS,
+                    "cc": "de",  # For prices
+                    "l": "english",  # For descriptions
+                },
             )
             response.raise_for_status()
             return response.json()
@@ -282,6 +313,7 @@ async def add_data_from_steam_store_page(
                 logger.error(f"Invalid Steam rating for {steam_info.id}: {e}")
 
         # Add the number of recommendations if available
+        # Should be filled from the API already, but just in case
         if steam_info.recommendations is None:
             try:
                 recommendations = await page.locator(
@@ -297,6 +329,7 @@ async def add_data_from_steam_store_page(
                 logger.error(f"Invalid rating for {steam_info.id}: {e}")
 
         # Source then the game is currently discounted
+        # Should be filled from the API already, but just in case
         if steam_info.recommended_price_eur is None:
             try:
                 recommended_price = (
@@ -324,6 +357,7 @@ async def add_data_from_steam_store_page(
                 )
 
         # Source when the game is not discounted
+        # Should be filled from the API already, but just in case
         if steam_info.recommended_price_eur is None:
             try:
                 recommended_price = (
@@ -353,6 +387,7 @@ async def add_data_from_steam_store_page(
                 )
 
         # If there is a "Free game" button, the game is free
+        # Should be filled from the API already, but just in case
         if steam_info.recommended_price_eur is None:
             try:
                 free_games_button = await page.locator("#freeGameBtn").is_visible(
@@ -364,6 +399,7 @@ async def add_data_from_steam_store_page(
                 logger.debug(f"Game {steam_info.id} is not free: {e}")
 
         # Add the release date if available
+        # Should be filled from the API already, but just in case
         if steam_info.release_date is None:
             try:
                 release_date_str = await page.locator(
