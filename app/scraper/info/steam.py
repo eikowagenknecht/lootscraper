@@ -299,7 +299,8 @@ async def add_data_from_steam_store_page(
                 logger.error(f"Invalid Steam percentage for {steam_info.id}: {e}")
 
         # Add the review score if available
-        if steam_info.score is None:
+        # If the percentage is not filled, there are no reviews, so skip in that case
+        if steam_info.score is None and steam_info.percent is not None:
             try:
                 review_score = await page.locator(
                     '#userReviews [itemprop="aggregateRating"] [itemprop="ratingValue"]'
@@ -315,7 +316,8 @@ async def add_data_from_steam_store_page(
 
         # Add the number of recommendations if available
         # Should be filled from the API already, but just in case
-        if steam_info.recommendations is None:
+        # If the percentage is not filled, there are no reviews, so skip in that case
+        if steam_info.recommendations is None and steam_info.percent is not None:
             try:
                 recommendations = await page.locator(
                     '#userReviews [itemprop="aggregateRating"] [itemprop="reviewCount"]'
