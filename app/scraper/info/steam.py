@@ -174,9 +174,9 @@ async def add_data_from_steam_api(steam_info: SteamInfo) -> None:
             )
         else:
             steam_info.recommended_price_eur = recommended_price_value / 100
-    except (KeyError, ValueError):
-        # Every response should have a price included
-        logger.error(f"No price found for Steam app id {steam_info.id}.")
+    except (KeyError, ValueError) as e:
+        # Some games have no price (e.g. not yet released games)
+        logger.info(f"No price found for Steam app id {steam_info.id}: {e}")
 
     try:
         steam_info.recommendations = content["recommendations"]["total"]
@@ -253,13 +253,15 @@ async def add_data_from_steam_store_page(
                 )
                 if review_score_percent is None:
                     logger.warning(f"No Steam percentage found for {steam_info.id}.")
-                elif review_score_percent.startswith("Need more user reviews"):
+                elif review_score_percent.startswith(
+                    "Need more user reviews"
+                ) or review_score_percent.startswith("No user reviews"):
                     # No percentage, but this reason is fine
                     pass
                 else:
                     steam_info.percent = int(review_score_percent.split("%")[0].strip())
-            except Error:
-                logger.warning(f"No Steam percentage found for {steam_info.id}.")
+            except Error as e:
+                logger.warning(f"No Steam percentage found for {steam_info.id}: {e}")
             except ValueError as e:
                 logger.error(f"Invalid Steam percentage for {steam_info.id}: {e}")
 
@@ -273,8 +275,8 @@ async def add_data_from_steam_store_page(
                     logger.warning(f"No Steam rating found for {steam_info.id}.")
                 else:
                     steam_info.score = int(review_score)
-            except Error:
-                logger.warning(f"No Steam rating found for {steam_info.id}!")
+            except Error as e:
+                logger.warning(f"No Steam rating found for {steam_info.id}: {e}")
             except ValueError as e:
                 logger.error(f"Invalid Steam rating for {steam_info.id}: {e}")
 
@@ -285,13 +287,13 @@ async def add_data_from_steam_store_page(
                     '#userReviews [itemprop="aggregateRating"] [itemprop="reviewCount"]'
                 ).get_attribute("content")
                 if recommendations is None:
-                    logger.warning(f"No Steam rating found for {steam_info.id}.")
+                    logger.warning(f"No rating found for {steam_info.id}.")
                 else:
                     steam_info.recommendations = int(recommendations)
-            except Error:
-                logger.warning(f"No Steam rating found for {steam_info.id}.")
+            except Error as e:
+                logger.warning(f"No rating found for {steam_info.id}: {e}")
             except ValueError as e:
-                logger.error(f"Invalid Steam rating for {steam_info.id}: {e}")
+                logger.error(f"Invalid rating for {steam_info.id}: {e}")
 
         # Source then the game is currently discounted
         if steam_info.recommended_price_eur is None:
@@ -305,7 +307,7 @@ async def add_data_from_steam_store_page(
                 )
                 if recommended_price is None:
                     logger.info(
-                        f"No Steam original price found on shop page for {steam_info.id}."
+                        f"No original price found on shop page for {steam_info.id}."
                     )
                 else:
                     steam_info.recommended_price_eur = float(
@@ -313,11 +315,11 @@ async def add_data_from_steam_store_page(
                     )
             except Error as e:
                 logger.info(
-                    f"No Steam original price found on shop page for {steam_info.id}: {e}"
+                    f"No original price found on shop page for {steam_info.id}: {e}"
                 )
             except ValueError as e:
                 logger.error(
-                    f"Steam original price has wrong format for {steam_info.id}: {e}"
+                    f"Original price has wrong format for {steam_info.id}: {e}"
                 )
 
         # Source when the game is not discounted
@@ -332,7 +334,7 @@ async def add_data_from_steam_store_page(
                 )
                 if recommended_price is None:
                     logger.info(
-                        f"No Steam recommended price found on shop page for {steam_info.id}."
+                        f"No recommended price found on shop page for {steam_info.id}."
                     )
                 elif "free" in recommended_price.lower():
                     steam_info.recommended_price_eur = 0
@@ -342,24 +344,23 @@ async def add_data_from_steam_store_page(
                     )
             except Error as e:
                 logger.info(
-                    f"No Steam recommended price found on shop page for {steam_info.id}: {e}"
+                    f"No recommended price found on shop page for {steam_info.id}: {e}"
                 )
             except ValueError as e:
                 logger.error(
-                    f"Steam recommended price has wrong format for {steam_info.id}: {e}."
+                    f"Recommended price has wrong format for {steam_info.id}: {e}"
                 )
 
         # If there is a "Free game" button, the game is free
         if steam_info.recommended_price_eur is None:
             try:
-                free_games_button = await page.locator("#freeGameBtn").is_visible()
-                if free_games_button is not None:
+                free_games_button = await page.locator("#freeGameBtn").is_visible(
+                    timeout=1000
+                )
+                if free_games_button:
                     steam_info.recommended_price_eur = 0
             except Error as e:
                 logger.debug(f"Game {steam_info.id} is not free: {e}")
-
-        if steam_info.recommended_price_eur is None:
-            logger.error(f"Steam recommended price not found for {steam_info.id}.")
 
         # Add the release date if available
         if steam_info.release_date is None:
@@ -372,19 +373,24 @@ async def add_data_from_steam_store_page(
                         f"No release date found on shop page for {steam_info.id}"
                     )
                 else:
-                    release_date_str = release_date_str.split("RELEASE DATE:")[
+                    release_date_str = release_date_str.split("Release Date:")[
                         1
                     ].strip()
-                    release_date = datetime.strptime(
-                        release_date_str, "%d %b, %Y"
-                    ).replace(tzinfo=timezone.utc)
-                    steam_info.release_date = release_date
-
-            except Error:
-                logger.debug(f"No release date found on shop page for {steam_info.id}.")
+                    if release_date_str == "Coming soon":
+                        # That's fine, we'll just leave it empty
+                        pass
+                    else:
+                        release_date = datetime.strptime(
+                            release_date_str, "%d %b, %Y"
+                        ).replace(tzinfo=timezone.utc)
+                        steam_info.release_date = release_date
+            except Error as e:
+                logger.debug(
+                    f"No release date found on shop page for {steam_info.id}: {e}"
+                )
             except (IndexError, ValueError) as e:
                 logger.error(
-                    f"Release date in wrong format on shop page for {steam_info.id} ({str(e)})."
+                    f"Release date in wrong format on shop page for {steam_info.id}: {e}"
                 )
 
 
