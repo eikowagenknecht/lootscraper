@@ -32,7 +32,7 @@ jobs:
 
     - name: Extract metadata for Docker
       id: meta
-      uses: docker/metadata-action@v3.6.2
+      uses: docker/metadata-action@v4
       with:
         images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
         # tagged semver releases get a (latest) entry as well
@@ -52,16 +52,18 @@ jobs:
 
     - name: Log in to Github Packages
       if: github.event_name != 'pull_request'
-      uses: docker/login-action@v1.14.1
+      uses: docker/login-action@v2
       with:
         registry: ${{ env.REGISTRY }}
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Build and push Docker image
-      uses: docker/build-push-action@v2.9.0
+      uses: docker/build-push-action@v3
       with:
         context: .
-        push: ${{ github.event_name != 'pull_request' }}
+        # Tags to build
         tags: ${{ steps.meta.outputs.tags }}
+        # Constraints to push
+        push: ${{ github.event_name != 'pull_request' }}
         labels: ${{ steps.meta.outputs.labels }}
