@@ -37,7 +37,7 @@ async def get_browser_context() -> AsyncGenerator[BrowserContext, None]:
                 # We want english pages
                 locale="en-US",
                 # Use Reykjavik timezone (=UTC) because UTC is not supported directly
-                timezone_id="Atlantic/Reykjavik"
+                timezone_id="Atlantic/Reykjavik",
                 # Seems not to be needed with PlayWright
                 # user_agent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/64.0.3282.39 Safari/537.36"
             )
@@ -67,11 +67,6 @@ async def get_browser_context() -> AsyncGenerator[BrowserContext, None]:
             # options.add_argument("--disable-gpu")
             # # To see everything, we use an extra long window. Default: 1920,1200
             # options.add_argument("--window-size=1920,1200")
-            # # Scrape english version of page
-            # options.add_argument("--lang=en-US")
-            # # Loglevel
-            # options.add_argument("--log-level=3")
-            # options.add_argument("--silent")
 
             yield context
     finally:
