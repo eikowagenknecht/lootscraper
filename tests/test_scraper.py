@@ -306,8 +306,9 @@ class SteamGameInfoTests(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(steam_info.name, "Riverbond")
             self.assertIsNotNone(steam_info.recommendations)
 
-    # This is a weird one where the price is shown in "KWR" in the JSON, so the
-    # store page has to be used instead to get the price in EUR
+    # This is a weird one where without the cc parameter the price had been
+    # shown in "KWR" in the JSON, so the store page had to be used instead to
+    # get the price in EUR. Hopefully not needed any more.
     async def test_steam_price_currency(self) -> None:
         async with get_browser_context() as context:
             with self.assertNoLogs(level="ERROR"):
