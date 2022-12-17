@@ -3,7 +3,7 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import AsyncGenerator
 
-from playwright.async_api import Browser, BrowserContext, Page, async_playwright
+from playwright.async_api import Browser, BrowserContext, Error, Page, async_playwright
 
 from app.configparser import Config
 
@@ -23,7 +23,7 @@ async def get_new_page(context: BrowserContext) -> AsyncGenerator[Page, None]:
 
 @asynccontextmanager
 async def get_browser_context() -> AsyncGenerator[BrowserContext, None]:
-    logger.debug("Creating Playwright Chromium context")
+    logger.debug("Creating Playwright Chromium context.")
     browser: Browser
     context: BrowserContext
 
@@ -44,5 +44,7 @@ async def get_browser_context() -> AsyncGenerator[BrowserContext, None]:
             context.set_default_timeout(Config.get().web_timeout * 1000)  # Milliseconds
 
             yield context
+    except Error as e:
+        logger.error(f"Error in Playwright Chromium context: {e}")
     finally:
-        logging.debug("Closing Playwright Chromium context")
+        logger.debug("Closing Playwright Chromium context.")
