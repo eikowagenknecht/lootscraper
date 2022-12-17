@@ -61,6 +61,8 @@ class ItchGamesScraper(Scraper):
         url = await element.locator("a.title").get_attribute("href")
         if url is None:
             raise ValueError(f"Couldn't find url for {title}.")
+        if not url.startswith("http"):
+            url = BASE_URL + url
 
         img_url = await element.locator("img").get_attribute("src")
         if img_url is None:
