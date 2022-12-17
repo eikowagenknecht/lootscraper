@@ -3,8 +3,6 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
-import os
-import signal
 import traceback
 from datetime import datetime, timedelta, timezone
 from http.client import RemoteDisconnected
@@ -20,9 +18,9 @@ from telegram.error import TelegramError
 from telegram.ext import (
     AIORateLimiter,
     Application,
-    CallbackContext,
     CallbackQueryHandler,
     CommandHandler,
+    ContextTypes,
     MessageHandler,
     filters,
 )
@@ -112,6 +110,7 @@ class TelegramBot:
         """
         Start the bot.
         """
+
         # Build application
         token = self.config.telegram_access_token
         rate_limiter = AIORateLimiter(max_retries=3)
@@ -164,7 +163,7 @@ class TelegramBot:
         )
 
         # Register error handler
-        self.application.add_error_handler(self.error_handler)  # type: ignore
+        self.application.add_error_handler(self.error_handler)
 
         # Start the bot
         await self.application.initialize()
@@ -174,14 +173,19 @@ class TelegramBot:
             logger.info("Started listening for messages from Telegram")
 
     async def stop(self) -> None:
-        """Stop the bot."""
+        """
+        Stop the bot.
+        """
+
         if self.application is not None and self.application.updater is not None:
             await self.application.updater.stop()
             await self.application.stop()
             await self.application.shutdown()
             logger.info("Stopped listening for messages from Telegram")
 
-    async def error_handler(self, update: Update, context: CallbackContext) -> None:  # type: ignore
+    async def error_handler(
+        self, update: object, context: ContextTypes.DEFAULT_TYPE
+    ) -> None:
         """
         Log the error and send a telegram message to notify the developer chat.
         """
@@ -218,22 +222,21 @@ class TelegramBot:
             context.error, TelegramError
         ) and context.error.message.startswith("Conflict: "):
             error_text = "Multiple instances of the same bot running, shutting down myself to avoid further conflicts."
-            logger.error(error_text)
+            logger.critical(error_text)
             await self.send_message(
                 chat_id=Config.get().telegram_developer_chat_id,
                 text=error_text,
                 parse_mode=None,
             )
-            # Stop the bot.. and the whole application with it.
-            # Do *not* call self.updater.stop() here as it doesn't persist.
-            # See https://github.com/python-telegram-bot/python-telegram-bot/issues/801#issuecomment-570945590
-            # TODO: Restart the bot instead of exiting the application.
-            bot_pid = os.getpid()
-            os.kill(bot_pid, signal.SIGINT)
+            # Stop the bot. Lootscraper needs to be restarted manually.
+            # See https://github.com/python-telegram-bot/python-telegram-bot/issues/801
+            # for a discussion of the behaviour before v20.
+            await self.stop()
             return
 
         if (
             isinstance(context.error, telegram.error.Forbidden)
+            and isinstance(update, Update)
             and update.effective_chat
         ):
             # The bot was removed from a group chat.
@@ -251,15 +254,16 @@ class TelegramBot:
 
         # Get some additional information about what happened.
         if isinstance(update, Update):
-            update_str = update.to_dict()
+            update_str = json.dumps(update.to_dict(), indent=2, ensure_ascii=False)
         else:
             update_str = str(update)
 
-        # Put it all together in the message
         full_debug_message = (
             f"An exception was raised while handling an update:\n\n"
-            f"update = {json.dumps(update_str, indent=2, ensure_ascii=False)}\n\n"
+            f"update = {update_str}\n\n"
         )
+
+        # Put it all together in the message
         if context.chat_data:
             full_debug_message += f"context.chat_data = {str(context.chat_data)}\n\n"
         if context.user_data:
@@ -280,7 +284,9 @@ class TelegramBot:
                 parse_mode=telegram.constants.ParseMode.MARKDOWN_V2,
             )
 
-    async def announce_command(self, update: Update, context: CallbackContext) -> None:  # type: ignore
+    async def announce_command(
+        self, update: Update, context: ContextTypes.DEFAULT_TYPE
+    ) -> None:
         """Handle the /announce command: Add an announcement (admin only)."""
 
         del context  # Unused
@@ -331,7 +337,9 @@ class TelegramBot:
                 parse_mode=telegram.constants.ParseMode.MARKDOWN_V2,
             )
 
-    async def channel_command(self, update: Update, context: CallbackContext) -> None:  # type: ignore
+    async def channel_command(
+        self, update: Update, context: ContextTypes.DEFAULT_TYPE
+    ) -> None:
         """Handle the /channel command: Manage channels (admin only)."""
 
         del context  # Unused
@@ -433,7 +441,9 @@ class TelegramBot:
                 parse_mode=telegram.constants.ParseMode.MARKDOWN_V2,
             )
 
-    async def debug_command(self, update: Update, context: CallbackContext) -> None:  # type: ignore
+    async def debug_command(
+        self, update: Update, context: ContextTypes.DEFAULT_TYPE
+    ) -> None:
         """Handle the /debug command: Show some debug information."""
 
         del context  # Unused
@@ -455,7 +465,9 @@ class TelegramBot:
                 parse_mode=telegram.constants.ParseMode.MARKDOWN_V2,
             )
 
-    async def error_command(self, update: Update, context: CallbackContext) -> None:  # type: ignore
+    async def error_command(
+        self, update: Update, context: ContextTypes.DEFAULT_TYPE
+    ) -> None:
         """Handle the /error command: Trigger an error to send to the dev chat."""
 
         del context  # Unused
@@ -464,7 +476,9 @@ class TelegramBot:
 
         raise Exception("This is a test error triggered by the /error command.")
 
-    async def help_command(self, update: Update, context: CallbackContext) -> None:  # type: ignore
+    async def help_command(
+        self, update: Update, context: ContextTypes.DEFAULT_TYPE
+    ) -> None:
         """Handle the /help command: Display all available commands to the user."""
 
         del context  # Unused
@@ -476,7 +490,9 @@ class TelegramBot:
 
         await update.message.reply_markdown_v2(MESSAGE_HELP)
 
-    async def leave_command(self, update: Update, context: CallbackContext) -> None:  # type: ignore
+    async def leave_command(
+        self, update: Update, context: ContextTypes.DEFAULT_TYPE
+    ) -> None:
         """Handle the /leave command: Unregister the user."""
 
         del context  # Unused
@@ -514,7 +530,9 @@ class TelegramBot:
         logger.debug(f"Sending /leave reply: {message}")
         await update.message.reply_markdown_v2(message)
 
-    async def manage_command(self, update: Update, context: CallbackContext) -> None:  # type: ignore
+    async def manage_command(
+        self, update: Update, context: ContextTypes.DEFAULT_TYPE
+    ) -> None:
         """Handle the /manage command: Manage subscriptions."""
 
         del context  # Unused
@@ -534,7 +552,9 @@ class TelegramBot:
             reply_markup=self.manage_keyboard(db_user),
         )
 
-    async def offers_command(self, update: Update, context: CallbackContext) -> None:  # type: ignore
+    async def offers_command(
+        self, update: Update, context: ContextTypes.DEFAULT_TYPE
+    ) -> None:
         """Handle the /offers command: Send all subscriptions once."""
 
         del context  # Unused
@@ -559,7 +579,9 @@ class TelegramBot:
         if not await self.send_new_offers(db_user):
             await update.message.reply_text(MESSAGE_NO_NEW_OFFERS)
 
-    async def start_command(self, update: Update, context: CallbackContext) -> None:  # type: ignore
+    async def start_command(
+        self, update: Update, context: ContextTypes.DEFAULT_TYPE
+    ) -> None:
         """Handle the /start command: Register the user and display guide."""
 
         del context  # Unused
@@ -648,7 +670,9 @@ class TelegramBot:
                 parse_mode=telegram.constants.ParseMode.MARKDOWN_V2,
             )
 
-    async def status_command(self, update: Update, context: CallbackContext) -> None:  # type: ignore
+    async def status_command(
+        self, update: Update, context: ContextTypes.DEFAULT_TYPE
+    ) -> None:
         """Handle the /status command: Display some statistics about the user."""
 
         del context  # Unused
@@ -719,7 +743,9 @@ class TelegramBot:
         logger.debug(f"Sending /status reply: {message}")
         await update.message.reply_markdown_v2(message)
 
-    async def timezone_command(self, update: Update, context: CallbackContext) -> None:  # type: ignore
+    async def timezone_command(
+        self, update: Update, context: ContextTypes.DEFAULT_TYPE
+    ) -> None:
         """Handle timezonelist command."""
 
         del context  # Unused
@@ -736,7 +762,9 @@ class TelegramBot:
             parse_mode=None,
         )
 
-    async def unknown_command(self, update: Update, context: CallbackContext) -> None:  # type: ignore
+    async def unknown_command(
+        self, update: Update, context: ContextTypes.DEFAULT_TYPE
+    ) -> None:
         """Handle unknown commands."""
 
         del context  # Unused
@@ -764,7 +792,9 @@ class TelegramBot:
             parse_mode=None,
         )
 
-    async def offer_callback(self, update: Update, context: CallbackContext) -> None:  # type: ignore
+    async def offer_callback(
+        self, update: Update, context: ContextTypes.DEFAULT_TYPE
+    ) -> None:
         """Callback from the menu buttons "Details" and "Summary" in the offer message."""
 
         del context  # Unused
@@ -820,7 +850,9 @@ class TelegramBot:
             session.rollback()
             raise
 
-    async def dismiss_callback(self, update: Update, context: CallbackContext) -> None:  # type: ignore
+    async def dismiss_callback(
+        self, update: Update, context: ContextTypes.DEFAULT_TYPE
+    ) -> None:
         """Callback from the menu button "Dismiss" in the offer message."""
 
         del context  # Unused
@@ -846,7 +878,9 @@ class TelegramBot:
             # Message could not be edited, probably a doubleclick
             pass
 
-    async def close_callback(self, update: Update, context: CallbackContext) -> None:  # type: ignore
+    async def close_callback(
+        self, update: Update, context: ContextTypes.DEFAULT_TYPE
+    ) -> None:
         """Callback from the menu button "Close" in various menus."""
 
         del context  # Unused
@@ -869,7 +903,9 @@ class TelegramBot:
                 text=MESSAGE_TIMEZONE_MENU_CLOSED,
             )
 
-    async def toggle_subscription_callback(self, update: Update, context: CallbackContext) -> None:  # type: ignore
+    async def toggle_subscription_callback(
+        self, update: Update, context: ContextTypes.DEFAULT_TYPE
+    ) -> None:
         """Callback from the subscription buttons in the manage menu."""
 
         del context  # Unused
@@ -905,7 +941,9 @@ class TelegramBot:
             reply_markup=self.manage_keyboard(db_user),
         )
 
-    async def set_timezone_callback(self, update: Update, context: CallbackContext) -> None:  # type: ignore
+    async def set_timezone_callback(
+        self, update: Update, context: ContextTypes.DEFAULT_TYPE
+    ) -> None:
         """Callback from the timezone buttons in the timezone menu."""
 
         del context  # Unused
@@ -1116,7 +1154,9 @@ class TelegramBot:
             session.rollback()
             raise
 
-    async def manage_menu(self, update: Update, context: CallbackContext) -> None:  # type: ignore
+    async def manage_menu(
+        self, update: Update, context: ContextTypes.DEFAULT_TYPE
+    ) -> None:
         del context  # Unused
 
         if update.callback_query is None or update.effective_user is None:
