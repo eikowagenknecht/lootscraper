@@ -41,11 +41,8 @@ class Scraper:
         offers = await self.read_offers()
         unique_offers = self.deduplicate_offers(offers)
         categorized_offers = self.categorize_offers(unique_offers)
-        # TODO: Check what this does.
-        # Originates from HumbleGamesScraper and GoogleGamesScraper
-        filtered_offers = list(
-            filter(lambda offer: offer.category != Category.DEMO, categorized_offers)
-        )
+        filtered_offers = self.clean_offers(categorized_offers)
+
         titles = ", ".join([offer.title for offer in filtered_offers])
         if len(filtered_offers) > 0:
             logger.info(f"Found {len(filtered_offers)} offers: {titles}.")
@@ -189,6 +186,12 @@ class Scraper:
                 logger.debug(f"Duplicate offer: {offer.title}")
 
         return new_offers
+
+    def clean_offers(self, offers: list[Offer]) -> list[Offer]:
+        """
+        Remove demos etc. from the list.
+        """
+        return list(filter(lambda offer: offer.category != Category.DEMO, offers))
 
     @staticmethod
     def is_demo(title: str) -> bool:

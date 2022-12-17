@@ -47,6 +47,7 @@ EXAMPLE_CONFIG_FILE = "config.default.ini"
 # - Add Telegram command for complete refresh of all metadata
 #   Drop all metadata and re-download it from IGDB and Steam
 # - Remove duplicate offers in production database
+# - Filter out the demo offers from Humble Bundle
 # - Reactivate Telegram tests
 
 
