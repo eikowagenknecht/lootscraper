@@ -344,6 +344,18 @@ class SteamGameInfoTests(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(steam_info.name, "Call of Duty®: Modern Warfare® II")
             self.assertEqual(steam_info.recommended_price_eur, 69.99)
 
+    async def test_steam_no_reviews(self) -> None:
+        # Obviously this test will not prove anything if the game now has reviews
+        async with get_browser_context() as context:
+            with self.assertNoLogs(level="ERROR"):
+                steam_info = await get_steam_details(
+                    title="Candy Kombat",
+                    context=context,
+                )
+            self.assertIsNotNone(steam_info)
+            self.assertEqual(steam_info.name, "Candy Kombat")
+            self.assertEqual(steam_info.recommended_price_eur, 69.99)
+
     async def test_steam_price_ea_included(self) -> None:
         # This game is included with EA Play, that changes the page layout
         async with get_browser_context() as context:
