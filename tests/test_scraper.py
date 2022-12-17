@@ -331,6 +331,17 @@ class SteamGameInfoTests(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(steam_info.name, "World of Tanks")
             self.assertEqual(steam_info.recommended_price_eur, 0)
 
+    async def test_steam_price_none(self) -> None:
+        async with get_browser_context() as context:
+            with self.assertNoLogs(level="ERROR"):
+                steam_info = await get_steam_details(
+                    title="Grand Theft Auto V",
+                    context=context,
+                )
+            self.assertIsNotNone(steam_info)
+            self.assertEqual(steam_info.name, "Grand Theft Auto V")
+            self.assertEqual(steam_info.recommended_price_eur, None)
+
     async def test_steam_price_weekend(self) -> None:
         # This game is free on the weekend, that changes the page layout
         # Obviously this test will not prove anything if the game currently is

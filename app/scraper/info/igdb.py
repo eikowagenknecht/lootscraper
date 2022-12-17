@@ -114,7 +114,7 @@ async def get_igdb_id(search_string: str) -> int | None:
         return None
 
     logger.info(
-        f"Search for {api_search_string} resulted in {best_match.title} ({best_match.id}) as the best match with a score of {(best_match.score*100):.0f} %"
+        f"{best_match.title} ({best_match.id}) is the best match ({(best_match.score*100):.0f} %)."
     )
     return best_match.id
 
