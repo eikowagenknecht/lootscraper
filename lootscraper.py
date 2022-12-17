@@ -41,15 +41,12 @@ except ImportError:
 EXAMPLE_CONFIG_FILE = "config.default.ini"
 
 # TODO:
-# - Switch from synchronous selenium to asynchronous framework,
-#   e.g. playwright (or if that doesn't work pyppeeter).
-#   This should allow us to still respond to Telegram messages while
-#   scraping is running.
 # - Switch from synchronous database access to asynchronous
 # - Look for TODOs in the code
 # - Check all warnings and errors in the code
-# - Add code coverage and way more tests (plus a mocking framework?)
-# - Check why log files are only 10KB
+# - Add Telegram command for complete refresh of all metadata
+#   Drop all metadata and re-download it from IGDB and Steam
+# - Remove duplicate offers in production database
 
 
 async def main() -> None:
