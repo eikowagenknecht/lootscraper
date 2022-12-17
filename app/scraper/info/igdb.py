@@ -99,8 +99,8 @@ async def get_igdb_id(search_string: str) -> int | None:
         title = entry["name"]
         score = get_match_score(search_string, title)
 
-        if best_match is None or (
-            score >= RESULT_MATCH_THRESHOLD and score > best_match.score
+        if score >= RESULT_MATCH_THRESHOLD and (
+            best_match is None or score > best_match.score
         ):
             best_match = IgdbEntry(entry["id"], score, title)
             logger.debug(f"Found match {title} with a score of {(score*100):.0f} %.")
