@@ -64,7 +64,8 @@ class HumbleGamesScraper(Scraper):
         url = await element.locator("a").get_attribute("href")
         if url is None:
             raise ValueError(f"Couldn't find url for {title}.")
-        url = BASE_URL + url
+        if not url.startswith("http"):
+            url = BASE_URL + url
 
         img_url = await element.locator("img.entity-image").get_attribute("src")
         if img_url is None:
