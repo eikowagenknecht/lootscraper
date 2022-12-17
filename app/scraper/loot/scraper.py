@@ -116,9 +116,9 @@ class Scraper:
         offers: list[Offer] = []
 
         async with get_new_page(self.context) as page:
-            await page.goto(self.get_offers_url())
 
             try:
+                await page.goto(self.get_offers_url())
                 await page.wait_for_selector(self.get_page_ready_selector())
                 await self.page_loaded_hook(page)
             except Error as e:
