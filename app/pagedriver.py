@@ -7,6 +7,8 @@ from playwright.async_api import Browser, BrowserContext, Page, async_playwright
 
 from app.configparser import Config
 
+logger = logging.getLogger(__name__)
+
 INJECTION_FILE = Path("js/inject.js")
 
 
@@ -21,7 +23,7 @@ async def get_new_page(context: BrowserContext) -> AsyncGenerator[Page, None]:
 
 @asynccontextmanager
 async def get_browser_context() -> AsyncGenerator[BrowserContext, None]:
-    logging.debug("Creating Playwright Chromium context")
+    logger.debug("Creating Playwright Chromium context")
     browser: Browser
     context: BrowserContext
 

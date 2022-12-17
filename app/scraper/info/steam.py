@@ -149,12 +149,12 @@ async def add_data_from_steam_api(steam_info: SteamInfo) -> None:
     try:
         steam_info.name = content["name"]
     except KeyError:
-        logging.error(f"Could not read name for app id {steam_info.id}: {data}")
+        logger.error(f"Could not read name for app id {steam_info.id}: {data}")
 
     try:
         steam_info.short_description = content["short_description"]
     except KeyError:
-        logging.error(
+        logger.error(
             f"Could not read short description for app id {steam_info.id}: {data}"
         )
 

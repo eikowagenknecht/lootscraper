@@ -48,11 +48,11 @@ class Scraper:
         )
         titles = ", ".join([offer.title for offer in filtered_offers])
         if len(filtered_offers) > 0:
-            logging.info(f"Found {len(filtered_offers)} offers: {titles}.")
+            logger.info(f"Found {len(filtered_offers)} offers: {titles}.")
         elif self.offers_expected():
-            logging.error("Found no offers, even though there hould be at least one.")
+            logger.error("Found no offers, even though there hould be at least one.")
         else:
-            logging.info("No offers found.")
+            logger.info("No offers found.")
         return filtered_offers
 
     @staticmethod
@@ -117,13 +117,15 @@ class Scraper:
 
         async with get_new_page(self.context) as page:
             try:
-                await page.goto(self.get_offers_url())
+                await page.goto(self.get_offers_url(), timeout=30000)
             except Error as e:
                 logger.error(f"Couldn't load page: {e}")
                 return []
 
             try:
-                await page.wait_for_selector(self.get_page_ready_selector())
+                await page.wait_for_selector(
+                    self.get_page_ready_selector(), timeout=10000
+                )
                 await self.page_loaded_hook(page)
             except Error as e:
                 logger.error(f"The page didn't get ready to be parsed: {e}")
