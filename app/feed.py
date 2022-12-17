@@ -1,6 +1,5 @@
 # mypy: ignore-errors
 import asyncio
-import functools
 import html
 from datetime import datetime
 from pathlib import Path
