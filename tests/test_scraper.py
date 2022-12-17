@@ -281,7 +281,7 @@ class SteamGameInfoTests(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(steam_info.metacritic_score, None)
             self.assertEqual(steam_info.metacritic_url, None)
 
-    async def test_steam_appinfo_releasedate(self) -> None:
+    async def test_steam_release_date(self) -> None:
         async with get_browser_context() as context:
             with self.assertNoLogs(level="ERROR"):
                 steam_info = await get_steam_details(
@@ -295,7 +295,7 @@ class SteamGameInfoTests(unittest.IsolatedAsyncioTestCase):
                 steam_info.release_date.isoformat(), "2019-06-09T00:00:00+00:00"
             )
 
-    async def test_steam_appinfo_recommendations(self) -> None:
+    async def test_steam_recommendations(self) -> None:
         async with get_browser_context() as context:
             with self.assertNoLogs(level="ERROR"):
                 steam_info = await get_steam_details(
@@ -308,7 +308,7 @@ class SteamGameInfoTests(unittest.IsolatedAsyncioTestCase):
 
     # This is a weird one where the price is shown in "KWR" in the JSON, so the
     # store page has to be used instead to get the price in EUR
-    async def test_steam_appinfo_price(self) -> None:
+    async def test_steam_price_currency(self) -> None:
         async with get_browser_context() as context:
             with self.assertNoLogs(level="ERROR"):
                 steam_info = await get_steam_details(
@@ -319,7 +319,44 @@ class SteamGameInfoTests(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(steam_info.name, "Cities: Skylines")
             self.assertEqual(steam_info.recommended_price_eur, 27.99)
 
-    async def test_steam_appinfo_language(self) -> None:
+    async def test_steam_price_free(self) -> None:
+        async with get_browser_context() as context:
+            with self.assertNoLogs(level="ERROR"):
+                steam_info = await get_steam_details(
+                    title="World of Tanks",
+                    context=context,
+                )
+            self.assertIsNotNone(steam_info)
+            self.assertEqual(steam_info.name, "World of Tanks")
+            self.assertEqual(steam_info.recommended_price_eur, 0)
+
+    async def test_steam_price_weekend(self) -> None:
+        # This game is free on the weekend, that changes the page layout
+        # Obviously this test will not prove anything if the game currently is
+        # not free on the weekend.
+        async with get_browser_context() as context:
+            with self.assertNoLogs(level="ERROR"):
+                steam_info = await get_steam_details(
+                    title="Call of Duty®: Modern Warfare® II",
+                    context=context,
+                )
+            self.assertIsNotNone(steam_info)
+            self.assertEqual(steam_info.name, "Call of Duty®: Modern Warfare® II")
+            self.assertEqual(steam_info.recommended_price_eur, 69.99)
+
+    async def test_steam_price_ea_included(self) -> None:
+        # This game is included with EA Play, that changes the page layout
+        async with get_browser_context() as context:
+            with self.assertNoLogs(level="ERROR"):
+                steam_info = await get_steam_details(
+                    title="Battlefield™ 2042",
+                    context=context,
+                )
+            self.assertIsNotNone(steam_info)
+            self.assertEqual(steam_info.name, "Battlefield™ 2042")
+            self.assertEqual(steam_info.recommended_price_eur, 59.99)
+
+    async def test_steam_language(self) -> None:
         async with get_browser_context() as context:
             with self.assertNoLogs(level="ERROR"):
                 steam_info = await get_steam_details(
@@ -330,7 +367,7 @@ class SteamGameInfoTests(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(steam_info.name, "Warframe")
             self.assertEqual(steam_info.short_description[0:6], "Awaken")
 
-    async def test_steam_appinfo_ageverify(self) -> None:
+    async def test_steam_skip_age_check(self) -> None:
         async with get_browser_context() as context:
             with self.assertNoLogs(level="ERROR"):
                 steam_info = await get_steam_details(
@@ -343,7 +380,7 @@ class SteamGameInfoTests(unittest.IsolatedAsyncioTestCase):
                 steam_info.release_date.isoformat(), "2020-03-19T00:00:00+00:00"
             )
 
-    async def test_steam_json_multiple_genres(self) -> None:
+    async def test_steam_multiple_genres(self) -> None:
         async with get_browser_context() as context:
             with self.assertNoLogs(level="ERROR"):
                 steam_info = await get_steam_details(
