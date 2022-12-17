@@ -263,12 +263,8 @@ async def scrape_offers(webdriver: BrowserContext) -> list[Offer]:
             )
             scraper_results = await scraper.scrape()
 
-            if scraper_results:
-                titles = ", ".join([offer.title for offer in scraper_results])
-                logging.info(f"Found {len(scraper_results)} offers: {titles}.")
+            if len(scraper_results) > 0:
                 scraped_offers.extend(scraper_results)
-            else:
-                logging.warning("Scraper finished without results.")
 
     return scraped_offers
 
