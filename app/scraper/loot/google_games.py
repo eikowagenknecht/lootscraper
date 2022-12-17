@@ -60,7 +60,8 @@ class GoogleGamesScraper(Scraper):
         url = await element.locator("a.nwel").get_attribute("href")
         if url is None:
             raise ValueError(f"Couldn't find url for {title}.")
-        url = BASE_URL + url
+        if not url.startswith("http"):
+            url = BASE_URL + url
 
         img_url = await element.locator("span.pic_div").get_attribute("style")
         if img_url is None:

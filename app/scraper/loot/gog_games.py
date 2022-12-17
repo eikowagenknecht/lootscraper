@@ -92,8 +92,11 @@ class GogGamesScraper(GogBaseScraper):
             return None
 
         try:
-            relative_path = str(await element.get_attribute("href"))
-            url = BASE_URL + relative_path
+            href = str(await element.get_attribute("href"))
+            if href.startswith("http"):
+                url = BASE_URL + href
+            else:
+                url = href
             return await self.read_offer_from_details_page(url)
         except Error:
             logger.warning("Could not read url for GOG variant 2.")

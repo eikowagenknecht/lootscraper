@@ -57,7 +57,7 @@ class AmazonBaseScraper(Scraper):  # pylint: disable=W0223
             path = await element.locator(
                 '[data-a-target="learn-more-card"]'
             ).get_attribute("href", timeout=500)
-            if path is not None:
+            if path is not None and not path.startswith("http"):
                 url += path
         except Error:
             # Some offers are claimed on site and don't have a specific path.
