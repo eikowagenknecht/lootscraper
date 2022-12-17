@@ -46,33 +46,74 @@ class Scraper:
         filtered_offers = list(
             filter(lambda offer: offer.category != Category.DEMO, categorized_offers)
         )
+        titles = ", ".join([offer.title for offer in filtered_offers])
+        if len(filtered_offers) > 0:
+            logging.info(f"Found {len(filtered_offers)} offers: {titles}.")
+        elif self.offers_expected():
+            logging.error("Found no offers, even though there hould be at least one.")
+        else:
+            logging.info("No offers found.")
         return filtered_offers
 
     @staticmethod
     def get_type() -> OfferType:
+        """
+        Returns the type of the offers this scraper is looking for.
+        """
         raise NotImplementedError("Please implement this method")
 
     @staticmethod
     def get_source() -> Source:
+        """
+        Returns the source of the offers this scraper is looking for.
+        """
         raise NotImplementedError("Please implement this method")
 
     @staticmethod
     def get_duration() -> OfferDuration:
+        """
+        Returns the duration of the offers this scraper is looking for.
+        """
         raise NotImplementedError("Please implement this method")
 
+    def offers_expected(self) -> bool:
+        """
+        Returns whether offers are always expected to be found on the page.
+        """
+        return False
+
     def get_offers_url(self) -> str:
+        """
+        Returns the URL of the page where the offers are listed.
+        """
         raise NotImplementedError("Please implement this method")
 
     def get_page_ready_selector(self) -> str:
+        """
+        Returns the CSS selector of an element that is present when the page is
+        ready to be parsed.
+        """
         raise NotImplementedError("Please implement this method")
 
     def get_offer_handlers(self, page: Page) -> list[OfferHandler]:
+        """
+        Returns a list of OfferHandlers that can be used to read and normalize
+        offers from the page.
+        """
         raise NotImplementedError("Please implement this method")
 
     async def page_loaded_hook(self, page: Page) -> None:
+        """
+        This method is called after the page is loaded. Override for custom
+        behavior that is needed here (e.g. scroll to bottom of page).
+        """
         pass
 
     async def read_offers(self) -> list[Offer]:
+        """
+        Read all offers from the page. This method calls the custom handlers
+        defined in get_offer_handlers() to read and normalize the offers.
+        """
         offers: list[Offer] = []
 
         async with get_new_page(self.context) as page:
@@ -146,6 +187,9 @@ class Scraper:
 
     @staticmethod
     def is_demo(title: str) -> bool:
+        """
+        Check if the given title is a demo.
+        """
         if re.search(r"\Wdemo\W?$", title[-6:], re.IGNORECASE):
             return True
         if re.search(r"^\W?demo\W", title[:6], re.IGNORECASE):
@@ -155,10 +199,9 @@ class Scraper:
     @staticmethod
     async def scroll_element_to_bottom(page: Page, element_id: str) -> None:
         """
-        Scroll down to the bottom of the given alement.
+        Scroll down to the bottom of the given element.
         Useful for pages with infinite scrolling.
         """
-
         selector = f'document.getElementById("{element_id}")'
 
         # Get scroll height

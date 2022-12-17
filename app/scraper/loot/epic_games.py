@@ -32,6 +32,9 @@ class EpicGamesScraper(Scraper):
     def get_duration() -> OfferDuration:
         return OfferDuration.CLAIMABLE
 
+    def offers_expected(self) -> bool:
+        return True
+
     def get_offers_url(self) -> str:
         return OFFER_URL
 
