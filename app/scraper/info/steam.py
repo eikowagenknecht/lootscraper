@@ -131,8 +131,12 @@ async def add_data_from_steam_api(steam_info: SteamInfo) -> None:
     if data is None:
         return
 
-    app_id = list(data.keys())[0]
-    content = data[app_id]["data"]
+    try:
+        app_id = list(data.keys())[0]
+        content = data[app_id]["data"]
+    except KeyError:
+        logger.error(f"Could not read data for app id {steam_info.id}: {data}")
+        return
 
     try:
         steam_info.name = content["name"]
@@ -162,13 +166,17 @@ async def add_data_from_steam_api(steam_info: SteamInfo) -> None:
     try:
         # We do not save prices in any other currency than EUR (or free)
         recommended_price_value: int = content["price_overview"]["initial"]
-        if (
-            recommended_price_value == 0
-            or content["price_overview"]["currency"] == "EUR"
-        ):
+        if recommended_price_value == 0:
+            steam_info.recommended_price_eur = 0
+        elif content["price_overview"]["currency"] != "EUR":
+            logger.warning(
+                f'Steam app id {steam_info.id} has a currency other than EUR ({content["price_overview"]["currency"]}).'
+            )
+        else:
             steam_info.recommended_price_eur = recommended_price_value / 100
     except (KeyError, ValueError):
-        pass
+        # Every response should have a price included
+        logger.error(f"No price found for Steam app id {steam_info.id}.")
 
     try:
         steam_info.recommendations = content["recommendations"]["total"]
@@ -209,8 +217,8 @@ async def read_from_steam_api(steam_app_id: int) -> dict[str, Any] | None:
             response.raise_for_status()
             return response.json()
         except httpx.HTTPError as e:
-            logger.warning(
-                f"Couldn't get details for {steam_app_id} from Steam JSON API ({e})."
+            logger.error(
+                f"Couldn't get details for {steam_app_id} from Steam JSON API: {e}."
             )
             return None
 
@@ -285,13 +293,15 @@ async def add_data_from_steam_store_page(
             except ValueError as e:
                 logger.error(f"Invalid Steam rating for {steam_info.id}: {e}")
 
-        # First source to add the recommended price if available
+        # Source then the game is currently discounted
         if steam_info.recommended_price_eur is None:
             try:
                 recommended_price = (
-                    await page.locator(".game_area_purchase_game_wrapper")
+                    await page.locator(".game_area_purchase_game")
+                    .filter(has=page.locator(".platform_img"))
+                    .filter(has_text="Add to Cart")
                     .first.locator(".game_purchase_action .discount_original_price")
-                    .text_content()
+                    .text_content(timeout=1000)
                 )
                 if recommended_price is None:
                     logger.info(
@@ -310,16 +320,18 @@ async def add_data_from_steam_store_page(
                     f"Steam original price has wrong format for {steam_info.id}: {e}"
                 )
 
-        # Second source to add the recommended price if available
+        # Source when the game is not discounted
         if steam_info.recommended_price_eur is None:
             try:
                 recommended_price = (
-                    await page.locator(".game_area_purchase_game_wrapper")
+                    await page.locator(".game_area_purchase_game")
+                    .filter(has=page.locator(".platform_img"))
+                    .filter(has_text="Add to Cart")
                     .first.locator(".game_purchase_action .game_purchase_price")
-                    .text_content()
+                    .text_content(timeout=1000)
                 )
                 if recommended_price is None:
-                    logger.error(
+                    logger.info(
                         f"No Steam recommended price found on shop page for {steam_info.id}."
                     )
                 elif "free" in recommended_price.lower():
@@ -329,13 +341,25 @@ async def add_data_from_steam_store_page(
                         recommended_price.replace("€", "").replace(",", ".").strip()
                     )
             except Error as e:
-                logger.error(
+                logger.info(
                     f"No Steam recommended price found on shop page for {steam_info.id}: {e}"
                 )
             except ValueError as e:
                 logger.error(
                     f"Steam recommended price has wrong format for {steam_info.id}: {e}."
                 )
+
+        # If there is a "Free game" button, the game is free
+        if steam_info.recommended_price_eur is None:
+            try:
+                free_games_button = await page.locator("#freeGameBtn").is_visible()
+                if free_games_button is not None:
+                    steam_info.recommended_price_eur = 0
+            except Error as e:
+                logger.debug(f"Game {steam_info.id} is not free: {e}")
+
+        if steam_info.recommended_price_eur is None:
+            logger.error(f"Steam recommended price not found for {steam_info.id}.")
 
         # Add the release date if available
         if steam_info.release_date is None:
