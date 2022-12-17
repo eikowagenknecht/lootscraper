@@ -1,6 +1,6 @@
 import logging
 
-from selenium.webdriver.chrome.webdriver import WebDriver
+from playwright.async_api import BrowserContext
 from sqlalchemy.orm import Session
 
 from app.scraper.info.steam import get_steam_details
@@ -9,14 +9,14 @@ from app.sqlalchemy import SteamInfo
 logger = logging.getLogger(__name__)
 
 
-async def refresh_all_steam_info(session: Session, webdriver: WebDriver) -> None:
+async def refresh_all_steam_info(session: Session, context: BrowserContext) -> None:
     """
     Refresh Steam information for all games in the database
     """
     logger.info("Refreshing Steam information")
     steam_info: SteamInfo
     for steam_info in session.query(SteamInfo):
-        new_steam_info = await get_steam_details(id_=steam_info.id, context=webdriver)
+        new_steam_info = await get_steam_details(id_=steam_info.id, context=context)
         if new_steam_info is None:
             return
         steam_info.name = new_steam_info.name

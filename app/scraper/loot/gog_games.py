@@ -4,8 +4,8 @@ from datetime import datetime, timezone
 
 from playwright.async_api import Error, Locator, Page
 
+from app.browser import get_new_page
 from app.common import OfferDuration
-from app.pagedriver import get_new_page
 from app.scraper.loot.gog_base import GogBaseScraper
 from app.scraper.loot.scraper import OfferHandler, RawOffer
 from app.sqlalchemy import Offer
