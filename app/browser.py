@@ -45,11 +45,6 @@ async def get_browser_context() -> AsyncGenerator[BrowserContext, None]:
             )
             context.set_default_timeout(Config.get().web_timeout * 1000)  # Milliseconds
 
-            # TODO: Check if this is needed and comment, why if it is
-            # with open(INJECTION_FILE, "r", encoding="utf-8") as file:
-            #     js_to_inject = file.read()
-            # await context.add_init_script(js_to_inject)
-
             # TODO: See which of these options (if any) are needed for playwright
             # # https://stackoverflow.com/a/50725918/1689770
             # # Must be first argument according to stack overflow
