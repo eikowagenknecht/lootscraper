@@ -107,7 +107,6 @@ class Scraper:
         This method is called after the page is loaded. Override for custom
         behavior that is needed here (e.g. scroll to bottom of page).
         """
-        pass
 
     async def read_offers(self) -> list[Offer]:
         """
