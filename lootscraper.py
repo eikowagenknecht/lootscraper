@@ -528,11 +528,7 @@ def hash_file(file: Path) -> str:
 
 
 if __name__ == "__main__":
-    # TODO: Test this, see https://stackoverflow.com/questions/37417595/graceful-shutdown-of-asyncio-coroutines
     try:
         asyncio.run(main())
     except KeyboardInterrupt:
-        pass
-    finally:
-        # Shutdown here
         pass
