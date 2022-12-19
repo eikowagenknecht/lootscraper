@@ -66,8 +66,9 @@ class TelegramTests(unittest.IsolatedAsyncioTestCase):
             async with TelegramBot(Config.get(), db.Session) as bot:
                 for i in range(300):
                     # Act
+                    # Send 300 messages to the developer chat
                     result = await bot.send_message(
-                        724039662, f"Flooding Test message {i}"
+                        -755090503, f"Flooding Test message {i}"
                     )
                     # Assert
                     self.assertIsNotNone(result)
