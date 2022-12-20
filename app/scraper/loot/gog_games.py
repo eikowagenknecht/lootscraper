@@ -126,10 +126,11 @@ class GogGamesScraper(GogBaseScraper):
         if not isinstance(raw_offer, GogRawOffer):
             raise ValueError("Wrong type of raw offer.")
 
-        rawtext = f"<title>{raw_offer.title}</title>"
+        rawtext = {
+            "title": raw_offer.title,
+        }
         if raw_offer.valid_to:
-            rawtext += f"<enddate>{raw_offer.valid_to}</enddate>"
-        title = raw_offer.title
+            rawtext["enddate"] = raw_offer.valid_to
 
         valid_to = None
         if raw_offer.valid_to:
@@ -147,8 +148,8 @@ class GogGamesScraper(GogBaseScraper):
             source=GogGamesScraper.get_source(),
             duration=GogGamesScraper.get_duration(),
             type=GogGamesScraper.get_type(),
-            title=title,
-            probable_game_name=title,
+            title=raw_offer.title,
+            probable_game_name=raw_offer.title,
             seen_last=datetime.now(timezone.utc),
             valid_to=valid_to,
             rawtext=rawtext,
