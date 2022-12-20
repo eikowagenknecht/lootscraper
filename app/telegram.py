@@ -169,19 +169,48 @@ class TelegramBot:
         await self.application.initialize()
         await self.application.start()
         if self.application.updater is not None:
-            await self.application.updater.start_polling()
+            await self.application.updater.start_polling(
+                error_callback=self.updater_error_handler
+            )
             logger.info("Started listening for messages from Telegram")
 
     async def stop(self) -> None:
         """
-        Stop the bot.
+        Stop the bot. The application needs to be restarted manually.
+        See https://github.com/python-telegram-bot/python-telegram-bot/issues/801
+        for a discussion of the behaviour before v20.
         """
 
-        if self.application is not None and self.application.updater is not None:
-            await self.application.updater.stop()
-            await self.application.stop()
-            await self.application.shutdown()
-            logger.info("Stopped listening for messages from Telegram")
+        if self.application is None or self.application.updater is None:
+            return
+
+        await self.application.updater.stop()
+        await self.application.stop()
+        await self.application.shutdown()
+        logger.info("Stopped listening for messages from Telegram")
+
+    def updater_error_handler(self, error: TelegramError) -> None:
+        # Multiple bot instances, abort to avoid Telegram punishing API key misuse!
+        if isinstance(error, telegram.error.Conflict):
+            error_text = "Multiple instances of the same bot running, shutting down myself to avoid further conflicts."
+            logger.critical(error_text)
+
+            # We need to run this in a separate task, because it runs asynchroniously
+            asyncio.get_running_loop().create_task(
+                self.notify_admin_and_stop(error_text)
+            )
+            return
+
+        logger.error(f"Error while polling for messages from Telegram: {error}")
+
+    async def notify_admin_and_stop(self, error_text: str) -> None:
+        await self.send_message(
+            chat_id=Config.get().telegram_developer_chat_id,
+            text=error_text,
+            parse_mode=None,
+        )
+
+        await self.stop()
 
     async def error_handler(
         self, update: object, context: ContextTypes.DEFAULT_TYPE
@@ -215,23 +244,6 @@ class TelegramBot:
             logger.warning(
                 f"Network error encountered {exception_type}, probably will fix itself."
             )
-            return
-
-        # Multiple bot instances, abort to avoid Telegram punishing API key misuse!
-        if isinstance(
-            context.error, TelegramError
-        ) and context.error.message.startswith("Conflict: "):
-            error_text = "Multiple instances of the same bot running, shutting down myself to avoid further conflicts."
-            logger.critical(error_text)
-            await self.send_message(
-                chat_id=Config.get().telegram_developer_chat_id,
-                text=error_text,
-                parse_mode=None,
-            )
-            # Stop the bot. Lootscraper needs to be restarted manually.
-            # See https://github.com/python-telegram-bot/python-telegram-bot/issues/801
-            # for a discussion of the behaviour before v20.
-            await self.stop()
             return
 
         if (
@@ -1497,11 +1509,11 @@ class TelegramBot:
                     return None
                 retry_in_seconds = 5.0
                 await asyncio.sleep(retry_in_seconds)
-            except telegram.error.Forbidden:
+            except telegram.error.Forbidden as e:
                 message_handled = True
                 # The user blocked the chat.
                 logger.info(
-                    f"Deactivating user with chat id {chat_id} because he blocked the chat."
+                    f"Deactivating user with chat id {chat_id} because he blocked the chat: {e}"
                 )
                 self.deactivate_user(chat_id, "blocked chat")
             except TelegramError as e:
