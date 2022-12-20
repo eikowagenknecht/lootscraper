@@ -1,42 +1,42 @@
+import asyncio
 import logging
 
 from playwright.async_api import BrowserContext
 from sqlalchemy.orm import Session
 
-from app.database import LootDatabase, Offer, SteamInfo
-from app.scraper.info.steam import get_steam_details
+from app.browser import get_browser_context
+from app.database import Game, IgdbInfo, LootDatabase, Offer, SteamInfo
+from lootscraper import add_game_info
 
 logger = logging.getLogger(__name__)
 
 
-async def refresh_all_steam_info(session: Session, context: BrowserContext) -> None:
+async def refresh_all_games(session: Session, context: BrowserContext) -> None:
     """
-    Refresh Steam information for all games in the database
+    This drops all games from the database and re-adds them, scraping all
+    information again.
     """
-    logger.info("Refreshing Steam information")
-    steam_info: SteamInfo
-    for steam_info in session.query(SteamInfo):
-        new_steam_info = await get_steam_details(id_=steam_info.id, context=context)
-        if new_steam_info is None:
-            return
-        steam_info.name = new_steam_info.name
-        steam_info.short_description = new_steam_info.short_description
-        steam_info.release_date = new_steam_info.release_date
-        steam_info.publishers = new_steam_info.publishers
-        steam_info.image_url = new_steam_info.image_url
-        steam_info.recommendations = new_steam_info.recommendations
-        steam_info.percent = new_steam_info.percent
-        steam_info.score = new_steam_info.score
-        steam_info.metacritic_score = new_steam_info.metacritic_score
-        steam_info.metacritic_url = new_steam_info.metacritic_url
-        steam_info.recommended_price_eur = new_steam_info.recommended_price_eur
+
+    logger.info("Dropping all existing information from database")
+    session.query(Game).delete()
+    session.query(SteamInfo).delete()
+    session.query(IgdbInfo).delete()
+    session.commit()
+
+    all_offers = session.query(Offer).all()
+
+    logger.info("Gathering new information")
+    for offer in all_offers:
+        logger.info(f"Adding game info for offer {offer.id}")
+        await add_game_info(offer, session, context)
+
+    session.commit()
 
 
-def harmonize_database(session: Session) -> None:
+def fix_image_nones(session: Session) -> None:
     """
-    Harmonize the database by removing duplicates and updating information
+    Remove empty image URLs from the database.
     """
-    logger.info("Harmonizing database")
     offer: Offer
     for offer in session.query(Offer):
         # Replace empty values with correct NULLs
@@ -47,10 +47,22 @@ def harmonize_database(session: Session) -> None:
     session.commit()
 
 
-def run_cleanup() -> None:
+async def run_cleanup() -> None:
     """
     Run cleanup functions
     """
     logger.info("Running cleanup")
     with LootDatabase(echo=False) as db:
-        harmonize_database(db.Session())
+        fix_image_nones(db.Session())
+
+        async with get_browser_context() as context:
+            await refresh_all_games(db.Session(), context)
+
+
+def cleanup() -> None:
+    """
+    Synchronous wrapper for cleanup functions. Run this with
+    `python -c 'import app.tools; app.tools.cleanup()'` for now.
+    TODO: Add an admin command for this (telegram)
+    """
+    asyncio.run(run_cleanup())
