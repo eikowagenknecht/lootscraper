@@ -1394,14 +1394,14 @@ class TelegramBot:
             if game.igdb_info and game.igdb_info.name:
                 content += (
                     "\n\n__"
-                    + Rf'More info about "{markdown_escape(game.igdb_info.name)}:'
-                    + '"__\n'
+                    + Rf'More info about "{markdown_escape(game.igdb_info.name)}":'
+                    + "__\n"
                 )
             elif game.steam_info and game.steam_info.name:
                 content += (
                     "\n\n__"
-                    + Rf'More info about "{markdown_escape(game.steam_info.name)}:'
-                    + '"__\n'
+                    + Rf'More info about "{markdown_escape(game.steam_info.name)}":'
+                    + "__\n"
                 )
             else:
                 # No Steam or IGDB info = no details
