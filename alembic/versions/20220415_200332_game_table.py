@@ -27,7 +27,7 @@ branch_labels = None
 depends_on = None
 
 
-Base = declarative_base()  # type: Any
+Base: Any = declarative_base()
 
 
 class OldLoot(Base):
