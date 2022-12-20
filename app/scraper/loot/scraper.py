@@ -195,9 +195,9 @@ class Scraper:
 
     def clean_offers(self, offers: list[Offer]) -> list[Offer]:
         """
-        Remove demos etc. from the list.
+        Only keep valid offers.
         """
-        return list(filter(lambda offer: offer.category != Category.DEMO, offers))
+        return list(filter(lambda offer: offer.category == Category.VALID, offers))
 
     @staticmethod
     def is_demo(title: str) -> bool:
