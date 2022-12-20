@@ -254,12 +254,6 @@ async def scrape_offers(webdriver: BrowserContext) -> list[Offer]:
             and scraperType.get_source() in cfg.enabled_offer_sources
         ):
             scraper = scraperType(context=webdriver)
-            scraper_duration = scraper.get_duration().value
-            scraper_source = scraper.get_source().value
-
-            logging.info(
-                f"Analyzing {scraper_source} for offers: {scraper.get_type().value} / {scraper_duration}."
-            )
             scraper_results = await scraper.scrape()
 
             if len(scraper_results) > 0:
