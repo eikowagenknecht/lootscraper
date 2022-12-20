@@ -14,7 +14,7 @@ from sqlalchemy import orm
 from sqlalchemy.ext.declarative import declarative_base
 
 from alembic import op
-from app.sqlalchemy import AwareDateTime
+from app.database import AwareDateTime
 
 # revision identifiers, used by Alembic.
 revision = "038c26b62555"

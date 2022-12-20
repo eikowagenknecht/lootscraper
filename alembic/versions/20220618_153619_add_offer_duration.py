@@ -16,7 +16,7 @@ from sqlalchemy.ext.declarative import declarative_base
 
 from alembic import op
 from app.common import OfferDuration, OfferType, Source
-from app.sqlalchemy import AwareDateTime, TelegramSubscription
+from app.database import AwareDateTime, TelegramSubscription
 
 # revision identifiers, used by Alembic.
 revision = "254444f3560f"

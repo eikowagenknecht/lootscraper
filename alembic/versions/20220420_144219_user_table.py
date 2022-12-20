@@ -10,7 +10,7 @@ Create Date: 2022-04-20 14:42:19.402926+00:00
 import sqlalchemy as sa
 
 from alembic import op
-from app.sqlalchemy import AwareDateTime
+from app.database import AwareDateTime
 
 # revision identifiers, used by Alembic.
 revision = "8cfaaf08b306"

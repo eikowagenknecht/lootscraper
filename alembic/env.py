@@ -1,3 +1,8 @@
+# The bahaviour of the config.context object is different in the env.py script,
+# so no-member errors must be ignored here. See also:
+# https://stackoverflow.com/questions/51203641/attributeerror-module-alembic-context-has-no-attribute-config
+# pylint: disable=no-member
+# pylint: disable=unused-argument
 from logging.config import fileConfig
 from pathlib import Path
 
@@ -5,38 +10,33 @@ from sqlalchemy import create_engine, pool
 from sqlalchemy.schema import SchemaItem
 
 from alembic import context
+from app import database
 from app.configparser import Config
-from app.sqlalchemy import Base
 
-# this is the Alembic Config object, which provides
-# access to the values within the .ini file in use.
+IGNORE_TABLES = ["sqlite_sequence"]
+
+# This is the Alembic Config object, which provides access to the values within
+# the .ini file in use.
 config = context.config
 
-# Interpret the config file for Python logging.
-# This line sets up loggers basically.
+# Interpret the config file for Python logging. This line sets up loggers basically.
 if config.config_file_name is not None and config.attributes.get(
     "configure_logger", True
 ):
     fileConfig(config.config_file_name)
 
-# add your model's MetaData object here
-# for 'autogenerate' support
+# Add your model's MetaData object here for 'autogenerate' support.
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
+target_metadata = database.Base.metadata
 
-target_metadata = Base.metadata
-
-# other values from the config, defined by the needs of env.py,
-# can be acquired:
+# Other values from the config, defined by the needs of env.py can be acquired:
 # my_important_option = config.get_main_option("my_important_option")
 # ... etc.
 
 
-IGNORE_TABLES = ["sqlite_sequence"]
-
-
 def include_object(
-    object: SchemaItem,
+    object_: SchemaItem,
     name: str,
     type_: str,
     reflected: bool,
@@ -53,7 +53,8 @@ def include_object(
 
 
 def run_migrations_offline() -> None:
-    """Run migrations in 'offline' mode.
+    """
+    Run migrations in 'offline' mode.
 
     This configures the context with just a URL
     and not an Engine, though an Engine is acceptable
@@ -62,8 +63,8 @@ def run_migrations_offline() -> None:
 
     Calls to context.execute() here emit the given string to the
     script output.
-
     """
+
     db_file_path = Config.data_path() / Path(Config.get().database_file)
     url = f"sqlite+pysqlite:///{db_file_path}"
 
@@ -82,11 +83,11 @@ def run_migrations_offline() -> None:
 
 
 def run_migrations_online() -> None:
-    """Run migrations in 'online' mode.
+    """
+    Run migrations in 'online' mode.
 
     In this scenario we need to create an Engine
     and associate a connection with the context.
-
     """
 
     db_file_path = Config.data_path() / Path(Config.get().database_file)
