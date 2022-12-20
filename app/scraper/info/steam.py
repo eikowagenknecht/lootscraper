@@ -8,8 +8,8 @@ import httpx
 from playwright.async_api import BrowserContext, Error, Page
 
 from app.browser import get_new_page
+from app.database import SteamInfo
 from app.scraper.info.utils import RESULT_MATCH_THRESHOLD, get_match_score
-from app.sqlalchemy import SteamInfo
 
 logger = logging.getLogger(__name__)
 

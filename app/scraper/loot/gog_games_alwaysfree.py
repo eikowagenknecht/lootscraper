@@ -4,9 +4,9 @@ from datetime import datetime, timezone
 from playwright.async_api import Locator, Page
 
 from app.common import OfferDuration
+from app.database import Offer
 from app.scraper.loot.gog_base import GogBaseScraper
 from app.scraper.loot.scraper import OfferHandler, RawOffer
-from app.sqlalchemy import Offer
 
 logger = logging.getLogger(__name__)
 

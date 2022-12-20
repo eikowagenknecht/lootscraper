@@ -5,7 +5,7 @@ import sqlalchemy as sa
 from sqlalchemy import orm
 
 from app.configparser import Config
-from app.sqlalchemy import LootDatabase, Offer, User
+from app.database import LootDatabase, Offer, User
 from app.telegram import TelegramBot
 
 

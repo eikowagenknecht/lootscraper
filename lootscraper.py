@@ -19,11 +19,11 @@ from sqlalchemy.orm import Session
 from app.browser import get_browser_context
 from app.common import TIMESTAMP_LONG, OfferDuration, OfferType, Source
 from app.configparser import Config
+from app.database import Game, IgdbInfo, LootDatabase, Offer, SteamInfo, User
 from app.feed import generate_feed
 from app.scraper.info.igdb import get_igdb_details, get_igdb_id
 from app.scraper.info.steam import get_steam_details, get_steam_id
 from app.scraper.loot.scraperhelper import get_all_scrapers
-from app.sqlalchemy import Game, IgdbInfo, LootDatabase, Offer, SteamInfo, User
 from app.telegram import TelegramBot
 from app.upload import upload_to_server
 

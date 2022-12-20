@@ -1,6 +1,6 @@
 import unittest
 
-from app.sqlalchemy import LootDatabase
+from app.database import LootDatabase
 
 
 class DatabaseTests(unittest.TestCase):

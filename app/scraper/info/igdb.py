@@ -7,8 +7,8 @@ import httpx
 from unidecode import unidecode
 
 from app.configparser import Config
+from app.database import IgdbInfo
 from app.scraper.info.utils import RESULT_MATCH_THRESHOLD, get_match_score
-from app.sqlalchemy import IgdbInfo
 
 logger = logging.getLogger(__name__)
 

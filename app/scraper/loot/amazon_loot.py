@@ -5,9 +5,9 @@ from datetime import date, datetime, time, timedelta, timezone
 from playwright.async_api import Locator, Page
 
 from app.common import OfferType
+from app.database import Offer
 from app.scraper.loot.amazon_base import AmazonBaseScraper, AmazonRawOffer
 from app.scraper.loot.scraper import OfferHandler, RawOffer, Scraper
-from app.sqlalchemy import Offer
 
 logger = logging.getLogger(__name__)
 
