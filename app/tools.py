@@ -1,6 +1,4 @@
-import json
 import logging
-import re
 
 from playwright.async_api import BrowserContext
 from sqlalchemy.orm import Session
@@ -46,18 +44,6 @@ def harmonize_database(session: Session) -> None:
             logger.info(f"Cleaning up empty image URL for offer {offer.id}")
             offer.img_url = None
 
-        if offer.rawtext is not None and offer.rawtext.startswith("<"):
-            logger.info(f"Converting rawtext for offer {offer.id}")
-            new_json: dict[str, str] = {}
-            add_xml_element_if_exists(new_json, offer.rawtext, "title")
-            add_xml_element_if_exists(new_json, offer.rawtext, "paragraph")
-            add_xml_element_if_exists(new_json, offer.rawtext, "startdate")
-            add_xml_element_if_exists(new_json, offer.rawtext, "enddate")
-            add_xml_element_if_exists(new_json, offer.rawtext, "appid")
-            add_xml_element_if_exists(new_json, offer.rawtext, "gametitle")
-            add_xml_element_if_exists(new_json, offer.rawtext, "text")
-            offer.rawtext = json.dumps(new_json)
-
     session.commit()
 
 
@@ -68,14 +54,3 @@ def run_cleanup() -> None:
     logger.info("Running cleanup")
     with LootDatabase(echo=False) as db:
         harmonize_database(db.Session())
-
-
-def add_xml_element_if_exists(
-    target: dict[str, str], source: str, element: str
-) -> None:
-    try:
-        res = re.search(rf"<{element}>(.*)</{element}>", source)
-        if res is not None:
-            target[element] = res.group(1)
-    except TypeError:
-        pass

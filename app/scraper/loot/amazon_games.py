@@ -41,7 +41,10 @@ class AmazonGamesScraper(AmazonBaseScraper):
         if not isinstance(raw_offer, AmazonRawOffer):
             raise ValueError("Wrong type of raw offer.")
 
-        rawtext = f"<title>{raw_offer.title}</title>"
+        rawtext = {
+            "title": raw_offer.title,
+        }
+
         probable_game_name = clean_game_title(raw_offer.title)
 
         # Date
