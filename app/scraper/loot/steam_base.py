@@ -98,12 +98,14 @@ class SteamBaseScraper(Scraper):  # pylint: disable=W0223
     def normalize_offer(self, raw_offer: RawOffer) -> Offer:
         if not isinstance(raw_offer, SteamRawOffer):
             raise ValueError("Wrong type of raw offer.")
+
+        rawtext = {
+            "title": raw_offer.title,
+            "appid": raw_offer.appid,
+            "text": raw_offer.text,
+        }
+
         now = datetime.now(timezone.utc)
-
-        rawtext = f"<title>{raw_offer.title}</title>"
-        rawtext += f"<appid>{raw_offer.appid}</appid>"
-        rawtext += f"<text>{raw_offer.text}</text>"
-
         valid_to: datetime | None = None
         if raw_offer.text:
             maybe_date = raw_offer.text.removeprefix(

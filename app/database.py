@@ -183,7 +183,7 @@ class Offer(Base):
     valid_from: datetime | None = sa.Column(AwareDateTime)
     valid_to: datetime | None = sa.Column(AwareDateTime)
 
-    rawtext: str | None = sa.Column(sa.String)
+    rawtext: dict[str, Any] | None = sa.Column(sa.JSON)
     url: str | None = sa.Column(sa.String)
     img_url: str | None = sa.Column(sa.String)
 
@@ -226,7 +226,7 @@ class User(Base):
 
     telegram_id: str | None = sa.Column(sa.String)
     telegram_chat_id: str = sa.Column(sa.String)
-    telegram_user_details: str | None = sa.Column(sa.JSON)
+    telegram_user_details: dict[str, Any] | None = sa.Column(sa.JSON)
     timezone_offset: int | None = sa.Column(sa.Integer)
     inactive: str | None = sa.Column(sa.String)
 

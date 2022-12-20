@@ -91,9 +91,10 @@ class EpicGamesScraper(Scraper):
         if not isinstance(raw_offer, EpicRawOffer):
             raise ValueError("Wrong type of raw offer.")
 
-        rawtext = f"<title>{raw_offer.title}</title>"
-        rawtext += f"<enddate>{raw_offer.valid_to}</enddate>"
-        title = raw_offer.title
+        rawtext = {
+            "title": raw_offer.title,
+            "enddate": raw_offer.valid_to,
+        }
 
         utc_valid_to = None
         if raw_offer.valid_to:
@@ -110,8 +111,8 @@ class EpicGamesScraper(Scraper):
             source=EpicGamesScraper.get_source(),
             duration=EpicGamesScraper.get_duration(),
             type=EpicGamesScraper.get_type(),
-            title=title,
-            probable_game_name=title,
+            title=raw_offer.title,
+            probable_game_name=raw_offer.title,
             seen_last=datetime.now(timezone.utc),
             valid_to=utc_valid_to,
             rawtext=rawtext,

@@ -70,15 +70,16 @@ class AppleGamesScraper(Scraper):
         )
 
     def normalize_offer(self, raw_offer: RawOffer) -> Offer:
-        rawtext = f"<title>{raw_offer.title}</title>"
-        title = raw_offer.title
+        rawtext = {
+            "title": raw_offer.title,
+        }
 
         return Offer(
             source=AppleGamesScraper.get_source(),
             duration=AppleGamesScraper.get_duration(),
             type=AppleGamesScraper.get_type(),
-            title=title,
-            probable_game_name=title,
+            title=raw_offer.title,
+            probable_game_name=raw_offer.title,
             seen_last=datetime.now(timezone.utc),
             rawtext=rawtext,
             url=raw_offer.url,

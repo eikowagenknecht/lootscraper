@@ -65,18 +65,18 @@ class GogGamesAlwaysFreeScraper(GogBaseScraper):
         )
 
     def normalize_offer(self, raw_offer: RawOffer) -> Offer:
-        rawtext = f"<title>{raw_offer.title}</title>"
-        title = raw_offer.title
-        nearest_url = raw_offer.url if raw_offer.url else OFFER_URL
+        rawtext = {
+            "title": raw_offer.title,
+        }
 
         return Offer(
             source=GogGamesAlwaysFreeScraper.get_source(),
             duration=GogGamesAlwaysFreeScraper.get_duration(),
             type=GogGamesAlwaysFreeScraper.get_type(),
-            title=title,
-            probable_game_name=title,
+            title=raw_offer.title,
+            probable_game_name=raw_offer.title,
             seen_last=datetime.now(timezone.utc),
             rawtext=rawtext,
-            url=nearest_url,
+            url=raw_offer.url,
             img_url=raw_offer.img_url,
         )

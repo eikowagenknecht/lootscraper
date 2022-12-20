@@ -389,7 +389,9 @@ class TelegramBot:
                     new_user = User(
                         telegram_id=channel_name,
                         telegram_chat_id=channel_name,
-                        telegram_user_details="Channel user created by admin",
+                        telegram_user_details={
+                            "description": "Channel user created by admin"
+                        },
                         registration_date=datetime.now().replace(tzinfo=timezone.utc),
                         last_announcement_id=latest_announcement,
                     )
