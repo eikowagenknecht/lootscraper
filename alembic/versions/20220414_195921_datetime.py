@@ -24,7 +24,7 @@ depends_on = None
 
 
 def upgrade() -> None:
-    Base = declarative_base()  # type: Any
+    Base: Any = declarative_base()
 
     class OldLoot(Base):
         __tablename__ = "loot"
