@@ -43,7 +43,6 @@ EXAMPLE_CONFIG_FILE = "config.default.ini"
 # TODO:
 # - Switch from synchronous database access to asynchronous
 # - Look for TODOs in the code
-# - Check all warnings and errors in the code
 # - Add Telegram command for complete refresh of all metadata
 #   Drop all metadata and re-download it from IGDB and Steam
 # - Remove duplicate offers in production database
@@ -61,6 +60,8 @@ async def main() -> None:
 
     # Run the various parts of the bot asynchronously (so we don't block)
     # and communicate using a queue.
+    # TODO: Switch to a more generic queue that can handle multiple bots
+    # when the Discord bot is added.
     telegram_queue: asyncio.Queue[int] = asyncio.Queue()
 
     try:
@@ -219,19 +220,17 @@ async def scrape_new_offers(db: LootDatabase) -> None:
     """
     Do the actual scraping and processing of new offers.
     """
-    webdriver: BrowserContext
+    context: BrowserContext
     cfg = Config.get()
 
-    async with get_browser_context() as webdriver:
+    async with get_browser_context() as context:
         session: Session = db.Session()
         try:
-            scraped_offers = await scrape_offers(webdriver)
-            await process_new_offers(db, webdriver, session, scraped_offers)
+            scraped_offers = await scrape_offers(context)
+            await process_new_offers(db, context, session, scraped_offers)
 
             all_offers = db.read_all()
 
-            if cfg.force_update and cfg.scrape_info:
-                await rebuild_game_infos(webdriver, session, all_offers)
             session.commit()
         except Exception:
             session.rollback()
@@ -243,7 +242,7 @@ async def scrape_new_offers(db: LootDatabase) -> None:
         logging.info("Skipping feed generation because it is disabled.")
 
 
-async def scrape_offers(webdriver: BrowserContext) -> list[Offer]:
+async def scrape_offers(context: BrowserContext) -> list[Offer]:
     cfg = Config.get()
 
     scraped_offers: list[Offer] = []
@@ -253,7 +252,7 @@ async def scrape_offers(webdriver: BrowserContext) -> list[Offer]:
             and scraperType.get_duration() in cfg.enabled_offer_durations
             and scraperType.get_source() in cfg.enabled_offer_sources
         ):
-            scraper = scraperType(context=webdriver)
+            scraper = scraperType(context=context)
             scraper_results = await scraper.scrape()
 
             if len(scraper_results) > 0:
@@ -264,7 +263,7 @@ async def scrape_offers(webdriver: BrowserContext) -> list[Offer]:
 
 async def process_new_offers(
     db: LootDatabase,
-    webdriver: BrowserContext,
+    context: BrowserContext,
     session: Session,
     scraped_offers: list[Offer],
 ) -> None:
@@ -290,7 +289,6 @@ async def process_new_offers(
         )
 
         if not existing_entry:
-            # Create a list of new scraped offers (logging only)
             if scraped_offer.title:
                 new_offer_titles.append(scraped_offer.title)
 
@@ -298,17 +296,14 @@ async def process_new_offers(
                 # get information about it (if it's a game)
                 # and insert it into the database
             if cfg.scrape_info:
-                await add_game_info(scraped_offer, session, webdriver)
+                await add_game_info(scraped_offer, session, context)
+
+            # Insert the new offer into the database.
             db.add_offer(scraped_offer)
             nr_of_new_offers += 1
         else:
-            # Do not insert offers that already have been scraped,
-            # but update them instead. What gets updated depends on
-            # the settings
-            if cfg.force_update:
-                db.update_db_offer(existing_entry, scraped_offer)
-            else:
-                db.touch_db_offer(existing_entry)
+            # Update offers that already have been scraped.
+            db.touch_db_offer(existing_entry)
 
     if new_offer_titles:
         logging.info(
@@ -327,19 +322,6 @@ async def send_new_offers_telegram(db: LootDatabase, bot: TelegramBot) -> None:
     except Exception:
         session.rollback()
         raise
-
-
-async def rebuild_game_infos(
-    webdriver: BrowserContext, session: Session, all_offers: list[Offer]
-) -> None:
-    # Remove all game info first
-    logging.info("Force update enabled - removing all game info")
-    for game in session.query(Game):
-        session.delete(game)
-
-    # Then add new game info
-    for db_offer in all_offers:
-        await add_game_info(db_offer, session, webdriver)
 
 
 async def action_generate_feed(loot_offers_in_db: list[Offer]) -> None:
@@ -419,11 +401,13 @@ async def action_generate_feed(loot_offers_in_db: list[Offer]) -> None:
 
 
 async def add_game_info(
-    offer: Offer, session: Session, webdriver: BrowserContext
+    offer: Offer, session: Session, context: BrowserContext
 ) -> None:
-    """Updated an offer with game information. If the offer already has some
-    information, just try to update the missing parts. Otherwise, create a new
-    Game and try to populate it with information."""
+    """
+    Update an offer with game information. If the offer already has some
+    information, just update the missing parts. Otherwise, create a new
+    Game and try to populate it with information.
+    """
 
     if offer.game:
         # The offer already has a game attached, leave it alone
@@ -472,7 +456,7 @@ async def add_game_info(
 
     # Use the api if no local entry exists
     if steam_id is None:
-        steam_id = await get_steam_id(offer.probable_game_name, context=webdriver)
+        steam_id = await get_steam_id(offer.probable_game_name, context=context)
 
     if steam_id is not None:
         existing_game = (
@@ -495,7 +479,7 @@ async def add_game_info(
     if igdb_id:
         offer.game.igdb_info = await get_igdb_details(id_=igdb_id)
     if steam_id:
-        offer.game.steam_info = await get_steam_details(id_=steam_id, context=webdriver)
+        offer.game.steam_info = await get_steam_details(id_=steam_id, context=context)
 
 
 def log_new_offer(offer: Offer) -> None:
