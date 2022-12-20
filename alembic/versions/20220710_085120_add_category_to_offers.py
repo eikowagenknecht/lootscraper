@@ -77,7 +77,6 @@ def upgrade() -> None:
                 sa.Enum(
                     "VALID",
                     "DEMO",
-                    "CHEAP",
                     name="category",
                 ),
                 nullable=True,

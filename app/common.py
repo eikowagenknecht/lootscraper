@@ -30,7 +30,7 @@ class Channel(Enum):
 class Category(Enum):
     VALID = "Valid"
     DEMO = "Demo"
-    CHEAP = "Cheap"
+    PRERELEASE = "Prerelease"
 
 
 class OfferDuration(Enum):

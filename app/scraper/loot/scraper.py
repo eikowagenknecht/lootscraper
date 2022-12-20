@@ -171,6 +171,9 @@ class Scraper:
             if Scraper.is_demo(offer.title):
                 offer.category = Category.DEMO
                 continue
+            if Scraper.is_prerelease(offer.title):
+                offer.category = Category.PRERELEASE
+                continue
 
         return offers
 
@@ -212,6 +215,32 @@ class Scraper:
         # - "Title Demo Version"
         if re.search(
             r"^[\W]?demo[\W]|\Wdemo\W?((.*version.*)|(\(.*\)))?$", title, re.IGNORECASE
+        ):
+            return True
+        return False
+
+    @staticmethod
+    def is_prerelease(title: str) -> bool:
+        """
+        Check if the given title is an alpha or beta version.
+        """
+
+        # Check for demo in title
+        # Catches titles like
+        # - "Alpha: Title"
+        # - "Title (Alpha)"
+        # - "Title Alpha"
+        # - "Title Alpha (Version)",
+        # - "Title Alpha (Great game)",
+        # - "Title Alpha Version"
+        if re.search(
+            r"^[\W]?alpha[\W]|\Walpha\W?((.*version.*)|(\(.*\)))?$",
+            title,
+            re.IGNORECASE,
+        ):
+            return True
+        if re.search(
+            r"^[\W]?beta[\W]|\Wbeta\W?((.*version.*)|(\(.*\)))?$", title, re.IGNORECASE
         ):
             return True
         return False
