@@ -336,6 +336,7 @@ class LootDatabase:
         "at most 1 day older or 1 day newer" to avoid getting duplicates for offers
         where the exact end date is not clear (looking at you, Amazon!)
         """
+
         statement = (
             sa.select(Offer)
             .where(Offer.source == source)
@@ -343,7 +344,9 @@ class LootDatabase:
             .where(Offer.title == title)
         )
 
-        if valid_to:
+        if valid_to is None:
+            statement = statement.where(Offer.valid_to.is_(None))  # type: ignore
+        else:
             earliest_date = valid_to.replace(tzinfo=timezone.utc) - timedelta(days=1)
             latest_date = valid_to.replace(tzinfo=timezone.utc) + timedelta(days=1)
             statement = statement.where(
@@ -363,12 +366,16 @@ class LootDatabase:
         if len(result) == 0:
             return None
 
-        if len(result) > 1:
-            logger.warning(
-                f"Found multiple offers for {title} {valid_to}. Returning the first match."
-            )
+        # Return exact match if possible
+        for result_offer in result:
+            if result_offer.valid_to == valid_to:
+                return result_offer
 
-        return result[0]
+        # Otherwise return the last match (=newest)
+        logger.warning(
+            f"Found multiple offers for {title} that are close to {valid_to}. Returning the newest of those."
+        )
+        return result[-1]
 
     def find_offer_by_id(self, id_: int) -> Offer:
         statement = sa.select(Offer).where(Offer.id == id_)
