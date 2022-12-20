@@ -30,7 +30,6 @@ class ParsedConfig:
     wait_between_runs: int = 0
 
     # Expert
-    force_update: bool = False
     db_echo: bool = False
     headless_chrome: bool = True
     web_timeout: int = 5
@@ -116,7 +115,6 @@ class Config:
             parsed_config.log_level = config["common"]["LogLevel"]
             parsed_config.wait_between_runs = int(config["common"]["WaitBetweenRuns"])
 
-            parsed_config.force_update = config.getboolean("expert", "ForceUpdate")
             parsed_config.db_echo = config.getboolean("expert", "DbEcho")
             parsed_config.headless_chrome = config.getboolean(
                 "expert", "HeadlessChrome"

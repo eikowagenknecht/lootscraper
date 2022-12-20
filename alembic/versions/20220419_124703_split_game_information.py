@@ -1,4 +1,4 @@
-"""Split game information. Warning: Needs refresh of offers once after (ForceUpdate = yes)
+"""Split game information. Warning: Needs refresh of offers once after.
 
 Revision ID: 038c26b62555
 Revises: c5a42a07d104
