@@ -38,6 +38,9 @@ class Scraper:
         self.context = context
 
     async def scrape(self) -> list[Offer]:
+        logging.info(
+            f"Analyzing {self.get_source().value} for offers: {self.get_type().value} / {self.get_duration().value}."
+        )
         offers = await self.read_offers()
         unique_offers = self.deduplicate_offers(offers)
         categorized_offers = self.categorize_offers(unique_offers)
