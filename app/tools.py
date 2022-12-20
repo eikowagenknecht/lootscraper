@@ -74,6 +74,8 @@ def add_xml_element_if_exists(
     target: dict[str, str], source: str, element: str
 ) -> None:
     try:
-        target[element] = re.search(rf"<{element}>(.*)</{element}>", source)[1]
+        res = re.search(rf"<{element}>(.*)</{element}>", source)
+        if res is not None:
+            target[element] = res.group(1)
     except TypeError:
         pass
