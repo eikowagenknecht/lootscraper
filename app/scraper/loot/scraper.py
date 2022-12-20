@@ -201,9 +201,18 @@ class Scraper:
         """
         Check if the given title is a demo.
         """
-        if re.search(r"\Wdemo\W?$", title[-6:], re.IGNORECASE):
-            return True
-        if re.search(r"^\W?demo\W", title[:6], re.IGNORECASE):
+
+        # Check for demo in title
+        # Catches titles like
+        # - "Demo: Title"
+        # - "Title (Demo)"
+        # - "Title Demo"
+        # - "Title Demo (Version)",
+        # - "Title Demo (Great game)",
+        # - "Title Demo Version"
+        if re.search(
+            r"^[\W]?demo[\W]|\Wdemo\W?((.*version.*)|(\(.*\)))?$", title, re.IGNORECASE
+        ):
             return True
         return False
 
