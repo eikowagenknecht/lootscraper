@@ -6,7 +6,7 @@ from pathlib import Path
 
 from feedgen.feed import FeedEntry, FeedGenerator
 
-from app.sqlalchemy import Game, Offer
+from app.database import Game, Offer
 
 from .common import (
     TIMESTAMP_LONG,

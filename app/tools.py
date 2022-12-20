@@ -5,8 +5,8 @@ import re
 from playwright.async_api import BrowserContext
 from sqlalchemy.orm import Session
 
+from app.database import LootDatabase, Offer, SteamInfo
 from app.scraper.info.steam import get_steam_details
-from app.sqlalchemy import LootDatabase, Offer, SteamInfo
 
 logger = logging.getLogger(__name__)
 

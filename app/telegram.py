@@ -38,8 +38,8 @@ from app.common import (
     markdown_url,
 )
 from app.configparser import Config, ParsedConfig, TelegramLogLevel
+from app.database import Announcement, Game, Offer, TelegramSubscription, User
 from app.scraper.loot.scraperhelper import get_all_scrapers
-from app.sqlalchemy import Announcement, Game, Offer, TelegramSubscription, User
 
 BUTTON_SHOW_DETAILS = "Details"
 BUTTON_HIDE_DETAILS = "Summary"

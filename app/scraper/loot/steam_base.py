@@ -7,10 +7,10 @@ from playwright.async_api import Locator, Page
 
 from app.browser import get_new_page
 from app.common import OfferDuration, Source
+from app.database import Offer
 from app.scraper.info.steam import skip_age_verification
 from app.scraper.info.utils import clean_title
 from app.scraper.loot.scraper import OfferHandler, RawOffer, Scraper
-from app.sqlalchemy import Offer
 
 logger = logging.getLogger(__name__)
 

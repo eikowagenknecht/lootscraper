@@ -80,7 +80,7 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
-    Base = declarative_base()  # type: Any
+    Base: Any = declarative_base()
 
     class NewLoot(Base):
         __tablename__ = "loot"

@@ -12,7 +12,7 @@ from playwright.async_api import BrowserContext, Error, Locator, Page
 from app.browser import get_new_page
 from app.common import Category, OfferDuration, OfferType, Source
 from app.configparser import Config
-from app.sqlalchemy import Offer
+from app.database import Offer
 
 logger = logging.getLogger(__name__)
 
