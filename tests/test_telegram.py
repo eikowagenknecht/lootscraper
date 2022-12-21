@@ -1,4 +1,5 @@
 # type: ignore
+import asyncio
 import unittest
 
 import sqlalchemy as sa
@@ -60,18 +61,32 @@ class TelegramTests(unittest.IsolatedAsyncioTestCase):
 
                 # Assert
 
-    async def test_telegram_flooding(self) -> None:
+    async def test_user_flooding(self) -> None:
         # Arrange
         with LootDatabase(echo=True) as db:
             async with TelegramBot(Config.get(), db.Session) as bot:
-                for i in range(100):
-                    # Act
-                    # Send 100 messages to the developer chat
-                    result = await bot.send_message(
-                        -738298064, f"Flooding Test message {i}"
-                    )
-                    # Assert
-                    self.assertIsNotNone(result)
+                await self.send_n_messages(bot, 724039662, 100)
+
+    async def test_group_flooding(self) -> None:
+        # Arrange
+        with LootDatabase(echo=True) as db:
+            async with TelegramBot(Config.get(), db.Session) as bot:
+                await self.send_n_messages(bot, -738298064, 20)
+
+    async def test_simultaneous_flooding(self) -> None:
+        # Arrange
+        with LootDatabase(echo=True) as db:
+            async with TelegramBot(Config.get(), db.Session) as bot:
+                await asyncio.gather(
+                    self.send_n_messages(bot, 724039662, 100),
+                    self.send_n_messages(bot, -738298064, 20),
+                )
+
+    async def send_n_messages(self, bot: TelegramBot, user: int, nr: int) -> None:
+        for i in range(nr):
+            result = await bot.send_message(user, f"Flooding Test message {i}")
+            if result is None:
+                raise ValueError("Message not sent.")
 
 
 if __name__ == "__main__":

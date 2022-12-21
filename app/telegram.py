@@ -113,6 +113,11 @@ class TelegramBot:
 
         # Build application
         token = self.config.telegram_access_token
+        # The Telegram API has some limits, so we need to rate limit:
+        # - Max 30 messages per second total
+        # - Max 20 messages per minute to the same group chat
+        # These limits are set by default, so we only set the max_retries parameter.
+        # See https://core.telegram.org/bots/faq#my-bot-is-hitting-limits-how-do-i-avoid-this
         rate_limiter = AIORateLimiter(max_retries=3)
         self.application = (
             Application.builder().token(token).rate_limiter(rate_limiter).build()
