@@ -5,7 +5,17 @@
 
 version: 2
 updates:
-  - package-ecosystem: "pip" # See documentation for possible values
-    directory: "/" # Location of package manifests
+  # Check for updates to the used Python packages every weekday
+  - package-ecosystem: "pip"
+    directory: "/"
     schedule:
       interval: "daily"
+    target-branch: "develop"
+    versioning-strategy: increase
+
+  # Check for updates to GitHub Actions every weekday
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "daily"
+    target-branch: "main"
