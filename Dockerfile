@@ -18,28 +18,30 @@ RUN apt-get update && apt-get install -y \
     xvfb \
     && rm -rf /var/lib/apt/lists/*
 
-# Lootscraper: Make folder
+# Prepare installation of poetry
+ENV POETRY_HOME="/opt/poetry" \
+    POETRY_VERSION=1.3.1
+ENV PATH="$POETRY_HOME/bin:$PATH"
+
+# Install poetry (Python package manager)
+RUN curl -sSL https://install.python-poetry.org | python3 -
+
+# Create and switch into app directory
 RUN mkdir /app
 WORKDIR /app
 
-# Lootscraper: Install Python libraries and save list of installed packages (for debugging)
-COPY requirements.txt /app
-RUN pip install --upgrade pip \
-    && pip install -r requirements.txt \
-    && pip freeze > installed_packages.txt
-RUN playwright install chromium
-RUN playwright install-deps
-
-# Lootscraper: Add
-COPY lootscraper.py \
+# Install Python libraries
+COPY poetry.lock \
+    pyproject.toml \
     config.default.ini \
     alembic.ini \
     /app/
-COPY app /app/app/
-COPY alembic /app/alembic/
+RUN poetry install
+RUN poetry run playwright install chromium
+RUN poetry run playwright install-deps
 
 # Lootscraper: Run
-CMD [ "python", "lootscraper.py", "--docker" ]
+CMD [ "poetry", "run", "python", "-m", "lootscraper" ]
 
 # Config
 VOLUME /data

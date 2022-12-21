@@ -1,6 +1,6 @@
 import unittest
 
-from app.database import LootDatabase
+from lootscraper.database import LootDatabase
 
 
 class DatabaseTests(unittest.TestCase):
