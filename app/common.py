@@ -29,6 +29,7 @@ class Channel(Enum):
 
 class Category(Enum):
     VALID = "Valid"
+    CHEAP = "Cheap"
     DEMO = "Demo"
     PRERELEASE = "Prerelease"
 

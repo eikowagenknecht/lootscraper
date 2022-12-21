@@ -10,7 +10,7 @@ from app.telegram import TelegramBot
 
 
 class TelegramTests(unittest.IsolatedAsyncioTestCase):
-    @unittest.skip("This test doesn't end and is for manual execution only")
+    @unittest.skip("This test doesn't end and is for manual execution only.")
     async def test_run_bot_in_idle(self) -> None:
         # Arrange
         with LootDatabase(echo=True) as db:
@@ -64,11 +64,11 @@ class TelegramTests(unittest.IsolatedAsyncioTestCase):
         # Arrange
         with LootDatabase(echo=True) as db:
             async with TelegramBot(Config.get(), db.Session) as bot:
-                for i in range(300):
+                for i in range(100):
                     # Act
-                    # Send 300 messages to the developer chat
+                    # Send 100 messages to the developer chat
                     result = await bot.send_message(
-                        -755090503, f"Flooding Test message {i}"
+                        -738298064, f"Flooding Test message {i}"
                     )
                     # Assert
                     self.assertIsNotNone(result)

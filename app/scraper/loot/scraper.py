@@ -4,7 +4,7 @@ import logging
 import re
 from asyncio import sleep
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from typing import Awaitable, Callable
 
 from playwright.async_api import BrowserContext, Error, Locator, Page
@@ -174,6 +174,9 @@ class Scraper:
             if Scraper.is_prerelease(offer.title):
                 offer.category = Category.PRERELEASE
                 continue
+            if Scraper.is_fake_always(offer.valid_to):
+                offer.duration = OfferDuration.ALWAYS
+                continue
 
         return offers
 
@@ -197,7 +200,13 @@ class Scraper:
         """
         Only keep valid offers.
         """
-        return list(filter(lambda offer: offer.category == Category.VALID, offers))
+        return list(
+            filter(
+                lambda offer: offer.category == Category.VALID
+                or offer.category is None,
+                offers,
+            )
+        )
 
     @staticmethod
     def is_demo(title: str) -> bool:
@@ -244,6 +253,20 @@ class Scraper:
         ):
             return True
         return False
+
+    @staticmethod
+    def is_fake_always(valid_to: datetime | None) -> bool:
+        """
+        Check if the offer is "always" valid. That means the end date is
+        unreasonably far in the future (100 days or more).
+        """
+
+        if valid_to is None:
+            return False
+
+        return valid_to > datetime.now().replace(tzinfo=timezone.utc) + timedelta(
+            days=100
+        )
 
     @staticmethod
     async def scroll_element_to_bottom(page: Page, element_id: str) -> None:
