@@ -17,7 +17,7 @@
             "request": "launch",
             "purpose": ["debug-test"],
             "console": "integratedTerminal",
-            "justMyCode": false,
+            "justMyCode": true,
         }
     ]
 }
