@@ -45,7 +45,7 @@ async def get_steam_id(
     url = f"{STEAM_SEARCH_URL}?{urllib.parse.urlencode(params)}"
 
     async with get_new_page(context) as page:
-        await page.goto(url)
+        await page.goto(url, timeout=30000)
 
         elements = (
             page.locator("#search_result_container")
@@ -262,7 +262,7 @@ async def add_data_from_steam_store_page(
     context: BrowserContext,
 ) -> None:
     async with get_new_page(context) as page:
-        await page.goto(steam_info.url)
+        await page.goto(steam_info.url, timeout=30000)
 
         try:
             await page.wait_for_selector(".game_page_background")

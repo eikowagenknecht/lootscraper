@@ -104,7 +104,7 @@ class GogGamesScraper(GogBaseScraper):
 
     async def read_offer_from_details_page(self, url: str) -> GogRawOffer:
         async with get_new_page(self.context) as page:
-            await page.goto(url)
+            await page.goto(url, timeout=30000)
 
             title = await page.locator(".productcard-basics__title").text_content()
             if title is None:
