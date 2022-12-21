@@ -366,12 +366,16 @@ class LootDatabase:
         if len(result) == 0:
             return None
 
-        # Return exact match if possible
+        # If there is only one match, return it
+        if len(result) == 1:
+            return result[0]
+
+        # If there are multiple matches, return the one that matches the valid_to date
         for result_offer in result:
             if result_offer.valid_to == valid_to:
                 return result_offer
 
-        # Otherwise return the last match (=newest)
+        # If there are multiple close matches, return the last (=newest)
         logger.warning(
             f"Found multiple offers for {title} that are close to {valid_to}. Returning the newest of those."
         )
