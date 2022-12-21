@@ -1,10 +1,55 @@
-[tool.isort]
+[tool.poetry]
+name = "lootscraper"
+version = "1.0.0"
+description = "RSS feeds and Telegram bot for free game and loot offers."
+authors = ["Eiko Wagenknecht <git@eiko-wagenknecht.de>"]
+readme = "README.md"
+license = "CC-BY-NC-SA-4.0"
+repository = "https://github.com/eikowagenknecht/lootscraper"
+include = ["config.default.ini"]
 
+[tool.poetry.urls]
+"Bug Tracker" = "https://github.com/eikowagenknecht/lootscraper/issues"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+alembic = "^1.9.0"
+feedgen = "^0.9.0"
+humanize = "^4.4.0"
+httpx = "^0.23.1"
+python-telegram-bot = { extras = ["rate-limiter"], version = "^20.0a6" }
+pytz = "^2022.7"
+playwright = "^1.28.0"
+SQLAlchemy = "^1.4.45"
+Unidecode = "^1.3.6"
+xvfbwrapper = "^0.2.9"
+
+[tool.poetry.group.dev]
+optional = true
+
+[tool.poetry.group.dev.dependencies]
+# Formatting
+black = "^22.12.0"
+isort = "^5.11.3"
+# Linting
+bandit = "^1.7.4"
+pylint = "^2.15.9"
+flake8 = "^6.0.0"
+flake8-isort = "^5.0.3"
+# Type checking
+mypy = "^0.991"
+# Profiling
+scalene = "^1.5.16"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.isort]
 profile = "black"
 
 [tool.mypy]
-
-python_version = "3.10"
+python_version = "3.11"
 # ignore imports from 3rd party libraries where no stubs are available
 ignore_missing_imports = true
 warn_unused_configs = true
@@ -15,13 +60,11 @@ disallow_untyped_defs = true
 disallow_any_generics = true
 
 [tool.pylint.master]
-
 # https://stackoverflow.com/questions/1899436/pylint-unable-to-import-error-how-to-set-pythonpath
 # Doesn't work with pyproject.toml but also doesn't seem to bee needed anymore with it
 #init-hook = "from pylint.config import find_pylintrc; import os, sys; sys.path.append(os.path.dirname(find_pylintrc()))"
 
 [tool.pylint.messages_control]
-
 # Some disabled because they are too verbose, some because they are handled better by flake8
 disable = [
     "raw-checker-failed",
@@ -52,6 +95,5 @@ disable = [
 ]
 
 [tool.pylint.logging]
-
 # Allow fstrings in logging. Might be changed later to better support log aggregators like Sentry
 logging-format-style = "new"

@@ -1,7 +1,7 @@
 # type: ignore
 import unittest
 
-from app.tools import run_cleanup
+from lootscraper.tools import run_cleanup
 
 
 class ManualTests(unittest.IsolatedAsyncioTestCase):

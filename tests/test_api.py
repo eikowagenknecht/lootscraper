@@ -1,7 +1,7 @@
 # type: ignore
 import unittest
 
-from app.scraper.info.igdb import get_igdb_details, get_igdb_id
+from lootscraper.scraper.info.igdb import get_igdb_details, get_igdb_id
 
 
 class IGDBGameInfoTests(unittest.IsolatedAsyncioTestCase):

@@ -2,19 +2,19 @@
 import unittest
 from datetime import datetime, timezone
 
-from app.browser import get_browser_context
-from app.scraper.info.steam import get_steam_details, get_steam_id
-from app.scraper.loot.amazon_games import AmazonGamesScraper
-from app.scraper.loot.amazon_loot import AmazonLootScraper
-from app.scraper.loot.apple_games import AppleGamesScraper
-from app.scraper.loot.epic_games import EpicGamesScraper
-from app.scraper.loot.gog_games import GogGamesScraper
-from app.scraper.loot.gog_games_alwaysfree import GogGamesAlwaysFreeScraper
-from app.scraper.loot.google_games import GoogleGamesScraper
-from app.scraper.loot.humble_games import HumbleGamesScraper
-from app.scraper.loot.itch_games import ItchGamesScraper
-from app.scraper.loot.steam_games import SteamGamesScraper
-from app.scraper.loot.steam_loot import SteamLootScraper
+from lootscraper.browser import get_browser_context
+from lootscraper.scraper.info.steam import get_steam_details, get_steam_id
+from lootscraper.scraper.loot.amazon_games import AmazonGamesScraper
+from lootscraper.scraper.loot.amazon_loot import AmazonLootScraper
+from lootscraper.scraper.loot.apple_games import AppleGamesScraper
+from lootscraper.scraper.loot.epic_games import EpicGamesScraper
+from lootscraper.scraper.loot.gog_games import GogGamesScraper
+from lootscraper.scraper.loot.gog_games_alwaysfree import GogGamesAlwaysFreeScraper
+from lootscraper.scraper.loot.google_games import GoogleGamesScraper
+from lootscraper.scraper.loot.humble_games import HumbleGamesScraper
+from lootscraper.scraper.loot.itch_games import ItchGamesScraper
+from lootscraper.scraper.loot.steam_games import SteamGamesScraper
+from lootscraper.scraper.loot.steam_loot import SteamLootScraper
 
 
 class PlaywrightTests(unittest.IsolatedAsyncioTestCase):
