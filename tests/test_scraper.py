@@ -21,7 +21,7 @@ class PlaywrightTests(unittest.IsolatedAsyncioTestCase):
     async def test_pagedriver(self) -> None:
         async with get_browser_context() as context:
             page = await context.new_page()
-            res = await page.goto("https://google.com/")
+            res = await page.goto("https://google.com/", timeout=30000)
             self.assertEqual(res.status, 200)
 
 
