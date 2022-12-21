@@ -83,7 +83,7 @@ class HumbleGamesScraper(Scraper):
 
     async def add_details(self, offer: HumbleRawOffer, url: str) -> None:
         async with get_new_page(self.context) as page:
-            await page.goto(url)
+            await page.goto(url, timeout=30000)
 
             await page.wait_for_selector(".promo-timer-view .js-days")
             days_valid = await page.locator(".promo-timer-view .js-days").text_content()
