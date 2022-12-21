@@ -40,14 +40,6 @@ except ImportError:
 
 EXAMPLE_CONFIG_FILE = "config.default.ini"
 
-# TODO:
-# - Look for TODOs in the code
-# - Add Telegram command for complete refresh of all metadata
-#   Drop all metadata and re-download it from IGDB and Steam
-# - Remove duplicate offers in production database
-# - Filter out the demo offers from Humble Bundle
-# - Reactivate Telegram tests
-
 
 async def main() -> None:
     # Synchronously set up the basics we need to run anything

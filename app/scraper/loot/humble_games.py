@@ -1,11 +1,12 @@
 import logging
 import urllib.parse
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 from playwright.async_api import Locator, Page
 
-from app.common import OfferDuration, OfferType, Source
+from app.browser import get_new_page
+from app.common import Category, OfferDuration, OfferType, Source
 from app.database import Offer
 from app.scraper.loot.scraper import OfferHandler, RawOffer, Scraper
 
@@ -21,9 +22,8 @@ SEARCH_URL_PARAMS = {
 
 @dataclass(kw_only=True)
 class HumbleRawOffer(RawOffer):
-    # This is unused for now!
-    # TODO: Check details page for valid_to (makes it easier to filter out nonsense entries that are valid "forever")
-    valid_to: str | None = None
+    valid_for_minutes: int | None = None
+    original_price: float | None = None
 
 
 class HumbleGamesScraper(Scraper):
@@ -71,11 +71,41 @@ class HumbleGamesScraper(Scraper):
         if img_url is None:
             raise ValueError(f"Couldn't find image for {title}.")
 
-        return HumbleRawOffer(
+        raw_offer = HumbleRawOffer(
             title=title,
             url=url,
             img_url=img_url,
         )
+
+        await self.add_details(raw_offer, url)
+
+        return raw_offer
+
+    async def add_details(self, offer: HumbleRawOffer, url: str) -> None:
+        async with get_new_page(self.context) as page:
+            await page.goto(url)
+
+            await page.wait_for_selector(".promo-timer-view .js-days")
+            days_valid = await page.locator(".promo-timer-view .js-days").text_content()
+            hours_valid = await page.locator(
+                ".promo-timer-view .js-hours"
+            ).text_content()
+            minutes_valid = await page.locator(
+                ".promo-timer-view .js-minutes"
+            ).text_content()
+
+            if days_valid is None or hours_valid is None or minutes_valid is None:
+                raise ValueError(f"Couldn't find valid to for {offer.title}.")
+
+            # May throw a ValueError, that's okay and will be handled.
+            offer.valid_for_minutes = (
+                int(days_valid) * 24 * 60 + int(hours_valid) * 60 + int(minutes_valid)
+            )
+
+            original_price = await page.locator(".full-price").text_content()
+            if original_price is not None:
+                # May throw a ValueError, that's okay and will be handled.
+                offer.original_price = float(original_price.removeprefix("€").strip())
 
     def normalize_offer(self, raw_offer: RawOffer) -> Offer:
         if not isinstance(raw_offer, HumbleRawOffer):
@@ -85,14 +115,28 @@ class HumbleGamesScraper(Scraper):
             "title": raw_offer.title,
         }
 
+        if raw_offer.valid_for_minutes is not None:
+            valid_to = datetime.now().replace(tzinfo=timezone.utc) + timedelta(
+                minutes=raw_offer.valid_for_minutes
+            )
+        else:
+            valid_to = None
+
+        if raw_offer.original_price is not None and raw_offer.original_price < 1.0:
+            category = Category.CHEAP
+        else:
+            category = Category.VALID
+
         return Offer(
             source=HumbleGamesScraper.get_source(),
             duration=HumbleGamesScraper.get_duration(),
             type=HumbleGamesScraper.get_type(),
+            category=category,
             title=raw_offer.title,
             probable_game_name=raw_offer.title,
             seen_last=datetime.now(timezone.utc),
             rawtext=rawtext,
             url=raw_offer.url,
             img_url=raw_offer.img_url,
+            valid_to=valid_to,
         )
