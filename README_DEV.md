@@ -4,13 +4,14 @@ Most people will probably just use the feeds and bot I provide, so there is no n
 
 ## Run this locally
 
-So if you actually want to run this yourself, you first need an installed Python 3.10+ environment.
+So if you actually want to run this yourself, you first need an installed Python 3.11+ environment. The commands below are for Windows. If you use Linux, you probably know the right substitutes.
 
 - Download repository
+- Install poetry (<https://python-poetry.org/>)
 - Create virtual environment (`python -m venv .venv`)
 - Activate virtual environment (`./.venv/Scripts/Activate`)
-- Install the required packages (`pip install -r requirements.txt`)
-- Run (`python ./lootscraper.py`)
+- Install the required packages (`poetry install`)
+- Run (`poetry run python -m lootscraper`)
 
 ### Settings
 
@@ -26,7 +27,7 @@ Start a chat with [Botfather](https://t.me/botfather), send him the `/create` co
 
 ## Setting up the development environment
 
-In addition to the above steps ("Run this locally"), I recommend installing the additional dev packages (`pip install -r requirements_dev.txt`) and the recommended VS Code extensions (Extensions > Filter > Recommended).
+In addition to the above steps ("Run this locally"), I recommend installing the additional dev packages (`poetry install --with dev`) and the recommended VS Code extensions (Extensions > Filter > Recommended).
 
 ## Build and run as Docker container
 
@@ -65,3 +66,12 @@ Some quick hints:
 - Downgrade 1 revision: `alembic downgrade -1`
 - Write custom scripts:
 <https://stackoverflow.com/questions/24612395/how-do-i-execute-inserts-and-updates-in-an-alembic-upgrade-script>
+
+## Poetry
+
+Install: `poetry install --with dev`
+Install and remove unused: `poetry install --with dev --sync`
+Build: `poetry build`
+Add package: `poetry add <package>`
+Add dev package: `poetry add <package> --group dev`
+Run: `poetry run <package>`

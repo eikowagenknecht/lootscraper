@@ -1,6 +1,6 @@
 import unittest
 
-from app.scraper.info.utils import clean_loot_title, get_match_score
+from lootscraper.scraper.info.utils import clean_loot_title, get_match_score
 
 
 class LocalTests(unittest.TestCase):

@@ -5,9 +5,9 @@ import unittest
 import sqlalchemy as sa
 from sqlalchemy import orm
 
-from app.configparser import Config
-from app.database import LootDatabase, Offer, User
-from app.telegram import TelegramBot
+from lootscraper.config import Config
+from lootscraper.database import LootDatabase, Offer, User
+from lootscraper.telegram import TelegramBot
 
 
 class TelegramTests(unittest.IsolatedAsyncioTestCase):
