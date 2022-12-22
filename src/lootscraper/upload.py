@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 # TLS explicit encryption. For now it's run in a separate thread.
 def upload_to_server(file: Path) -> None:
     host = Config.get().ftp_host
-    user = Config.get().ftp_username
+    user = Config.get().ftp_user
     password = Config.get().ftp_password
 
     logger.info(f"Uploading {file.name} to host {host} as user {user}")

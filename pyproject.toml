@@ -6,7 +6,7 @@ authors = ["Eiko Wagenknecht <git@eiko-wagenknecht.de>"]
 readme = "README.md"
 license = "CC-BY-NC-SA-4.0"
 repository = "https://github.com/eikowagenknecht/lootscraper"
-include = ["config.default.ini"]
+include = ["config.default.toml"]
 
 [tool.poetry.scripts]
 lootscraper = 'lootscraper.main:main'

@@ -322,7 +322,7 @@ class TelegramBot:
             return
 
         # Check if the user is an admin
-        if not update.effective_user.id == Config.get().telegram_admin_id:
+        if not update.effective_user.id == Config.get().telegram_admin_user_id:
             await self.send_message(
                 chat_id=update.effective_chat.id,
                 text=markdown_escape(
@@ -375,7 +375,7 @@ class TelegramBot:
             return
 
         # Check if the user is an admin
-        if not update.effective_user.id == Config.get().telegram_admin_id:
+        if not update.effective_user.id == Config.get().telegram_admin_user_id:
             await self.send_message(
                 chat_id=update.effective_chat.id,
                 text=markdown_escape(
