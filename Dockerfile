@@ -35,7 +35,10 @@ COPY poetry.lock \
     pyproject.toml \
     config.default.ini \
     alembic.ini \
+    README.md \
     /app/
+COPY /src/ /app/src/
+
 RUN poetry install
 RUN poetry run playwright install chromium
 RUN poetry run playwright install-deps
