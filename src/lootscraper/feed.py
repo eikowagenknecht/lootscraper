@@ -1,6 +1,7 @@
 # mypy: ignore-errors
 import asyncio
 import html
+import logging
 from datetime import datetime
 from pathlib import Path
 
@@ -16,6 +17,8 @@ from .common import (
     OfferType,
     Source,
 )
+
+logger = logging.getLogger(__name__)
 
 
 async def generate_feed(

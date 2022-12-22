@@ -7,7 +7,7 @@ from sqlalchemy import orm
 
 from lootscraper.config import Config
 from lootscraper.database import LootDatabase, Offer, User
-from lootscraper.telegram import TelegramBot
+from lootscraper.telegrambot import TelegramBot
 
 
 class TelegramTests(unittest.IsolatedAsyncioTestCase):
