@@ -36,14 +36,16 @@ Docker needs to be installed first of course. If you want to skip the build step
 - Download repository
 - In terminal go to directory
 - First run:
-  - Build: `docker build . -t eikowagenknecht/lootscraper:main`
-  - Start: `docker run --detach --volume /your/local/path:/data --name lootscraper eikowagenknecht/lootscraper:main`
+  - Build: `docker build . -t eikowagenknecht/lootscraper:develop`
+  - Start: `docker run --detach --volume /your/local/path:/data --name lootscraper eikowagenknecht/lootscraper:develop`
 - Update:
   - Stop: `docker stop lootscraper`
   - Remove: `docker container rm lootscraper`
-  - Build without cache: `docker build . --no-cache -t eikowagenknecht/lootscraper:main`
-  - Start: `docker run --detach --volume /your/local/path:/data --name lootscraper eikowagenknecht/lootscraper:main`
-- Debug: `docker run -it --entrypoint /bin/bash --volume /your/local/path:/data --name lootscraper_debug eikowagenknecht/lootscraper:main`
+  - Build without cache: `docker build . --no-cache -t eikowagenknecht/lootscraper:develop`
+  - Start: `docker run --detach --volume /your/local/path:/data --name lootscraper eikowagenknecht/lootscraper:develop`
+- Push: `docker push eikowagenknecht/lootscraper:develop`
+- Save locally: `docker image save -o ./data/lootscraper.tar eikowagenknecht/lootscraper:develop`
+- Debug: `docker run -it --entrypoint /bin/bash --volume /your/local/path:/data --name lootscraper_debug eikowagenknecht/lootscraper:develop`
 - To stop, run `docker stop lootscraper`
 
 ## SQLAlchemy
