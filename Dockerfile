@@ -41,7 +41,7 @@ RUN poetry run playwright install chromium
 RUN poetry run playwright install-deps
 
 # Lootscraper: Run
-CMD [ "poetry", "run", "python", "-m", "lootscraper" ]
+CMD [ "poetry", "run", "lootscraper" ]
 
 # Config
 VOLUME /data

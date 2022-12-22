@@ -11,7 +11,7 @@ So if you actually want to run this yourself, you first need an installed Python
 - Create virtual environment (`python -m venv .venv`)
 - Activate virtual environment (`./.venv/Scripts/Activate`)
 - Install the required packages (`poetry install`)
-- Run (`poetry run python -m lootscraper`)
+- Run (`poetry run lootscraper`)
 
 ### Settings
 
@@ -75,3 +75,8 @@ Build: `poetry build`
 Add package: `poetry add <package>`
 Add dev package: `poetry add <package> --group dev`
 Run: `poetry run <package>`
+
+### Update all dependencies in pyproject.toml
+
+Install tool: `poetry self add poetry-plugin-up`
+Run: `poetry up`

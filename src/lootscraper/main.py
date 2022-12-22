@@ -39,7 +39,14 @@ except ImportError:
 EXAMPLE_CONFIG_FILE = "config.default.ini"
 
 
-async def main() -> None:
+def main() -> None:
+    try:
+        asyncio.run(run())
+    except KeyboardInterrupt:
+        pass
+
+
+async def run() -> None:
     # Synchronously set up the basics we need to run anything
     initialize_config_file()
     check_config_file()
