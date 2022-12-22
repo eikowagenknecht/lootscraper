@@ -141,21 +141,20 @@ class Scraper:
                 offers_locator = handler.locator
 
                 try:
-                    no_res = await offers_locator.count()
+                    elements = await offers_locator.all()
                 except Error as e:
                     # Without offers we can't do anything
                     logger.error(f"Couldn't find any offers: {e}")
                     return []
 
-                for i in range(no_res):
+                for element in elements:
                     try:
-                        element = offers_locator.nth(i)
                         raw_offer = await handler.read_offer_func(element)
                         if raw_offer is None:
                             continue
                     except (ValueError, Error) as e:
                         # Skip offers that can't be loaded
-                        logger.error(f"Couldn't parse offer {i}: {e}")
+                        logger.error(f"Couldn't parse element {str(element)}: {e}")
                         continue
 
                     normalized_offer = handler.normalize_offer_func(raw_offer)

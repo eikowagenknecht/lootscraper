@@ -47,17 +47,20 @@ async def get_steam_id(
     async with get_new_page(context) as page:
         await page.goto(url, timeout=30000)
 
-        elements = (
-            page.locator("#search_result_container")
-            .locator("a")
-            .filter(has=page.locator(".title"))
-        )
+        try:
+            elements = (
+                await page.locator("#search_result_container")
+                .locator("a")
+                .filter(has=page.locator(".title"))
+                .all()
+            )
+        except Error as e:
+            logger.error(f"Could not find search results container: {str(e)}")
+            return None
 
-        no_res = await elements.count()
         best_match: SteamEntry | None = None
 
-        for i in range(no_res):
-            element = elements.nth(i)
+        for element in elements:
             try:
                 title = await element.locator(".title").text_content()
                 appid = await element.get_attribute("data-ds-appid")
