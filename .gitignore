@@ -1,19 +1,17 @@
 # Virtual environments
 /.venv/
 
-# Secrets
-/app/config/config.py
+# App data
+/data/
 
-# Byte-compiled / optimized / DLL files
+# Distributables
+/dist/
+
+# Python compilates and cache files
 __pycache__/
 *.py[cod]
 *$py.class
 
-# Dev environments
+# Dev and tool data
 /.idea/
-
-# Temporary files
 /.mypy_cache/
-
-# App data
-/data/
