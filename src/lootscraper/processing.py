@@ -170,7 +170,7 @@ async def action_generate_feed(loot_offers_in_db: list[Offer]) -> None:
             file=feed_file,
             author_name=cfg.feed_author_name,
             author_web=cfg.feed_author_web,
-            author_mail=cfg.feed_author_mail,
+            author_mail=cfg.feed_author_email,
             feed_url_prefix=cfg.feed_url_prefix,
             feed_url_alternate=cfg.feed_url_alternate,
             feed_id_prefix=cfg.feed_id_prefix,
@@ -183,7 +183,7 @@ async def action_generate_feed(loot_offers_in_db: list[Offer]) -> None:
             feed_changed = True
             any_feed_changed = True
 
-        if feed_changed and cfg.upload_feed:
+        if feed_changed and cfg.upload_to_ftp:
             await asyncio.to_thread(upload_to_server, feed_file)
 
     # Generate and upload cumulated feed
@@ -194,12 +194,12 @@ async def action_generate_feed(loot_offers_in_db: list[Offer]) -> None:
             file=feed_file,
             author_name=cfg.feed_author_name,
             author_web=cfg.feed_author_web,
-            author_mail=cfg.feed_author_mail,
+            author_mail=cfg.feed_author_email,
             feed_url_prefix=cfg.feed_url_prefix,
             feed_url_alternate=cfg.feed_url_alternate,
             feed_id_prefix=cfg.feed_id_prefix,
         )
-        if cfg.upload_feed:
+        if cfg.upload_to_ftp:
             await asyncio.to_thread(upload_to_server, feed_file_base)
         else:
             logging.info("Skipping upload, disabled")
