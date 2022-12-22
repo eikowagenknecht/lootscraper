@@ -39,12 +39,12 @@ class ParsedConfig:
     enabled_offer_durations: list[OfferDuration] = field(default_factory=list)
 
     # Sources: Info
-    info_steam: bool = True
-    info_igdb: bool = True
+    info_steam: bool = False
+    info_igdb: bool = False
 
     # Actions
     scrape_info: bool = True
-    generate_feed: bool = True
+    generate_feed: bool = False
     upload_to_ftp: bool = False
     telegram_bot: bool = False
 
