@@ -29,7 +29,7 @@ except ImportError:
     use_virtual_display = False
 
 
-EXAMPLE_CONFIG_FILE = "config.default.ini"
+EXAMPLE_CONFIG_FILE = "config.default.toml"
 
 
 def main() -> None:
@@ -187,7 +187,7 @@ async def run_scraper_loop(
         if use_virtual_display:
             stack.enter_context(Xvfb())
 
-        time_between_runs = int(Config.get().wait_between_runs)
+        time_between_runs = int(Config.get().wait_between_runs_seconds)
 
         # Loop forever (until terminated by external events)
         run_no = 0

@@ -41,7 +41,9 @@ async def get_browser_context() -> AsyncGenerator[BrowserContext, None]:
                 # Use Reykjavik timezone (=UTC) because UTC is not supported directly
                 timezone_id="Atlantic/Reykjavik",
             )
-            context.set_default_timeout(Config.get().web_timeout * 1000)  # Milliseconds
+            context.set_default_timeout(
+                Config.get().web_timeout_seconds * 1000
+            )  # Milliseconds
 
             yield context
     except Error as e:

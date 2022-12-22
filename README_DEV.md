@@ -15,7 +15,7 @@ So if you actually want to run this yourself, you first need an installed Python
 
 ### Settings
 
-On the first startup, a default configuration file will be created in `./data/config.ini`. You can edit this file to change the settings (e.g. the sites to visit and the actions to perform). It also stores the needed API keys (see below), so just put them in there and then start the application again.
+On the first startup, a default configuration file will be created in `./data/config.toml`. You can edit this file to change the settings (e.g. the sites to visit and the actions to perform). It also stores the needed API keys (see below), so just put them in there and then start the application again.
 
 #### IGDB API Keys
 

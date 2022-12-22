@@ -1,15 +1,15 @@
-import configparser
-from asyncio.log import logger
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
+
+import tomllib
 
 from lootscraper.common import OfferDuration, OfferType, Source
 
 # Do not use logging here. This is executed before the logging framework is
 # initialized and using logging here would initialize with the wrong values.
 
-CONFIG_FILE = Path("config.ini")
+CONFIG_FILE = Path("config.toml")
 
 
 class TelegramLogLevel(Enum):
@@ -27,12 +27,11 @@ class ParsedConfig:
     feed_file_prefix: str = "lootscraper"
     log_file: str = "lootscraper.log"
     log_level: str = "INFO"
-    wait_between_runs: int = 0
+    wait_between_runs_seconds: int = 0
 
     # Expert
     db_echo: bool = False
-    headless_chrome: bool = True
-    web_timeout: int = 5
+    web_timeout_seconds: int = 5
 
     # Sources: Offers
     enabled_offer_sources: list[Source] = field(default_factory=list)
@@ -44,16 +43,16 @@ class ParsedConfig:
     info_igdb: bool = True
 
     # Actions
-    scrape_info: bool = True  # Not used anywhere yet
+    scrape_info: bool = True
     generate_feed: bool = True
-    upload_feed: bool = False
+    upload_to_ftp: bool = False
     telegram_bot: bool = False
 
     # Telegram
     telegram_log_level: TelegramLogLevel = TelegramLogLevel.ERROR
     telegram_access_token: str = ""
     telegram_developer_chat_id: int = 0
-    telegram_admin_id: int = 0
+    telegram_admin_user_id: int = 0
 
     # IGDB
     igdb_client_id: str = ""
@@ -61,16 +60,16 @@ class ParsedConfig:
 
     # FTP
     ftp_host: str = ""
-    ftp_username: str = ""
+    ftp_user: str = ""
     ftp_password: str = ""
 
     # Feed
-    feed_author_name: str = "Eiko Wagenknecht"
-    feed_author_mail: str = "feed@ew-mail.de"
-    feed_author_web: str = "https://eiko-wagenknecht.de"
-    feed_url_prefix: str = "https://feed.phenx.de/"
-    feed_url_alternate: str = "https://phenx.de/loot"
-    feed_id_prefix: str = "https://phenx.de/loot/"
+    feed_author_name: str = "John Doe"
+    feed_author_email: str = "mail@example.com"
+    feed_author_web: str = "https://example.com"
+    feed_url_prefix: str = "https://feed.example.com/"
+    feed_url_alternate: str = "https://example.com/loot"
+    feed_id_prefix: str = "https://example.com/loot/"
 
 
 class Config:
@@ -80,7 +79,10 @@ class Config:
 
     @staticmethod
     def config_file() -> Path:
-        """Return the path to the config file."""
+        """
+        Return the path to the config file.
+        """
+
         if Config.__config_file is None:
             data_path = Config.data_path()
             config_file = data_path / Path(CONFIG_FILE)
@@ -90,7 +92,10 @@ class Config:
 
     @staticmethod
     def data_path() -> Path:
-        """Return the path to the data directory."""
+        """
+        Return the path to the data directory.
+        """
+
         if Config.__data_path is None:
             docker_path = Path("/data")
             local_path = Path("data")
@@ -103,96 +108,198 @@ class Config:
 
     @staticmethod
     def get() -> ParsedConfig:
-        """Parse the config file into a ParsedConfig dataclass. Do this only once (lazy)."""
+        """
+        Parse the config file into a ParsedConfig dataclass. Do this only once (lazy).
+        """
+
         if Config.__parsed_config is None:
-            config = configparser.ConfigParser()
-            config.read(Config.data_path() / CONFIG_FILE)
+            with open(Config.data_path() / CONFIG_FILE, "rb") as f:
+                data = tomllib.load(f)
 
             parsed_config = ParsedConfig()
-            parsed_config.database_file = config["common"]["DatabaseFile"]
-            parsed_config.feed_file_prefix = config["common"]["FeedFilePrefix"]
-            parsed_config.log_file = config["common"]["LogFile"]
-            parsed_config.log_level = config["common"]["LogLevel"]
-            parsed_config.wait_between_runs = int(config["common"]["WaitBetweenRuns"])
 
-            parsed_config.db_echo = config.getboolean("expert", "DbEcho")
-            parsed_config.headless_chrome = config.getboolean(
-                "expert", "HeadlessChrome"
-            )
-            parsed_config.web_timeout = int(config["expert"]["WebTimeout"])
-
-            if config.getboolean("offer_sources", "Amazon"):
-                parsed_config.enabled_offer_sources.append(Source.AMAZON)
-            if config.getboolean("offer_sources", "Apple"):
-                parsed_config.enabled_offer_sources.append(Source.APPLE)
-            if config.getboolean("offer_sources", "Epic"):
-                parsed_config.enabled_offer_sources.append(Source.EPIC)
-            if config.getboolean("offer_sources", "GOG"):
-                parsed_config.enabled_offer_sources.append(Source.GOG)
-            if config.getboolean("offer_sources", "Google"):
-                parsed_config.enabled_offer_sources.append(Source.GOOGLE)
-            if config.getboolean("offer_sources", "Humble"):
-                parsed_config.enabled_offer_sources.append(Source.HUMBLE)
-            if config.getboolean("offer_sources", "Itch"):
-                parsed_config.enabled_offer_sources.append(Source.ITCH)
-            if config.getboolean("offer_sources", "Steam"):
-                parsed_config.enabled_offer_sources.append(Source.STEAM)
-
-            if config.getboolean("offer_types", "Games"):
-                parsed_config.enabled_offer_types.append(OfferType.GAME)
-            if config.getboolean("offer_types", "Loot"):
-                parsed_config.enabled_offer_types.append(OfferType.LOOT)
-
-            if config.getboolean("offer_durations", "Always"):
-                parsed_config.enabled_offer_durations.append(OfferDuration.ALWAYS)
-            if config.getboolean("offer_durations", "Claimable"):
-                parsed_config.enabled_offer_durations.append(OfferDuration.CLAIMABLE)
-            if config.getboolean("offer_durations", "Temporary"):
-                parsed_config.enabled_offer_durations.append(OfferDuration.TEMPORARY)
-
-            parsed_config.info_steam = config.getboolean("sources_info", "Steam")
-            parsed_config.info_igdb = config.getboolean("sources_info", "IGDB")
-
-            parsed_config.scrape_info = config.getboolean("actions", "ScrapeInfo")
-            parsed_config.generate_feed = config.getboolean("actions", "GenerateFeed")
-            parsed_config.upload_feed = config.getboolean("actions", "UploadFtp")
-            parsed_config.telegram_bot = config.getboolean("actions", "TelegramBot")
-
-            parsed_config.telegram_log_level = TelegramLogLevel[
-                config["telegram"]["LogLevel"]
-            ]
-            parsed_config.telegram_access_token = config["telegram"]["AccessToken"]
+            # Common
             try:
-                parsed_config.telegram_developer_chat_id = int(
-                    config["telegram"]["DeveloperChatID"]
-                )
-            except ValueError:
-                logger.warning(
-                    "Invalid developer chat ID. Only ignore if you don't use the Telegram bot."
-                )
+                parsed_config.database_file = data["common"]["database_file"]
+            except KeyError:
+                pass
 
             try:
-                parsed_config.telegram_admin_id = int(
-                    config["telegram"]["AdminTelegramID"]
-                )
-            except ValueError:
-                logger.warning(
-                    "Invalid telegram admin ID. Only ignore if you don't use the Telegram bot."
-                )
+                parsed_config.feed_file_prefix = data["common"]["feed_file_prefix"]
+            except KeyError:
+                pass
 
-            parsed_config.igdb_client_id = config["igdb"]["ClientID"]
-            parsed_config.igdb_client_secret = config["igdb"]["ClientSecret"]
+            try:
+                parsed_config.log_file = data["common"]["log_file"]
+            except KeyError:
+                pass
 
-            parsed_config.ftp_host = config["ftp"]["Host"]
-            parsed_config.ftp_username = config["ftp"]["User"]
-            parsed_config.ftp_password = config["ftp"]["Password"]
+            try:
+                parsed_config.log_level = data["common"]["log_level"]
+            except KeyError:
+                pass
 
-            parsed_config.feed_author_name = config["feed"]["AuthorName"]
-            parsed_config.feed_author_mail = config["feed"]["AuthorMail"]
-            parsed_config.feed_author_web = config["feed"]["AuthorWeb"]
-            parsed_config.feed_url_prefix = config["feed"]["FeedUrlPrefix"]
-            parsed_config.feed_url_alternate = config["feed"]["FeedUrlAlternate"]
-            parsed_config.feed_id_prefix = config["feed"]["FeedIdPrefix"]
+            try:
+                parsed_config.wait_between_runs_seconds = data["common"][
+                    "wait_between_runs_seconds"
+                ]
+            except KeyError:
+                pass
+
+            # Expert
+            try:
+                parsed_config.db_echo = data["expert"]["db_echo"]
+            except KeyError:
+                pass
+
+            try:
+                parsed_config.web_timeout_seconds = data["expert"][
+                    "web_timeout_seconds"
+                ]
+            except KeyError:
+                pass
+
+            # Scraper
+            try:
+                sources = data["scraper"]["offer_sources"]
+                converted_sources = []
+                for source in sources:
+                    converted_sources.append(Source[source])
+                parsed_config.enabled_offer_sources = converted_sources
+            except KeyError:
+                pass
+
+            try:
+                types = data["scraper"]["offer_types"]
+                converted_types = []
+                for type_ in types:
+                    converted_types.append(OfferType[type_])
+                parsed_config.enabled_offer_types = converted_types
+            except KeyError:
+                pass
+
+            try:
+                durations = data["scraper"]["offer_durations"]
+                converted_durations = []
+                for duration in durations:
+                    converted_durations.append(OfferDuration[duration])
+                parsed_config.enabled_offer_durations = converted_durations
+            except KeyError:
+                pass
+
+            try:
+                parsed_config.info_steam = "STEAM" in data["scraper"]["info_sources"]
+            except KeyError:
+                pass
+
+            try:
+                parsed_config.info_igdb = "IGDB" in data["scraper"]["info_sources"]
+            except KeyError:
+                pass
+
+            # Actions
+            try:
+                parsed_config.scrape_info = data["actions"]["scrape_info"]
+            except KeyError:
+                pass
+
+            try:
+                parsed_config.generate_feed = data["actions"]["generate_feed"]
+            except KeyError:
+                pass
+
+            try:
+                parsed_config.upload_to_ftp = data["actions"]["upload_to_ftp"]
+            except KeyError:
+                pass
+
+            try:
+                parsed_config.telegram_bot = data["actions"]["telegram_bot"]
+            except KeyError:
+                pass
+
+            # Telegram
+            try:
+                parsed_config.telegram_access_token = data["telegram"]["access_token"]
+            except KeyError:
+                pass
+
+            try:
+                parsed_config.telegram_developer_chat_id = data["telegram"][
+                    "developer_chat_id"
+                ]
+            except KeyError:
+                pass
+
+            try:
+                parsed_config.telegram_log_level = TelegramLogLevel[
+                    data["telegram"]["log_level"]
+                ]
+            except KeyError:
+                pass
+
+            try:
+                parsed_config.telegram_admin_user_id = data["telegram"]["admin_user_id"]
+            except KeyError:
+                pass
+
+            # IGDB
+            try:
+                parsed_config.igdb_client_id = data["igdb"]["client_id"]
+            except KeyError:
+                pass
+
+            try:
+                parsed_config.igdb_client_secret = data["igdb"]["client_secret"]
+            except KeyError:
+                pass
+
+            # FTP
+            try:
+                parsed_config.ftp_host = data["ftp"]["host"]
+            except KeyError:
+                pass
+
+            try:
+                parsed_config.ftp_user = data["ftp"]["user"]
+            except KeyError:
+                pass
+
+            try:
+                parsed_config.ftp_password = data["ftp"]["password"]
+            except KeyError:
+                pass
+
+            # Feed
+            try:
+                parsed_config.feed_author_name = data["feed"]["author_name"]
+            except KeyError:
+                pass
+
+            try:
+                parsed_config.feed_author_email = data["feed"]["author_email"]
+            except KeyError:
+                pass
+
+            try:
+                parsed_config.feed_author_web = data["feed"]["author_web"]
+            except KeyError:
+                pass
+
+            try:
+                parsed_config.feed_url_prefix = data["feed"]["url_prefix"]
+            except KeyError:
+                pass
+
+            try:
+                parsed_config.feed_url_alternate = data["feed"]["url_alternate"]
+            except KeyError:
+                pass
+
+            try:
+                parsed_config.feed_id_prefix = data["feed"]["id_prefix"]
+            except KeyError:
+                pass
 
             Config.__parsed_config = parsed_config
 

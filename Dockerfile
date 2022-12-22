@@ -33,7 +33,7 @@ WORKDIR /app
 # Install Python libraries
 COPY poetry.lock \
     pyproject.toml \
-    config.default.ini \
+    config.default.toml \
     alembic.ini \
     README.md \
     /app/

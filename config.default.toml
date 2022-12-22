@@ -1,0 +1,56 @@
+[common]
+# Path is /data if it exists (Docker), otherwise the relative directory data
+database_file = "loot.db"
+feed_file_prefix = "lootscraper"
+log_file = "lootscraper.log"
+# One of: DEBUG, INFO, WARNING, ERROR, CRITICAL
+log_level = "INFO"
+# How long the script waits between runs (in seconds). 0 for single run.
+wait_between_runs_seconds = 0
+
+[expert]
+# Output all database queries to the console
+db_echo = false
+# Timeout for web requests (in seconds). Increase if you have slow internet.
+web_timeout_seconds = 5
+
+[scraper]
+# Possible Values: ["AMAZON", "APPLE", "EPIC", "GOG", "GOOGLE", "HUMBLE", "ITCH", "STEAM"]
+offer_sources = []
+# Possible Values: ["GAME", "LOOT"]
+offer_types = [] 
+# Possible Values: ["ALWAYS", "TEMPORARY", "CLAIMABLE"] 
+offer_durations = []
+info_sources = ["STEAM", "IGDB"]
+
+[actions]
+scrape_info = true
+generate_feed = true
+upload_to_ftp = false
+telegram_bot = false
+
+[telegram]
+access_token = ""
+developer_chat_id = 0
+admin_user_id = 0
+# One of: DEBUG, INFO, WARNING, ERROR, DISABLED
+log_level = "ERROR"
+
+[igdb]
+#; Twitch App API Key
+client_id = ""
+client_secret = ""
+
+[ftp]
+# Settings for the TLS FTP connection
+host = "ftp.example.com"
+user = "user"
+password = "password"
+
+[feed]
+author_name = "John Doe"
+author_email = "mail@example.com"
+author_web = "https://example.com"
+url_prefix = "https://feed.example.com/"
+url_alternate = "https://example.com/loot"
+id_prefix = "https://example.com/loot/"
