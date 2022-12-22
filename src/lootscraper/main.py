@@ -1,5 +1,3 @@
-__version__ = "1.0.0"
-
 import asyncio
 import hashlib
 import logging
@@ -15,6 +13,7 @@ from sqlalchemy import select
 from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import Session
 
+from lootscraper import __version__
 from lootscraper.browser import get_browser_context
 from lootscraper.common import TIMESTAMP_LONG, OfferDuration, OfferType, Source
 from lootscraper.config import Config
