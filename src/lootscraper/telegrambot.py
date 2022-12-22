@@ -93,8 +93,11 @@ class TelegramBot:
         self.application: Application | None = None  # type: ignore
 
     async def __aenter__(self) -> TelegramBot:
-        if self.config.telegram_bot:
+        try:
             await self.start()
+        except TelegramError as e:
+            logger.error(f"Couldn't start Telegram bot: {e}")
+            raise
         return self
 
     async def __aexit__(
