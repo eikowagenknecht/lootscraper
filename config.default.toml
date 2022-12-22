@@ -21,11 +21,12 @@ offer_sources = []
 offer_types = [] 
 # Possible Values: ["ALWAYS", "TEMPORARY", "CLAIMABLE"] 
 offer_durations = []
-info_sources = ["STEAM", "IGDB"]
+# Possible Values: ["STEAM", "IGDB"]
+info_sources = []
 
 [actions]
 scrape_info = true
-generate_feed = true
+generate_feed = false
 upload_to_ftp = false
 telegram_bot = false
 

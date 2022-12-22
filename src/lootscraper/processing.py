@@ -236,7 +236,7 @@ async def add_game_info(
     )
 
     # Use the api if no local entry exists
-    if igdb_id is None:
+    if igdb_id is None and Config.get().info_igdb:
         igdb_id = await get_igdb_id(offer.probable_game_name)
 
     if igdb_id is not None:
@@ -260,7 +260,7 @@ async def add_game_info(
     )
 
     # Use the api if no local entry exists
-    if steam_id is None:
+    if steam_id is None and Config.get().info_steam:
         steam_id = await get_steam_id(offer.probable_game_name, context=context)
 
     if steam_id is not None:
@@ -281,9 +281,9 @@ async def add_game_info(
 
     # We have some new match. Create a new game and attach it to the offer
     offer.game = Game()
-    if igdb_id:
+    if igdb_id and Config.get().info_igdb:
         offer.game.igdb_info = await get_igdb_details(id_=igdb_id)
-    if steam_id:
+    if steam_id and Config.get().info_steam:
         offer.game.steam_info = await get_steam_details(id_=steam_id, context=context)
 
 
