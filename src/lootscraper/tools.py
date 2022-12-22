@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from lootscraper.browser import get_browser_context
 from lootscraper.common import Category
 from lootscraper.database import Game, IgdbInfo, LootDatabase, Offer, SteamInfo
-from lootscraper.main import add_game_info
+from lootscraper.processing import add_game_info
 
 logger = logging.getLogger(__name__)
 
