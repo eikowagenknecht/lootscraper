@@ -422,7 +422,7 @@ async def add_data_from_steam_store_page(
                     release_date_str = release_date_str.split("Release Date:")[
                         1
                     ].strip()
-                    if release_date_str == "Coming soon":
+                    if release_date_str.lower() in ["coming soon", "to be announced"]:
                         # That's fine, we'll just leave it empty
                         pass
                     else:
