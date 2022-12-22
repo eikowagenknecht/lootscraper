@@ -31,7 +31,7 @@ async def get_browser_context() -> AsyncGenerator[BrowserContext, None]:
         async with async_playwright() as playwright:
             browser = await playwright.chromium.launch(
                 # Headful is needed for Epic Games
-                headless=Config.get().headless_chrome,
+                headless=False,
                 # Needed for docker
                 chromium_sandbox=False,
             )
