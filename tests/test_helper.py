@@ -1,6 +1,11 @@
 import unittest
+from datetime import datetime, timezone
 
-from lootscraper.scraper.info.utils import clean_loot_title, get_match_score
+from lootscraper.scraper.info.utils import (
+    calc_real_valid_to,
+    clean_loot_title,
+    get_match_score,
+)
 
 
 class LocalTests(unittest.TestCase):
@@ -53,6 +58,60 @@ class LocalTests(unittest.TestCase):
         cleaned = "World of Warships"
 
         self.assertEqual(clean_loot_title(title), cleaned)
+
+    def test_real_valid_to_date(self) -> None:
+        seen_last = datetime(2020, 6, 1, 0, 0, 0, tzinfo=timezone.utc)
+        valid_to = datetime(2020, 6, 15, 0, 0, 0, tzinfo=timezone.utc)
+        forced_now = datetime(2022, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
+
+        real_valid_to = calc_real_valid_to(seen_last, valid_to, forced_now=forced_now)
+
+        self.assertEqual(real_valid_to, seen_last)
+
+    def test_real_valid_to_date2(self) -> None:
+        seen_last = datetime(2020, 6, 1, 0, 0, 0, tzinfo=timezone.utc)
+        valid_to = datetime(2020, 6, 15, 0, 0, 0, tzinfo=timezone.utc)
+        forced_now = datetime(2020, 6, 1, 0, 0, 1, tzinfo=timezone.utc)
+
+        real_valid_to = calc_real_valid_to(seen_last, valid_to, forced_now=forced_now)
+
+        self.assertEqual(real_valid_to, valid_to)
+
+    def test_real_valid_to_date3(self) -> None:
+        seen_last = datetime(2020, 6, 1, 0, 0, 0, tzinfo=timezone.utc)
+        valid_to = None
+        forced_now = datetime(2020, 6, 1, 0, 0, 1, tzinfo=timezone.utc)
+
+        real_valid_to = calc_real_valid_to(seen_last, valid_to, forced_now=forced_now)
+
+        self.assertEqual(real_valid_to, None)
+
+    def test_real_valid_to_date4(self) -> None:
+        seen_last = datetime(2020, 6, 1, 0, 0, 0, tzinfo=timezone.utc)
+        valid_to = None
+        forced_now = datetime(2020, 6, 3, 0, 0, 0, tzinfo=timezone.utc)
+
+        real_valid_to = calc_real_valid_to(seen_last, valid_to, forced_now=forced_now)
+
+        self.assertEqual(real_valid_to, seen_last)
+
+    def test_real_valid_to_date5(self) -> None:
+        seen_last = datetime(2020, 6, 1, 0, 0, 0, tzinfo=timezone.utc)
+        valid_to = datetime(2020, 6, 1, 6, 0, 0, tzinfo=timezone.utc)
+        forced_now = datetime(2020, 6, 1, 2, 0, 0, tzinfo=timezone.utc)
+
+        real_valid_to = calc_real_valid_to(seen_last, valid_to, forced_now=forced_now)
+
+        self.assertEqual(real_valid_to, valid_to)
+
+    def test_real_valid_to_date6(self) -> None:
+        seen_last = datetime(2020, 6, 1, 0, 0, 0, tzinfo=timezone.utc)
+        valid_to = datetime(2020, 6, 1, 6, 0, 0, tzinfo=timezone.utc)
+        forced_now = datetime(2020, 6, 2, 0, 0, 0, tzinfo=timezone.utc)
+
+        real_valid_to = calc_real_valid_to(seen_last, valid_to, forced_now=forced_now)
+
+        self.assertEqual(real_valid_to, seen_last)
 
 
 if __name__ == "__main__":

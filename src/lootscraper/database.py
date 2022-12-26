@@ -7,13 +7,14 @@ from types import TracebackType
 from typing import Any, Type
 
 import sqlalchemy as sa
+from alembic import command
+from alembic.config import Config as AlembicConfig
 from sqlalchemy import orm
 from sqlalchemy.engine.interfaces import Dialect
 
-from alembic import command
-from alembic.config import Config as AlembicConfig
 from lootscraper.common import Category, Channel, OfferDuration, OfferType, Source
 from lootscraper.config import Config
+from lootscraper.scraper.info.utils import calc_real_valid_to
 
 logger = logging.getLogger(__name__)
 
@@ -182,6 +183,7 @@ class Offer(Base):
     seen_last: datetime = sa.Column(AwareDateTime, nullable=False)
     valid_from: datetime | None = sa.Column(AwareDateTime)
     valid_to: datetime | None = sa.Column(AwareDateTime)
+    """The valid to date as seen on the website. Some websites sometimes remove the offer before this date."""
 
     rawtext: dict[str, Any] | None = sa.Column(sa.JSON)
     url: str | None = sa.Column(sa.String)
@@ -193,6 +195,10 @@ class Offer(Base):
 
     game_id: int | None = sa.Column(sa.Integer, sa.ForeignKey("games.id"))
     game: Game | None = orm.relationship("Game", back_populates="offers")
+
+    def real_valid_to(self) -> datetime | None:
+        """The real valid to date. This is calculated from valid_to and seen_last."""
+        return calc_real_valid_to(self.seen_last, self.valid_to)
 
     def __repr__(self) -> str:
         return (
@@ -207,6 +213,7 @@ class Offer(Base):
             f"title={self.title!r}, "
             f"valid_from={self.valid_from!r}, "
             f"valid_to={self.valid_to!r}, "
+            f"real_valid_to={self.real_valid_to!r}, "
             f"url={self.url!r}, "
             f"img_url={self.img_url!r}, "
         )
