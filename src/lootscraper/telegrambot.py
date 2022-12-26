@@ -616,17 +616,17 @@ class TelegramBot:
         welcome_text = (
             R"I belong to the [LootScraper](https://github\.com/eikowagenknecht/lootscraper) project\. "
             R"If you have any issues or feature request, please use the "
-            R"[issues](https://github\.com/eikowagenknecht/lootscraper/issues) to report them\. "
+            R"[Github issues](https://github\.com/eikowagenknecht/lootscraper/issues) to report them\. "
             R"And if you like it, please consider "
             R"[⭐ starring it on GitHub](https://github\.com/eikowagenknecht/lootscraper/stargazers)\. "
             R"Thanks\!"
             "\n\n"
             R"*How this works*"
             "\n"
-            R"You tell me what kind of offers you want to see with the /manage command\. "
-            R"I will then send you a message with all current offers of that kind if you want\. "
-            R"I will also send you a message every time a new offer is added\. "
-            R"To see the commands you can use to talk to me, type /help now\."
+            R"For a quick start, I just subscribed you to free offers from Steam, Epic and GOG\. "
+            R"There are more sources available\. To configure what kind of offers you want to see, you can use the /manage command\. "
+            R"I will then send you a message every time a new offer is added\. "
+            R"To see the commands you can use to talk to me, type /help\."
             "\n\n"
             R"*Privacy*"
             "\n"
@@ -671,6 +671,11 @@ class TelegramBot:
         except Exception:
             session.rollback()
             raise
+
+        # Subscribe user to some default categories
+        self.subscribe(new_user, OfferType.GAME, Source.STEAM, OfferDuration.CLAIMABLE)
+        self.subscribe(new_user, OfferType.GAME, Source.GOG, OfferDuration.CLAIMABLE)
+        self.subscribe(new_user, OfferType.GAME, Source.EPIC, OfferDuration.CLAIMABLE)
 
         message = (
             Rf"Hi {update.effective_user.mention_markdown_v2()} 👋, welcome to the LootScraper Telegram Bot and thank you for registering\!"
@@ -1633,12 +1638,15 @@ def subscription_button(
     offer_type: OfferType,
     offer_duration: OfferDuration,
 ) -> list[InlineKeyboardButton]:
-    is_subscribed_str = " - subscribed" if active else ""
+    is_subscribed_str = "[x] " if active else ""
     source_str = f"{source.value} {offer_type.value}"
     if offer_duration != OfferDuration.CLAIMABLE:
         source_str += f" ({offer_duration.value})"
     command = f"toggle {source.name} {offer_type.name} {offer_duration.name}"
 
     return [
-        InlineKeyboardButton(f"{source_str}{is_subscribed_str}", callback_data=command)
+        InlineKeyboardButton(
+            f"{is_subscribed_str}{source_str}",
+            callback_data=command,
+        )
     ]
