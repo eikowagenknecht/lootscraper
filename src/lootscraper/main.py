@@ -15,7 +15,7 @@ from lootscraper.common import TIMESTAMP_LONG
 from lootscraper.config import Config
 from lootscraper.database import LootDatabase
 from lootscraper.processing import scrape_new_offers, send_new_offers_telegram
-from lootscraper.telegrambot import TelegramBot
+from lootscraper.telegrambot import TelegramBot, TelegramLoggingHandler
 from lootscraper.tools import cleanup
 
 try:
@@ -28,8 +28,10 @@ except ImportError:
     print("Using real display")
     use_virtual_display = False
 
+logger = logging.getLogger()
 
 EXAMPLE_CONFIG_FILE = "config.default.toml"
+LOGFORMAT = "%(asctime)s [%(levelname)s] (%(name)s) %(message)s"
 
 
 def main() -> None:
@@ -62,7 +64,7 @@ async def run() -> None:
     check_config_file()
     setup_logging()
 
-    logging.info(f"Starting LootScraper v{__version__}")
+    logger.info(f"Starting LootScraper v{__version__}")
 
     # Run the various parts of the bot asynchronously (so we don't block)
     # and communicate using a queue.
@@ -77,10 +79,10 @@ async def run() -> None:
                 if Config.get().telegram_bot:
                     tg.create_task(run_telegram_bot(db, telegram_queue))
     except OperationalError as db_error:
-        logging.error(f"Database error, exiting application: {db_error}")
+        logger.error(f"Database error, exiting application: {db_error}")
         sys.exit()
 
-    logging.info(f"Exiting LootScraper v{__version__}")
+    logger.info(f"Exiting LootScraper v{__version__}")
 
 
 def initialize_config_file() -> None:
@@ -109,8 +111,8 @@ def check_config_file() -> None:
     # terminate because without a valid config continuing is useless.
     try:
         Config.get()
-    except KeyError as e:
-        print(f"Config could not be loaded, Keys not found: {e.args}")
+    except Exception as e:  # pylint: disable=broad-except
+        print(f"Config could not be loaded: {e}")
         sys.exit()
 
 
@@ -119,29 +121,26 @@ def setup_logging() -> None:
     Set up the logging system.
     """
     filename = Config.data_path() / Path(Config.get().log_file)
-    loglevel = Config.get().log_level
+    loglevel = logging.getLevelName(Config.get().log_level)
+    handlers: list[logging.Handler] = []
+
+    # Default stream handler for console output
+    stream_handler = logging.StreamHandler(sys.stdout)
+    stream_handler.setFormatter(logging.Formatter(LOGFORMAT))
+    handlers.append(stream_handler)
+
+    # Create a rotating log file, size: 5 MB, keep 10 files
+    file_handler = RotatingFileHandler(filename, maxBytes=5 * 1024**2, backupCount=10)
+    file_handler.setFormatter(logging.Formatter(LOGFORMAT))
+    handlers.append(file_handler)
+
     logging.basicConfig(
-        handlers=[
-            # 5MB per log file, 10 log files
-            RotatingFileHandler(filename, maxBytes=5 * 1024**2, backupCount=10),
-            get_streamhandler(),
-        ],
         encoding="utf-8",
-        level=logging.getLevelName(loglevel),
-        format="%(asctime)s %(name)s [%(levelname)-5s] %(message)s",
+        level=loglevel,
+        handlers=handlers,
+        format=LOGFORMAT,
         datefmt=TIMESTAMP_LONG,
     )
-
-
-def get_streamhandler() -> logging.StreamHandler:  # type: ignore
-    """
-    Get a handler handler for the console output.
-    """
-    stream_handler = logging.StreamHandler(sys.stdout)
-    stream_handler.setFormatter(
-        logging.Formatter("%(asctime)s %(name)s [%(levelname)-5s] %(message)s")
-    )
-    return stream_handler
 
 
 async def run_telegram_bot(
@@ -154,9 +153,18 @@ async def run_telegram_bot(
     """
     async with TelegramBot(Config.get(), db.Session) as bot:
         # The bot is running now and will stop when the context exits
+        try:
+            telegram_handler = TelegramLoggingHandler(bot)
+            # Only log errors and above to Telegram. TODO: Make this configurable.
+            telegram_handler.setLevel(logging.ERROR)
+            telegram_handler.setFormatter(logging.Formatter(LOGFORMAT))
+            logger.addHandler(telegram_handler)
+        except Exception as e:  # pylint: disable=broad-except
+            logger.error(f"Could not add Telegram logging handler: {e}")
+
         while True:
             run_no = await queue.get()
-            logging.info(
+            logger.info(
                 f"Sending offers on Telegram that were found in scraping run #{run_no}."
             )
 
@@ -169,7 +177,7 @@ async def run_telegram_bot(
                 # This is our catch-all. Something really unexpected occurred.
                 # Log it with the highest priority and continue with the
                 # next run.
-                logging.critical(e)
+                logger.critical(e)
 
             queue.task_done()
 
@@ -194,7 +202,7 @@ async def run_scraper_loop(
         while True:
             run_no += 1
 
-            logging.info(f"Starting scraping run #{run_no}.")
+            logger.info(f"Starting scraping run #{run_no}.")
 
             try:
                 await scrape_new_offers(db)
@@ -205,18 +213,18 @@ async def run_scraper_loop(
                 # This is our catch-all. Something really unexpected occurred.
                 # Log it with the highest priority and continue with the
                 # next run.
-                logging.critical(e)
+                logger.critical(e)
 
             if time_between_runs == 0:
                 break
 
             next_execution = datetime.now() + timedelta(seconds=time_between_runs)
 
-            logging.info(f"Next scraping run will be at {next_execution.isoformat()}.")
+            logger.info(f"Next scraping run will be at {next_execution.isoformat()}.")
 
             if Config.get().telegram_bot:
                 await telegram_queue.put(run_no)
 
             await asyncio.sleep(time_between_runs)
 
-        logging.info(f"Finished {run_no} runs")
+        logger.info(f"Finished {run_no} runs")
