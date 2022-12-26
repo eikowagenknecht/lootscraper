@@ -1,5 +1,6 @@
 import difflib
 import re
+from datetime import datetime, timedelta, timezone
 from typing import Any
 
 from lootscraper.common import OfferType
@@ -145,3 +146,44 @@ def clean_loot_title(title: str) -> str:
         probable_game_name = title
 
     return clean_game_title(probable_game_name)
+
+
+def calc_real_valid_to(
+    seen_last: datetime,
+    valid_to: datetime | None,
+    *,
+    forced_now: datetime | None = None,
+) -> datetime | None:
+    """Calculate the real end date of an offer."""
+
+    if forced_now is not None:
+        now = forced_now
+    else:
+        now = datetime.now().replace(tzinfo=timezone.utc)
+
+    if valid_to is None:
+        # The offer has no end date and hasn't been seen for more than a day.
+        if now > (seen_last + timedelta(days=1)):
+            return seen_last
+        # The offer has no end date and is still there. So we know nothing.
+        return None
+
+    # The offer had an end date but hasn't been seen for more than an hour.
+    if valid_to > (seen_last + timedelta(hours=1)):
+        # The offer has been seen in the last day, we don't force end it yet.
+        # Maybe the site ist just down for a while.
+        if now < (seen_last + timedelta(days=1)):
+            return valid_to
+
+        # The offer has not been seen in the last day. It's probably gone.
+        # So the real end date is the last time we saw it.
+        return seen_last
+
+    # The offer should have ended, but it's still there. So we approximate the
+    # end date by adding 1 hour to the last time we saw it.
+    if valid_to < seen_last:
+
+        return seen_last + timedelta(hours=1)
+
+    # In all other cases, we believe what the offer says.
+    return valid_to
