@@ -58,8 +58,7 @@ MESSAGE_DISMISSED = "Dismissed (can't delete messages older than 48h)."
 MESSAGE_MANAGE_MENU_CLOSED = (
     "Thank you for managing your subscriptions. "
     "Forgot something? "
-    "You can continue any time with /manage. "
-    "If you want me to send you all current offers of your subscriptions, you can type /offers now or any time later."
+    "You can continue any time with /manage."
 )
 MESSAGE_TIMEZONE_MENU_CLOSED = (
     "Thank you for choosing your timezone. "
@@ -69,7 +68,6 @@ MESSAGE_HELP = markdown_bold("Available commands") + markdown_escape(
     "\n/start - Start the bot (you already did that)"
     "\n/help - Show this help message"
     "\n/status - Show information about your subscriptions"
-    "\n/offers - Send all current offers once (only from the categories you are subscribed to)"
     "\n/manage - Manage your subscriptions"
     "\n/timezone - Choose a timezone that will be used to display the start and end dates"
     "\n/leave - Leave this bot and delete stored user data"
@@ -81,7 +79,9 @@ MESSAGE_USER_NOT_REGISTERED = (
     "You are not registered. Please, register with /start command."
 )
 MESSAGE_NO_SUBSCRIPTIONS = "You have no subscriptions. Change that with /manage."
-MESSAGE_NO_NEW_OFFERS = "No new offers available. I will write you as soon as there are new offers, I promise!"
+MESSAGE_NO_NEW_OFFERS = (
+    "No new offers available. I will write you as soon as they come in, I promise!"
+)
 
 logger = logging.getLogger(__name__)
 
@@ -144,7 +144,7 @@ class TelegramBot:
         self.application.add_handler(CommandHandler("help", self.help_command))
         self.application.add_handler(CommandHandler("leave", self.leave_command))
         self.application.add_handler(CommandHandler("manage", self.manage_command))
-        self.application.add_handler(CommandHandler("offers", self.offers_command))
+        self.application.add_handler(CommandHandler("refresh", self.refresh_command))
         self.application.add_handler(CommandHandler("start", self.start_command))
         self.application.add_handler(CommandHandler("status", self.status_command))
         self.application.add_handler(CommandHandler("timezone", self.timezone_command))
@@ -574,32 +574,44 @@ class TelegramBot:
             reply_markup=self.manage_keyboard(db_user),
         )
 
-    async def offers_command(
+    async def refresh_command(
         self, update: Update, context: ContextTypes.DEFAULT_TYPE
     ) -> None:
-        """Handle the /offers command: Send all subscriptions once."""
+        """Handle the /refresh command: Send all offers once that have not been sent yet.."""
 
         del context  # Unused
 
         await self.log_call(update)
 
-        if update.message is None or update.effective_user is None:
+        if update.effective_chat is None or update.effective_user is None:
             return
 
         db_user = self.get_user_by_telegram_id(update.effective_user.id)
         if db_user is None:
-            await update.message.reply_text(MESSAGE_USER_NOT_REGISTERED)
+            await self.send_message(
+                chat_id=update.effective_chat.id,
+                text=MESSAGE_USER_NOT_REGISTERED,
+                parse_mode=None,
+            )
             return
 
         if (
             db_user.telegram_subscriptions is None
             or len(db_user.telegram_subscriptions) == 0
         ):
-            await update.message.reply_text(MESSAGE_NO_SUBSCRIPTIONS)
+            await self.send_message(
+                chat_id=update.effective_chat.id,
+                text=MESSAGE_NO_SUBSCRIPTIONS,
+                parse_mode=None,
+            )
             return
 
         if not await self.send_new_offers(db_user):
-            await update.message.reply_text(MESSAGE_NO_NEW_OFFERS)
+            await self.send_message(
+                chat_id=update.effective_chat.id,
+                text=MESSAGE_NO_NEW_OFFERS,
+                parse_mode=None,
+            )
 
     async def start_command(
         self, update: Update, context: ContextTypes.DEFAULT_TYPE
@@ -684,7 +696,7 @@ class TelegramBot:
         await update.message.reply_markdown_v2(message)
 
         # Send all current offers once
-        await self.offers_command(update, context)
+        await self.refresh_command(update, context)
 
         # Notify about the new registration
         if Config.get().telegram_log_level.value >= TelegramLogLevel.DEBUG.value:
@@ -911,8 +923,6 @@ class TelegramBot:
     ) -> None:
         """Callback from the menu button "Close" in various menus."""
 
-        del context  # Unused
-
         await self.log_call(update)
 
         if update.callback_query is None or update.effective_user is None:
@@ -930,6 +940,9 @@ class TelegramBot:
             await query.edit_message_text(
                 text=MESSAGE_TIMEZONE_MENU_CLOSED,
             )
+
+        # Send outstanding offers to the user
+        await self.refresh_command(update, context)
 
     async def toggle_subscription_callback(
         self, update: Update, context: ContextTypes.DEFAULT_TYPE
