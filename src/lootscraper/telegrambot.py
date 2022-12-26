@@ -606,8 +606,6 @@ class TelegramBot:
     ) -> None:
         """Handle the /start command: Register the user and display guide."""
 
-        del context  # Unused
-
         await self.log_call(update)
 
         if update.message is None or update.effective_user is None:
@@ -684,6 +682,9 @@ class TelegramBot:
         )
         logger.debug(f"Sending /start reply: {message}")
         await update.message.reply_markdown_v2(message)
+
+        # Send all current offers once
+        await self.offers_command(update, context)
 
         # Notify about the new registration
         if Config.get().telegram_log_level.value >= TelegramLogLevel.DEBUG.value:
