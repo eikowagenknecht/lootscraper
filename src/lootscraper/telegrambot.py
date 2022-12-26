@@ -1034,20 +1034,13 @@ class TelegramBot:
                                 # Only send offers that are already active
                                 sa.or_(
                                     Offer.valid_from <= datetime.now().replace(tzinfo=None),  # type: ignore
-                                    Offer.valid_from == None,  # noqa: E711
+                                    Offer.valid_from.is_(None),  # type: ignore
                                 ),
-                                # Only send offers that are either:
-                                # - valid at this point of time
-                                # - have no start and end date and have been first seen in the last 7 days
+                                # Prefilter to reduce database load. The details are handled below.
                                 sa.or_(
                                     Offer.valid_to >= datetime.now().replace(tzinfo=None),  # type: ignore
-                                    sa.and_(
-                                        Offer.valid_from == None,  # noqa: E711
-                                        Offer.valid_to == None,  # noqa: E711
-                                        Offer.seen_first
-                                        >= datetime.now().replace(tzinfo=timezone.utc)
-                                        - timedelta(days=7),
-                                    ),
+                                    Offer.seen_last >= datetime.now().replace(tzinfo=None) - timedelta(days=1),  # type: ignore
+                                    Offer.valid_to.is_(None),  # type: ignore
                                 ),
                             )
                         )
@@ -1056,18 +1049,30 @@ class TelegramBot:
                     .all()
                 )
 
-                if len(offers) == 0:
+                # Filter out offers that have a real end date that is in the future
+                filtered_offers = []
+
+                for offer in offers:
+                    real_valid_to = offer.real_valid_to()
+                    if real_valid_to is None or real_valid_to > datetime.now().replace(
+                        tzinfo=timezone.utc
+                    ):
+                        filtered_offers.append(offer)
+
+                if len(filtered_offers) == 0:
                     continue
 
-                offers_sent += len(offers)
+                offers_sent += len(filtered_offers)
 
                 # Send the offers
-                for offer in offers:
+                for offer in filtered_offers:
                     await self.send_offer(offer, user)
 
                 # Update the last offer id
-                subscription.last_offer_id = offers[-1].id
-                user.offers_received_count = user.offers_received_count + len(offers)
+                subscription.last_offer_id = filtered_offers[-1].id
+                user.offers_received_count = user.offers_received_count + len(
+                    filtered_offers
+                )
                 session.commit()
         except Exception:
             session.rollback()
