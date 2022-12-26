@@ -131,7 +131,7 @@ class Scraper:
                 logger.error(f"The page didn't get ready to be parsed: {e}")
                 filename = (
                     Config.data_path()
-                    / f'error_{datetime.now().isoformat().replace(".", "_").replace(":", "_")}.png'
+                    / f'error_{self.get_source().name.lower()}_{datetime.now().isoformat().replace(".", "_").replace(":", "_")}.png'
                 )
                 logger.error(f"Saving screenshot to {filename}.")
                 await page.screenshot(path=str(filename.resolve()))
