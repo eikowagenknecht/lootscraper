@@ -1647,6 +1647,27 @@ class TelegramBot:
             raise
 
 
+class TelegramLoggingHandler(logging.Handler):
+    def __init__(self, bot: TelegramBot):
+        super().__init__()
+        self.bot = bot
+
+    def emit(self, record: logging.LogRecord) -> None:
+        """Try to send a log message to telegram."""
+
+        try:
+            msg = self.format(record)
+            asyncio.create_task(
+                self.bot.send_message(
+                    chat_id=Config.get().telegram_developer_chat_id,
+                    text=msg,
+                    parse_mode=None,
+                )
+            )
+        except Exception:  # pylint: disable=broad-except
+            self.handleError(record)
+
+
 def markdown_json_formatted(input_: str) -> str:
     return f"```json\n{input_}\n```"
 
