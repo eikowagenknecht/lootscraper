@@ -222,7 +222,15 @@ class Scraper:
         # - "Title Demo (Great game)",
         # - "Title Demo Version"
         if re.search(
-            r"^[\W]?demo[\W]|\Wdemo\W?((.*version.*)|(\(.*\)))?$", title, re.IGNORECASE
+            r"^[\W]?demo[\W]|\Wdemo\W?((.*version.*)|(\(.*\)))?$",
+            title,
+            re.IGNORECASE,
+        ):
+            return True
+        if re.search(
+            r"^[\W]?teaser[\W]|\Wteaser\W?((.*version.*)|(\(.*\)))?$",
+            title,
+            re.IGNORECASE,
         ):
             return True
         return False
@@ -248,7 +256,9 @@ class Scraper:
         ):
             return True
         if re.search(
-            r"^[\W]?beta[\W]|\Wbeta\W?((.*version.*)|(\(.*\)))?$", title, re.IGNORECASE
+            r"^[\W]?beta[\W]|\Wbeta\W?((.*version.*)|(\(.*\)))?$",
+            title,
+            re.IGNORECASE,
         ):
             return True
         return False
