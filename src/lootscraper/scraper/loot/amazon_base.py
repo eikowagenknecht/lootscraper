@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from datetime import datetime
 
 from playwright.async_api import Error, Locator
 
@@ -31,6 +32,11 @@ class AmazonBaseScraper(Scraper):  # pylint: disable=W0223
 
     def get_page_ready_selector(self) -> str:
         return ".offer-list__content"
+
+    @staticmethod
+    def is_fake_always(valid_to: datetime | None) -> bool:
+        """Offers on Amazon are never valid forever."""
+        return False
 
     async def read_base_raw_offer(self, element: Locator) -> AmazonRawOffer:
         title = await element.locator(
