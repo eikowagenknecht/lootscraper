@@ -167,13 +167,13 @@ class Scraper:
         Categorize offers by title (demo, etc.)
         """
         for offer in offers:
-            if Scraper.is_demo(offer.title):
+            if self.is_demo(offer.title):
                 offer.category = Category.DEMO
                 continue
-            if Scraper.is_prerelease(offer.title):
+            if self.is_prerelease(offer.title):
                 offer.category = Category.PRERELEASE
                 continue
-            if Scraper.is_fake_always(offer.valid_to):
+            if self.is_fake_always(offer.valid_to):
                 offer.duration = OfferDuration.ALWAYS
                 continue
 
