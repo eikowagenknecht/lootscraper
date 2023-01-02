@@ -20,7 +20,7 @@ alembic = "^1.9.1"
 feedgen = "^0.9.0"
 humanize = "^4.4.0"
 httpx = "^0.23.1"
-python-telegram-bot = { extras = ["rate-limiter"], version = "^20.0b0" }
+python-telegram-bot = { extras = ["rate-limiter"], version = "^20.0" }
 pytz = "^2022.7"
 playwright = "^1.29.0"
 SQLAlchemy = "^1.4.45"
