@@ -251,7 +251,7 @@ socks = ["socksio (>=1.0.0,<2.0.0)"]
 
 [[package]]
 name = "httpx"
-version = "0.23.1"
+version = "0.23.2"
 description = "The next generation HTTP client."
 category = "main"
 optional = false
@@ -717,7 +717,7 @@ python-versions = "*"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.11"
-content-hash = "1ece35aa84bc4a876c0f8f45ce41baee8af25d2ee1054646949577e2d5bc802d"
+content-hash = "055cbf937036f4631c508b2f30eb80fd0e5bc96803d02fbf7c1aa3ce274d5124"
 
 [metadata.files]
 aiolimiter = [
@@ -868,8 +868,8 @@ httpcore = [
     {file = "httpcore-0.16.3.tar.gz", hash = "sha256:c5d6f04e2fc530f39e0c077e6a30caa53f1451096120f1f38b954afd0b17c0cb"},
 ]
 httpx = [
-    {file = "httpx-0.23.1-py3-none-any.whl", hash = "sha256:0b9b1f0ee18b9978d637b0776bfd7f54e2ca278e063e3586d8f01cda89e042a8"},
-    {file = "httpx-0.23.1.tar.gz", hash = "sha256:202ae15319be24efe9a8bd4ed4360e68fde7b38bcc2ce87088d416f026667d19"},
+    {file = "httpx-0.23.2-py3-none-any.whl", hash = "sha256:106cded342a44e443060fab70ef327139248c61939e77d73964560c8d8b57069"},
+    {file = "httpx-0.23.2.tar.gz", hash = "sha256:e824a6fa18ffaa6423c6f3a32d5096fc15bd8dff43663a223f06242fc69451a8"},
 ]
 humanize = [
     {file = "humanize-4.4.0-py3-none-any.whl", hash = "sha256:8830ebf2d65d0395c1bd4c79189ad71e023f277c2c7ae00f263124432e6f2ffa"},
