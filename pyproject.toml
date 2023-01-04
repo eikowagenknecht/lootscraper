@@ -23,7 +23,7 @@ httpx = "^0.23.2"
 python-telegram-bot = { extras = ["rate-limiter"], version = "^20.0" }
 pytz = "^2022.7"
 playwright = "^1.29.0"
-SQLAlchemy = "^1.4.45"
+SQLAlchemy = "^1.4.46"
 Unidecode = "^1.3.6"
 xvfbwrapper = "^0.2.9"
 
