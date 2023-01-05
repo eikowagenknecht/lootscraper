@@ -227,14 +227,10 @@ class TelegramBot:
         Log the error and send a telegram message to notify the developer chat.
         """
 
-        # Log the error before we do anything else, so we can see it even if something breaks.
-        logger.error(msg="Exception while handling an update:", exc_info=context.error)
-
         # We can only continue if we have an actual exception
         if context.error is None:
+            logger.error("Unknown error encountered in Telegram error handler.")
             return
-
-        exception_type = str(type(context.error))
 
         # Common case when a user clicks too fast on the "show details" button.
         # Nothing to do here, not an actual error.
@@ -249,8 +245,9 @@ class TelegramBot:
             isinstance(context.error, telegram.error.NetworkError)
             and not isinstance(context.error, telegram.error.BadRequest)
         ):
+            exception_type = str(type(context.error))
             logger.warning(
-                f"Network error encountered {exception_type}, probably will fix itself."
+                f"Network instability encountered ({exception_type}), probably will fix itself."
             )
             return
 
@@ -291,18 +288,6 @@ class TelegramBot:
         full_debug_message += f"traceback = {traceback_string}"
 
         logger.error(full_debug_message)
-
-        # Max message length is 4096, so we need to split it up. We use 3000 to
-        # be on the safe side and have room for some markdown wrapping.
-        message_in_chunks = chunkstring(full_debug_message, 3000)
-
-        for chunk in message_in_chunks:
-            message = "```\n" + (markdown_escape(chunk)) + "\n```"
-            await self.send_message(
-                chat_id=Config.get().telegram_developer_chat_id,
-                text=message,
-                parse_mode=telegram.constants.ParseMode.MARKDOWN_V2,
-            )
 
     async def announce_command(
         self, update: Update, context: ContextTypes.DEFAULT_TYPE
@@ -1596,6 +1581,7 @@ class TelegramBot:
             raise
 
     async def log_call(self, update: Update) -> None:
+        # Only log calls from users if the log level is set to debug.
         if Config.get().telegram_log_level.value >= TelegramLogLevel.DEBUG.value:
             if update.callback_query:
                 type_ = "Callback query"
@@ -1656,14 +1642,23 @@ class TelegramLoggingHandler(logging.Handler):
         """Try to send a log message to telegram."""
 
         try:
-            msg = self.format(record)
-            asyncio.create_task(
-                self.bot.send_message(
-                    chat_id=Config.get().telegram_developer_chat_id,
-                    text=msg,
-                    parse_mode=None,
+            message = self.format(record)
+
+            # Max message length is 4096, so we need to split it up. We use 3000
+            # to be on the safe side and have room for some markdown wrapping.
+            message_in_chunks = chunkstring(message, 3000)
+
+            for chunk in message_in_chunks:
+                message = "```\n" + (markdown_escape(chunk)) + "\n```"
+
+                asyncio.create_task(
+                    self.bot.send_message(
+                        chat_id=Config.get().telegram_developer_chat_id,
+                        text=message,
+                        parse_mode=telegram.constants.ParseMode.MARKDOWN_V2,
+                    )
                 )
-            )
+
         except Exception:  # pylint: disable=broad-except
             self.handleError(record)
 
