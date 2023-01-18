@@ -42,7 +42,7 @@ flake8-isort = "^5.0.3"
 # Type checking
 mypy = "^0.991"
 # Profiling
-scalene = "^1.5.16"
+scalene = "^1.5.19"
 
 [build-system]
 requires = ["poetry-core"]
