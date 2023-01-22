@@ -152,12 +152,17 @@ class Scraper:
                         raw_offer = await handler.read_offer_func(element)
                         if raw_offer is None:
                             continue
-                    except (ValueError, Error) as e:
+                    except Exception as e:  # pylint: disable=broad-except
                         # Skip offers that can't be loaded
                         logger.error(f"Couldn't parse element {str(element)}: {e}")
                         continue
 
-                    normalized_offer = handler.normalize_offer_func(raw_offer)
+                    try:
+                        normalized_offer = handler.normalize_offer_func(raw_offer)
+                    except Exception as e:  # pylint: disable=broad-except
+                        logger.error(f"Couldn't normalize offer {raw_offer.title}: {e}")
+                        continue
+
                     offers.append(normalized_offer)
 
         return offers

@@ -12,6 +12,7 @@ from lootscraper.scraper.loot.itch_games import ItchGamesScraper
 from lootscraper.scraper.loot.scraper import Scraper
 from lootscraper.scraper.loot.steam_games import SteamGamesScraper
 from lootscraper.scraper.loot.steam_loot import SteamLootScraper
+from lootscraper.scraper.loot.ubisoft_games import UbisoftGamesScraper
 
 
 def get_all_scrapers() -> list[Type[Scraper]]:
@@ -27,4 +28,5 @@ def get_all_scrapers() -> list[Type[Scraper]]:
         ItchGamesScraper,
         SteamGamesScraper,
         SteamLootScraper,
+        UbisoftGamesScraper,
     ]

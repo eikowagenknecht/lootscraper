@@ -15,7 +15,7 @@ db_echo = false
 web_timeout_seconds = 5
 
 [scraper]
-# Possible Values: ["AMAZON", "APPLE", "EPIC", "GOG", "GOOGLE", "HUMBLE", "ITCH", "STEAM"]
+# Possible Values: ["AMAZON", "APPLE", "EPIC", "GOG", "GOOGLE", "HUMBLE", "ITCH", "STEAM", "UBISOFT"]
 offer_sources = []
 # Possible Values: ["GAME", "LOOT"]
 offer_types = [] 

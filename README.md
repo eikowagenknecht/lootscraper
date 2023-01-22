@@ -45,6 +45,7 @@ You prefer the anonymity and manageability of RSS feeds? Sure. You can use the l
 - [Humble games](https://feed.phenx.de/lootscraper_humble_game.xml)
 - [itch.io games](https://feed.phenx.de/lootscraper_itch_game.xml)
 - Steam ([games](https://feed.phenx.de/lootscraper_steam_game.xml) and [ingame loot](https://feed.phenx.de/lootscraper_steam_loot.xml))
+- [Ubisoft games](https://feed.phenx.de/lootscraper_ubisoft_game.xml)
 
 For our mobile gamers:
 
@@ -59,7 +60,7 @@ This is what it currently looks like in Feedly:
 
 ## How this works
 
-This Python (3.10+) application uses Selenium to automatically visit sites with free gaming related offers (currently Amazon Prime, Epic Games and Steam are supported, more will follow) and then neatly puts the gathered information into RSS feeds and a Telegram bot. So now you can track the offers using your favorite news reader like Feedly instead of manually visiting the sites or get a message every time a new offer is available.
+This Python (3.11+) application uses Selenium to automatically visit sites with free gaming related offers (currently Amazon Prime, Epic Games and Steam are supported, more will follow) and then neatly puts the gathered information into RSS feeds and a Telegram bot. So now you can track the offers using your favorite news reader like Feedly instead of manually visiting the sites or get a message every time a new offer is available.
 
 If you encounter any problems feel free to open an issue here and I'll try my best to help. I'd also really like to hear your feature requests (even though I still have quite some ideas myself)!. This is tracked in the Github issues as well.
 
