@@ -14,6 +14,7 @@ from lootscraper.scraper.loot.humble_games import HumbleGamesScraper
 from lootscraper.scraper.loot.itch_games import ItchGamesScraper
 from lootscraper.scraper.loot.steam_games import SteamGamesScraper
 from lootscraper.scraper.loot.steam_loot import SteamLootScraper
+from lootscraper.scraper.loot.ubisoft_games import UbisoftGamesScraper
 
 
 class PlaywrightTests(unittest.IsolatedAsyncioTestCase):
@@ -208,6 +209,22 @@ class SteamLootTest(unittest.IsolatedAsyncioTestCase):
                 self.assertGreater(
                     res.valid_to, datetime.now().replace(tzinfo=timezone.utc)
                 )
+
+
+class UbisoftGamesTest(unittest.IsolatedAsyncioTestCase):
+    async def test_loot(self) -> None:
+        async with get_browser_context() as context:
+            scraper = UbisoftGamesScraper(context=context)
+            with self.assertNoLogs(level="ERROR"):
+                scraper_results = await scraper.scrape()
+            self.assertGreater(len(scraper_results), 0)
+            for res in scraper_results:
+                self.assertIsNotNone(res.valid_to)
+                self.assertIsNotNone(res.title)
+                self.assertIsNotNone(res.url)
+                self.assertTrue(res.url.startswith("https://store.ubi.com/"))
+                self.assertIsNotNone(res.img_url)
+                self.assertTrue(res.img_url.startswith("https://"))
 
 
 if __name__ == "__main__":
