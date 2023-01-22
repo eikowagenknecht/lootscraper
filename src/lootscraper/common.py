@@ -19,6 +19,7 @@ class Source(Enum):
     HUMBLE = "Humble Bundle"
     ITCH = "itch.io"
     STEAM = "Steam"
+    UBISOFT = "Ubisoft"
 
 
 class Channel(Enum):
