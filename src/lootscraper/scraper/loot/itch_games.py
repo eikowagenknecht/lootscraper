@@ -1,7 +1,7 @@
 import logging
 from datetime import datetime, timezone
 
-from playwright.async_api import Locator, Page
+from playwright.async_api import Locator, Page, TimeoutError
 
 from lootscraper.common import OfferDuration, OfferType, Source
 from lootscraper.database import Offer
@@ -64,9 +64,11 @@ class ItchGamesScraper(Scraper):
         if not url.startswith("http"):
             url = BASE_URL + url
 
-        img_url = await element.locator("img").get_attribute("src")
-        if img_url is None:
-            raise ValueError(f"Couldn't find image for {title}.")
+        # Some games don't have an image.
+        try:
+            img_url = await element.locator("img").get_attribute("src", timeout=1000)
+        except TimeoutError:
+            img_url = None
 
         return RawOffer(
             title=title,
