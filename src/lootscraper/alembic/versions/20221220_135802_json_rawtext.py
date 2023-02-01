@@ -14,7 +14,6 @@ from typing import Any
 import sqlalchemy as sa
 from alembic import op
 from sqlalchemy import orm
-from sqlalchemy.ext.declarative import declarative_base
 
 from lootscraper.common import Category, OfferDuration, OfferType, Source
 from lootscraper.database import AwareDateTime
@@ -76,10 +75,11 @@ def add_xml_element_if_exists(
         pass
 
 
-Base: Any = declarative_base()
+Base: Any = orm.declarative_base()
 
 
 class Offer(Base):
+    __allow_unmapped__ = True
     __tablename__ = "offers"
 
     id: int = sa.Column(sa.Integer, primary_key=True, nullable=False)
@@ -107,6 +107,7 @@ class Offer(Base):
 
 
 class Game(Base):
+    __allow_unmapped__ = True
     __tablename__ = "games"
 
     id = sa.Column(sa.Integer, primary_key=True, nullable=False)

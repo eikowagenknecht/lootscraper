@@ -47,6 +47,7 @@ class AwareDateTime(sa.TypeDecorator):  # pylint: disable=W0223
 
 
 class Announcement(Base):
+    __allow_unmapped__ = True
     __tablename__ = "announcements"
 
     id: int = sa.Column(sa.Integer, primary_key=True, nullable=False)
@@ -61,6 +62,7 @@ class Game(Base):
     A game (e.g. "The Witcher 3").
     """
 
+    __allow_unmapped__ = True
     __tablename__ = "games"
 
     id: int = sa.Column(sa.Integer, primary_key=True, nullable=False)
@@ -87,6 +89,7 @@ class IgdbInfo(Base):
     Information about a Game, gathered from IDGB.
     """
 
+    __allow_unmapped__ = True
     __tablename__ = "igdb_info"
 
     id: int = sa.Column(sa.Integer, primary_key=True, nullable=False)
@@ -123,6 +126,7 @@ class SteamInfo(Base):
     Information about a Game, gathered from Steam.
     """
 
+    __allow_unmapped__ = True
     __tablename__ = "steam_info"
 
     id: int = sa.Column(sa.Integer, primary_key=True, nullable=False)
@@ -170,6 +174,7 @@ class Offer(Base):
     An offer, can be for a game or some other game related content (loot).
     """
 
+    __allow_unmapped__ = True
     __tablename__ = "offers"
 
     id: int = sa.Column(sa.Integer, primary_key=True, nullable=False)
@@ -224,6 +229,7 @@ class User(Base):
     A user of the application.
     """
 
+    __allow_unmapped__ = True
     __tablename__ = "users"
 
     id: int = sa.Column(sa.Integer, primary_key=True, nullable=False)
@@ -249,6 +255,7 @@ class TelegramSubscription(Base):
     Subscription of a user to a category for Telegram notifications.
     """
 
+    __allow_unmapped__ = True
     __tablename__ = "telegram_subscriptions"
 
     id: int = sa.Column(sa.Integer, primary_key=True, nullable=False)
@@ -274,7 +281,7 @@ class LootDatabase:
             echo=echo,
             future=True,
         )
-        session_factory = orm.sessionmaker(bind=self.engine)
+        session_factory = orm.sessionmaker(bind=self.engine, future=True)
         self.Session = orm.scoped_session(session_factory)
 
     def __enter__(self) -> LootDatabase:

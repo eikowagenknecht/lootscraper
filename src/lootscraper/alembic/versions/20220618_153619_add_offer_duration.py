@@ -13,7 +13,6 @@ from typing import Any
 import sqlalchemy as sa
 from alembic import op
 from sqlalchemy import orm
-from sqlalchemy.ext.declarative import declarative_base
 
 from lootscraper.common import OfferDuration, OfferType, Source
 from lootscraper.database import AwareDateTime, TelegramSubscription
@@ -24,10 +23,11 @@ down_revision = "fc43de437432"
 branch_labels = None
 depends_on = None
 
-Base: Any = declarative_base()
+Base: Any = orm.declarative_base()
 
 
 class Game(Base):
+    __allow_unmapped__ = True
     __tablename__ = "games"
 
     id = sa.Column(sa.Integer, primary_key=True, nullable=False)
@@ -41,6 +41,7 @@ class Game(Base):
 class Offer(Base):
     """An offer, can be for a game or some other game related content (loot)."""
 
+    __allow_unmapped__ = True
     __tablename__ = "offers"
 
     id: int = sa.Column(sa.Integer, primary_key=True, nullable=False)
