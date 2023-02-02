@@ -81,18 +81,13 @@ class Game(Base):
 
     __tablename__ = "games"
 
-    igdb_info: Mapped[IgdbInfo | None] = relationship(
+    igdb_info: Mapped["IgdbInfo | None"] = relationship(
         "IgdbInfo",
         back_populates="game",
         default=None,
     )
-    steam_info: Mapped[SteamInfo | None] = relationship(
+    steam_info: Mapped["SteamInfo | None"] = relationship(
         "SteamInfo",
-        back_populates="game",
-        default=None,
-    )
-    offers: Mapped[list[Offer] | None] = relationship(
-        "Offer",
         back_populates="game",
         default=None,
     )
@@ -118,23 +113,24 @@ class IgdbInfo(Base):
 
     __tablename__ = "igdb_info"
 
-    game: Mapped[Game] = relationship(
-        "Game",
-        back_populates="igdb_info",
-    )
-
     id: Mapped[int] = mapped_column(
-        init=False,
         primary_key=True,
     )
-    url: Mapped[str]
-    name: Mapped[str]
-    short_description: Mapped[str | None]
-    release_date: Mapped[datetime | None] = mapped_column(AwareDateTime)
-    user_score: Mapped[int | None]
-    user_ratings: Mapped[int | None]
-    meta_score: Mapped[int | None]
-    meta_ratings: Mapped[int | None]
+
+    game: Mapped["Game | None"] = relationship(
+        "Game",
+        back_populates="igdb_info",
+        default=None,
+    )
+
+    url: Mapped[str | None] = mapped_column(default=None)
+    name: Mapped[str | None] = mapped_column(default=None)
+    short_description: Mapped[str | None] = mapped_column(default=None)
+    release_date: Mapped[datetime | None] = mapped_column(AwareDateTime, default=None)
+    user_score: Mapped[int | None] = mapped_column(default=None)
+    user_ratings: Mapped[int | None] = mapped_column(default=None)
+    meta_score: Mapped[int | None] = mapped_column(default=None)
+    meta_ratings: Mapped[int | None] = mapped_column(default=None)
 
 
 class SteamInfo(Base):
@@ -144,28 +140,29 @@ class SteamInfo(Base):
 
     __tablename__ = "steam_info"
 
-    game: Mapped[Game] = relationship(
-        "Game",
-        back_populates="steam_info",
-    )
-
     id: Mapped[int] = mapped_column(
-        init=False,
         primary_key=True,
     )
     url: Mapped[str]
-    name: Mapped[str]
-    short_description: Mapped[str | None]
-    release_date: Mapped[datetime | None] = mapped_column(AwareDateTime)
-    genres: Mapped[str | None]
-    publishers: Mapped[str | None]
-    image_url: Mapped[str | None]
-    recommendations: Mapped[int | None]
-    percent: Mapped[int | None]
-    score: Mapped[int | None]
-    metacritic_score: Mapped[int | None]
-    metacritic_url: Mapped[str | None]
-    recommended_price_eur: Mapped[float | None]
+
+    game: Mapped["Game | None"] = relationship(
+        "Game",
+        back_populates="steam_info",
+        default=None,
+    )
+
+    name: Mapped[str | None] = mapped_column(default=None)
+    short_description: Mapped[str | None] = mapped_column(default=None)
+    release_date: Mapped[datetime | None] = mapped_column(AwareDateTime, default=None)
+    genres: Mapped[str | None] = mapped_column(default=None)
+    publishers: Mapped[str | None] = mapped_column(default=None)
+    image_url: Mapped[str | None] = mapped_column(default=None)
+    recommendations: Mapped[int | None] = mapped_column(default=None)
+    percent: Mapped[int | None] = mapped_column(default=None)
+    score: Mapped[int | None] = mapped_column(default=None)
+    metacritic_score: Mapped[int | None] = mapped_column(default=None)
+    metacritic_url: Mapped[str | None] = mapped_column(default=None)
+    recommended_price_eur: Mapped[float | None] = mapped_column(default=None)
 
 
 class Offer(Base):
@@ -201,9 +198,8 @@ class Offer(Base):
     valid_from: Mapped[datetime | None] = mapped_column(AwareDateTime, default=None)
     valid_to: Mapped[datetime | None] = mapped_column(AwareDateTime, default=None)
 
-    game: Mapped[Game | None] = relationship(
+    game: Mapped["Game | None"] = relationship(
         "Game",
-        back_populates="offers",
         default=None,
     )
 
@@ -223,6 +219,7 @@ class User(Base):
         "TelegramSubscription",
         back_populates="user",
         cascade="all, delete-orphan",
+        init=False,
     )
 
     id: Mapped[int] = mapped_column(
@@ -233,8 +230,8 @@ class User(Base):
     telegram_id: Mapped[str | None]
     telegram_chat_id: Mapped[str]
     telegram_user_details: Mapped[dict[str, Any] | None] = mapped_column(sa.JSON)
-    timezone_offset: Mapped[int | None]
-    inactive: Mapped[str | None]
+    timezone_offset: Mapped[int] = mapped_column(default=0)
+    inactive: Mapped[str | None] = mapped_column(default=None)
     offers_received_count: Mapped[int] = mapped_column(default=0)
     last_announcement_id: Mapped[int] = mapped_column(default=0)
 
@@ -246,7 +243,7 @@ class TelegramSubscription(Base):
 
     __tablename__ = "telegram_subscriptions"
 
-    user: Mapped[User] = relationship("User", back_populates="telegram_subscriptions")
+    user: Mapped["User"] = relationship("User", back_populates="telegram_subscriptions")
 
     id: Mapped[int] = mapped_column(
         init=False,
