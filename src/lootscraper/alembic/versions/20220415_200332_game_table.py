@@ -8,8 +8,6 @@ Create Date: 2022-04-15 20:03:32.928325+00:00
 
 from __future__ import annotations
 
-from typing import Any
-
 import sqlalchemy as sa
 from alembic import op
 from sqlalchemy import orm
@@ -21,63 +19,62 @@ branch_labels = None
 depends_on = None
 
 
-Base: Any = orm.declarative_base()
+class Base(orm.DeclarativeBase):
+    __allow_unmapped__ = True
 
 
 class Game(Base):
-    __allow_unmapped__ = True
     __tablename__ = "games"
 
-    id = sa.Column(sa.Integer, primary_key=True, nullable=False)
+    id = orm.mapped_column(sa.Integer, primary_key=True, nullable=False)
 
     # Steam scraped data
-    steam_id = sa.Column(sa.Integer)
-    steam_url = sa.Column(sa.String)
-    steam_recommendations = sa.Column(sa.Integer)
-    steam_percent = sa.Column(sa.Integer)
-    steam_score = sa.Column(sa.Integer)
-    metacritic_score = sa.Column(sa.Integer)
-    metacritic_url = sa.Column(sa.String)
-    recommended_price_eur = sa.Column(sa.Float)
+    steam_id = orm.mapped_column(sa.Integer)
+    steam_url = orm.mapped_column(sa.String)
+    steam_recommendations = orm.mapped_column(sa.Integer)
+    steam_percent = orm.mapped_column(sa.Integer)
+    steam_score = orm.mapped_column(sa.Integer)
+    metacritic_score = orm.mapped_column(sa.Integer)
+    metacritic_url = orm.mapped_column(sa.String)
+    recommended_price_eur = orm.mapped_column(sa.Float)
 
     # IGDB scraped data
-    igdb_id = sa.Column(sa.Integer)
-    igdb_url = sa.Column(sa.String)
-    igdb_user_score = sa.Column(sa.Integer)
-    igdb_user_ratings = sa.Column(sa.Integer)
-    igdb_meta_score = sa.Column(sa.Integer)
-    igdb_meta_ratings = sa.Column(sa.Integer)
+    igdb_id = orm.mapped_column(sa.Integer)
+    igdb_url = orm.mapped_column(sa.String)
+    igdb_user_score = orm.mapped_column(sa.Integer)
+    igdb_user_ratings = orm.mapped_column(sa.Integer)
+    igdb_meta_score = orm.mapped_column(sa.Integer)
+    igdb_meta_ratings = orm.mapped_column(sa.Integer)
 
     # Could be from both
-    name = sa.Column(sa.String)
-    short_description = sa.Column(sa.String)
-    genres = sa.Column(sa.String)  # Currently Steam only
-    publishers = sa.Column(sa.String)  # Currently Steam only
-    release_date = sa.Column(sa.DateTime)
-    image_url = sa.Column(sa.String)  # Currently Steam only
+    name = orm.mapped_column(sa.String)
+    short_description = orm.mapped_column(sa.String)
+    genres = orm.mapped_column(sa.String)  # Currently Steam only
+    publishers = orm.mapped_column(sa.String)  # Currently Steam only
+    release_date = orm.mapped_column(sa.DateTime)
+    image_url = orm.mapped_column(sa.String)  # Currently Steam only
 
     offers = orm.relationship("Offer", back_populates="game")
 
 
 class Offer(Base):
-    __allow_unmapped__ = True
     __tablename__ = "offers"
 
-    id = sa.Column(sa.Integer, primary_key=True)
-    source = sa.Column(sa.Enum("AMAZON", "EPIC", "STEAM", "GOG", name="source"))
-    type = sa.Column(sa.Enum("LOOT", "GAME", name="offertype"))
-    title = sa.Column(sa.String)
+    id = orm.mapped_column(sa.Integer, primary_key=True)
+    source = orm.mapped_column(sa.Enum("AMAZON", "EPIC", "STEAM", "GOG", name="source"))
+    type = orm.mapped_column(sa.Enum("LOOT", "GAME", name="offertype"))
+    title = orm.mapped_column(sa.String)
 
-    seen_first = sa.Column(sa.DateTime)
-    seen_last = sa.Column(sa.DateTime)
-    valid_from = sa.Column(sa.DateTime)
-    valid_to = sa.Column(sa.DateTime)
+    seen_first = orm.mapped_column(sa.DateTime)
+    seen_last = orm.mapped_column(sa.DateTime)
+    valid_from = orm.mapped_column(sa.DateTime)
+    valid_to = orm.mapped_column(sa.DateTime)
 
-    rawtext = sa.Column(sa.String)
-    url = sa.Column(sa.String)
-    img_url = sa.Column(sa.String)
+    rawtext = orm.mapped_column(sa.String)
+    url = orm.mapped_column(sa.String)
+    img_url = orm.mapped_column(sa.String)
 
-    game_id = sa.Column(sa.Integer, sa.ForeignKey("games.id"))
+    game_id = orm.mapped_column(sa.Integer, sa.ForeignKey("games.id"))
     game = orm.relationship("Game", back_populates="offers")
 
 

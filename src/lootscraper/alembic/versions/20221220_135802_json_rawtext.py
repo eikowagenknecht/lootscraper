@@ -9,7 +9,6 @@ Create Date: 2022-12-20 13:58:02.312815+00:00
 import json
 import re
 from datetime import datetime
-from typing import Any
 
 import sqlalchemy as sa
 from alembic import op
@@ -75,11 +74,12 @@ def add_xml_element_if_exists(
         pass
 
 
-Base: Any = orm.declarative_base()
+class Base(orm.DeclarativeBase):
+    __allow_unmapped__ = True
+    pass
 
 
 class Offer(Base):
-    __allow_unmapped__ = True
     __tablename__ = "offers"
 
     id: int = sa.Column(sa.Integer, primary_key=True, nullable=False)
@@ -107,7 +107,6 @@ class Offer(Base):
 
 
 class Game(Base):
-    __allow_unmapped__ = True
     __tablename__ = "games"
 
     id = sa.Column(sa.Integer, primary_key=True, nullable=False)

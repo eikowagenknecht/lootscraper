@@ -4,13 +4,22 @@ import logging
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from types import TracebackType
-from typing import Any, Type
+from typing import Any, Sequence, Type
 
 import sqlalchemy as sa
 from alembic import command
 from alembic.config import Config as AlembicConfig
-from sqlalchemy import orm
 from sqlalchemy.engine.interfaces import Dialect
+from sqlalchemy.orm import (
+    DeclarativeBase,
+    Mapped,
+    MappedAsDataclass,
+    Session,
+    mapped_column,
+    relationship,
+    scoped_session,
+    sessionmaker,
+)
 
 from lootscraper.common import Category, Channel, OfferDuration, OfferType, Source
 from lootscraper.config import Config
@@ -18,11 +27,17 @@ from lootscraper.scraper.info.utils import calc_real_valid_to
 
 logger = logging.getLogger(__name__)
 
-mapper_registry = orm.registry()
-Base: Any = mapper_registry.generate_base()
+
+# mapper_registry = orm.registry()
 
 
-class AwareDateTime(sa.TypeDecorator):  # pylint: disable=W0223
+class Base(MappedAsDataclass, DeclarativeBase):
+    """
+    Subclasses will be converted to dataclasses
+    """
+
+
+class AwareDateTime(sa.TypeDecorator):  # type: ignore # pylint: disable=W0223
     """
     Results returned as aware datetimes, not naive ones.
     """
@@ -47,14 +62,16 @@ class AwareDateTime(sa.TypeDecorator):  # pylint: disable=W0223
 
 
 class Announcement(Base):
-    __allow_unmapped__ = True
     __tablename__ = "announcements"
 
-    id: int = sa.Column(sa.Integer, primary_key=True, nullable=False)
+    id: Mapped[int] = mapped_column(
+        init=False,
+        primary_key=True,
+    )
 
-    channel: Channel = sa.Column(sa.Enum(Channel), nullable=False)
-    date: datetime = sa.Column(AwareDateTime, nullable=False)
-    text_markdown: str = sa.Column(sa.String, nullable=False)
+    channel: Mapped[Channel] = mapped_column(sa.Enum(Channel))
+    date: Mapped[datetime] = mapped_column(AwareDateTime)
+    text_markdown: Mapped[str]
 
 
 class Game(Base):
@@ -62,111 +79,93 @@ class Game(Base):
     A game (e.g. "The Witcher 3").
     """
 
-    __allow_unmapped__ = True
     __tablename__ = "games"
 
-    id: int = sa.Column(sa.Integer, primary_key=True, nullable=False)
+    igdb_info: Mapped[IgdbInfo | None] = relationship(
+        "IgdbInfo",
+        back_populates="game",
+        default=None,
+    )
+    steam_info: Mapped[SteamInfo | None] = relationship(
+        "SteamInfo",
+        back_populates="game",
+        default=None,
+    )
+    offers: Mapped[list[Offer] | None] = relationship(
+        "Offer",
+        back_populates="game",
+        default=None,
+    )
 
-    igdb_id: int | None = sa.Column(sa.Integer, sa.ForeignKey("igdb_info.id"))
-    steam_id: int | None = sa.Column(sa.Integer, sa.ForeignKey("steam_info.id"))
-
-    igdb_info: IgdbInfo | None = orm.relationship("IgdbInfo", back_populates="game")
-    steam_info: SteamInfo | None = orm.relationship("SteamInfo", back_populates="game")
-
-    offers: list[Offer] = orm.relationship("Offer", back_populates="game")
-
-    def __repr__(self) -> str:
-        return (
-            "Game("
-            f"id={self.id!r}, "
-            f"igdb_id={self.igdb_id!r}, "
-            f"steam_id={self.steam_id!r})"
-        )
+    id: Mapped[int] = mapped_column(
+        init=False,
+        primary_key=True,
+    )
+    igdb_id: Mapped[int | None] = mapped_column(
+        sa.ForeignKey("igdb_info.id"),
+        init=False,
+    )
+    steam_id: Mapped[int | None] = mapped_column(
+        sa.ForeignKey("steam_info.id"),
+        init=False,
+    )
 
 
 class IgdbInfo(Base):
     """
-    Information about a Game, gathered from IDGB.
+    Information about a game, gathered from IDGB.
     """
 
-    __allow_unmapped__ = True
     __tablename__ = "igdb_info"
 
-    id: int = sa.Column(sa.Integer, primary_key=True, nullable=False)
-    url: str = sa.Column(sa.String, nullable=False)
+    game: Mapped[Game] = relationship(
+        "Game",
+        back_populates="igdb_info",
+    )
 
-    name: str = sa.Column(sa.String, nullable=False)
-    short_description: str | None = sa.Column(sa.String)
-    release_date: datetime | None = sa.Column(AwareDateTime)
-
-    user_score: int | None = sa.Column(sa.Integer)
-    user_ratings: int | None = sa.Column(sa.Integer)
-    meta_score: int | None = sa.Column(sa.Integer)
-    meta_ratings: int | None = sa.Column(sa.Integer)
-
-    def __repr__(self) -> str:
-        return (
-            "IgdbInfo("
-            f"id={self.id!r}, "
-            f"url={self.url!r}, "
-            f"name={self.name!r}, "
-            f"short_description={self.short_description!r}, "
-            f"user_score={self.user_score!r}, "
-            f"user_rating={self.user_ratings!r}, "
-            f"meta_score={self.meta_score!r}, "
-            f"meta_rating={self.meta_ratings!r}, "
-            f"release_date={self.release_date!r})"
-        )
-
-    game: Game = orm.relationship("Game", back_populates="igdb_info")
+    id: Mapped[int] = mapped_column(
+        init=False,
+        primary_key=True,
+    )
+    url: Mapped[str]
+    name: Mapped[str]
+    short_description: Mapped[str | None]
+    release_date: Mapped[datetime | None] = mapped_column(AwareDateTime)
+    user_score: Mapped[int | None]
+    user_ratings: Mapped[int | None]
+    meta_score: Mapped[int | None]
+    meta_ratings: Mapped[int | None]
 
 
 class SteamInfo(Base):
     """
-    Information about a Game, gathered from Steam.
+    Information about a game, gathered from Steam.
     """
 
-    __allow_unmapped__ = True
     __tablename__ = "steam_info"
 
-    id: int = sa.Column(sa.Integer, primary_key=True, nullable=False)
-    url: str = sa.Column(sa.String, nullable=False)
+    game: Mapped[Game] = relationship(
+        "Game",
+        back_populates="steam_info",
+    )
 
-    name: str = sa.Column(sa.String, nullable=False)
-    short_description: str | None = sa.Column(sa.String)
-    release_date: datetime | None = sa.Column(AwareDateTime)
-    genres: str | None = sa.Column(sa.String)
-    publishers: str | None = sa.Column(sa.String)
-    image_url: str | None = sa.Column(sa.String)
-
-    recommendations: int | None = sa.Column(sa.Integer)
-    percent: int | None = sa.Column(sa.Integer)
-    score: int | None = sa.Column(sa.Integer)
-    metacritic_score: int | None = sa.Column(sa.Integer)
-    metacritic_url: str | None = sa.Column(sa.String)
-
-    recommended_price_eur: float | None = sa.Column(sa.Float)
-
-    def __repr__(self) -> str:
-        return (
-            "SteamInfo("
-            f"id={self.id!r}, "
-            f"url={self.url!r}, "
-            f"name={self.name!r}, "
-            f"short_description={self.short_description!r}, "
-            f"release_date={self.release_date!r}, "
-            f"genres={self.genres!r}, "
-            f"publishers={self.publishers!r}, "
-            f"image_url={self.image_url!r}, "
-            f"recommendations={self.recommendations!r}, "
-            f"percent={self.percent!r}, "
-            f"score={self.score!r}, "
-            f"metacritic_score={self.metacritic_score!r}, "
-            f"metacritic_url={self.metacritic_url!r}, "
-            f"recommended_price_eur={self.recommended_price_eur!r})"
-        )
-
-    game: Game = orm.relationship("Game", back_populates="steam_info")
+    id: Mapped[int] = mapped_column(
+        init=False,
+        primary_key=True,
+    )
+    url: Mapped[str]
+    name: Mapped[str]
+    short_description: Mapped[str | None]
+    release_date: Mapped[datetime | None] = mapped_column(AwareDateTime)
+    genres: Mapped[str | None]
+    publishers: Mapped[str | None]
+    image_url: Mapped[str | None]
+    recommendations: Mapped[int | None]
+    percent: Mapped[int | None]
+    score: Mapped[int | None]
+    metacritic_score: Mapped[int | None]
+    metacritic_url: Mapped[str | None]
+    recommended_price_eur: Mapped[float | None]
 
 
 class Offer(Base):
@@ -174,54 +173,43 @@ class Offer(Base):
     An offer, can be for a game or some other game related content (loot).
     """
 
-    __allow_unmapped__ = True
     __tablename__ = "offers"
 
-    id: int = sa.Column(sa.Integer, primary_key=True, nullable=False)
-    source: Source = sa.Column(sa.Enum(Source), nullable=False)
-    type: OfferType = sa.Column(sa.Enum(OfferType), nullable=False)
-    duration: OfferDuration = sa.Column(sa.Enum(OfferDuration), nullable=False)
-    title: str = sa.Column(sa.String, nullable=False)
-    probable_game_name: str = sa.Column(sa.String, nullable=False)
-
-    seen_first: datetime = sa.Column(AwareDateTime, nullable=False)
-    seen_last: datetime = sa.Column(AwareDateTime, nullable=False)
-    valid_from: datetime | None = sa.Column(AwareDateTime)
-    valid_to: datetime | None = sa.Column(AwareDateTime)
+    id: Mapped[int] = mapped_column(
+        init=False,
+        primary_key=True,
+    )
+    source: Mapped[Source] = mapped_column(sa.Enum(Source))
+    type: Mapped[OfferType] = mapped_column(sa.Enum(OfferType))
+    duration: Mapped[OfferDuration] = mapped_column(sa.Enum(OfferDuration))
+    title: Mapped[str]
+    probable_game_name: Mapped[str]
+    seen_last: Mapped[datetime] = mapped_column(AwareDateTime)
     """The valid to date as seen on the website. Some websites sometimes remove the offer before this date."""
-
-    rawtext: dict[str, Any] | None = sa.Column(sa.JSON)
-    url: str | None = sa.Column(sa.String)
-    img_url: str | None = sa.Column(sa.String)
-
-    category: Category = sa.Column(
-        sa.Enum(Category), nullable=False, default=Category.VALID
+    rawtext: Mapped[dict[str, Any] | None] = mapped_column(sa.JSON)
+    url: Mapped[str | None]
+    game_id: Mapped[int | None] = mapped_column(
+        sa.ForeignKey("games.id"),
+        init=False,
+    )
+    category: Mapped[Category] = mapped_column(
+        sa.Enum(Category), default=Category.VALID
     )
 
-    game_id: int | None = sa.Column(sa.Integer, sa.ForeignKey("games.id"))
-    game: Game | None = orm.relationship("Game", back_populates="offers")
+    img_url: Mapped[str | None] = mapped_column(default=None)
+    seen_first: Mapped[datetime | None] = mapped_column(AwareDateTime, default=None)
+    valid_from: Mapped[datetime | None] = mapped_column(AwareDateTime, default=None)
+    valid_to: Mapped[datetime | None] = mapped_column(AwareDateTime, default=None)
+
+    game: Mapped[Game | None] = relationship(
+        "Game",
+        back_populates="offers",
+        default=None,
+    )
 
     def real_valid_to(self) -> datetime | None:
         """The real valid to date. This is calculated from valid_to and seen_last."""
         return calc_real_valid_to(self.seen_last, self.valid_to)
-
-    def __repr__(self) -> str:
-        return (
-            "Offer("
-            f"id={self.id!r}, "
-            f"game_id={self.game_id!r}, "
-            f"seen_first={self.seen_first!r}, "
-            f"seen_last={self.seen_last!r}, "
-            f"source={self.source!r}, "
-            f"type={self.type!r}, "
-            f"rawtext={self.rawtext!r}, "
-            f"title={self.title!r}, "
-            f"valid_from={self.valid_from!r}, "
-            f"valid_to={self.valid_to!r}, "
-            f"real_valid_to={self.real_valid_to!r}, "
-            f"url={self.url!r}, "
-            f"img_url={self.img_url!r}, "
-        )
 
 
 class User(Base):
@@ -229,25 +217,26 @@ class User(Base):
     A user of the application.
     """
 
-    __allow_unmapped__ = True
     __tablename__ = "users"
 
-    id: int = sa.Column(sa.Integer, primary_key=True, nullable=False)
-
-    registration_date: datetime = sa.Column(AwareDateTime)
-    offers_received_count: int = sa.Column(sa.Integer, default=0)
-
-    telegram_id: str | None = sa.Column(sa.String)
-    telegram_chat_id: str = sa.Column(sa.String)
-    telegram_user_details: dict[str, Any] | None = sa.Column(sa.JSON)
-    timezone_offset: int | None = sa.Column(sa.Integer)
-    inactive: str | None = sa.Column(sa.String)
-
-    telegram_subscriptions: list[TelegramSubscription] = orm.relationship(
-        "TelegramSubscription", back_populates="user", cascade="all, delete-orphan"
+    telegram_subscriptions: Mapped[list[TelegramSubscription]] = relationship(
+        "TelegramSubscription",
+        back_populates="user",
+        cascade="all, delete-orphan",
     )
 
-    last_announcement_id: int = sa.Column(sa.Integer, nullable=False, default=0)
+    id: Mapped[int] = mapped_column(
+        init=False,
+        primary_key=True,
+    )
+    registration_date: Mapped[datetime] = mapped_column(AwareDateTime)
+    telegram_id: Mapped[str | None]
+    telegram_chat_id: Mapped[str]
+    telegram_user_details: Mapped[dict[str, Any] | None] = mapped_column(sa.JSON)
+    timezone_offset: Mapped[int | None]
+    inactive: Mapped[str | None]
+    offers_received_count: Mapped[int] = mapped_column(default=0)
+    last_announcement_id: Mapped[int] = mapped_column(default=0)
 
 
 class TelegramSubscription(Base):
@@ -255,19 +244,22 @@ class TelegramSubscription(Base):
     Subscription of a user to a category for Telegram notifications.
     """
 
-    __allow_unmapped__ = True
     __tablename__ = "telegram_subscriptions"
 
-    id: int = sa.Column(sa.Integer, primary_key=True, nullable=False)
+    user: Mapped[User] = relationship("User", back_populates="telegram_subscriptions")
 
-    user_id: int = sa.Column(sa.Integer, sa.ForeignKey("users.id"), nullable=False)
-    user: User = orm.relationship("User", back_populates="telegram_subscriptions")
-
-    source: Source = sa.Column(sa.Enum(Source), nullable=False)
-    type: OfferType = sa.Column(sa.Enum(OfferType), nullable=False)
-    duration: OfferDuration = sa.Column(sa.Enum(OfferDuration), nullable=False)
-
-    last_offer_id: int = sa.Column(sa.Integer, nullable=False, default=0)
+    id: Mapped[int] = mapped_column(
+        init=False,
+        primary_key=True,
+    )
+    user_id: Mapped[int] = mapped_column(
+        sa.ForeignKey("users.id"),
+        init=False,
+    )
+    source: Mapped[Source] = mapped_column(sa.Enum(Source))
+    type: Mapped[OfferType] = mapped_column(sa.Enum(OfferType))
+    duration: Mapped[OfferDuration] = mapped_column(sa.Enum(OfferDuration))
+    last_offer_id: Mapped[int] = mapped_column(default=0)
 
 
 class LootDatabase:
@@ -281,8 +273,9 @@ class LootDatabase:
             echo=echo,
             future=True,
         )
-        session_factory = orm.sessionmaker(bind=self.engine, future=True)
-        self.Session = orm.scoped_session(session_factory)
+        session_factory = sessionmaker(bind=self.engine, future=True)
+        self.Session = scoped_session(session_factory)
+        # TODO: Can this be changed with SQLAlchemy 2.0 and the removal of threaded execution?
 
     def __enter__(self) -> LootDatabase:
         return self
@@ -293,7 +286,7 @@ class LootDatabase:
         exc_value: BaseException | None,
         traceback: TracebackType | None,
     ) -> None:
-        session: orm.Session = self.Session()
+        session: Session = self.Session()
         if isinstance(exc_value, Exception):
             session.rollback()
         else:
@@ -308,8 +301,8 @@ class LootDatabase:
         )
         command.upgrade(alembic_cfg, "head")
 
-    def read_all(self) -> list[Offer]:
-        session: orm.Session = self.Session()
+    def read_all(self) -> Sequence[Offer]:
+        session: Session = self.Session()
         try:
             result = session.execute(sa.select(Offer)).scalars().all()
         except Exception:
@@ -370,9 +363,9 @@ class LootDatabase:
                 )
             )
 
-        session: orm.Session = self.Session()
+        session: Session = self.Session()
         try:
-            result: list[Offer] = session.execute(statement).scalars().all()
+            result: Sequence[Offer] = session.execute(statement).scalars().all()
         except Exception:
             session.rollback()
             raise
@@ -395,9 +388,9 @@ class LootDatabase:
         )
         return result[-1]
 
-    def find_offer_by_id(self, id_: int) -> Offer:
+    def find_offer_by_id(self, id_: int) -> Offer | None:
         statement = sa.select(Offer).where(Offer.id == id_)
-        session: orm.Session = self.Session()
+        session: Session = self.Session()
         try:
             result = session.execute(statement).scalars().one_or_none()
         except Exception:
@@ -408,7 +401,7 @@ class LootDatabase:
 
     def touch_db_offer(self, db_offer: Offer) -> None:
         db_offer.seen_last = datetime.now().replace(tzinfo=timezone.utc)
-        session: orm.Session = self.Session()
+        session: Session = self.Session()
         try:
             session.commit()
         except Exception:
@@ -439,7 +432,7 @@ class LootDatabase:
         if new_data.game_id:
             db_offer.game_id = new_data.game_id
 
-        session: orm.Session = self.Session()
+        session: Session = self.Session()
         try:
             session.commit()
         except Exception:
@@ -448,7 +441,7 @@ class LootDatabase:
 
     def add_offer(self, offer: Offer) -> None:
         offer.seen_first = offer.seen_last
-        session: orm.Session = self.Session()
+        session: Session = self.Session()
         try:
             session.add(offer)
             session.commit()

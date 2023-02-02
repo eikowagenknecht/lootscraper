@@ -23,11 +23,12 @@ branch_labels = None
 depends_on = None
 
 
-Base: Any = orm.declarative_base()
+class Base(orm.DeclarativeBase):
+    __allow_unmapped__ = True
+    pass
 
 
 class Game(Base):
-    __allow_unmapped__ = True
     __tablename__ = "games"
 
     id = sa.Column(sa.Integer, primary_key=True, nullable=False)
@@ -39,7 +40,6 @@ class Game(Base):
 
 
 class Offer(Base):
-    __allow_unmapped__ = True
     __tablename__ = "offers"
 
     id: int = sa.Column(sa.Integer, primary_key=True)

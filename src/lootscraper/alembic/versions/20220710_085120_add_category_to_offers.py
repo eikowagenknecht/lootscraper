@@ -8,7 +8,6 @@ Create Date: 2022-07-10 08:51:20.622359+00:00
 # pylint: disable=no-member
 
 from datetime import datetime
-from typing import Any
 
 import sqlalchemy as sa
 from alembic import op
@@ -24,11 +23,12 @@ branch_labels = None
 depends_on = None
 
 
-Base: Any = orm.declarative_base()
+class Base(orm.DeclarativeBase):
+    __allow_unmapped__ = True
+    pass
 
 
 class Game(Base):
-    __allow_unmapped__ = True
     __tablename__ = "games"
 
     id = sa.Column(sa.Integer, primary_key=True, nullable=False)
@@ -42,7 +42,6 @@ class Game(Base):
 class Offer(Base):
     """An offer, can be for a game or some other game related content (loot)."""
 
-    __allow_unmapped__ = True
     __tablename__ = "offers"
 
     id: int = sa.Column(sa.Integer, primary_key=True, nullable=False)

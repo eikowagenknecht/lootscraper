@@ -4,6 +4,7 @@ import html
 import logging
 from datetime import datetime
 from pathlib import Path
+from typing import Sequence
 
 from feedgen.feed import FeedEntry, FeedGenerator
 
@@ -22,7 +23,7 @@ logger = logging.getLogger(__name__)
 
 
 async def generate_feed(
-    offers: list[Offer],
+    offers: Sequence[Offer],
     file: Path,
     author_name: str,
     author_mail: str,
