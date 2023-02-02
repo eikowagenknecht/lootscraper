@@ -7,7 +7,7 @@ import traceback
 from datetime import datetime, timedelta, timezone
 from http.client import RemoteDisconnected
 from types import TracebackType
-from typing import Any, Type
+from typing import Any, Sequence, Type
 
 import humanize
 import sqlalchemy as sa
@@ -87,9 +87,11 @@ logger = logging.getLogger(__name__)
 
 
 class TelegramBot:
-    def __init__(self, config: ParsedConfig, session: orm.Session):
+    def __init__(
+        self, config: ParsedConfig, scoped_session: orm.scoped_session[orm.Session]
+    ):
         self.config = config
-        self.Session = session
+        self.Session = scoped_session
         self.application: Application | None = None  # type: ignore
 
     async def __aenter__(self) -> TelegramBot:
@@ -388,7 +390,9 @@ class TelegramBot:
                 session: orm.Session = self.Session()
                 try:
                     latest_announcement = session.execute(
-                        sa.select(sa.func.max(Announcement.id))
+                        sa.select(
+                            sa.func.max(Announcement.id)
+                        )  # pylint: disable=not-callable
                     ).scalar()
 
                     new_user = User(
@@ -649,7 +653,7 @@ class TelegramBot:
         session: orm.Session = self.Session()
         try:
             latest_announcement = session.execute(
-                sa.select(sa.func.max(Announcement.id))
+                sa.select(sa.func.max(Announcement.id))  # pylint: disable=not-callable
             ).scalar()
 
             new_user = User(
@@ -843,7 +847,7 @@ class TelegramBot:
             session: orm.Session = self.Session()
             offer = session.execute(
                 sa.select(Offer).where(Offer.id == offer_id)
-            ).scalar()
+            ).scalar_one()
             if query.data.startswith("details show"):
                 await query.answer()
                 await query.edit_message_text(
@@ -1068,7 +1072,7 @@ class TelegramBot:
     async def send_new_announcements(self, user: User) -> None:
         session: orm.Session = self.Session()
         try:
-            announcements: list[Announcement] = (
+            announcements: Sequence[Announcement] = (
                 session.execute(
                     sa.select(Announcement).where(
                         sa.and_(
