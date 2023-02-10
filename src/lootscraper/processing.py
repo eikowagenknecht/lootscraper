@@ -2,6 +2,7 @@ import asyncio
 import hashlib
 import logging
 from pathlib import Path
+from typing import Sequence
 
 from playwright.async_api import BrowserContext
 from sqlalchemy import select
@@ -74,9 +75,9 @@ async def process_new_offers(
 ) -> None:
     """
     Check which offers are new and which are updated, then act accordingly:
-     - Offers that are neither new nor updated just get a new date
-     - Offers that are new are inserted
-     - Offers that are updated are updated
+    - Offers that are neither new nor updated just get a new date
+    - Offers that are new are inserted
+    - Offers that are updated are updated
     """
 
     cfg = Config.get()
@@ -129,7 +130,7 @@ async def send_new_offers_telegram(db: LootDatabase, bot: TelegramBot) -> None:
         raise
 
 
-async def action_generate_feed(loot_offers_in_db: list[Offer]) -> None:
+async def action_generate_feed(loot_offers_in_db: Sequence[Offer]) -> None:
     cfg = Config.get()
     feed_file_base = Config.data_path() / Path(cfg.feed_file_prefix + ".xml")
 
