@@ -40,7 +40,7 @@ pylint = "^2.16.1"
 flake8 = "^6.0.0"
 flake8-isort = "^5.0.3"
 # Type checking
-mypy = "^0.991"
+mypy = "^1.1"
 # Profiling
 scalene = "^1.5.19"
 
