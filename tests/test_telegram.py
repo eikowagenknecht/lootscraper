@@ -40,7 +40,7 @@ class TelegramTests(unittest.IsolatedAsyncioTestCase):
                 message = await bot.send_offer(offer, user)
 
                 # Assert
-                self.assertTrue(message)
+                assert message
 
     async def test_telegram_new_offers(self) -> None:
         # Arrange
