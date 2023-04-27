@@ -1,3 +1,4 @@
+import contextlib
 import logging
 import urllib.parse
 from dataclasses import dataclass
@@ -200,10 +201,9 @@ async def add_data_from_steam_api(steam_info: SteamInfo) -> None:
             # correct.
             logger.info(f"No price found for Steam app id {steam_info.id}: {e}")
 
-    try:
+    with contextlib.suppress(KeyError):
         steam_info.recommendations = content["recommendations"]["total"]
-    except KeyError:
-        pass
+
 
     try:
         steam_info.metacritic_score = content["metacritic"]["score"]
@@ -220,10 +220,9 @@ async def add_data_from_steam_api(steam_info: SteamInfo) -> None:
     except KeyError:
         pass
 
-    try:
+    with contextlib.suppress(KeyError):
         steam_info.publishers = ", ".join(content["publishers"])
-    except KeyError:
-        pass
+
 
 
 async def read_from_steam_api(steam_app_id: int) -> dict[str, Any] | None:

@@ -1,3 +1,4 @@
+import contextlib
 import logging
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -163,20 +164,17 @@ async def add_data_from_api(igdb_info: IgdbInfo) -> None:
 
     game = data[0]
 
-    try:
+    with contextlib.suppress(KeyError):
         igdb_info.name = game["name"]
-    except KeyError:
-        pass
 
-    try:
+
+    with contextlib.suppress(KeyError):
         igdb_info.url = game["url"]
-    except KeyError:
-        pass
 
-    try:
+
+    with contextlib.suppress(KeyError):
         igdb_info.short_description = game["summary"]
-    except KeyError:
-        pass
+
 
     try:
         unix_releasedate = game["first_release_date"]
@@ -185,25 +183,21 @@ async def add_data_from_api(igdb_info: IgdbInfo) -> None:
     except KeyError:
         pass
 
-    try:
+    with contextlib.suppress(KeyError, ValueError):
         igdb_info.user_score = int(game["rating"])
-    except (KeyError, ValueError):
-        pass
 
-    try:
+
+    with contextlib.suppress(KeyError):
         igdb_info.user_ratings = game["rating_count"]
-    except KeyError:
-        pass
 
-    try:
+
+    with contextlib.suppress(KeyError, ValueError):
         igdb_info.meta_score = int(game["aggregated_rating"])
-    except (KeyError, ValueError):
-        pass
 
-    try:
+
+    with contextlib.suppress(KeyError):
         igdb_info.meta_ratings = game["aggregated_rating_count"]
-    except KeyError:
-        pass
+
 
     # TODO: Publisher, Genres, Cover
     # genres = List of genres (ids only, have to be called separately)

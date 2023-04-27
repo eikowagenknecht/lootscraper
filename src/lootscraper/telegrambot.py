@@ -310,7 +310,7 @@ class TelegramBot:
             return
 
         # Check if the user is an admin
-        if not update.effective_user.id == Config.get().telegram_admin_user_id:
+        if update.effective_user.id != Config.get().telegram_admin_user_id:
             await self.send_message(
                 chat_id=update.effective_chat.id,
                 text=markdown_escape(
@@ -363,7 +363,7 @@ class TelegramBot:
             return
 
         # Check if the user is an admin
-        if not update.effective_user.id == Config.get().telegram_admin_user_id:
+        if update.effective_user.id != Config.get().telegram_admin_user_id:
             await self.send_message(
                 chat_id=update.effective_chat.id,
                 text=markdown_escape(
@@ -1588,10 +1588,7 @@ class TelegramBot:
     async def log_call(self, update: Update) -> None:
         # Only log calls from users if the log level is set to debug.
         if Config.get().telegram_log_level.value >= TelegramLogLevel.DEBUG.value:
-            if update.callback_query:
-                type_ = "Callback query"
-            else:
-                type_ = "Message"
+            type_ = "Callback query" if update.callback_query else "Message"
 
             if update.effective_user:
                 user = update.effective_user.name

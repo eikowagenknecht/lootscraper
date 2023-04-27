@@ -3,7 +3,7 @@ import asyncio
 import logging
 import shutil
 import sys
-from contextlib import ExitStack
+from contextlib import ExitStack, suppress
 from datetime import datetime, timedelta
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
@@ -52,10 +52,9 @@ def main() -> None:
         cleanup()
         return
 
-    try:
+    with suppress(KeyboardInterrupt):
         asyncio.run(run())
-    except KeyboardInterrupt:
-        pass
+
 
 
 async def run() -> None:

@@ -1,3 +1,4 @@
+import contextlib
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
@@ -119,45 +120,38 @@ class Config:
             parsed_config = ParsedConfig()
 
             # Common
-            try:
+            with contextlib.suppress(KeyError):
                 parsed_config.database_file = data["common"]["database_file"]
-            except KeyError:
-                pass
 
-            try:
+
+            with contextlib.suppress(KeyError):
                 parsed_config.feed_file_prefix = data["common"]["feed_file_prefix"]
-            except KeyError:
-                pass
 
-            try:
+
+            with contextlib.suppress(KeyError):
                 parsed_config.log_file = data["common"]["log_file"]
-            except KeyError:
-                pass
 
-            try:
+
+            with contextlib.suppress(KeyError):
                 parsed_config.log_level = data["common"]["log_level"]
-            except KeyError:
-                pass
 
-            try:
+
+            with contextlib.suppress(KeyError):
                 parsed_config.wait_between_runs_seconds = data["common"][
                     "wait_between_runs_seconds"
                 ]
-            except KeyError:
-                pass
+
 
             # Expert
-            try:
+            with contextlib.suppress(KeyError):
                 parsed_config.db_echo = data["expert"]["db_echo"]
-            except KeyError:
-                pass
 
-            try:
+
+            with contextlib.suppress(KeyError):
                 parsed_config.web_timeout_seconds = data["expert"][
                     "web_timeout_seconds"
                 ]
-            except KeyError:
-                pass
+
 
             # Scraper
             try:
@@ -187,119 +181,98 @@ class Config:
             except KeyError:
                 pass
 
-            try:
+            with contextlib.suppress(KeyError):
                 parsed_config.info_steam = "STEAM" in data["scraper"]["info_sources"]
-            except KeyError:
-                pass
 
-            try:
+
+            with contextlib.suppress(KeyError):
                 parsed_config.info_igdb = "IGDB" in data["scraper"]["info_sources"]
-            except KeyError:
-                pass
+
 
             # Actions
-            try:
+            with contextlib.suppress(KeyError):
                 parsed_config.scrape_info = data["actions"]["scrape_info"]
-            except KeyError:
-                pass
 
-            try:
+
+            with contextlib.suppress(KeyError):
                 parsed_config.generate_feed = data["actions"]["generate_feed"]
-            except KeyError:
-                pass
 
-            try:
+
+            with contextlib.suppress(KeyError):
                 parsed_config.upload_to_ftp = data["actions"]["upload_to_ftp"]
-            except KeyError:
-                pass
 
-            try:
+
+            with contextlib.suppress(KeyError):
                 parsed_config.telegram_bot = data["actions"]["telegram_bot"]
-            except KeyError:
-                pass
+
 
             # Telegram
-            try:
+            with contextlib.suppress(KeyError):
                 parsed_config.telegram_access_token = data["telegram"]["access_token"]
-            except KeyError:
-                pass
 
-            try:
+
+            with contextlib.suppress(KeyError):
                 parsed_config.telegram_developer_chat_id = data["telegram"][
                     "developer_chat_id"
                 ]
-            except KeyError:
-                pass
 
-            try:
+
+            with contextlib.suppress(KeyError):
                 parsed_config.telegram_log_level = TelegramLogLevel[
                     data["telegram"]["log_level"]
                 ]
-            except KeyError:
-                pass
 
-            try:
+
+            with contextlib.suppress(KeyError):
                 parsed_config.telegram_admin_user_id = data["telegram"]["admin_user_id"]
-            except KeyError:
-                pass
+
 
             # IGDB
-            try:
+            with contextlib.suppress(KeyError):
                 parsed_config.igdb_client_id = data["igdb"]["client_id"]
-            except KeyError:
-                pass
 
-            try:
+
+            with contextlib.suppress(KeyError):
                 parsed_config.igdb_client_secret = data["igdb"]["client_secret"]
-            except KeyError:
-                pass
+
 
             # FTP
-            try:
+            with contextlib.suppress(KeyError):
                 parsed_config.ftp_host = data["ftp"]["host"]
-            except KeyError:
-                pass
 
-            try:
+
+            with contextlib.suppress(KeyError):
                 parsed_config.ftp_user = data["ftp"]["user"]
-            except KeyError:
-                pass
 
-            try:
+
+            with contextlib.suppress(KeyError):
                 parsed_config.ftp_password = data["ftp"]["password"]
-            except KeyError:
-                pass
+
 
             # Feed
-            try:
+            with contextlib.suppress(KeyError):
                 parsed_config.feed_author_name = data["feed"]["author_name"]
-            except KeyError:
-                pass
 
-            try:
+
+            with contextlib.suppress(KeyError):
                 parsed_config.feed_author_email = data["feed"]["author_email"]
-            except KeyError:
-                pass
 
-            try:
+
+            with contextlib.suppress(KeyError):
                 parsed_config.feed_author_web = data["feed"]["author_web"]
-            except KeyError:
-                pass
 
-            try:
+
+            with contextlib.suppress(KeyError):
                 parsed_config.feed_url_prefix = data["feed"]["url_prefix"]
-            except KeyError:
-                pass
 
-            try:
+
+            with contextlib.suppress(KeyError):
                 parsed_config.feed_url_alternate = data["feed"]["url_alternate"]
-            except KeyError:
-                pass
 
-            try:
+
+            with contextlib.suppress(KeyError):
                 parsed_config.feed_id_prefix = data["feed"]["id_prefix"]
-            except KeyError:
-                pass
+
 
             Config.__parsed_config = parsed_config
 
