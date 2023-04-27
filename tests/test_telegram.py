@@ -3,11 +3,10 @@ import asyncio
 import unittest
 
 import sqlalchemy as sa
-from sqlalchemy import orm
-
 from lootscraper.config import Config
 from lootscraper.database import LootDatabase, Offer, User
 from lootscraper.telegrambot import TelegramBot
+from sqlalchemy import orm
 
 
 class TelegramTests(unittest.IsolatedAsyncioTestCase):

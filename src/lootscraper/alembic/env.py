@@ -6,12 +6,12 @@
 from logging.config import fileConfig
 from pathlib import Path
 
+from lootscraper import database
+from lootscraper.config import Config
 from sqlalchemy import create_engine, pool
 from sqlalchemy.schema import SchemaItem
 
 from alembic import context
-from lootscraper import database
-from lootscraper.config import Config
 
 IGNORE_TABLES = ["sqlite_sequence"]
 
