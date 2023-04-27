@@ -31,14 +31,12 @@ xvfbwrapper = "^0.2.9"
 optional = true
 
 [tool.poetry.group.dev.dependencies]
+# Formatting and Linting
+ruff = "^0.0.263"
 # Formatting
 black = "^23.3.0"
-isort = "^5.12.0"
-# Linting
-bandit = "^1.7.5"
+
 pylint = "^2.17.3"
-flake8 = "^6.0.0"
-flake8-isort = "^6.0.0"
 # Type checking
 mypy = "^1.2"
 # Profiling
@@ -48,8 +46,8 @@ scalene = "^1.5.19"
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
-[tool.isort]
-profile = "black"
+[tool.ruff]
+# See rules here: https://beta.ruff.rs/docs/rules/
 
 [tool.mypy]
 python_version = "3.11"
