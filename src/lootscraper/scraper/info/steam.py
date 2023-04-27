@@ -289,9 +289,7 @@ async def add_data_from_steam_store_page(
                 )
                 if review_score_percent is None:
                     logger.warning(f"No Steam percentage found for {steam_info.id}.")
-                elif review_score_percent.startswith(
-                    "Need more user reviews",
-                ) or review_score_percent.startswith("No user reviews"):
+                elif review_score_percent.startswith(("Need more user reviews", "No user reviews")):
                     # No percentage, but this reason is fine
                     pass
                 else:
