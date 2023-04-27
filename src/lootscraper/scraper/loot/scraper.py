@@ -3,9 +3,9 @@ from __future__ import annotations
 import logging
 import re
 from asyncio import sleep
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
-from typing import Awaitable, Callable
 
 from playwright.async_api import BrowserContext, Error, Locator, Page
 

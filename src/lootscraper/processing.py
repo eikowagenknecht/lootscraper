@@ -1,8 +1,8 @@
 import asyncio
 import hashlib
 import logging
+from collections.abc import Sequence
 from pathlib import Path
-from typing import Sequence
 
 from playwright.async_api import BrowserContext
 from sqlalchemy import select

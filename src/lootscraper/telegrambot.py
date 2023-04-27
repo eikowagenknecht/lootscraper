@@ -4,10 +4,11 @@ import asyncio
 import json
 import logging
 import traceback
+from collections.abc import Sequence
 from datetime import datetime, timedelta, timezone
 from http.client import RemoteDisconnected
 from types import TracebackType
-from typing import Any, Sequence, Type
+from typing import Any
 
 import humanize
 import sqlalchemy as sa
@@ -104,7 +105,7 @@ class TelegramBot:
 
     async def __aexit__(
         self,
-        exc_type: Type[BaseException] | None,
+        exc_type: type[BaseException] | None,
         exc_value: BaseException | None,
         traceback_: TracebackType | None,
     ) -> None:
@@ -421,10 +422,10 @@ class TelegramBot:
                 await self.send_message(
                     chat_id=update.effective_chat.id,
                     text=markdown_escape(
-                        (
+
                             f"Channel {channel_db_user.telegram_chat_id} is now unsubscribed "
                             f"to offers from: {offer_type.value} / {source.value} / {duration.value}."
-                        )
+
                     ),
                     parse_mode=telegram.constants.ParseMode.MARKDOWN_V2,
                 )
@@ -434,11 +435,11 @@ class TelegramBot:
                 await self.send_message(
                     chat_id=update.effective_chat.id,
                     text=markdown_escape(
-                        (
+
                             f"Channel {channel_db_user.telegram_chat_id} is now subscribed "
                             f"to offers from: {offer_type.value} / {source.value} / {duration.value}."
                             f"Sending new offers with the next scraping run."
-                        )
+
                     ),
                     parse_mode=telegram.constants.ParseMode.MARKDOWN_V2,
                 )

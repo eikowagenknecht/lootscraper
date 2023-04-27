@@ -2,9 +2,9 @@
 import asyncio
 import html
 import logging
+from collections.abc import Sequence
 from datetime import datetime
 from pathlib import Path
-from typing import Sequence
 
 from feedgen.feed import FeedEntry, FeedGenerator
 

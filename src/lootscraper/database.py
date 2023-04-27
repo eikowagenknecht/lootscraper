@@ -1,10 +1,11 @@
 from __future__ import annotations
 
 import logging
+from collections.abc import Sequence
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from types import TracebackType
-from typing import Any, Sequence, Type
+from typing import Any
 
 import sqlalchemy as sa
 from sqlalchemy.engine.interfaces import Dialect
@@ -81,12 +82,12 @@ class Game(Base):
 
     __tablename__ = "games"
 
-    igdb_info: Mapped["IgdbInfo | None"] = relationship(
+    igdb_info: Mapped[IgdbInfo | None] = relationship(
         "IgdbInfo",
         back_populates="game",
         default=None,
     )
-    steam_info: Mapped["SteamInfo | None"] = relationship(
+    steam_info: Mapped[SteamInfo | None] = relationship(
         "SteamInfo",
         back_populates="game",
         default=None,
@@ -117,7 +118,7 @@ class IgdbInfo(Base):
         primary_key=True,
     )
 
-    game: Mapped["Game | None"] = relationship(
+    game: Mapped[Game | None] = relationship(
         "Game",
         back_populates="igdb_info",
         default=None,
@@ -145,7 +146,7 @@ class SteamInfo(Base):
     )
     url: Mapped[str]
 
-    game: Mapped["Game | None"] = relationship(
+    game: Mapped[Game | None] = relationship(
         "Game",
         back_populates="steam_info",
         default=None,
@@ -198,7 +199,7 @@ class Offer(Base):
     valid_from: Mapped[datetime | None] = mapped_column(AwareDateTime, default=None)
     valid_to: Mapped[datetime | None] = mapped_column(AwareDateTime, default=None)
 
-    game: Mapped["Game | None"] = relationship(
+    game: Mapped[Game | None] = relationship(
         "Game",
         default=None,
     )
@@ -243,7 +244,7 @@ class TelegramSubscription(Base):
 
     __tablename__ = "telegram_subscriptions"
 
-    user: Mapped["User"] = relationship("User", back_populates="telegram_subscriptions")
+    user: Mapped[User] = relationship("User", back_populates="telegram_subscriptions")
 
     id: Mapped[int] = mapped_column(
         init=False,
@@ -279,7 +280,7 @@ class LootDatabase:
 
     def __exit__(
         self,
-        exc_type: Type[BaseException] | None,
+        exc_type: type[BaseException] | None,
         exc_value: BaseException | None,
         traceback: TracebackType | None,
     ) -> None:
