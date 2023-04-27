@@ -71,7 +71,7 @@ MESSAGE_HELP = markdown_bold("Available commands") + markdown_escape(
     "\n/status - Show information about your subscriptions"
     "\n/manage - Manage your subscriptions"
     "\n/timezone - Choose a timezone that will be used to display the start and end dates"
-    "\n/leave - Leave this bot and delete stored user data"
+    "\n/leave - Leave this bot and delete stored user data",
 )
 MESSAGE_UNKNOWN_COMMAND = (
     "Sorry, I didn't understand that command. Type /help to see all commands."
@@ -89,7 +89,7 @@ logger = logging.getLogger(__name__)
 
 class TelegramBot:
     def __init__(
-        self, config: ParsedConfig, scoped_session: orm.scoped_session[orm.Session]
+        self, config: ParsedConfig, scoped_session: orm.scoped_session[orm.Session],
     ) -> None:
         self.config = config
         self.Session = scoped_session
@@ -136,7 +136,7 @@ class TelegramBot:
                 telegram.BotCommand("help", "Show available commands"),
                 telegram.BotCommand("manage", "Manage your subscriptions"),
                 telegram.BotCommand("status", "Show your status"),
-            ]
+            ],
         )
 
         # Register "/..." commands
@@ -153,24 +153,24 @@ class TelegramBot:
         self.application.add_handler(CommandHandler("timezone", self.timezone_command))
         # Fallback for all other messages starting with "/"
         self.application.add_handler(
-            MessageHandler(filters.COMMAND, self.unknown_command)
+            MessageHandler(filters.COMMAND, self.unknown_command),
         )
 
         # Register callback handlers
         self.application.add_handler(
-            CallbackQueryHandler(self.toggle_subscription_callback, pattern="toggle")
+            CallbackQueryHandler(self.toggle_subscription_callback, pattern="toggle"),
         )
         self.application.add_handler(
-            CallbackQueryHandler(self.set_timezone_callback, pattern="settimezone")
+            CallbackQueryHandler(self.set_timezone_callback, pattern="settimezone"),
         )
         self.application.add_handler(
-            CallbackQueryHandler(self.offer_callback, pattern="details")
+            CallbackQueryHandler(self.offer_callback, pattern="details"),
         )
         self.application.add_handler(
-            CallbackQueryHandler(self.dismiss_callback, pattern="dismiss")
+            CallbackQueryHandler(self.dismiss_callback, pattern="dismiss"),
         )
         self.application.add_handler(
-            CallbackQueryHandler(self.close_callback, pattern="close")
+            CallbackQueryHandler(self.close_callback, pattern="close"),
         )
 
         # Register error handler
@@ -181,7 +181,7 @@ class TelegramBot:
         await self.application.start()
         if self.application.updater is not None:
             await self.application.updater.start_polling(
-                error_callback=self.updater_error_handler
+                error_callback=self.updater_error_handler,
             )
             logger.info("Started listening for messages from Telegram")
 
@@ -208,7 +208,7 @@ class TelegramBot:
 
             # We need to run this in a separate task, because it runs asynchroniously
             asyncio.get_running_loop().create_task(
-                self.notify_admin_and_stop(error_text)
+                self.notify_admin_and_stop(error_text),
             )
             return
 
@@ -224,7 +224,7 @@ class TelegramBot:
         await self.stop()
 
     async def error_handler(
-        self, update: object, context: ContextTypes.DEFAULT_TYPE
+        self, update: object, context: ContextTypes.DEFAULT_TYPE,
     ) -> None:
         """
         Log the error and send a telegram message to notify the developer chat.
@@ -238,7 +238,7 @@ class TelegramBot:
         # Common case when a user clicks too fast on the "show details" button.
         # Nothing to do here, not an actual error.
         if isinstance(
-            context.error, telegram.error.BadRequest
+            context.error, telegram.error.BadRequest,
         ) and context.error.message.startswith("Message is not modified: "):
             return
 
@@ -250,7 +250,7 @@ class TelegramBot:
         ):
             exception_type = str(type(context.error))
             logger.warning(
-                f"Network instability encountered ({exception_type}), probably will fix itself."
+                f"Network instability encountered ({exception_type}), probably will fix itself.",
             )
             return
 
@@ -262,14 +262,14 @@ class TelegramBot:
             # The bot was removed from a group chat.
             chat_id = update.effective_chat.id
             logger.info(
-                f"Deactivating user with group chat id {chat_id} because the bot was removed from the group."
+                f"Deactivating user with group chat id {chat_id} because the bot was removed from the group.",
             )
             self.deactivate_user(chat_id, "removed group")
             return
 
         # Build the exception string from the exception
         traceback_string = "".join(
-            traceback.format_exception(None, context.error, context.error.__traceback__)
+            traceback.format_exception(None, context.error, context.error.__traceback__),
         )
 
         # Get some additional information about what happened.
@@ -293,7 +293,7 @@ class TelegramBot:
         logger.error(full_debug_message)
 
     async def announce_command(
-        self, update: Update, context: ContextTypes.DEFAULT_TYPE
+        self, update: Update, context: ContextTypes.DEFAULT_TYPE,
     ) -> None:
         """Handle the /announce command: Add an announcement (admin only)."""
 
@@ -314,7 +314,7 @@ class TelegramBot:
             await self.send_message(
                 chat_id=update.effective_chat.id,
                 text=markdown_escape(
-                    "You are not an admin, so you can't use this command."
+                    "You are not an admin, so you can't use this command.",
                 ),
                 parse_mode=telegram.constants.ParseMode.MARKDOWN_V2,
             )
@@ -331,7 +331,7 @@ class TelegramBot:
             await self.send_message(
                 chat_id=update.effective_chat.id,
                 text=markdown_escape(
-                    "Announcement added successfully. Sending it with the next scraping run."
+                    "Announcement added successfully. Sending it with the next scraping run.",
                 ),
                 parse_mode=telegram.constants.ParseMode.MARKDOWN_V2,
             )
@@ -340,13 +340,13 @@ class TelegramBot:
             await self.send_message(
                 chat_id=update.effective_chat.id,
                 text=markdown_escape(
-                    "Invalid announcement command. Format needs to be /announce <header> || <text>"
+                    "Invalid announcement command. Format needs to be /announce <header> || <text>",
                 ),
                 parse_mode=telegram.constants.ParseMode.MARKDOWN_V2,
             )
 
     async def channel_command(
-        self, update: Update, context: ContextTypes.DEFAULT_TYPE
+        self, update: Update, context: ContextTypes.DEFAULT_TYPE,
     ) -> None:
         """Handle the /channel command: Manage channels (admin only)."""
 
@@ -367,7 +367,7 @@ class TelegramBot:
             await self.send_message(
                 chat_id=update.effective_chat.id,
                 text=markdown_escape(
-                    "You are not an admin, so you can't use this command."
+                    "You are not an admin, so you can't use this command.",
                 ),
                 parse_mode=telegram.constants.ParseMode.MARKDOWN_V2,
             )
@@ -392,15 +392,15 @@ class TelegramBot:
                 try:
                     latest_announcement = session.execute(
                         sa.select(
-                            sa.func.max(Announcement.id)
-                        )  # pylint: disable=not-callable
+                            sa.func.max(Announcement.id),
+                        ),  # pylint: disable=not-callable
                     ).scalar()
 
                     new_user = User(
                         telegram_id=channel_name,
                         telegram_chat_id=channel_name,
                         telegram_user_details={
-                            "description": "Channel user created by admin"
+                            "description": "Channel user created by admin",
                         },
                         registration_date=datetime.now().replace(tzinfo=timezone.utc),
                         last_announcement_id=latest_announcement,
@@ -424,7 +424,7 @@ class TelegramBot:
                     text=markdown_escape(
 
                             f"Channel {channel_db_user.telegram_chat_id} is now unsubscribed "
-                            f"to offers from: {offer_type.value} / {source.value} / {duration.value}."
+                            f"to offers from: {offer_type.value} / {source.value} / {duration.value}.",
 
                     ),
                     parse_mode=telegram.constants.ParseMode.MARKDOWN_V2,
@@ -438,7 +438,7 @@ class TelegramBot:
 
                             f"Channel {channel_db_user.telegram_chat_id} is now subscribed "
                             f"to offers from: {offer_type.value} / {source.value} / {duration.value}."
-                            f"Sending new offers with the next scraping run."
+                            f"Sending new offers with the next scraping run.",
 
                     ),
                     parse_mode=telegram.constants.ParseMode.MARKDOWN_V2,
@@ -448,13 +448,13 @@ class TelegramBot:
             await self.send_message(
                 chat_id=update.effective_chat.id,
                 text=markdown_escape(
-                    "Invalid channel command. Format needs to be /channel <channel_name> <offer_type> <source> <duration>."
+                    "Invalid channel command. Format needs to be /channel <channel_name> <offer_type> <source> <duration>.",
                 ),
                 parse_mode=telegram.constants.ParseMode.MARKDOWN_V2,
             )
 
     async def debug_command(
-        self, update: Update, context: ContextTypes.DEFAULT_TYPE
+        self, update: Update, context: ContextTypes.DEFAULT_TYPE,
     ) -> None:
         """Handle the /debug command: Show some debug information."""
 
@@ -469,16 +469,16 @@ class TelegramBot:
             await self.send_message(
                 chat_id=update.effective_chat.id,
                 text=markdown_json_formatted(
-                    f"update.effective_user = {json.dumps(update.effective_user.to_dict(), indent=2, ensure_ascii=False)}"
+                    f"update.effective_user = {json.dumps(update.effective_user.to_dict(), indent=2, ensure_ascii=False)}",
                 )
                 + markdown_json_formatted(
-                    f"update.effective_chat = {json.dumps(update.effective_chat.to_dict(), indent=2, ensure_ascii=False)}"
+                    f"update.effective_chat = {json.dumps(update.effective_chat.to_dict(), indent=2, ensure_ascii=False)}",
                 ),
                 parse_mode=telegram.constants.ParseMode.MARKDOWN_V2,
             )
 
     async def error_command(
-        self, update: Update, context: ContextTypes.DEFAULT_TYPE
+        self, update: Update, context: ContextTypes.DEFAULT_TYPE,
     ) -> None:
         """Handle the /error command: Trigger an error to send to the dev chat."""
 
@@ -489,7 +489,7 @@ class TelegramBot:
         raise Exception("This is a test error triggered by the /error command.")
 
     async def help_command(
-        self, update: Update, context: ContextTypes.DEFAULT_TYPE
+        self, update: Update, context: ContextTypes.DEFAULT_TYPE,
     ) -> None:
         """Handle the /help command: Display all available commands to the user."""
 
@@ -503,7 +503,7 @@ class TelegramBot:
         await update.message.reply_markdown_v2(MESSAGE_HELP)
 
     async def leave_command(
-        self, update: Update, context: ContextTypes.DEFAULT_TYPE
+        self, update: Update, context: ContextTypes.DEFAULT_TYPE,
     ) -> None:
         """Handle the /leave command: Unregister the user."""
 
@@ -543,7 +543,7 @@ class TelegramBot:
         await update.message.reply_markdown_v2(message)
 
     async def manage_command(
-        self, update: Update, context: ContextTypes.DEFAULT_TYPE
+        self, update: Update, context: ContextTypes.DEFAULT_TYPE,
     ) -> None:
         """Handle the /manage command: Manage subscriptions."""
 
@@ -565,7 +565,7 @@ class TelegramBot:
         )
 
     async def refresh_command(
-        self, update: Update, context: ContextTypes.DEFAULT_TYPE
+        self, update: Update, context: ContextTypes.DEFAULT_TYPE,
     ) -> None:
         """Handle the /refresh command: Send all offers once that have not been sent yet.."""
 
@@ -604,7 +604,7 @@ class TelegramBot:
             )
 
     async def start_command(
-        self, update: Update, context: ContextTypes.DEFAULT_TYPE
+        self, update: Update, context: ContextTypes.DEFAULT_TYPE,
     ) -> None:
         """Handle the /start command: Register the user and display guide."""
 
@@ -654,7 +654,7 @@ class TelegramBot:
         session: orm.Session = self.Session()
         try:
             latest_announcement = session.execute(
-                sa.select(sa.func.max(Announcement.id))  # pylint: disable=not-callable
+                sa.select(sa.func.max(Announcement.id)),  # pylint: disable=not-callable
             ).scalar()
 
             new_user = User(
@@ -701,7 +701,7 @@ class TelegramBot:
             )
 
     async def status_command(
-        self, update: Update, context: ContextTypes.DEFAULT_TYPE
+        self, update: Update, context: ContextTypes.DEFAULT_TYPE,
     ) -> None:
         """Handle the /status command: Display some statistics about the user."""
 
@@ -733,7 +733,7 @@ class TelegramBot:
             )
             for subscription in db_user.telegram_subscriptions:
                 subscriptions_text += markdown_escape(
-                    f"  * {subscription.source.value} / {subscription.type.value} / {subscription.duration.value}\n"
+                    f"  * {subscription.source.value} / {subscription.type.value} / {subscription.duration.value}\n",
                 )
             subscriptions_text += (
                 R"You can unsubscribe from them any time with /manage\."
@@ -774,7 +774,7 @@ class TelegramBot:
         await update.message.reply_markdown_v2(message)
 
     async def timezone_command(
-        self, update: Update, context: ContextTypes.DEFAULT_TYPE
+        self, update: Update, context: ContextTypes.DEFAULT_TYPE,
     ) -> None:
         """Handle timezonelist command."""
 
@@ -793,7 +793,7 @@ class TelegramBot:
         )
 
     async def unknown_command(
-        self, update: Update, context: ContextTypes.DEFAULT_TYPE
+        self, update: Update, context: ContextTypes.DEFAULT_TYPE,
     ) -> None:
         """Handle unknown commands."""
 
@@ -809,7 +809,7 @@ class TelegramBot:
             await self.send_message(
                 chat_id=update.effective_chat.id,
                 text=markdown_escape(
-                    f"Commands are not supported in channels. This channel has the id {update.effective_chat.id}."
+                    f"Commands are not supported in channels. This channel has the id {update.effective_chat.id}.",
                 ),
                 parse_mode=telegram.constants.ParseMode.MARKDOWN_V2,
             )
@@ -823,7 +823,7 @@ class TelegramBot:
         )
 
     async def offer_callback(
-        self, update: Update, context: ContextTypes.DEFAULT_TYPE
+        self, update: Update, context: ContextTypes.DEFAULT_TYPE,
     ) -> None:
         """Callback from the menu buttons "Details" and "Summary" in the offer message."""
 
@@ -847,7 +847,7 @@ class TelegramBot:
         try:
             session: orm.Session = self.Session()
             offer = session.execute(
-                sa.select(Offer).where(Offer.id == offer_id)
+                sa.select(Offer).where(Offer.id == offer_id),
             ).scalar_one()
             if query.data.startswith("details show"):
                 await query.answer()
@@ -881,7 +881,7 @@ class TelegramBot:
             raise
 
     async def dismiss_callback(
-        self, update: Update, context: ContextTypes.DEFAULT_TYPE
+        self, update: Update, context: ContextTypes.DEFAULT_TYPE,
     ) -> None:
         """Callback from the menu button "Dismiss" in the offer message."""
 
@@ -909,7 +909,7 @@ class TelegramBot:
             pass
 
     async def close_callback(
-        self, update: Update, context: ContextTypes.DEFAULT_TYPE
+        self, update: Update, context: ContextTypes.DEFAULT_TYPE,
     ) -> None:
         """Callback from the menu button "Close" in various menus."""
 
@@ -935,7 +935,7 @@ class TelegramBot:
         await self.refresh_command(update, context)
 
     async def toggle_subscription_callback(
-        self, update: Update, context: ContextTypes.DEFAULT_TYPE
+        self, update: Update, context: ContextTypes.DEFAULT_TYPE,
     ) -> None:
         """Callback from the subscription buttons in the manage menu."""
 
@@ -973,7 +973,7 @@ class TelegramBot:
         )
 
     async def set_timezone_callback(
-        self, update: Update, context: ContextTypes.DEFAULT_TYPE
+        self, update: Update, context: ContextTypes.DEFAULT_TYPE,
     ) -> None:
         """Callback from the timezone buttons in the timezone menu."""
 
@@ -1032,8 +1032,8 @@ class TelegramBot:
                                     Offer.seen_last >= datetime.now().replace(tzinfo=None) - timedelta(days=1),  # type: ignore
                                     Offer.valid_to.is_(None),  # type: ignore
                                 ),
-                            )
-                        )
+                            ),
+                        ),
                     )
                     .scalars()
                     .all()
@@ -1045,7 +1045,7 @@ class TelegramBot:
                 for offer in offers:
                     real_valid_to = offer.real_valid_to()
                     if real_valid_to is None or real_valid_to > datetime.now().replace(
-                        tzinfo=timezone.utc
+                        tzinfo=timezone.utc,
                     ):
                         filtered_offers.append(offer)
 
@@ -1061,7 +1061,7 @@ class TelegramBot:
                 # Update the last offer id
                 subscription.last_offer_id = filtered_offers[-1].id
                 user.offers_received_count = user.offers_received_count + len(
-                    filtered_offers
+                    filtered_offers,
                 )
                 session.commit()
         except Exception:
@@ -1082,8 +1082,8 @@ class TelegramBot:
                                 Announcement.channel == Channel.TELEGRAM,
                             ),
                             Announcement.id > user.last_announcement_id,
-                        )
-                    )
+                        ),
+                    ),
                 )
                 .scalars()
                 .all()
@@ -1131,7 +1131,7 @@ class TelegramBot:
         return db_user
 
     def is_subscribed(
-        self, user: User, type_: OfferType, source: Source, duration: OfferDuration
+        self, user: User, type_: OfferType, source: Source, duration: OfferDuration,
     ) -> bool:
         session: orm.Session = self.Session()
         existing_subscriptions = 0
@@ -1144,7 +1144,7 @@ class TelegramBot:
                         TelegramSubscription.type == type_,
                         TelegramSubscription.source == source,
                         TelegramSubscription.duration == duration,
-                    )
+                    ),
                 )
                 .count()
             )
@@ -1155,7 +1155,7 @@ class TelegramBot:
         return existing_subscriptions > 0
 
     def subscribe(
-        self, user: User, type_: OfferType, source: Source, duration: OfferDuration
+        self, user: User, type_: OfferType, source: Source, duration: OfferDuration,
     ) -> None:
         session: orm.Session = self.Session()
         try:
@@ -1164,8 +1164,8 @@ class TelegramBot:
 
             session.add(
                 TelegramSubscription(
-                    user=user, source=source, type=type_, duration=duration
-                )
+                    user=user, source=source, type=type_, duration=duration,
+                ),
             )
             session.commit()
         except Exception:
@@ -1173,7 +1173,7 @@ class TelegramBot:
             raise
 
     def unsubscribe(
-        self, user: User, type_: OfferType, source: Source, duration: OfferDuration
+        self, user: User, type_: OfferType, source: Source, duration: OfferDuration,
     ) -> None:
         session: orm.Session = self.Session()
         try:
@@ -1183,7 +1183,7 @@ class TelegramBot:
                     TelegramSubscription.type == type_,
                     TelegramSubscription.source == source,
                     TelegramSubscription.duration == duration,
-                )
+                ),
             ).delete()
             session.commit()
         except Exception:
@@ -1191,7 +1191,7 @@ class TelegramBot:
             raise
 
     async def manage_menu(
-        self, update: Update, context: ContextTypes.DEFAULT_TYPE
+        self, update: Update, context: ContextTypes.DEFAULT_TYPE,
     ) -> None:
         del context  # Unused
 
@@ -1226,18 +1226,18 @@ class TelegramBot:
             ):
                 keyboard.append(
                     subscription_button(
-                        True, scraper_source, scraper_type, scraper_duration
-                    )
+                        True, scraper_source, scraper_type, scraper_duration,
+                    ),
                 )
             else:
                 keyboard.append(
                     subscription_button(
-                        False, scraper_source, scraper_type, scraper_duration
-                    )
+                        False, scraper_source, scraper_type, scraper_duration,
+                    ),
                 )
 
         keyboard.append(
-            [InlineKeyboardButton(text=BUTTON_CLOSE, callback_data="close manage")]
+            [InlineKeyboardButton(text=BUTTON_CLOSE, callback_data="close manage")],
         )
 
         return InlineKeyboardMarkup(keyboard)
@@ -1253,13 +1253,13 @@ class TelegramBot:
             keyboard.append(
                 [
                     InlineKeyboardButton(
-                        text=f"UTC{hourstr}:00", callback_data=f"settimezone {hourstr}"
-                    )
-                ]
+                        text=f"UTC{hourstr}:00", callback_data=f"settimezone {hourstr}",
+                    ),
+                ],
             )
 
         keyboard.append(
-            [InlineKeyboardButton(text=BUTTON_CLOSE, callback_data="close timezone")]
+            [InlineKeyboardButton(text=BUTTON_CLOSE, callback_data="close timezone")],
         )
 
         return InlineKeyboardMarkup(keyboard)
@@ -1280,7 +1280,7 @@ class TelegramBot:
                 InlineKeyboardButton(
                     text=BUTTON_CLAIM,
                     url=offer.url,
-                )
+                ),
             )
 
         if details_show_button:
@@ -1288,7 +1288,7 @@ class TelegramBot:
                 InlineKeyboardButton(
                     text=BUTTON_SHOW_DETAILS,
                     callback_data=f"details show {offer.id}",
-                )
+                ),
             )
 
         if details_hide_button:
@@ -1296,7 +1296,7 @@ class TelegramBot:
                 InlineKeyboardButton(
                     text=BUTTON_HIDE_DETAILS,
                     callback_data=f"details hide {offer.id}",
-                )
+                ),
             )
 
         if dismiss_button:
@@ -1304,7 +1304,7 @@ class TelegramBot:
                 InlineKeyboardButton(
                     text=BUTTON_DISMISS,
                     callback_data=f"dismiss {offer.id}",
-                )
+                ),
             )
 
         keyboard.append(first_row)
@@ -1313,12 +1313,12 @@ class TelegramBot:
 
     async def send_offer(self, offer: Offer, user: User) -> bool:
         logger.debug(
-            f"Sending offer {offer.title} to Telegram user {user.telegram_id}."
+            f"Sending offer {offer.title} to Telegram user {user.telegram_id}.",
         )
 
         # Special treatment for channels
         if user.telegram_chat_id.startswith("@") or user.telegram_chat_id.startswith(
-            "-100"
+            "-100",
         ):
             markup = self.offer_keyboard(offer)
 
@@ -1334,7 +1334,7 @@ class TelegramBot:
 
         # Normal users
         details_button = bool(
-            offer.game and (offer.game.igdb_info or offer.game.steam_info)
+            offer.game and (offer.game.igdb_info or offer.game.steam_info),
         )
 
         markup = self.offer_keyboard(
@@ -1356,7 +1356,7 @@ class TelegramBot:
 
     async def send_announcement(self, announcement: Announcement, user: User) -> None:
         logger.debug(
-            f"Sending announcement {announcement.id} to Telegram user {user.telegram_id}."
+            f"Sending announcement {announcement.id} to Telegram user {user.telegram_id}.",
         )
         await self.send_message(
             chat_id=user.telegram_chat_id,
@@ -1371,7 +1371,7 @@ class TelegramBot:
             additional_info += f", {offer.duration.value}"
 
         content = markdown_bold(
-            f"{offer.title} - {source} ({additional_info})"
+            f"{offer.title} - {source} ({additional_info})",
         ) + markdown_escape(f" [{offer.id}")
 
         # Put the image first for the Telegram preview image
@@ -1396,13 +1396,13 @@ class TelegramBot:
             else:
                 valid_to_localized = (
                     offer.valid_to.astimezone(
-                        timezone(timedelta(hours=tzoffset))
+                        timezone(timedelta(hours=tzoffset)),
                     ).strftime(TIMESTAMP_READABLE_WITH_HOUR)
                     + f" UTC{tzoffset:+d}"
                 )
 
             time_to_end = humanize.naturaldelta(
-                datetime.now().replace(tzinfo=timezone.utc) - offer.valid_to
+                datetime.now().replace(tzinfo=timezone.utc) - offer.valid_to,
             )
             if datetime.now().replace(tzinfo=timezone.utc) > offer.valid_to:
                 content += f"Offer expired {markdown_escape(time_to_end)} ago"
@@ -1413,7 +1413,7 @@ class TelegramBot:
             content += markdown_escape("Offer will stay free, no need to hurry.")
         else:
             content += markdown_escape(
-                "Offer is valid forever.. just kidding, I just don't know when it will end."
+                "Offer is valid forever.. just kidding, I just don't know when it will end.",
             )
 
         return content
@@ -1506,7 +1506,7 @@ class TelegramBot:
         """
         if self.application is None:
             logger.error(
-                "Tried to send message while the application is not initialized."
+                "Tried to send message while the application is not initialized.",
             )
             return None
 
@@ -1535,7 +1535,7 @@ class TelegramBot:
                 message_handled = True
                 # The user blocked the chat.
                 logger.info(
-                    f"Deactivating user with chat id {chat_id} because he blocked the chat: {e}"
+                    f"Deactivating user with chat id {chat_id} because he blocked the chat: {e}",
                 )
                 self.deactivate_user(chat_id, "blocked chat")
             except TelegramError as e:
@@ -1543,7 +1543,7 @@ class TelegramBot:
                 # The chat could not be found
                 if e.message == "Chat not found":
                     logger.info(
-                        f"Deactivating user with chat id {chat_id} because the chat could not be found."
+                        f"Deactivating user with chat id {chat_id} because the chat could not be found.",
                     )
                     self.deactivate_user(chat_id, "not found")
                 else:
@@ -1661,7 +1661,7 @@ class TelegramLoggingHandler(logging.Handler):
                         chat_id=Config.get().telegram_developer_chat_id,
                         text=message,
                         parse_mode=telegram.constants.ParseMode.MARKDOWN_V2,
-                    )
+                    ),
                 )
 
         except Exception:  # pylint: disable=broad-except
@@ -1688,5 +1688,5 @@ def subscription_button(
         InlineKeyboardButton(
             f"{is_subscribed_str}{source_str}",
             callback_data=command,
-        )
+        ),
     ]

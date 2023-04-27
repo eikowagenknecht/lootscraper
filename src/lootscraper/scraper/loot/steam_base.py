@@ -43,7 +43,7 @@ class SteamBaseScraper(Scraper):  # pylint: disable=W0223
                 page.locator("#search_results a"),
                 self.read_raw_offer,
                 self.normalize_offer,
-            )
+            ),
         ]
 
     def get_offers_url(self) -> str:
@@ -109,7 +109,7 @@ class SteamBaseScraper(Scraper):  # pylint: disable=W0223
         valid_to: datetime | None = None
         if raw_offer.text:
             maybe_date = raw_offer.text.removeprefix(
-                "Free to keep when you get it before "
+                "Free to keep when you get it before ",
             ).removesuffix(". Some limitations apply. (?)")
             try:
                 valid_to = (

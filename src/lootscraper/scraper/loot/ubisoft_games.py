@@ -97,13 +97,13 @@ class UbisoftGamesScraper(Scraper):
 
         title = raw_offer.title.removeprefix("Get ").removesuffix(" for FREE!")
         valid_to = raw_offer.valid_to.removeprefix("Offer valid until ").removesuffix(
-            " UTC."
+            " UTC.",
         )
 
         utc_valid_to = None
         if valid_to:
             utc_valid_to = datetime.strptime(valid_to, "%B %d, %Y at %I%p").replace(
-                tzinfo=timezone.utc
+                tzinfo=timezone.utc,
             )
 
         return Offer(

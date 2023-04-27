@@ -47,7 +47,7 @@ class AwareDateTime(sa.TypeDecorator):  # type: ignore # pylint: disable=W0223
     cache_ok = True
 
     def process_result_value(
-        self, value: datetime | None, dialect: Dialect
+        self, value: datetime | None, dialect: Dialect,
     ) -> datetime | None:
         if value is not None:
             return value.replace(tzinfo=timezone.utc)
@@ -55,7 +55,7 @@ class AwareDateTime(sa.TypeDecorator):  # type: ignore # pylint: disable=W0223
         return None
 
     def process_bind_param(
-        self, value: datetime | None, dialect: Dialect
+        self, value: datetime | None, dialect: Dialect,
     ) -> datetime | None:
         if value is not None:
             return value.replace(tzinfo=None)
@@ -191,7 +191,7 @@ class Offer(Base):
         init=False,
     )
     category: Mapped[Category] = mapped_column(
-        sa.Enum(Category), default=Category.VALID
+        sa.Enum(Category), default=Category.VALID,
     )
 
     img_url: Mapped[str | None] = mapped_column(default=None)
@@ -358,7 +358,7 @@ class LootDatabase:
                 sa.and_(
                     Offer.valid_to >= earliest_date,  # type: ignore
                     Offer.valid_to <= latest_date,  # type: ignore
-                )
+                ),
             )
 
         session: Session = self.Session()
@@ -382,7 +382,7 @@ class LootDatabase:
 
         # If there are multiple close matches, return the last (=newest)
         logger.warning(
-            f"Found multiple offers for {title} that are close to {valid_to}. Returning the newest of those."
+            f"Found multiple offers for {title} that are close to {valid_to}. Returning the newest of those.",
         )
         return result[-1]
 

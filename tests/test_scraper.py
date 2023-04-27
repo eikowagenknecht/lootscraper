@@ -39,7 +39,7 @@ class AmazonGamesTests(unittest.IsolatedAsyncioTestCase):
                 self.assertIsNotNone(res.img_url)
                 self.assertTrue(res.img_url.startswith("https://"))
                 self.assertGreater(
-                    res.valid_to, datetime.now().replace(tzinfo=timezone.utc)
+                    res.valid_to, datetime.now().replace(tzinfo=timezone.utc),
                 )
 
 
@@ -59,7 +59,7 @@ class AmazonLootTests(unittest.IsolatedAsyncioTestCase):
                 self.assertIsNotNone(res.img_url)
                 self.assertTrue(res.img_url.startswith("https://"))
                 self.assertGreater(
-                    res.valid_to, datetime.now().replace(tzinfo=timezone.utc)
+                    res.valid_to, datetime.now().replace(tzinfo=timezone.utc),
                 )
 
 
@@ -126,7 +126,7 @@ class GogGamesTest(unittest.IsolatedAsyncioTestCase):
                 # Some offer types do not contain a date
                 if res.valid_to is not None:
                     self.assertGreater(
-                        res.valid_to, datetime.now().replace(tzinfo=timezone.utc)
+                        res.valid_to, datetime.now().replace(tzinfo=timezone.utc),
                     )
 
 
@@ -189,7 +189,7 @@ class SteamGamesTest(unittest.IsolatedAsyncioTestCase):
                 self.assertIsNotNone(res.img_url)
                 self.assertTrue(res.img_url.startswith("https://"))
                 self.assertGreater(
-                    res.valid_to, datetime.now().replace(tzinfo=timezone.utc)
+                    res.valid_to, datetime.now().replace(tzinfo=timezone.utc),
                 )
 
 
@@ -207,7 +207,7 @@ class SteamLootTest(unittest.IsolatedAsyncioTestCase):
                 self.assertIsNotNone(res.img_url)
                 self.assertTrue(res.img_url.startswith("https://"))
                 self.assertGreater(
-                    res.valid_to, datetime.now().replace(tzinfo=timezone.utc)
+                    res.valid_to, datetime.now().replace(tzinfo=timezone.utc),
                 )
 
 

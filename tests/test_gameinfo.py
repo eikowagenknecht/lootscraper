@@ -32,7 +32,7 @@ class IGDBGameInfoTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(igdb_info.name, "Counter-Strike")
         self.assertIsNotNone(igdb_info.short_description)
         self.assertEqual(
-            igdb_info.release_date.isoformat(), "2000-11-09T00:00:00+00:00"
+            igdb_info.release_date.isoformat(), "2000-11-09T00:00:00+00:00",
         )
         self.assertGreater(igdb_info.meta_ratings, 1)
         self.assertGreater(igdb_info.meta_score, 50)
@@ -84,7 +84,7 @@ class SteamGameInfoTests(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(steam_info.name, "Counter-Strike")
             self.assertIsNotNone(steam_info.short_description)
             self.assertEqual(
-                steam_info.release_date.isoformat(), "2000-11-01T00:00:00+00:00"
+                steam_info.release_date.isoformat(), "2000-11-01T00:00:00+00:00",
             )
             self.assertEqual(steam_info.recommended_price_eur, 8.19)
             self.assertEqual(steam_info.genres, "Action")
@@ -109,7 +109,7 @@ class SteamGameInfoTests(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(steam_info.name, "Tom Clancy's Rainbow Six® Siege")
             self.assertIsNotNone(steam_info.short_description)
             self.assertEqual(
-                steam_info.release_date.isoformat(), "2015-12-01T00:00:00+00:00"
+                steam_info.release_date.isoformat(), "2015-12-01T00:00:00+00:00",
             )
             self.assertEqual(steam_info.recommended_price_eur, 19.99)
             self.assertEqual(steam_info.genres, "Action")
@@ -131,7 +131,7 @@ class SteamGameInfoTests(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(steam_info.name, "Riverbond")
             self.assertIsNotNone(steam_info.release_date)
             self.assertEqual(
-                steam_info.release_date.isoformat(), "2019-06-09T00:00:00+00:00"
+                steam_info.release_date.isoformat(), "2019-06-09T00:00:00+00:00",
             )
 
     async def test_steam_recommendations(self) -> None:
@@ -251,7 +251,7 @@ class SteamGameInfoTests(unittest.IsolatedAsyncioTestCase):
             self.assertIsNotNone(steam_info)
             self.assertEqual(steam_info.name, "DOOM Eternal")
             self.assertEqual(
-                steam_info.release_date.isoformat(), "2020-03-19T00:00:00+00:00"
+                steam_info.release_date.isoformat(), "2020-03-19T00:00:00+00:00",
             )
 
     async def test_steam_multiple_genres(self) -> None:

@@ -31,7 +31,7 @@ class TelegramTests(unittest.IsolatedAsyncioTestCase):
                 offer: Offer = session.execute(sa.select(Offer)).scalars().first()
                 user: User = (
                     session.execute(
-                        sa.select(User).where(User.telegram_id == 724039662)
+                        sa.select(User).where(User.telegram_id == 724039662),
                     )  # Eiko
                     .scalars()
                     .first()
@@ -51,7 +51,7 @@ class TelegramTests(unittest.IsolatedAsyncioTestCase):
                 # Act
                 user: User = (
                     session.execute(
-                        sa.select(User).where(User.telegram_id == 724039662)
+                        sa.select(User).where(User.telegram_id == 724039662),
                     )
                     .scalars()
                     .first()

@@ -49,11 +49,11 @@ class HumbleGamesScraper(Scraper):
         return [
             OfferHandler(
                 page.locator(
-                    "li", has=page.locator("div.discount-amount", has_text="100")
+                    "li", has=page.locator("div.discount-amount", has_text="100"),
                 ),
                 self.read_raw_offer,
                 self.normalize_offer,
-            )
+            ),
         ]
 
     async def read_raw_offer(self, element: Locator) -> HumbleRawOffer:
@@ -88,10 +88,10 @@ class HumbleGamesScraper(Scraper):
             await page.wait_for_selector(".promo-timer-view .js-days")
             days_valid = await page.locator(".promo-timer-view .js-days").text_content()
             hours_valid = await page.locator(
-                ".promo-timer-view .js-hours"
+                ".promo-timer-view .js-hours",
             ).text_content()
             minutes_valid = await page.locator(
-                ".promo-timer-view .js-minutes"
+                ".promo-timer-view .js-minutes",
             ).text_content()
 
             if days_valid is None or hours_valid is None or minutes_valid is None:
@@ -117,7 +117,7 @@ class HumbleGamesScraper(Scraper):
 
         if raw_offer.valid_for_minutes is not None:
             valid_to = datetime.now().replace(tzinfo=timezone.utc) + timedelta(
-                minutes=raw_offer.valid_for_minutes
+                minutes=raw_offer.valid_for_minutes,
             )
         else:
             valid_to = None

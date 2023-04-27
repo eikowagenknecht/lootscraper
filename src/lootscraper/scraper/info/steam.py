@@ -74,12 +74,12 @@ async def get_steam_id(
                     best_match is None or score > best_match.score
                 ):
                     logger.debug(
-                        f"Found match {title} with a score of {(score*100):.0f} %."
+                        f"Found match {title} with a score of {(score*100):.0f} %.",
                     )
                     best_match = SteamEntry(int(appid), score, title)
                 else:
                     logger.debug(
-                        f"Ignoring {title} as it's score of {(score*100):.0f} % is too low."
+                        f"Ignoring {title} as it's score of {(score*100):.0f} % is too low.",
                     )
             except Error as e:
                 # Log problem with reading a result, but continue with the next one
@@ -95,7 +95,7 @@ async def get_steam_id(
         return None
 
     logger.info(
-        f"{best_match.title} ({best_match.appid}) is the best match ({(best_match.score*100):.0f} %)."
+        f"{best_match.title} ({best_match.appid}) is the best match ({(best_match.score*100):.0f} %).",
     )
     return best_match.appid
 
@@ -158,7 +158,7 @@ async def add_data_from_steam_api(steam_info: SteamInfo) -> None:
         steam_info.short_description = content["short_description"]
     except KeyError:
         logger.error(
-            f"Could not read short description for app id {steam_info.id}: {data}"
+            f"Could not read short description for app id {steam_info.id}: {data}",
         )
 
     try:
@@ -190,7 +190,7 @@ async def add_data_from_steam_api(steam_info: SteamInfo) -> None:
                 steam_info.recommended_price_eur = 0
             elif content["price_overview"]["currency"] != "EUR":
                 logger.error(
-                    f'Steam app id {steam_info.id} has a currency other than EUR ({content["price_overview"]["currency"]}).'
+                    f'Steam app id {steam_info.id} has a currency other than EUR ({content["price_overview"]["currency"]}).',
                 )
             else:
                 steam_info.recommended_price_eur = recommended_price_value / 100
@@ -214,7 +214,7 @@ async def add_data_from_steam_api(steam_info: SteamInfo) -> None:
     try:
         # Prefer header image over first screenshot
         steam_info.image_url = content["screenshots"][0]["path_full"].replace(
-            R"\/", "/"
+            R"\/", "/",
         )
         steam_info.image_url = content["header_image"].replace(R"\/", "/")
     except KeyError:
@@ -237,7 +237,7 @@ async def read_from_steam_api(steam_app_id: int) -> dict[str, Any] | None:
             "publishers",
             "metacritic",
             "screenshots",
-        ]
+        ],
     )
     async with httpx.AsyncClient() as client:
         try:
@@ -254,7 +254,7 @@ async def read_from_steam_api(steam_app_id: int) -> dict[str, Any] | None:
             return response.json()
         except httpx.HTTPError as e:
             logger.error(
-                f"Couldn't get details for {steam_app_id} from Steam JSON API: {e}."
+                f"Couldn't get details for {steam_app_id} from Steam JSON API: {e}.",
             )
             return None
 
@@ -290,7 +290,7 @@ async def add_data_from_steam_store_page(
                 if review_score_percent is None:
                     logger.warning(f"No Steam percentage found for {steam_info.id}.")
                 elif review_score_percent.startswith(
-                    "Need more user reviews"
+                    "Need more user reviews",
                 ) or review_score_percent.startswith("No user reviews"):
                     # No percentage, but this reason is fine
                     pass
@@ -306,7 +306,7 @@ async def add_data_from_steam_store_page(
         if steam_info.score is None and steam_info.percent is not None:
             try:
                 review_score = await page.locator(
-                    '#userReviews [itemprop="aggregateRating"] [itemprop="ratingValue"]'
+                    '#userReviews [itemprop="aggregateRating"] [itemprop="ratingValue"]',
                 ).get_attribute("content")
                 if review_score is None:
                     logger.warning(f"No Steam rating found for {steam_info.id}.")
@@ -323,7 +323,7 @@ async def add_data_from_steam_store_page(
         if steam_info.recommendations is None and steam_info.percent is not None:
             try:
                 recommendations = await page.locator(
-                    '#userReviews [itemprop="aggregateRating"] [itemprop="reviewCount"]'
+                    '#userReviews [itemprop="aggregateRating"] [itemprop="reviewCount"]',
                 ).get_attribute("content")
                 if recommendations is None:
                     logger.warning(f"No rating found for {steam_info.id}.")
@@ -412,11 +412,11 @@ async def add_data_from_steam_store_page(
         if steam_info.release_date is None:
             try:
                 release_date_str = await page.locator(
-                    "#genresAndManufacturer"
+                    "#genresAndManufacturer",
                 ).text_content()
                 if release_date_str is None:
                     logger.debug(
-                        f"No release date found on shop page for {steam_info.id}"
+                        f"No release date found on shop page for {steam_info.id}",
                     )
                 else:
                     release_date_str = release_date_str.split("Release Date:")[
@@ -427,16 +427,16 @@ async def add_data_from_steam_store_page(
                         pass
                     else:
                         release_date = datetime.strptime(
-                            release_date_str, "%d %b, %Y"
+                            release_date_str, "%d %b, %Y",
                         ).replace(tzinfo=timezone.utc)
                         steam_info.release_date = release_date
             except Error as e:
                 logger.debug(
-                    f"No release date found on shop page for {steam_info.id}: {e}"
+                    f"No release date found on shop page for {steam_info.id}: {e}",
                 )
             except (IndexError, ValueError) as e:
                 logger.error(
-                    f"Release date in wrong format on shop page for {steam_info.id}: {e}"
+                    f"Release date in wrong format on shop page for {steam_info.id}: {e}",
                 )
 
 

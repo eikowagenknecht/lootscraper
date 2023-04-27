@@ -45,11 +45,11 @@ class GogBaseScraper(Scraper):  # pylint: disable=W0223
         current_language = await GogBaseScraper.get_current_language(page)
         if current_language != "English":
             raise ValueError(
-                f"Tried switching to English, but {current_language} is active instead."
+                f"Tried switching to English, but {current_language} is active instead.",
             )
 
     @staticmethod
     async def get_current_language(page: Page) -> str | None:
         return await page.locator(
-            "li.footer-microservice-language__item.is-selected"
+            "li.footer-microservice-language__item.is-selected",
         ).text_content()

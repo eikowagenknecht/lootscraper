@@ -165,7 +165,7 @@ async def run_telegram_bot(
         while True:
             run_no = await queue.get()
             logger.info(
-                f"Sending offers on Telegram that were found in scraping run #{run_no}."
+                f"Sending offers on Telegram that were found in scraping run #{run_no}.",
             )
 
             try:

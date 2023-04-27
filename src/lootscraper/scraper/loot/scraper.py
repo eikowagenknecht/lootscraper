@@ -39,7 +39,7 @@ class Scraper:
 
     async def scrape(self) -> list[Offer]:
         logging.info(
-            f"Analyzing {self.get_source().value} for offers: {self.get_type().value} / {self.get_duration().value}."
+            f"Analyzing {self.get_source().value} for offers: {self.get_type().value} / {self.get_duration().value}.",
         )
         offers = await self.read_offers()
         unique_offers = self.deduplicate_offers(offers)
@@ -124,7 +124,7 @@ class Scraper:
 
             try:
                 await page.wait_for_selector(
-                    self.get_page_ready_selector(), timeout=10000
+                    self.get_page_ready_selector(), timeout=10000,
                 )
                 await self.page_loaded_hook(page)
             except Error as e:
@@ -209,7 +209,7 @@ class Scraper:
                 lambda offer: offer.category == Category.VALID
                 or offer.category is None,
                 offers,
-            )
+            ),
         )
 
     @staticmethod
@@ -279,7 +279,7 @@ class Scraper:
             return False
 
         return valid_to > datetime.now().replace(tzinfo=timezone.utc) + timedelta(
-            days=100
+            days=100,
         )
 
     @staticmethod

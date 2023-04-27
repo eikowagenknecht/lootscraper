@@ -26,7 +26,7 @@ class AmazonLootScraper(AmazonBaseScraper):
         return [
             OfferHandler(
                 page.locator(
-                    '[data-a-target="offer-list-IN_GAME_LOOT"] .item-card__action'
+                    '[data-a-target="offer-list-IN_GAME_LOOT"] .item-card__action',
                 ),
                 self.read_raw_offer,
                 self.normalize_offer,
@@ -97,25 +97,25 @@ class AmazonLootScraper(AmazonBaseScraper):
                 raw_date = raw_offer.valid_to.removeprefix("Ends ").lower()
                 if raw_date == "today":
                     parsed_date = datetime.now().replace(
-                        tzinfo=timezone.utc, hour=0, minute=0, second=0
+                        tzinfo=timezone.utc, hour=0, minute=0, second=0,
                     )
                 elif raw_date == "tomorrow":
                     parsed_date = datetime.now().replace(
-                        tzinfo=timezone.utc, hour=0, minute=0, second=0
+                        tzinfo=timezone.utc, hour=0, minute=0, second=0,
                     ) + timedelta(days=1)
                 else:
                     parsed_date = datetime.now().replace(
-                        tzinfo=timezone.utc, hour=0, minute=0, second=0
+                        tzinfo=timezone.utc, hour=0, minute=0, second=0,
                     ) + timedelta(days=int(raw_date.split(" ")[1]))
 
                 # Correct the year
                 guessed_end_date = date(
-                    date.today().year, parsed_date.month, parsed_date.day
+                    date.today().year, parsed_date.month, parsed_date.day,
                 )
                 yesterday = date.today() - timedelta(days=1)
                 if guessed_end_date < yesterday:
                     guessed_end_date = guessed_end_date.replace(
-                        year=guessed_end_date.year + 1
+                        year=guessed_end_date.year + 1,
                     )
 
                 # Add 1 day because of the notation

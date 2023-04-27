@@ -62,15 +62,15 @@ class GogGamesScraper(GogBaseScraper):
             .removesuffix(" and don't miss the best GOG offers in the future!")
         )
         valid_to = await element.locator("gog-countdown-timer").get_attribute(
-            "end-date"
+            "end-date",
         )
         url = await element.get_attribute("href")
         if url is not None:
             url = BASE_URL + url
         img_url = GogGamesScraper.sanitize_img_url(
             await element.locator(
-                '.giveaway-banner__image source[type="image/png"]:not([media])'
-            ).get_attribute("srcset")
+                '.giveaway-banner__image source[type="image/png"]:not([media])',
+            ).get_attribute("srcset"),
         )
 
         return GogRawOffer(
@@ -111,7 +111,7 @@ class GogGamesScraper(GogBaseScraper):
                 raise ValueError("Couldn't find title.")
 
             img_url = GogGamesScraper.sanitize_img_url(
-                await page.locator(".productcard-player__logo").get_attribute("srcset")
+                await page.locator(".productcard-player__logo").get_attribute("srcset"),
             )
             if img_url is None:
                 raise ValueError(f"Couldn't find image for {title}.")
@@ -137,7 +137,7 @@ class GogGamesScraper(GogBaseScraper):
             try:
                 valid_to_unix = int(raw_offer.valid_to) / 1000
                 valid_to = datetime.utcfromtimestamp(valid_to_unix).replace(
-                    tzinfo=timezone.utc
+                    tzinfo=timezone.utc,
                 )
             except ValueError:
                 valid_to = None

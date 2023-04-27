@@ -53,7 +53,7 @@ class GogGamesAlwaysFreeScraper(GogBaseScraper):
             url = BASE_URL + url
 
         img_url = GogGamesAlwaysFreeScraper.sanitize_img_url(
-            await element.locator("img").get_attribute("srcset")
+            await element.locator("img").get_attribute("srcset"),
         )
         if img_url is None:
             raise ValueError(f"Couldn't find image for {title}.")

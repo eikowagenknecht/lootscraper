@@ -45,7 +45,7 @@ class ItchGamesScraper(Scraper):
                 ),
                 self.read_raw_offer,
                 self.normalize_offer,
-            )
+            ),
         ]
 
     async def page_loaded_hook(self, page: Page) -> None:

@@ -55,7 +55,7 @@ class EpicGamesScraper(Scraper):
         await element.scroll_into_view_if_needed()
 
         title = await element.locator(
-            '[data-testid="offer-title-info-title"] div'
+            '[data-testid="offer-title-info-title"] div',
         ).text_content()
         if title is None:
             raise ValueError("Couldn't find title.")
