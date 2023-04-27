@@ -34,7 +34,7 @@ class OfferHandler:
 
 
 class Scraper:
-    def __init__(self, context: BrowserContext):
+    def __init__(self, context: BrowserContext) -> None:
         self.context = context
 
     async def scrape(self) -> list[Offer]:

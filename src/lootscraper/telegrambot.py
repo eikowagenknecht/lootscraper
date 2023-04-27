@@ -90,7 +90,7 @@ logger = logging.getLogger(__name__)
 class TelegramBot:
     def __init__(
         self, config: ParsedConfig, scoped_session: orm.scoped_session[orm.Session]
-    ):
+    ) -> None:
         self.config = config
         self.Session = scoped_session
         self.application: Application | None = None  # type: ignore
@@ -1639,7 +1639,7 @@ class TelegramBot:
 
 
 class TelegramLoggingHandler(logging.Handler):
-    def __init__(self, bot: TelegramBot):
+    def __init__(self, bot: TelegramBot) -> None:
         super().__init__()
         self.bot = bot
 
