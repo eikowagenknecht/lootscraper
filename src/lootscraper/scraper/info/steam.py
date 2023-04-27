@@ -271,13 +271,13 @@ async def add_data_from_steam_store_page(
             await page.wait_for_selector(".game_page_background")
         except Error:
             logger.error(f"Steam store page for {steam_info.id} didn't load.")
-            return None
+            return
 
         try:
             await skip_age_verification(page)
         except Error:
             logger.error(f"Steam age verification for {steam_info.id} failed.")
-            return None
+            return
 
         # Add the review score percentage if available
         if steam_info.percent is None:
