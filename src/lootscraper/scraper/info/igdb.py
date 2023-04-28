@@ -15,12 +15,12 @@ logger = logging.getLogger(__name__)
 
 
 API_URL = "https://api.igdb.com/v4/"
-TOKEN_URL = "https://id.twitch.tv/oauth2/token"  # nosec
+TOKEN_URL = "https://id.twitch.tv/oauth2/token"  # noqa: S105
 
 
 @dataclass
 class IgdbEntry:
-    id: int
+    igdb_id: int
     score: float
     title: str
 
@@ -51,7 +51,7 @@ class IGDBWrapper:
             result.raise_for_status()
             self.auth_token = result.json()["access_token"]
 
-    async def api_request(self, endpoint: str, query: str) -> Any:
+    async def api_request(self, endpoint: str, query: str) -> Any:  # noqa: ANN401
         """
         Takes an endpoint and the Apicalypse query and returns the api response as a json object.
         """
@@ -88,8 +88,8 @@ async def get_igdb_id(search_string: str) -> int | None:
             "games",
             f'search "{api_search_string}"; fields name; where version_parent = null; limit 50;',
         )
-    except httpx.HTTPError as e:
-        logger.error(f"IGDB request failed: {e}")
+    except httpx.HTTPError:
+        logger.exception("IGDB request failed.")
         return None
 
     best_match: IgdbEntry | None = None
@@ -113,9 +113,9 @@ async def get_igdb_id(search_string: str) -> int | None:
         return None
 
     logger.info(
-        f"{best_match.title} ({best_match.id}) is the best match ({(best_match.score*100):.0f} %).",
+        f"{best_match.title} ({best_match.igdb_id}) is the best match ({(best_match.score*100):.0f} %).",
     )
-    return best_match.id
+    return best_match.igdb_id
 
 
 async def get_igdb_details(
@@ -151,10 +151,11 @@ async def read_data_from_api(igdbid: int) -> list[dict[str, Any]] | None:
             "games",
             f"fields *; where id = {igdbid};",
         )
-        return response
-    except httpx.HTTPError as e:
-        logger.error(f"IGDB request failed: {e}")
+    except httpx.HTTPError:
+        logger.exception("IGDB request failed.")
         return None
+    else:
+        return response
 
 
 async def add_data_from_api(igdb_info: IgdbInfo) -> None:

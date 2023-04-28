@@ -34,7 +34,7 @@ class AmazonBaseScraper(Scraper):
         return ".offer-list__content"
 
     @staticmethod
-    def is_fake_always(valid_to: datetime | None) -> bool:
+    def is_fake_always(valid_to: datetime | None) -> bool:  # noqa: ARG004
         """Offers on Amazon are never valid forever."""
         return False
 

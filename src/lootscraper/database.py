@@ -1,14 +1,11 @@
 from __future__ import annotations
 
 import logging
-from collections.abc import Sequence
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from types import TracebackType
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import sqlalchemy as sa
-from sqlalchemy.engine.interfaces import Dialect
 from sqlalchemy.orm import (
     DeclarativeBase,
     Mapped,
@@ -25,6 +22,11 @@ from alembic.config import Config as AlembicConfig
 from lootscraper.common import Category, Channel, OfferDuration, OfferType, Source
 from lootscraper.config import Config
 from lootscraper.scraper.info.utils import calc_real_valid_to
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
+    from types import TracebackType
+
 
 logger = logging.getLogger(__name__)
 
@@ -49,7 +51,7 @@ class AwareDateTime(sa.TypeDecorator):  # type: ignore
     def process_result_value(
         self,
         value: datetime | None,
-        dialect: Dialect,
+        dialect: sa.Dialect,  # noqa: ARG002
     ) -> datetime | None:
         if value is not None:
             return value.replace(tzinfo=timezone.utc)
@@ -59,7 +61,7 @@ class AwareDateTime(sa.TypeDecorator):  # type: ignore
     def process_bind_param(
         self,
         value: datetime | None,
-        dialect: Dialect,
+        dialect: sa.Dialect,  # noqa: ARG002
     ) -> datetime | None:
         if value is not None:
             return value.replace(tzinfo=None)
@@ -69,7 +71,7 @@ class AwareDateTime(sa.TypeDecorator):  # type: ignore
 class Announcement(Base):
     __tablename__ = "announcements"
 
-    id: Mapped[int] = mapped_column(
+    id: Mapped[int] = mapped_column(  # noqa: A003
         init=False,
         primary_key=True,
     )
@@ -97,7 +99,7 @@ class Game(Base):
         default=None,
     )
 
-    id: Mapped[int] = mapped_column(
+    id: Mapped[int] = mapped_column(  # noqa: A003
         init=False,
         primary_key=True,
     )
@@ -118,7 +120,7 @@ class IgdbInfo(Base):
 
     __tablename__ = "igdb_info"
 
-    id: Mapped[int] = mapped_column(
+    id: Mapped[int] = mapped_column(  # noqa: A003
         primary_key=True,
     )
 
@@ -145,7 +147,7 @@ class SteamInfo(Base):
 
     __tablename__ = "steam_info"
 
-    id: Mapped[int] = mapped_column(
+    id: Mapped[int] = mapped_column(  # noqa: A003
         primary_key=True,
     )
     url: Mapped[str]
@@ -177,12 +179,12 @@ class Offer(Base):
 
     __tablename__ = "offers"
 
-    id: Mapped[int] = mapped_column(
+    id: Mapped[int] = mapped_column(  # noqa: A003
         init=False,
         primary_key=True,
     )
     source: Mapped[Source] = mapped_column(sa.Enum(Source))
-    type: Mapped[OfferType] = mapped_column(sa.Enum(OfferType))
+    type: Mapped[OfferType] = mapped_column(sa.Enum(OfferType))  # noqa: A003
     duration: Mapped[OfferDuration] = mapped_column(sa.Enum(OfferDuration))
     title: Mapped[str]
     probable_game_name: Mapped[str]
@@ -228,7 +230,7 @@ class User(Base):
         init=False,
     )
 
-    id: Mapped[int] = mapped_column(
+    id: Mapped[int] = mapped_column(  # noqa: A003
         init=False,
         primary_key=True,
     )
@@ -251,7 +253,7 @@ class TelegramSubscription(Base):
 
     user: Mapped[User] = relationship("User", back_populates="telegram_subscriptions")
 
-    id: Mapped[int] = mapped_column(
+    id: Mapped[int] = mapped_column(  # noqa: A003
         init=False,
         primary_key=True,
     )
@@ -260,7 +262,7 @@ class TelegramSubscription(Base):
         init=False,
     )
     source: Mapped[Source] = mapped_column(sa.Enum(Source))
-    type: Mapped[OfferType] = mapped_column(sa.Enum(OfferType))
+    type: Mapped[OfferType] = mapped_column(sa.Enum(OfferType))  # noqa: A003
     duration: Mapped[OfferDuration] = mapped_column(sa.Enum(OfferDuration))
     last_offer_id: Mapped[int] = mapped_column(default=0)
 

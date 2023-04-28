@@ -52,13 +52,13 @@ async def scrape_offers(context: BrowserContext) -> list[Offer]:
     cfg = Config.get()
 
     scraped_offers: list[Offer] = []
-    for scraperType in get_all_scrapers():
+    for scraper_type in get_all_scrapers():
         if (
-            scraperType.get_type() in cfg.enabled_offer_types
-            and scraperType.get_duration() in cfg.enabled_offer_durations
-            and scraperType.get_source() in cfg.enabled_offer_sources
+            scraper_type.get_type() in cfg.enabled_offer_types
+            and scraper_type.get_duration() in cfg.enabled_offer_durations
+            and scraper_type.get_source() in cfg.enabled_offer_sources
         ):
-            scraper = scraperType(context=context)
+            scraper = scraper_type(context=context)
             scraper_results = await scraper.scrape()
 
             if len(scraper_results) > 0:
@@ -155,7 +155,7 @@ async def action_generate_feed(loot_offers_in_db: Sequence[Offer]) -> None:
             continue
 
         feed_changed = False
-        feed_file_core = f"_{source.name.lower()}" + f"_{type_.name.lower()}"
+        feed_file_core = f"_{source.name.lower()}_{type_.name.lower()}"
 
         # To keep the old feed ids and names only add when the type is one of
         # the new types.

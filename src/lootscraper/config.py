@@ -108,7 +108,7 @@ class Config:
         return Config.__data_path
 
     @staticmethod
-    def get() -> ParsedConfig:
+    def get() -> ParsedConfig:  # noqa: PLR0915
         """
         Parse the config file into a ParsedConfig dataclass. Do this only once (lazy).
         """

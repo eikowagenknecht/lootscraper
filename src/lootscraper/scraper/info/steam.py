@@ -55,19 +55,23 @@ async def get_steam_id(
                 .filter(has=page.locator(".title"))
                 .all()
             )
-        except Error as e:
-            logger.error(f"Could not find search results container: {str(e)}")
+        except Error:
+            logger.exception("Could not find search results container:.")
             return None
 
         best_match: SteamEntry | None = None
 
         for element in elements:
+            title = None
+            appid = None
+
             try:
                 title = await element.locator(".title").text_content()
                 appid = await element.get_attribute("data-ds-appid")
 
                 if not title or not appid:
-                    raise ValueError("Result needs a title and appid.")
+                    logger.warning("Result needs a title and appid.")
+                    continue
 
                 score = get_match_score(search_string, title)
 
@@ -227,7 +231,7 @@ async def add_data_from_steam_api(steam_info: SteamInfo) -> None:
 
 
 async def read_from_steam_api(steam_app_id: int) -> dict[str, Any] | None:
-    FILTERS = ",".join(
+    filters = ",".join(
         [
             "basic",  # name, short_description, header_image, is_free
             "price_overview",
@@ -245,7 +249,7 @@ async def read_from_steam_api(steam_app_id: int) -> dict[str, Any] | None:
                 STEAM_DETAILS_JSON_URL,
                 params={
                     "appids": steam_app_id,
-                    "filters": FILTERS,
+                    "filters": filters,
                     "cc": "de",  # For prices
                     "l": "english",  # For descriptions
                 },

@@ -74,9 +74,7 @@ def clean_title(title: str, type_: OfferType) -> str:
 
 
 def clean_game_title(title: str) -> str:
-    probable_game_name: str | None = None
-
-    probable_game_name = (
+    return (
         title.removesuffix(" on Origin")
         .removesuffix(" Game of the Year Edition Deluxe")
         .removesuffix(" Game of the Year Edition")
@@ -86,8 +84,6 @@ def clean_game_title(title: str) -> str:
         .removesuffix("-")
         .strip()
     )
-
-    return probable_game_name
 
 
 def clean_loot_title(title: str) -> str:

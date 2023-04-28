@@ -35,11 +35,11 @@ target_metadata = database.Base.metadata
 
 
 def include_object(
-    object_: SchemaItem,
+    object_: SchemaItem,  # noqa: ARG001
     name: str,
     type_: str,
-    reflected: bool,
-    compare_to: SchemaItem,
+    reflected: bool,  # noqa: ARG001
+    compare_to: SchemaItem,  # noqa: ARG001
 ) -> bool:
     """
     Should you include this table or not?

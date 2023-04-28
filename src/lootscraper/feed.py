@@ -3,8 +3,8 @@ import asyncio
 import html
 import logging
 from collections.abc import Sequence
-from datetime import datetime
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from feedgen.feed import FeedEntry, FeedGenerator
 
@@ -18,6 +18,9 @@ from .common import (
     OfferType,
     Source,
 )
+
+if TYPE_CHECKING:
+    from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
@@ -217,8 +220,7 @@ def get_feed_id(filename: str) -> str:
     if len(parts) == 1:
         return ""  # Main feed
 
-    subfeed = parts[1][0:-4]
-    return subfeed
+    return parts[1][0:-4]
 
 
 def get_feed_title(

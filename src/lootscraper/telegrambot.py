@@ -4,11 +4,9 @@ import asyncio
 import json
 import logging
 import traceback
-from collections.abc import Sequence
 from datetime import datetime, timedelta, timezone
 from http.client import RemoteDisconnected
-from types import TracebackType
-from typing import Any
+from typing import TYPE_CHECKING
 
 import humanize
 import sqlalchemy as sa
@@ -41,6 +39,12 @@ from lootscraper.common import (
 from lootscraper.config import Config, ParsedConfig, TelegramLogLevel
 from lootscraper.database import Announcement, Game, Offer, TelegramSubscription, User
 from lootscraper.scraper.loot.scraperhelper import get_all_scrapers
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
+    from types import TracebackType
+
+    from telegram._utils.types import ReplyMarkup
 
 BUTTON_SHOW_DETAILS = "Details"
 BUTTON_HIDE_DETAILS = "Summary"
@@ -100,8 +104,8 @@ class TelegramBot:
     async def __aenter__(self) -> TelegramBot:
         try:
             await self.start()
-        except TelegramError as e:
-            logger.error(f"Couldn't start Telegram bot: {e}")
+        except TelegramError:
+            logger.exception("Couldn't start Telegram bot.")
             raise
         return self
 
@@ -403,7 +407,7 @@ class TelegramBot:
                 # Register channel user if not registered yet
                 session: orm.Session = self.Session()
                 try:
-                    latest_announcement = session.execute(
+                    latest_announcement: int = session.execute(  # type: ignore
                         sa.select(
                             sa.func.max(Announcement.id),
                         ),
@@ -427,7 +431,7 @@ class TelegramBot:
                     raise
 
             if channel_db_user is None:
-                raise Exception("Channel user not found.")
+                raise Exception("Channel user not found.")  # noqa: TRY301, TRY002
 
             if self.is_subscribed(channel_db_user, offer_type, source, duration):
                 self.unsubscribe(channel_db_user, offer_type, source, duration)
@@ -499,7 +503,9 @@ class TelegramBot:
 
         await self.log_call(update)
 
-        raise Exception("This is a test error triggered by the /error command.")
+        raise Exception(  # noqa: TRY002
+            "This is a test error triggered by the /error command.",
+        )
 
     async def help_command(
         self,
@@ -664,10 +670,9 @@ class TelegramBot:
         if db_user is not None:
             message = (
                 Rf"Welcome back, {update.effective_user.mention_markdown_v2()} 👋\. "
-                + R"You are already registered ❤\. "
-                + R"In case you forgot, this was my initial message to you:"
-                + "\n\n"
-                + welcome_text
+                R"You are already registered ❤\. "
+                R"In case you forgot, this was my initial message to you:"
+                "\n\n" + welcome_text
             )
             logger.debug(f"Sending /start reply: {message}")
             await update.message.reply_markdown_v2(message)
@@ -676,16 +681,16 @@ class TelegramBot:
         # Register user if not registered yet
         session: orm.Session = self.Session()
         try:
-            latest_announcement = session.execute(
+            latest_announcement: int = session.execute(  # type: ignore
                 sa.select(sa.func.max(Announcement.id)),
             ).scalar()
 
             new_user = User(
-                telegram_id=update.effective_user.id,
-                telegram_chat_id=update.effective_chat.id
+                telegram_id=str(update.effective_user.id),
+                telegram_chat_id=str(update.effective_chat.id)
                 if update.effective_chat
                 else None,
-                telegram_user_details=update.effective_user.to_json(),
+                telegram_user_details=update.effective_user.to_dict(),
                 registration_date=datetime.now(tz=timezone.utc),
                 last_announcement_id=latest_announcement,
             )
@@ -701,9 +706,9 @@ class TelegramBot:
         self.subscribe(new_user, OfferType.GAME, Source.EPIC, OfferDuration.CLAIMABLE)
 
         message = (
-            Rf"Hi {update.effective_user.mention_markdown_v2()} 👋, welcome to the LootScraper Telegram Bot and thank you for registering\!"
-            + "\n\n"
-            + welcome_text
+            Rf"Hi {update.effective_user.mention_markdown_v2()} 👋, "
+            R"welcome to the LootScraper Telegram Bot and thank you for registering\!"
+            "\n\n" + welcome_text
         )
         logger.debug(f"Sending /start reply: {message}")
         await update.message.reply_markdown_v2(message)
@@ -753,9 +758,7 @@ class TelegramBot:
             subscriptions_text = (
                 Rf"\- You have {len(db_user.telegram_subscriptions)} subscriptions\. "
             )
-            subscriptions_text += (
-                R"Here are the categories you are subscribed to: " + "\n"
-            )
+            subscriptions_text += R"Here are the categories you are subscribed to: \n"
             for subscription in db_user.telegram_subscriptions:
                 subscriptions_text += markdown_escape(
                     f"  * {subscription.source.value} / {subscription.type.value} / {subscription.duration.value}\n",
@@ -927,19 +930,21 @@ class TelegramBot:
 
         try:
             await update.callback_query.delete_message()
-            return
         except telegram.error.BadRequest:
             # Message could not be deleted, probably it's older than 48h
             pass
+        else:
+            return
 
         try:
             await update.callback_query.edit_message_text(
                 text=MESSAGE_DISMISSED,
             )
-            return
         except telegram.error.BadRequest:
             # Message could not be edited, probably a doubleclick
             pass
+        else:
+            return
 
     async def close_callback(
         self,
@@ -1052,7 +1057,7 @@ class TelegramBot:
         session: orm.Session = self.Session()
         try:
             for subscription in subscriptions:
-                offers: list[Offer] = (
+                offers: Sequence[Offer] = (
                     session.execute(
                         sa.select(Offer).where(
                             sa.and_(
@@ -1062,14 +1067,16 @@ class TelegramBot:
                                 Offer.id > subscription.last_offer_id,
                                 # Only send offers that are already active
                                 sa.or_(
-                                    Offer.valid_from <= datetime.now(tz=None),  # type: ignore
-                                    Offer.valid_from.is_(None),  # type: ignore
+                                    Offer.valid_from <= datetime.now(tz=timezone.utc),
+                                    Offer.valid_from.is_(None),
                                 ),
                                 # Prefilter to reduce database load. The details are handled below.
                                 sa.or_(
-                                    Offer.valid_to >= datetime.now(tz=None),  # type: ignore
-                                    Offer.seen_last >= datetime.now(tz=None) - timedelta(days=1),  # type: ignore
-                                    Offer.valid_to.is_(None),  # type: ignore
+                                    Offer.valid_to >= datetime.now(tz=timezone.utc),
+                                    Offer.seen_last
+                                    >= datetime.now(tz=timezone.utc)
+                                    - timedelta(days=1),
+                                    Offer.valid_to.is_(None),
                                 ),
                             ),
                         ),
@@ -1515,6 +1522,7 @@ class TelegramBot:
                 and game.steam_info.percent
                 and game.steam_info.score
                 and game.steam_info.recommendations
+                and game.steam_info.url
             ):
                 text = Rf"Steam {game.steam_info.percent} % ({game.steam_info.score}/10, {game.steam_info.recommendations} recommendations)"
                 text = markdown_url(game.steam_info.url, text)
@@ -1523,6 +1531,7 @@ class TelegramBot:
                 game.igdb_info
                 and game.igdb_info.meta_ratings
                 and game.igdb_info.meta_score
+                and game.igdb_info.url
             ):
                 text = Rf"IGDB Meta {game.igdb_info.meta_score} % ({game.igdb_info.meta_ratings} sources)"
                 text = markdown_url(game.igdb_info.url, text)
@@ -1531,6 +1540,7 @@ class TelegramBot:
                 game.igdb_info
                 and game.igdb_info.user_ratings
                 and game.igdb_info.user_score
+                and game.igdb_info.url
             ):
                 text = Rf"IGDB User {game.igdb_info.user_score} % ({game.igdb_info.user_ratings} sources)"
                 text = markdown_url(game.igdb_info.url, text)
@@ -1563,7 +1573,7 @@ class TelegramBot:
         chat_id: int | str,
         text: str,
         parse_mode: str | None = telegram.constants.ParseMode.MARKDOWN_V2,
-        **kwargs: Any,
+        reply_markup: ReplyMarkup | None = None,
     ) -> Message | None:  # type: ignore
         """
         Wrapper around the message sending to handle exceptions.
@@ -1584,14 +1594,12 @@ class TelegramBot:
                     chat_id=chat_id,
                     text=text,
                     parse_mode=parse_mode,
-                    **kwargs,
+                    reply_markup=reply_markup,
                 )
-                message_handled = True
-                return message
             except telegram.error.TimedOut:
                 # Telegram is not responding. This is not handled by the AIORateLimiter.
                 if send_attempt > 3:
-                    logger.exception()
+                    logger.exception("Too many send attempts.")
                     return None
                 retry_in_seconds = 5.0
                 await asyncio.sleep(retry_in_seconds)
@@ -1611,7 +1619,10 @@ class TelegramBot:
                     )
                     self.deactivate_user(chat_id, "not found")
                 else:
-                    logger.exception()
+                    logger.exception("Telegram error while sending message.")
+            else:
+                message_handled = True
+                return message
 
         return None
 

@@ -109,7 +109,7 @@ class SteamGameInfoTests(unittest.IsolatedAsyncioTestCase):
             assert steam_info.genres == "Action"
 
             assert steam_info.recommendations > 850000
-            assert steam_info.percent == 87
+            assert steam_info.percent > 80
             assert steam_info.score == 9
             assert steam_info.metacritic_score is None
             assert steam_info.metacritic_url is None

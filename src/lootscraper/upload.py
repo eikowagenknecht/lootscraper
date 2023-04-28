@@ -1,5 +1,5 @@
 import logging
-from ftplib import FTP_TLS  # nosec
+from ftplib import FTP_TLS
 from pathlib import Path
 
 from lootscraper.config import Config
@@ -16,7 +16,7 @@ def upload_to_server(file: Path) -> None:
     password = Config.get().ftp_password
 
     logger.info(f"Uploading {file.name} to host {host} as user {user}")
-    with FTP_TLS(host) as session:
+    with FTP_TLS(host) as session:  # noqa: S321
         session.auth()
         session.prot_p()
         session.login(user, password)

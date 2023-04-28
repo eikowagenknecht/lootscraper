@@ -3,16 +3,20 @@ from __future__ import annotations
 import logging
 import re
 from asyncio import sleep
-from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
+from typing import TYPE_CHECKING
 
 from playwright.async_api import BrowserContext, Error, Locator, Page
+
+if TYPE_CHECKING:
+    from collections.abc import Awaitable, Callable
+
+    from lootscraper.database import Offer
 
 from lootscraper.browser import get_new_page
 from lootscraper.common import Category, OfferDuration, OfferType, Source
 from lootscraper.config import Config
-from lootscraper.database import Offer
 
 logger = logging.getLogger(__name__)
 
