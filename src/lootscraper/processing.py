@@ -304,7 +304,7 @@ def hash_file(file: Path) -> str:
 
     hash_ = hashlib.sha256()
 
-    with open(file, "rb") as f:
+    with file.open(mode="rb") as f:
         while True:
             data = f.read(65536)
             if not data:

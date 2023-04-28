@@ -21,7 +21,7 @@ def upload_to_server(file: Path) -> None:
         session.prot_p()
         session.login(user, password)
 
-        with open(file, "rb") as binary_file:
+        with file.open(mode="rb") as binary_file:
             session.storbinary("STOR " + file.name, binary_file)
 
     logger.debug("Finished uploading")

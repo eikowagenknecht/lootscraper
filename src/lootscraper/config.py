@@ -114,7 +114,8 @@ class Config:
         """
 
         if Config.__parsed_config is None:
-            with open(Config.data_path() / CONFIG_FILE, "rb") as f:
+            file = Path(Config.data_path() / CONFIG_FILE)
+            with file.open(mode="rb") as f:
                 data = tomllib.load(f)
 
             parsed_config = ParsedConfig()
