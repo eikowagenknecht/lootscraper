@@ -147,18 +147,18 @@ async def add_data_from_steam_api(steam_info: SteamInfo) -> None:
             return
         content = data[app_id]["data"]
     except KeyError:
-        logger.error(f"Could not read data for app id {steam_info.id}: {data}")
+        logger.exception(f"Could not read data for app id {steam_info.id}: {data}")
         return
 
     try:
         steam_info.name = content["name"]
     except KeyError:
-        logger.error(f"Could not read name for app id {steam_info.id}: {data}")
+        logger.exception(f"Could not read name for app id {steam_info.id}: {data}")
 
     try:
         steam_info.short_description = content["short_description"]
     except KeyError:
-        logger.error(
+        logger.exception(
             f"Could not read short description for app id {steam_info.id}: {data}",
         )
 
@@ -252,9 +252,9 @@ async def read_from_steam_api(steam_app_id: int) -> dict[str, Any] | None:
             )
             response.raise_for_status()
             return response.json()
-        except httpx.HTTPError as e:
-            logger.error(
-                f"Couldn't get details for {steam_app_id} from Steam JSON API: {e}.",
+        except httpx.HTTPError:
+            logger.exception(
+                f"Couldn't get details for {steam_app_id} from Steam JSON API.",
             )
             return None
 
@@ -270,13 +270,13 @@ async def add_data_from_steam_store_page(
         try:
             await page.wait_for_selector(".game_page_background")
         except Error:
-            logger.error(f"Steam store page for {steam_info.id} didn't load.")
+            logger.exception(f"Steam store page for {steam_info.id} didn't load.")
             return
 
         try:
             await skip_age_verification(page)
         except Error:
-            logger.error(f"Steam age verification for {steam_info.id} failed.")
+            logger.exception(f"Steam age verification for {steam_info.id} failed.")
             return
 
         # Add the review score percentage if available
@@ -298,8 +298,8 @@ async def add_data_from_steam_store_page(
                     steam_info.percent = int(review_score_percent.split("%")[0].strip())
             except Error as e:
                 logger.warning(f"No Steam percentage found for {steam_info.id}: {e}")
-            except ValueError as e:
-                logger.error(f"Invalid Steam percentage for {steam_info.id}: {e}")
+            except ValueError:
+                logger.exception(f"Invalid Steam percentage for {steam_info.id}.")
 
         # Add the review score if available
         # If the percentage is not filled, there are no reviews, so skip in that case
@@ -314,8 +314,8 @@ async def add_data_from_steam_store_page(
                     steam_info.score = int(review_score)
             except Error as e:
                 logger.warning(f"No Steam rating found for {steam_info.id}: {e}")
-            except ValueError as e:
-                logger.error(f"Invalid Steam rating for {steam_info.id}: {e}")
+            except ValueError:
+                logger.exception(f"Invalid Steam rating for {steam_info.id}.")
 
         # Add the number of recommendations if available
         # Should be filled from the API already, but just in case
@@ -331,8 +331,8 @@ async def add_data_from_steam_store_page(
                     steam_info.recommendations = int(recommendations)
             except Error as e:
                 logger.warning(f"No rating found for {steam_info.id}: {e}")
-            except ValueError as e:
-                logger.error(f"Invalid rating for {steam_info.id}: {e}")
+            except ValueError:
+                logger.exception(f"Invalid rating for {steam_info.id}.")
 
         # This currently would also get the price from the first bundle which is
         # incorrect. Commented out for now because the API seems to be more reliable.
@@ -435,9 +435,9 @@ async def add_data_from_steam_store_page(
                 logger.debug(
                     f"No release date found on shop page for {steam_info.id}: {e}",
                 )
-            except (IndexError, ValueError) as e:
-                logger.error(
-                    f"Release date in wrong format on shop page for {steam_info.id}: {e}",
+            except (IndexError, ValueError):
+                logger.exception(
+                    f"Release date in wrong format on shop page for {steam_info.id}.",
                 )
 
 

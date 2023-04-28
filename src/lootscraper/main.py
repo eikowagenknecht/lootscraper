@@ -76,8 +76,8 @@ async def run() -> None:
                 tg.create_task(run_scraper_loop(db, telegram_queue))
                 if Config.get().telegram_bot:
                     tg.create_task(run_telegram_bot(db, telegram_queue))
-    except OperationalError as db_error:
-        logger.error(f"Database error, exiting application: {db_error}")
+    except OperationalError:
+        logger.exception("Database error, exiting application.")
         sys.exit()
 
     logger.info(f"Exiting LootScraper v{__version__}")
@@ -157,8 +157,8 @@ async def run_telegram_bot(
             telegram_handler.setLevel(logging.ERROR)
             telegram_handler.setFormatter(logging.Formatter(LOGFORMAT))
             logger.addHandler(telegram_handler)
-        except Exception as e:
-            logger.error(f"Could not add Telegram logging handler: {e}")
+        except Exception:
+            logger.exception("Could not add Telegram logging handler.")
 
         while True:
             run_no = await queue.get()

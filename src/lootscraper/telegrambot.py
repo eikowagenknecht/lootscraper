@@ -1588,10 +1588,10 @@ class TelegramBot:
                 )
                 message_handled = True
                 return message
-            except telegram.error.TimedOut as e:
+            except telegram.error.TimedOut:
                 # Telegram is not responding. This is not handled by the AIORateLimiter.
                 if send_attempt > 3:
-                    logger.error(e)
+                    logger.exception()
                     return None
                 retry_in_seconds = 5.0
                 await asyncio.sleep(retry_in_seconds)
@@ -1611,7 +1611,7 @@ class TelegramBot:
                     )
                     self.deactivate_user(chat_id, "not found")
                 else:
-                    logger.error(e)
+                    logger.exception()
 
         return None
 

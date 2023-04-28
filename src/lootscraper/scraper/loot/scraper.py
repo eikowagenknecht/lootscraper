@@ -118,8 +118,8 @@ class Scraper:
         async with get_new_page(self.context) as page:
             try:
                 await page.goto(self.get_offers_url(), timeout=30000)
-            except Error as e:
-                logger.error(f"Couldn't load page: {e}")
+            except Error:
+                logger.exception("Couldn't load page.")
                 return []
 
             try:
@@ -128,13 +128,14 @@ class Scraper:
                     timeout=10000,
                 )
                 await self.page_loaded_hook(page)
-            except Error as e:
-                logger.error(f"The page didn't get ready to be parsed: {e}")
+            except Error:
                 filename = (
                     Config.data_path()
                     / f'error_{self.get_source().name.lower()}_{datetime.now(tz=timezone.utc).isoformat().replace(".", "_").replace(":", "_")}.png'
                 )
-                logger.error(f"Saving screenshot to {filename}.")
+                logger.exception(
+                    f"The page didn't get ready to be parsed. Saved screenshot to {filename}.",
+                )
                 await page.screenshot(path=str(filename.resolve()))
                 return []
 
@@ -143,9 +144,9 @@ class Scraper:
 
                 try:
                     elements = await offers_locator.all()
-                except Error as e:
+                except Error:
                     # Without offers we can't do anything
-                    logger.error(f"Couldn't find any offers: {e}")
+                    logger.exception("Couldn't find any offers.")
                     return []
 
                 for element in elements:
@@ -153,15 +154,15 @@ class Scraper:
                         raw_offer = await handler.read_offer_func(element)
                         if raw_offer is None:
                             continue
-                    except Exception as e:
+                    except Exception:
                         # Skip offers that can't be loaded
-                        logger.error(f"Couldn't parse element {str(element)}: {e}")
+                        logger.exception(f"Couldn't parse element {str(element)}.")
                         continue
 
                     try:
                         normalized_offer = handler.normalize_offer_func(raw_offer)
-                    except Exception as e:
-                        logger.error(f"Couldn't normalize offer {raw_offer.title}: {e}")
+                    except Exception:
+                        logger.exception(f"Couldn't normalize offer {raw_offer.title}.")
                         continue
 
                     offers.append(normalized_offer)
