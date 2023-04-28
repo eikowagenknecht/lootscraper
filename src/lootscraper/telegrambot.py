@@ -89,7 +89,9 @@ logger = logging.getLogger(__name__)
 
 class TelegramBot:
     def __init__(
-        self, config: ParsedConfig, scoped_session: orm.scoped_session[orm.Session],
+        self,
+        config: ParsedConfig,
+        scoped_session: orm.scoped_session[orm.Session],
     ) -> None:
         self.config = config
         self.Session = scoped_session
@@ -224,7 +226,9 @@ class TelegramBot:
         await self.stop()
 
     async def error_handler(
-        self, update: object, context: ContextTypes.DEFAULT_TYPE,
+        self,
+        update: object,
+        context: ContextTypes.DEFAULT_TYPE,
     ) -> None:
         """
         Log the error and send a telegram message to notify the developer chat.
@@ -238,7 +242,8 @@ class TelegramBot:
         # Common case when a user clicks too fast on the "show details" button.
         # Nothing to do here, not an actual error.
         if isinstance(
-            context.error, telegram.error.BadRequest,
+            context.error,
+            telegram.error.BadRequest,
         ) and context.error.message.startswith("Message is not modified: "):
             return
 
@@ -269,7 +274,9 @@ class TelegramBot:
 
         # Build the exception string from the exception
         traceback_string = "".join(
-            traceback.format_exception(None, context.error, context.error.__traceback__),
+            traceback.format_exception(
+                None, context.error, context.error.__traceback__
+            ),
         )
 
         # Get some additional information about what happened.
@@ -293,7 +300,9 @@ class TelegramBot:
         logger.error(full_debug_message)
 
     async def announce_command(
-        self, update: Update, context: ContextTypes.DEFAULT_TYPE,
+        self,
+        update: Update,
+        context: ContextTypes.DEFAULT_TYPE,
     ) -> None:
         """Handle the /announce command: Add an announcement (admin only)."""
 
@@ -346,7 +355,9 @@ class TelegramBot:
             )
 
     async def channel_command(
-        self, update: Update, context: ContextTypes.DEFAULT_TYPE,
+        self,
+        update: Update,
+        context: ContextTypes.DEFAULT_TYPE,
     ) -> None:
         """Handle the /channel command: Manage channels (admin only)."""
 
@@ -422,10 +433,8 @@ class TelegramBot:
                 await self.send_message(
                     chat_id=update.effective_chat.id,
                     text=markdown_escape(
-
-                            f"Channel {channel_db_user.telegram_chat_id} is now unsubscribed "
-                            f"to offers from: {offer_type.value} / {source.value} / {duration.value}.",
-
+                        f"Channel {channel_db_user.telegram_chat_id} is now unsubscribed "
+                        f"to offers from: {offer_type.value} / {source.value} / {duration.value}.",
                     ),
                     parse_mode=telegram.constants.ParseMode.MARKDOWN_V2,
                 )
@@ -435,11 +444,9 @@ class TelegramBot:
                 await self.send_message(
                     chat_id=update.effective_chat.id,
                     text=markdown_escape(
-
-                            f"Channel {channel_db_user.telegram_chat_id} is now subscribed "
-                            f"to offers from: {offer_type.value} / {source.value} / {duration.value}."
-                            f"Sending new offers with the next scraping run.",
-
+                        f"Channel {channel_db_user.telegram_chat_id} is now subscribed "
+                        f"to offers from: {offer_type.value} / {source.value} / {duration.value}."
+                        f"Sending new offers with the next scraping run.",
                     ),
                     parse_mode=telegram.constants.ParseMode.MARKDOWN_V2,
                 )
@@ -454,7 +461,9 @@ class TelegramBot:
             )
 
     async def debug_command(
-        self, update: Update, context: ContextTypes.DEFAULT_TYPE,
+        self,
+        update: Update,
+        context: ContextTypes.DEFAULT_TYPE,
     ) -> None:
         """Handle the /debug command: Show some debug information."""
 
@@ -478,7 +487,9 @@ class TelegramBot:
             )
 
     async def error_command(
-        self, update: Update, context: ContextTypes.DEFAULT_TYPE,
+        self,
+        update: Update,
+        context: ContextTypes.DEFAULT_TYPE,
     ) -> None:
         """Handle the /error command: Trigger an error to send to the dev chat."""
 
@@ -489,7 +500,9 @@ class TelegramBot:
         raise Exception("This is a test error triggered by the /error command.")
 
     async def help_command(
-        self, update: Update, context: ContextTypes.DEFAULT_TYPE,
+        self,
+        update: Update,
+        context: ContextTypes.DEFAULT_TYPE,
     ) -> None:
         """Handle the /help command: Display all available commands to the user."""
 
@@ -503,7 +516,9 @@ class TelegramBot:
         await update.message.reply_markdown_v2(MESSAGE_HELP)
 
     async def leave_command(
-        self, update: Update, context: ContextTypes.DEFAULT_TYPE,
+        self,
+        update: Update,
+        context: ContextTypes.DEFAULT_TYPE,
     ) -> None:
         """Handle the /leave command: Unregister the user."""
 
@@ -543,7 +558,9 @@ class TelegramBot:
         await update.message.reply_markdown_v2(message)
 
     async def manage_command(
-        self, update: Update, context: ContextTypes.DEFAULT_TYPE,
+        self,
+        update: Update,
+        context: ContextTypes.DEFAULT_TYPE,
     ) -> None:
         """Handle the /manage command: Manage subscriptions."""
 
@@ -565,7 +582,9 @@ class TelegramBot:
         )
 
     async def refresh_command(
-        self, update: Update, context: ContextTypes.DEFAULT_TYPE,
+        self,
+        update: Update,
+        context: ContextTypes.DEFAULT_TYPE,
     ) -> None:
         """Handle the /refresh command: Send all offers once that have not been sent yet.."""
 
@@ -604,7 +623,9 @@ class TelegramBot:
             )
 
     async def start_command(
-        self, update: Update, context: ContextTypes.DEFAULT_TYPE,
+        self,
+        update: Update,
+        context: ContextTypes.DEFAULT_TYPE,
     ) -> None:
         """Handle the /start command: Register the user and display guide."""
 
@@ -701,7 +722,9 @@ class TelegramBot:
             )
 
     async def status_command(
-        self, update: Update, context: ContextTypes.DEFAULT_TYPE,
+        self,
+        update: Update,
+        context: ContextTypes.DEFAULT_TYPE,
     ) -> None:
         """Handle the /status command: Display some statistics about the user."""
 
@@ -774,7 +797,9 @@ class TelegramBot:
         await update.message.reply_markdown_v2(message)
 
     async def timezone_command(
-        self, update: Update, context: ContextTypes.DEFAULT_TYPE,
+        self,
+        update: Update,
+        context: ContextTypes.DEFAULT_TYPE,
     ) -> None:
         """Handle timezonelist command."""
 
@@ -793,7 +818,9 @@ class TelegramBot:
         )
 
     async def unknown_command(
-        self, update: Update, context: ContextTypes.DEFAULT_TYPE,
+        self,
+        update: Update,
+        context: ContextTypes.DEFAULT_TYPE,
     ) -> None:
         """Handle unknown commands."""
 
@@ -823,7 +850,9 @@ class TelegramBot:
         )
 
     async def offer_callback(
-        self, update: Update, context: ContextTypes.DEFAULT_TYPE,
+        self,
+        update: Update,
+        context: ContextTypes.DEFAULT_TYPE,
     ) -> None:
         """Callback from the menu buttons "Details" and "Summary" in the offer message."""
 
@@ -881,7 +910,9 @@ class TelegramBot:
             raise
 
     async def dismiss_callback(
-        self, update: Update, context: ContextTypes.DEFAULT_TYPE,
+        self,
+        update: Update,
+        context: ContextTypes.DEFAULT_TYPE,
     ) -> None:
         """Callback from the menu button "Dismiss" in the offer message."""
 
@@ -909,7 +940,9 @@ class TelegramBot:
             pass
 
     async def close_callback(
-        self, update: Update, context: ContextTypes.DEFAULT_TYPE,
+        self,
+        update: Update,
+        context: ContextTypes.DEFAULT_TYPE,
     ) -> None:
         """Callback from the menu button "Close" in various menus."""
 
@@ -935,7 +968,9 @@ class TelegramBot:
         await self.refresh_command(update, context)
 
     async def toggle_subscription_callback(
-        self, update: Update, context: ContextTypes.DEFAULT_TYPE,
+        self,
+        update: Update,
+        context: ContextTypes.DEFAULT_TYPE,
     ) -> None:
         """Callback from the subscription buttons in the manage menu."""
 
@@ -973,7 +1008,9 @@ class TelegramBot:
         )
 
     async def set_timezone_callback(
-        self, update: Update, context: ContextTypes.DEFAULT_TYPE,
+        self,
+        update: Update,
+        context: ContextTypes.DEFAULT_TYPE,
     ) -> None:
         """Callback from the timezone buttons in the timezone menu."""
 
@@ -1131,7 +1168,11 @@ class TelegramBot:
         return db_user
 
     def is_subscribed(
-        self, user: User, type_: OfferType, source: Source, duration: OfferDuration,
+        self,
+        user: User,
+        type_: OfferType,
+        source: Source,
+        duration: OfferDuration,
     ) -> bool:
         session: orm.Session = self.Session()
         existing_subscriptions = 0
@@ -1155,7 +1196,11 @@ class TelegramBot:
         return existing_subscriptions > 0
 
     def subscribe(
-        self, user: User, type_: OfferType, source: Source, duration: OfferDuration,
+        self,
+        user: User,
+        type_: OfferType,
+        source: Source,
+        duration: OfferDuration,
     ) -> None:
         session: orm.Session = self.Session()
         try:
@@ -1164,7 +1209,10 @@ class TelegramBot:
 
             session.add(
                 TelegramSubscription(
-                    user=user, source=source, type=type_, duration=duration,
+                    user=user,
+                    source=source,
+                    type=type_,
+                    duration=duration,
                 ),
             )
             session.commit()
@@ -1173,7 +1221,11 @@ class TelegramBot:
             raise
 
     def unsubscribe(
-        self, user: User, type_: OfferType, source: Source, duration: OfferDuration,
+        self,
+        user: User,
+        type_: OfferType,
+        source: Source,
+        duration: OfferDuration,
     ) -> None:
         session: orm.Session = self.Session()
         try:
@@ -1191,7 +1243,9 @@ class TelegramBot:
             raise
 
     async def manage_menu(
-        self, update: Update, context: ContextTypes.DEFAULT_TYPE,
+        self,
+        update: Update,
+        context: ContextTypes.DEFAULT_TYPE,
     ) -> None:
         del context  # Unused
 
@@ -1226,13 +1280,19 @@ class TelegramBot:
             ):
                 keyboard.append(
                     subscription_button(
-                        True, scraper_source, scraper_type, scraper_duration,
+                        True,
+                        scraper_source,
+                        scraper_type,
+                        scraper_duration,
                     ),
                 )
             else:
                 keyboard.append(
                     subscription_button(
-                        False, scraper_source, scraper_type, scraper_duration,
+                        False,
+                        scraper_source,
+                        scraper_type,
+                        scraper_duration,
                     ),
                 )
 
@@ -1253,7 +1313,8 @@ class TelegramBot:
             keyboard.append(
                 [
                     InlineKeyboardButton(
-                        text=f"UTC{hourstr}:00", callback_data=f"settimezone {hourstr}",
+                        text=f"UTC{hourstr}:00",
+                        callback_data=f"settimezone {hourstr}",
                     ),
                 ],
             )
@@ -1428,14 +1489,14 @@ class TelegramBot:
             if game.igdb_info and game.igdb_info.name:
                 content += (
                     "\n\n__"
-                    + Rf'More info about "{markdown_escape(game.igdb_info.name)}":'
-                    + "__\n"
+                    Rf'More info about "{markdown_escape(game.igdb_info.name)}":'
+                    "__\n"
                 )
             elif game.steam_info and game.steam_info.name:
                 content += (
                     "\n\n__"
-                    + Rf'More info about "{markdown_escape(game.steam_info.name)}":'
-                    + "__\n"
+                    Rf'More info about "{markdown_escape(game.steam_info.name)}":'
+                    "__\n"
                 )
             else:
                 # No Steam or IGDB info = no details
@@ -1482,8 +1543,9 @@ class TelegramBot:
                 content += f"*Release date:* {markdown_escape(game.steam_info.release_date.strftime(TIMESTAMP_SHORT))}\n"
             if game.steam_info and game.steam_info.recommended_price_eur:
                 content += (
-                    Rf"*Recommended price \(Steam\):* {markdown_escape(str(game.steam_info.recommended_price_eur))} EUR"
-                    + "\n"
+                    R"*Recommended price \(Steam\):* "
+                    Rf"{markdown_escape(str(game.steam_info.recommended_price_eur))} "
+                    "EUR\n"
                 )
             if game.steam_info and game.steam_info.genres:
                 content += f"*Genres:* {markdown_escape(game.steam_info.genres)}\n"
