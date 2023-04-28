@@ -132,7 +132,9 @@ def clean_loot_title(title: str) -> str:
         probable_game_name = match.group(1)
     if probable_game_name is None:
         # Replace some very special characters that Steam uses sometimes
-        title = title.replace("：", ": ").replace(" — ", ": ").replace(" - ", ": ")
+        title = (
+            title.replace("：", ": ").replace(" — ", ": ").replace(" - ", ": ")
+        )  # noqa
         title_parts: list[str] = title.split(": ")
     if probable_game_name is None and len(title_parts) >= 3:
         probable_game_name = ": ".join(title_parts[:-1])
@@ -182,7 +184,6 @@ def calc_real_valid_to(
     # The offer should have ended, but it's still there. So we approximate the
     # end date by adding 1 hour to the last time we saw it.
     if valid_to < seen_last:
-
         return seen_last + timedelta(hours=1)
 
     # In all other cases, we believe what the offer says.

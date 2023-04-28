@@ -19,7 +19,7 @@ class IGDBGameInfoTests(unittest.IsolatedAsyncioTestCase):
         expected_id: int = 66
         with self.assertNoLogs(level="ERROR"):
             scraped_id: int = await get_igdb_id(
-                "Monkey Island 2 Special Edition: LeChuck’s Revenge",
+                "Monkey Island 2 Special Edition: LeChuck’s Revenge",  # noqa
             )
         assert expected_id == scraped_id
 
@@ -66,7 +66,7 @@ class SteamGameInfoTests(unittest.IsolatedAsyncioTestCase):
             expected_id: int = 32460
             with self.assertNoLogs(level="ERROR"):
                 scraped_id: int = await get_steam_id(
-                    "Monkey Island 2 Special Edition: LeChuck’s Revenge",
+                    "Monkey Island 2 Special Edition: LeChuck’s Revenge",  # noqa
                     context=context,
                 )
             assert expected_id == scraped_id
@@ -89,7 +89,10 @@ class SteamGameInfoTests(unittest.IsolatedAsyncioTestCase):
             assert steam_info.percent > 90
             assert steam_info.score == 10
             assert steam_info.metacritic_score == 88
-            assert steam_info.metacritic_url == "https://www.metacritic.com/game/pc/counter-strike?ftag=MCD-06-10aaa1f"
+            assert (
+                steam_info.metacritic_url
+                == "https://www.metacritic.com/game/pc/counter-strike?ftag=MCD-06-10aaa1f"
+            )
 
     async def test_steam_details_rainbowsix(self) -> None:
         async with get_browser_context() as context:
