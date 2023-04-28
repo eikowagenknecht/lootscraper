@@ -74,9 +74,7 @@ def clean_title(title: str, type_: OfferType) -> str:
 
 
 def clean_game_title(title: str) -> str:
-    probable_game_name: str | None = None
-
-    probable_game_name = (
+    return (
         title.removesuffix(" on Origin")
         .removesuffix(" Game of the Year Edition Deluxe")
         .removesuffix(" Game of the Year Edition")
@@ -86,8 +84,6 @@ def clean_game_title(title: str) -> str:
         .removesuffix("-")
         .strip()
     )
-
-    return probable_game_name
 
 
 def clean_loot_title(title: str) -> str:
@@ -132,7 +128,9 @@ def clean_loot_title(title: str) -> str:
         probable_game_name = match.group(1)
     if probable_game_name is None:
         # Replace some very special characters that Steam uses sometimes
-        title = title.replace("：", ": ").replace(" — ", ": ").replace(" - ", ": ")
+        title = (
+            title.replace("：", ": ").replace(" — ", ": ").replace(" - ", ": ")
+        )  # noqa
         title_parts: list[str] = title.split(": ")
     if probable_game_name is None and len(title_parts) >= 3:
         probable_game_name = ": ".join(title_parts[:-1])
@@ -156,10 +154,7 @@ def calc_real_valid_to(
 ) -> datetime | None:
     """Calculate the real end date of an offer."""
 
-    if forced_now is not None:
-        now = forced_now
-    else:
-        now = datetime.now().replace(tzinfo=timezone.utc)
+    now = forced_now if forced_now is not None else datetime.now(tz=timezone.utc)
 
     if valid_to is None:
         # The offer has no end date and hasn't been seen for more than a day.
@@ -182,7 +177,6 @@ def calc_real_valid_to(
     # The offer should have ended, but it's still there. So we approximate the
     # end date by adding 1 hour to the last time we saw it.
     if valid_to < seen_last:
-
         return seen_last + timedelta(hours=1)
 
     # In all other cases, we believe what the offer says.

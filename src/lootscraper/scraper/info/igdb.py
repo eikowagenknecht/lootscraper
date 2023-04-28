@@ -1,3 +1,6 @@
+from __future__ import annotations
+
+import contextlib
 import logging
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -14,12 +17,12 @@ logger = logging.getLogger(__name__)
 
 
 API_URL = "https://api.igdb.com/v4/"
-TOKEN_URL = "https://id.twitch.tv/oauth2/token"  # nosec
+TOKEN_URL = "https://id.twitch.tv/oauth2/token"  # noqa: S105
 
 
 @dataclass
 class IgdbEntry:
-    id: int
+    igdb_id: int
     score: float
     title: str
 
@@ -29,12 +32,12 @@ class IGDBWrapper:
     Asynchronous IGDB wrapper module for the api v4 with Apicalypse syntax.
     """
 
-    def __init__(self, client_id: str, client_secret: str) -> None:
+    def __init__(self: IGDBWrapper, client_id: str, client_secret: str) -> None:
         self.client_id = client_id
         self.client_secret = client_secret
         self.auth_token: str | None = None
 
-    async def authorize(self) -> None:
+    async def authorize(self: IGDBWrapper) -> None:
         """
         Authorize with IGDB and get a token for the session.
         """
@@ -50,7 +53,9 @@ class IGDBWrapper:
             result.raise_for_status()
             self.auth_token = result.json()["access_token"]
 
-    async def api_request(self, endpoint: str, query: str) -> Any:
+    async def api_request(
+        self: IGDBWrapper, endpoint: str, query: str,
+    ) -> Any:  # noqa: ANN401
         """
         Takes an endpoint and the Apicalypse query and returns the api response as a json object.
         """
@@ -87,8 +92,8 @@ async def get_igdb_id(search_string: str) -> int | None:
             "games",
             f'search "{api_search_string}"; fields name; where version_parent = null; limit 50;',
         )
-    except httpx.HTTPError as e:
-        logger.error(f"IGDB request failed: {e}")
+    except httpx.HTTPError:
+        logger.exception("IGDB request failed.")
         return None
 
     best_match: IgdbEntry | None = None
@@ -104,7 +109,7 @@ async def get_igdb_id(search_string: str) -> int | None:
             logger.debug(f"Found match {title} with a score of {(score*100):.0f} %.")
         else:
             logger.debug(
-                f"Ignoring {title} as it's score of {(score*100):.0f} % is too low."
+                f"Ignoring {title} as it's score of {(score*100):.0f} % is too low.",
             )
 
     if best_match is None:
@@ -112,9 +117,9 @@ async def get_igdb_id(search_string: str) -> int | None:
         return None
 
     logger.info(
-        f"{best_match.title} ({best_match.id}) is the best match ({(best_match.score*100):.0f} %)."
+        f"{best_match.title} ({best_match.igdb_id}) is the best match ({(best_match.score*100):.0f} %).",
     )
-    return best_match.id
+    return best_match.igdb_id
 
 
 async def get_igdb_details(
@@ -150,10 +155,11 @@ async def read_data_from_api(igdbid: int) -> list[dict[str, Any]] | None:
             "games",
             f"fields *; where id = {igdbid};",
         )
-        return response
-    except httpx.HTTPError as e:
-        logger.error(f"IGDB request failed: {e}")
+    except httpx.HTTPError:
+        logger.exception("IGDB request failed.")
         return None
+    else:
+        return response
 
 
 async def add_data_from_api(igdb_info: IgdbInfo) -> None:
@@ -163,47 +169,33 @@ async def add_data_from_api(igdb_info: IgdbInfo) -> None:
 
     game = data[0]
 
-    try:
+    with contextlib.suppress(KeyError):
         igdb_info.name = game["name"]
-    except KeyError:
-        pass
 
-    try:
+    with contextlib.suppress(KeyError):
         igdb_info.url = game["url"]
-    except KeyError:
-        pass
 
-    try:
+    with contextlib.suppress(KeyError):
         igdb_info.short_description = game["summary"]
-    except KeyError:
-        pass
 
     try:
         unix_releasedate = game["first_release_date"]
-        timestamp = datetime.utcfromtimestamp(unix_releasedate)
+        timestamp = datetime.fromtimestamp(unix_releasedate, tz=timezone.utc)
         igdb_info.release_date = timestamp.replace(tzinfo=timezone.utc)
     except KeyError:
         pass
 
-    try:
+    with contextlib.suppress(KeyError, ValueError):
         igdb_info.user_score = int(game["rating"])
-    except (KeyError, ValueError):
-        pass
 
-    try:
+    with contextlib.suppress(KeyError):
         igdb_info.user_ratings = game["rating_count"]
-    except KeyError:
-        pass
 
-    try:
+    with contextlib.suppress(KeyError, ValueError):
         igdb_info.meta_score = int(game["aggregated_rating"])
-    except (KeyError, ValueError):
-        pass
 
-    try:
+    with contextlib.suppress(KeyError):
         igdb_info.meta_ratings = game["aggregated_rating_count"]
-    except KeyError:
-        pass
 
     # TODO: Publisher, Genres, Cover
     # genres = List of genres (ids only, have to be called separately)

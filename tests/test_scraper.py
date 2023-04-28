@@ -1,4 +1,6 @@
 # type: ignore
+from __future__ import annotations
+
 import unittest
 from datetime import datetime, timezone
 
@@ -18,213 +20,203 @@ from lootscraper.scraper.loot.ubisoft_games import UbisoftGamesScraper
 
 
 class PlaywrightTests(unittest.IsolatedAsyncioTestCase):
-    async def test_pagedriver(self) -> None:
+    async def test_pagedriver(self: PlaywrightTests) -> None:
         async with get_browser_context() as context:
             page = await context.new_page()
             res = await page.goto("https://google.com/", timeout=30000)
-            self.assertEqual(res.status, 200)
+            assert res.status == 200
 
 
 class AmazonGamesTests(unittest.IsolatedAsyncioTestCase):
-    async def test_games(self) -> None:
+    async def test_games(self: AmazonGamesTests) -> None:
         async with get_browser_context() as context:
             scraper = AmazonGamesScraper(context=context)
             with self.assertNoLogs(level="ERROR"):
                 scraper_results = await scraper.scrape()
             self.assertNoLogs(level="ERROR")
-            self.assertGreater(len(scraper_results), 0)
+            assert len(scraper_results) > 0
             for res in scraper_results:
-                self.assertIsNotNone(res.title)
-                self.assertIsNotNone(res.valid_to)
-                self.assertIsNotNone(res.img_url)
-                self.assertTrue(res.img_url.startswith("https://"))
-                self.assertGreater(
-                    res.valid_to, datetime.now().replace(tzinfo=timezone.utc)
-                )
+                assert res.title is not None
+                assert res.valid_to is not None
+                assert res.img_url is not None
+                assert res.img_url.startswith("https://")
+                assert res.valid_to > datetime.now(tz=timezone.utc)
 
 
 class AmazonLootTests(unittest.IsolatedAsyncioTestCase):
-    async def test_loot(self) -> None:
+    async def test_loot(self: AmazonLootTests) -> None:
         async with get_browser_context() as context:
             scraper = AmazonLootScraper(context=context)
             with self.assertNoLogs(level="ERROR"):
                 scraper_results = await scraper.scrape()
-            self.assertGreater(len(scraper_results), 0)
+            assert len(scraper_results) > 0
             for res in scraper_results:
-                self.assertIsNotNone(res.probable_game_name)
-                self.assertIsNotNone(res.title)
-                self.assertIsNotNone(res.valid_to)
+                assert res.probable_game_name is not None
+                assert res.title is not None
+                assert res.valid_to is not None
                 if res.url is not None:
-                    self.assertTrue(res.url.startswith("https://gaming.amazon.com"))
-                self.assertIsNotNone(res.img_url)
-                self.assertTrue(res.img_url.startswith("https://"))
-                self.assertGreater(
-                    res.valid_to, datetime.now().replace(tzinfo=timezone.utc)
-                )
+                    assert res.url.startswith("https://gaming.amazon.com")
+                assert res.img_url is not None
+                assert res.img_url.startswith("https://")
+                assert res.valid_to > datetime.now(tz=timezone.utc)
 
 
 class AppleGamesTest(unittest.IsolatedAsyncioTestCase):
-    async def test_loot(self) -> None:
+    async def test_loot(self: AppleGamesTest) -> None:
         async with get_browser_context() as context:
             scraper = AppleGamesScraper(context=context)
             with self.assertNoLogs(level="ERROR"):
                 scraper_results = await scraper.scrape()
-            self.assertGreater(len(scraper_results), 0)
+            assert len(scraper_results) > 0
             for res in scraper_results:
-                self.assertIsNotNone(res.probable_game_name)
-                self.assertIsNotNone(res.title)
-                self.assertIsNotNone(res.url)
-                self.assertTrue(res.url.startswith("https://"))
-                self.assertIsNotNone(res.img_url)
-                self.assertTrue(res.img_url.startswith("https://"))
+                assert res.probable_game_name is not None
+                assert res.title is not None
+                assert res.url is not None
+                assert res.url.startswith("https://")
+                assert res.img_url is not None
+                assert res.img_url.startswith("https://")
 
 
 class EpicGamesTest(unittest.IsolatedAsyncioTestCase):
-    async def test_loot(self) -> None:
+    async def test_loot(self: EpicGamesTest) -> None:
         async with get_browser_context() as context:
             scraper = EpicGamesScraper(context=context)
             with self.assertNoLogs(level="ERROR"):
                 scraper_results = await scraper.scrape()
-            self.assertGreater(len(scraper_results), 0)
+            assert len(scraper_results) > 0
             for res in scraper_results:
-                self.assertIsNotNone(res.valid_to)
-                self.assertIsNotNone(res.title)
-                self.assertIsNotNone(res.url)
-                self.assertTrue(res.url.startswith("https://store.epicgames.com/"))
-                self.assertIsNotNone(res.img_url)
-                self.assertTrue(res.img_url.startswith("https://"))
+                assert res.valid_to is not None
+                assert res.title is not None
+                assert res.url is not None
+                assert res.url.startswith("https://store.epicgames.com/")
+                assert res.img_url is not None
+                assert res.img_url.startswith("https://")
 
 
 class GogGamesFreeTest(unittest.IsolatedAsyncioTestCase):
-    async def test_loot(self) -> None:
+    async def test_loot(self: GogGamesFreeTest) -> None:
         async with get_browser_context() as context:
             scraper = GogGamesAlwaysFreeScraper(context=context)
             with self.assertNoLogs(level="ERROR"):
                 scraper_results = await scraper.scrape()
-            self.assertGreater(len(scraper_results), 40)
+            assert len(scraper_results) > 40
             for res in scraper_results:
-                self.assertIsNotNone(res.title)
-                self.assertIsNotNone(res.url)
-                self.assertTrue(res.url.startswith("https://www.gog.com/"))
-                self.assertIsNotNone(res.img_url)
-                self.assertTrue(res.img_url.startswith("https://"))
+                assert res.title is not None
+                assert res.url is not None
+                assert res.url.startswith("https://www.gog.com/")
+                assert res.img_url is not None
+                assert res.img_url.startswith("https://")
 
 
 class GogGamesTest(unittest.IsolatedAsyncioTestCase):
-    async def test_loot(self) -> None:
+    async def test_loot(self: GogGamesTest) -> None:
         async with get_browser_context() as context:
             scraper = GogGamesScraper(context=context)
             with self.assertNoLogs(level="ERROR"):
                 scraper_results = await scraper.scrape()
-            self.assertGreater(len(scraper_results), 0)
+            assert len(scraper_results) > 0
             for res in scraper_results:
-                self.assertIsNotNone(res.title)
-                self.assertIsNotNone(res.url)
-                self.assertTrue(res.url.startswith("https://www.gog.com/"))
-                self.assertIsNotNone(res.img_url)
-                self.assertTrue(res.img_url.startswith("https://"))
+                assert res.title is not None
+                assert res.url is not None
+                assert res.url.startswith("https://www.gog.com/")
+                assert res.img_url is not None
+                assert res.img_url.startswith("https://")
                 # Some offer types do not contain a date
                 if res.valid_to is not None:
-                    self.assertGreater(
-                        res.valid_to, datetime.now().replace(tzinfo=timezone.utc)
-                    )
+                    assert res.valid_to > datetime.now(tz=timezone.utc)
 
 
 class GoogleGamesTest(unittest.IsolatedAsyncioTestCase):
-    async def test_loot(self) -> None:
+    async def test_loot(self: GoogleGamesTest) -> None:
         async with get_browser_context() as context:
             scraper = GoogleGamesScraper(context=context)
             with self.assertNoLogs(level="ERROR"):
                 scraper_results = await scraper.scrape()
-            self.assertGreater(len(scraper_results), 0)
+            assert len(scraper_results) > 0
             for res in scraper_results:
-                self.assertIsNotNone(res.title)
-                self.assertIsNotNone(res.url)
-                self.assertTrue(res.url.startswith("https://appagg.com/"))
-                self.assertIsNotNone(res.img_url)
-                self.assertTrue(res.img_url.startswith("https://"))
+                assert res.title is not None
+                assert res.url is not None
+                assert res.url.startswith("https://appagg.com/")
+                assert res.img_url is not None
+                assert res.img_url.startswith("https://")
 
 
 class HumbleGamesTest(unittest.IsolatedAsyncioTestCase):
-    async def test_loot(self) -> None:
+    async def test_loot(self: HumbleGamesTest) -> None:
         async with get_browser_context() as context:
             scraper = HumbleGamesScraper(context=context)
             with self.assertNoLogs(level="ERROR"):
                 scraper_results = await scraper.scrape()
-            self.assertGreater(len(scraper_results), 0)
+            assert len(scraper_results) > 0
             for res in scraper_results:
-                self.assertIsNotNone(res.title)
-                self.assertIsNotNone(res.url)
-                self.assertTrue(res.url.startswith("https://humblebundle.com/"))
-                self.assertIsNotNone(res.img_url)
-                self.assertTrue(res.img_url.startswith("https://"))
+                assert res.title is not None
+                assert res.url is not None
+                assert res.url.startswith("https://humblebundle.com/")
+                assert res.img_url is not None
+                assert res.img_url.startswith("https://")
 
 
 class ItchGamesTest(unittest.IsolatedAsyncioTestCase):
-    async def test_loot(self) -> None:
+    async def test_loot(self: ItchGamesTest) -> None:
         async with get_browser_context() as context:
             scraper = ItchGamesScraper(context=context)
             with self.assertNoLogs(level="ERROR"):
                 scraper_results = await scraper.scrape()
-            self.assertGreater(len(scraper_results), 0)
+            assert len(scraper_results) > 0
             for res in scraper_results:
-                self.assertIsNotNone(res.title)
-                self.assertIsNotNone(res.url)
-                self.assertTrue(res.url.startswith("https://"))
-                self.assertIsNotNone(res.img_url)
-                self.assertTrue(res.img_url.startswith("https://"))
+                assert res.title is not None
+                assert res.url is not None
+                assert res.url.startswith("https://")
+                assert res.img_url is not None
+                assert res.img_url.startswith("https://")
 
 
 class SteamGamesTest(unittest.IsolatedAsyncioTestCase):
-    async def test_loot(self) -> None:
+    async def test_loot(self: SteamGamesTest) -> None:
         async with get_browser_context() as context:
             scraper = SteamGamesScraper(context=context)
             with self.assertNoLogs(level="ERROR"):
                 scraper_results = await scraper.scrape()
-            self.assertGreater(len(scraper_results), 0)
+            assert len(scraper_results) > 0
             for res in scraper_results:
-                self.assertIsNotNone(res.title)
-                self.assertIsNotNone(res.url)
-                self.assertTrue(res.url.startswith("https://store.steampowered.com/"))
-                self.assertIsNotNone(res.img_url)
-                self.assertTrue(res.img_url.startswith("https://"))
-                self.assertGreater(
-                    res.valid_to, datetime.now().replace(tzinfo=timezone.utc)
-                )
+                assert res.title is not None
+                assert res.url is not None
+                assert res.url.startswith("https://store.steampowered.com/")
+                assert res.img_url is not None
+                assert res.img_url.startswith("https://")
+                assert res.valid_to > datetime.now(tz=timezone.utc)
 
 
 class SteamLootTest(unittest.IsolatedAsyncioTestCase):
-    async def test_loot(self) -> None:
+    async def test_loot(self: SteamLootTest) -> None:
         async with get_browser_context() as context:
             scraper = SteamLootScraper(context=context)
             with self.assertNoLogs(level="ERROR"):
                 scraper_results = await scraper.scrape()
-            self.assertGreater(len(scraper_results), 0)
+            assert len(scraper_results) > 0
             for res in scraper_results:
-                self.assertIsNotNone(res.title)
-                self.assertIsNotNone(res.url)
-                self.assertTrue(res.url.startswith("https://store.steampowered.com/"))
-                self.assertIsNotNone(res.img_url)
-                self.assertTrue(res.img_url.startswith("https://"))
-                self.assertGreater(
-                    res.valid_to, datetime.now().replace(tzinfo=timezone.utc)
-                )
+                assert res.title is not None
+                assert res.url is not None
+                assert res.url.startswith("https://store.steampowered.com/")
+                assert res.img_url is not None
+                assert res.img_url.startswith("https://")
+                assert res.valid_to > datetime.now(tz=timezone.utc)
 
 
 class UbisoftGamesTest(unittest.IsolatedAsyncioTestCase):
-    async def test_loot(self) -> None:
+    async def test_loot(self: UbisoftGamesTest) -> None:
         async with get_browser_context() as context:
             scraper = UbisoftGamesScraper(context=context)
             with self.assertNoLogs(level="ERROR"):
                 scraper_results = await scraper.scrape()
-            self.assertGreater(len(scraper_results), 0)
+            assert len(scraper_results) > 0
             for res in scraper_results:
-                self.assertIsNotNone(res.valid_to)
-                self.assertIsNotNone(res.title)
-                self.assertIsNotNone(res.url)
-                self.assertTrue(res.url.startswith("https://store.ubi.com/"))
-                self.assertIsNotNone(res.img_url)
-                self.assertTrue(res.img_url.startswith("https://"))
+                assert res.valid_to is not None
+                assert res.title is not None
+                assert res.url is not None
+                assert res.url.startswith("https://store.ubi.com/")
+                assert res.img_url is not None
+                assert res.img_url.startswith("https://")
 
 
 if __name__ == "__main__":

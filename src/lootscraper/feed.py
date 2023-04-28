@@ -2,9 +2,9 @@
 import asyncio
 import html
 import logging
-from datetime import datetime
+from collections.abc import Sequence
 from pathlib import Path
-from typing import Sequence
+from typing import TYPE_CHECKING
 
 from feedgen.feed import FeedEntry, FeedGenerator
 
@@ -18,6 +18,9 @@ from .common import (
     OfferType,
     Source,
 )
+
+if TYPE_CHECKING:
+    from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
@@ -84,7 +87,7 @@ async def generate_feed(
                 "name": author_name,
                 "email": author_mail,
                 "uri": author_web,
-            }
+            },
         )
         # - Content
         game: Game = offer.game
@@ -192,14 +195,15 @@ async def generate_feed(
             "name": author_name,
             "email": author_mail,
             "uri": author_web,
-        }
+        },
     )
     # Atom Optional
     # - Category
     # - Contributor
     # - Generator
     feed_generator.generator(
-        generator="LootScraper", uri="https://github.com/eikowagenknecht/lootscraper"
+        generator="LootScraper",
+        uri="https://github.com/eikowagenknecht/lootscraper",
     )
     # - Icon
     # - Logo
@@ -216,12 +220,13 @@ def get_feed_id(filename: str) -> str:
     if len(parts) == 1:
         return ""  # Main feed
 
-    subfeed = parts[1][0:-4]
-    return subfeed
+    return parts[1][0:-4]
 
 
 def get_feed_title(
-    source: Source | None, type_: OfferType | None, duration: OfferDuration | None
+    source: Source | None,
+    type_: OfferType | None,
+    duration: OfferDuration | None,
 ) -> str:
     if source is None and type_ is None and duration is None:
         return "Free Games and Loot"

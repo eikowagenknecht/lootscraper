@@ -6,11 +6,9 @@ Create Date: 2023-02-02 10:07:20.108271+00:00
 
 """
 
-# pylint: disable=no-member
-
 import sqlalchemy as sa
-from alembic import op
 
+from alembic import op
 from lootscraper.database import AwareDateTime
 
 # revision identifiers, used by Alembic.
