@@ -87,8 +87,6 @@ select = [
 ignore = [
     "S101", # Use of assert detected
     "E501", # Line too long
-    "ANN101", # Missing type annotation for self in method
-    "PLR2004", # Magic value in comparison
     "TRY003", # Long messages in exceptions
 ] 
 

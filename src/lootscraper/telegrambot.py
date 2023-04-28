@@ -93,7 +93,7 @@ logger = logging.getLogger(__name__)
 
 class TelegramBot:
     def __init__(
-        self,
+        self: TelegramBot,
         config: ParsedConfig,
         scoped_session: orm.scoped_session[orm.Session],
     ) -> None:
@@ -101,7 +101,7 @@ class TelegramBot:
         self.Session = scoped_session
         self.application: Application | None = None  # type: ignore
 
-    async def __aenter__(self) -> TelegramBot:
+    async def __aenter__(self: TelegramBot) -> TelegramBot:
         try:
             await self.start()
         except TelegramError:
@@ -110,7 +110,7 @@ class TelegramBot:
         return self
 
     async def __aexit__(
-        self,
+        self: TelegramBot,
         exc_type: type[BaseException] | None,
         exc_value: BaseException | None,
         traceback_: TracebackType | None,
@@ -118,7 +118,7 @@ class TelegramBot:
         if self.application is not None:
             await self.stop()
 
-    async def start(self) -> None:
+    async def start(self: TelegramBot) -> None:
         """
         Start the bot.
         """
@@ -191,7 +191,7 @@ class TelegramBot:
             )
             logger.info("Started listening for messages from Telegram")
 
-    async def stop(self) -> None:
+    async def stop(self: TelegramBot) -> None:
         """
         Stop the bot. The application needs to be restarted manually.
         See https://github.com/python-telegram-bot/python-telegram-bot/issues/801
@@ -206,7 +206,7 @@ class TelegramBot:
         await self.application.shutdown()
         logger.info("Stopped listening for messages from Telegram")
 
-    def updater_error_handler(self, error: TelegramError) -> None:
+    def updater_error_handler(self: TelegramBot, error: TelegramError) -> None:
         # Multiple bot instances, abort to avoid Telegram punishing API key misuse!
         if isinstance(error, telegram.error.Conflict):
             error_text = "Multiple instances of the same bot running, shutting down myself to avoid further conflicts."
@@ -220,7 +220,7 @@ class TelegramBot:
 
         logger.error(f"Error while polling for messages from Telegram: {error}")
 
-    async def notify_admin_and_stop(self, error_text: str) -> None:
+    async def notify_admin_and_stop(self: TelegramBot, error_text: str) -> None:
         await self.send_message(
             chat_id=Config.get().telegram_developer_chat_id,
             text=error_text,
@@ -230,7 +230,7 @@ class TelegramBot:
         await self.stop()
 
     async def error_handler(
-        self,
+        self: TelegramBot,
         update: object,
         context: ContextTypes.DEFAULT_TYPE,
     ) -> None:
@@ -306,7 +306,7 @@ class TelegramBot:
         logger.error(full_debug_message)
 
     async def announce_command(
-        self,
+        self: TelegramBot,
         update: Update,
         context: ContextTypes.DEFAULT_TYPE,
     ) -> None:
@@ -361,7 +361,7 @@ class TelegramBot:
             )
 
     async def channel_command(
-        self,
+        self: TelegramBot,
         update: Update,
         context: ContextTypes.DEFAULT_TYPE,
     ) -> None:
@@ -467,7 +467,7 @@ class TelegramBot:
             )
 
     async def debug_command(
-        self,
+        self: TelegramBot,
         update: Update,
         context: ContextTypes.DEFAULT_TYPE,
     ) -> None:
@@ -493,7 +493,7 @@ class TelegramBot:
             )
 
     async def error_command(
-        self,
+        self: TelegramBot,
         update: Update,
         context: ContextTypes.DEFAULT_TYPE,
     ) -> None:
@@ -508,7 +508,7 @@ class TelegramBot:
         )
 
     async def help_command(
-        self,
+        self: TelegramBot,
         update: Update,
         context: ContextTypes.DEFAULT_TYPE,
     ) -> None:
@@ -524,7 +524,7 @@ class TelegramBot:
         await update.message.reply_markdown_v2(MESSAGE_HELP)
 
     async def leave_command(
-        self,
+        self: TelegramBot,
         update: Update,
         context: ContextTypes.DEFAULT_TYPE,
     ) -> None:
@@ -566,7 +566,7 @@ class TelegramBot:
         await update.message.reply_markdown_v2(message)
 
     async def manage_command(
-        self,
+        self: TelegramBot,
         update: Update,
         context: ContextTypes.DEFAULT_TYPE,
     ) -> None:
@@ -590,7 +590,7 @@ class TelegramBot:
         )
 
     async def refresh_command(
-        self,
+        self: TelegramBot,
         update: Update,
         context: ContextTypes.DEFAULT_TYPE,
     ) -> None:
@@ -631,7 +631,7 @@ class TelegramBot:
             )
 
     async def start_command(
-        self,
+        self: TelegramBot,
         update: Update,
         context: ContextTypes.DEFAULT_TYPE,
     ) -> None:
@@ -729,7 +729,7 @@ class TelegramBot:
             )
 
     async def status_command(
-        self,
+        self: TelegramBot,
         update: Update,
         context: ContextTypes.DEFAULT_TYPE,
     ) -> None:
@@ -802,7 +802,7 @@ class TelegramBot:
         await update.message.reply_markdown_v2(message)
 
     async def timezone_command(
-        self,
+        self: TelegramBot,
         update: Update,
         context: ContextTypes.DEFAULT_TYPE,
     ) -> None:
@@ -823,7 +823,7 @@ class TelegramBot:
         )
 
     async def unknown_command(
-        self,
+        self: TelegramBot,
         update: Update,
         context: ContextTypes.DEFAULT_TYPE,
     ) -> None:
@@ -855,7 +855,7 @@ class TelegramBot:
         )
 
     async def offer_callback(
-        self,
+        self: TelegramBot,
         update: Update,
         context: ContextTypes.DEFAULT_TYPE,
     ) -> None:
@@ -915,7 +915,7 @@ class TelegramBot:
             raise
 
     async def dismiss_callback(
-        self,
+        self: TelegramBot,
         update: Update,
         context: ContextTypes.DEFAULT_TYPE,
     ) -> None:
@@ -947,7 +947,7 @@ class TelegramBot:
             return
 
     async def close_callback(
-        self,
+        self: TelegramBot,
         update: Update,
         context: ContextTypes.DEFAULT_TYPE,
     ) -> None:
@@ -975,7 +975,7 @@ class TelegramBot:
         await self.refresh_command(update, context)
 
     async def toggle_subscription_callback(
-        self,
+        self: TelegramBot,
         update: Update,
         context: ContextTypes.DEFAULT_TYPE,
     ) -> None:
@@ -1015,7 +1015,7 @@ class TelegramBot:
         )
 
     async def set_timezone_callback(
-        self,
+        self: TelegramBot,
         update: Update,
         context: ContextTypes.DEFAULT_TYPE,
     ) -> None:
@@ -1047,7 +1047,7 @@ class TelegramBot:
             text=f"Timezone offset set to {data} hours from UTC. {MESSAGE_TIMEZONE_MENU_CLOSED}",
         )
 
-    async def send_new_offers(self, user: User) -> bool:
+    async def send_new_offers(self: TelegramBot, user: User) -> bool:
         """Send all new offers for the user."""
 
         subscriptions = user.telegram_subscriptions
@@ -1116,7 +1116,7 @@ class TelegramBot:
 
         return bool(offers_sent)
 
-    async def send_new_announcements(self, user: User) -> None:
+    async def send_new_announcements(self: TelegramBot, user: User) -> None:
         session: orm.Session = self.Session()
         try:
             announcements: Sequence[Announcement] = (
@@ -1148,7 +1148,10 @@ class TelegramBot:
             session.rollback()
             raise
 
-    def get_user_by_telegram_id(self, telegram_id: int | str) -> User | None:
+    def get_user_by_telegram_id(
+        self: TelegramBot,
+        telegram_id: int | str,
+    ) -> User | None:
         session: orm.Session = self.Session()
         try:
             db_user = (
@@ -1162,7 +1165,7 @@ class TelegramBot:
 
         return db_user
 
-    def get_user_by_chat_id(self, chat_id: int | str) -> User | None:
+    def get_user_by_chat_id(self: TelegramBot, chat_id: int | str) -> User | None:
         try:
             session: orm.Session = self.Session()
             db_user = (
@@ -1177,7 +1180,7 @@ class TelegramBot:
         return db_user
 
     def is_subscribed(
-        self,
+        self: TelegramBot,
         user: User,
         type_: OfferType,
         source: Source,
@@ -1205,7 +1208,7 @@ class TelegramBot:
         return existing_subscriptions > 0
 
     def subscribe(
-        self,
+        self: TelegramBot,
         user: User,
         type_: OfferType,
         source: Source,
@@ -1230,7 +1233,7 @@ class TelegramBot:
             raise
 
     def unsubscribe(
-        self,
+        self: TelegramBot,
         user: User,
         type_: OfferType,
         source: Source,
@@ -1252,7 +1255,7 @@ class TelegramBot:
             raise
 
     async def manage_menu(
-        self,
+        self: TelegramBot,
         update: Update,
         context: ContextTypes.DEFAULT_TYPE,
     ) -> None:
@@ -1272,7 +1275,7 @@ class TelegramBot:
             reply_markup=self.manage_keyboard(db_user),
         )
 
-    def manage_keyboard(self, user: User) -> InlineKeyboardMarkup:
+    def manage_keyboard(self: TelegramBot, user: User) -> InlineKeyboardMarkup:
         keyboard: list[list[InlineKeyboardButton]] = []
 
         # Add buttons for all available categories
@@ -1311,7 +1314,7 @@ class TelegramBot:
 
         return InlineKeyboardMarkup(keyboard)
 
-    def timezone_keyboard(self) -> InlineKeyboardMarkup:
+    def timezone_keyboard(self: TelegramBot) -> InlineKeyboardMarkup:
         keyboard: list[list[InlineKeyboardButton]] = []
 
         # Add buttons for all available categories
@@ -1335,7 +1338,7 @@ class TelegramBot:
         return InlineKeyboardMarkup(keyboard)
 
     def offer_keyboard(
-        self,
+        self: TelegramBot,
         offer: Offer,
         details_show_button: bool = False,
         details_hide_button: bool = False,
@@ -1381,7 +1384,7 @@ class TelegramBot:
 
         return InlineKeyboardMarkup(keyboard)
 
-    async def send_offer(self, offer: Offer, user: User) -> bool:
+    async def send_offer(self: TelegramBot, offer: Offer, user: User) -> bool:
         logger.debug(
             f"Sending offer {offer.title} to Telegram user {user.telegram_id}.",
         )
@@ -1424,7 +1427,11 @@ class TelegramBot:
         )
         return success is not None
 
-    async def send_announcement(self, announcement: Announcement, user: User) -> None:
+    async def send_announcement(
+        self: TelegramBot,
+        announcement: Announcement,
+        user: User,
+    ) -> None:
         logger.debug(
             f"Sending announcement {announcement.id} to Telegram user {user.telegram_id}.",
         )
@@ -1434,7 +1441,12 @@ class TelegramBot:
             reply_markup=None,
         )
 
-    def offer_message(self, offer: Offer, *, tzoffset: int | None = 0) -> str:
+    def offer_message(
+        self: TelegramBot,
+        offer: Offer,
+        *,
+        tzoffset: int | None = 0,
+    ) -> str:
         source = offer.source.value
         additional_info = offer.type.value
         if offer.duration != OfferDuration.CLAIMABLE:
@@ -1488,7 +1500,12 @@ class TelegramBot:
 
         return content
 
-    def offer_details_message(self, offer: Offer, *, tzoffset: int | None = 0) -> str:
+    def offer_details_message(
+        self: TelegramBot,
+        offer: Offer,
+        *,
+        tzoffset: int | None = 0,
+    ) -> str:
         content = self.offer_message(offer, tzoffset=tzoffset)
 
         if offer.game:
@@ -1569,7 +1586,7 @@ class TelegramBot:
         return content
 
     async def send_message(
-        self,
+        self: TelegramBot,
         chat_id: int | str,
         text: str,
         parse_mode: str | None = telegram.constants.ParseMode.MARKDOWN_V2,
@@ -1626,7 +1643,7 @@ class TelegramBot:
 
         return None
 
-    def deactivate_user(self, chat_id: int | str, reason: str) -> None:
+    def deactivate_user(self: TelegramBot, chat_id: int | str, reason: str) -> None:
         db_user = self.get_user_by_chat_id(chat_id)
 
         if db_user is None:
@@ -1643,7 +1660,7 @@ class TelegramBot:
             session.rollback()
             raise
 
-    def remove_user(self, chat_id: int | str) -> None:
+    def remove_user(self: TelegramBot, chat_id: int | str) -> None:
         db_user = self.get_user_by_chat_id(chat_id)
 
         if db_user is None:
@@ -1660,7 +1677,7 @@ class TelegramBot:
             session.rollback()
             raise
 
-    async def log_call(self, update: Update) -> None:
+    async def log_call(self: TelegramBot, update: Update) -> None:
         # Only log calls from users if the log level is set to debug.
         if Config.get().telegram_log_level.value >= TelegramLogLevel.DEBUG.value:
             type_ = "Callback query" if update.callback_query else "Message"
@@ -1686,7 +1703,7 @@ class TelegramBot:
                 text=message,
             )
 
-    def add_announcement(self, header: str, text: str) -> None:
+    def add_announcement(self: TelegramBot, header: str, text: str) -> None:
         """
         Add an announcement to the database
         """
@@ -1711,11 +1728,11 @@ class TelegramBot:
 
 
 class TelegramLoggingHandler(logging.Handler):
-    def __init__(self, bot: TelegramBot) -> None:
+    def __init__(self: TelegramLoggingHandler, bot: TelegramBot) -> None:
         super().__init__()
         self.bot = bot
 
-    def emit(self, record: logging.LogRecord) -> None:
+    def emit(self: TelegramLoggingHandler, record: logging.LogRecord) -> None:
         """Try to send a log message to telegram."""
 
         try:

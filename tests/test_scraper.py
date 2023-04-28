@@ -1,4 +1,6 @@
 # type: ignore
+from __future__ import annotations
+
 import unittest
 from datetime import datetime, timezone
 
@@ -18,7 +20,7 @@ from lootscraper.scraper.loot.ubisoft_games import UbisoftGamesScraper
 
 
 class PlaywrightTests(unittest.IsolatedAsyncioTestCase):
-    async def test_pagedriver(self) -> None:
+    async def test_pagedriver(self: PlaywrightTests) -> None:
         async with get_browser_context() as context:
             page = await context.new_page()
             res = await page.goto("https://google.com/", timeout=30000)
@@ -26,7 +28,7 @@ class PlaywrightTests(unittest.IsolatedAsyncioTestCase):
 
 
 class AmazonGamesTests(unittest.IsolatedAsyncioTestCase):
-    async def test_games(self) -> None:
+    async def test_games(self: AmazonGamesTests) -> None:
         async with get_browser_context() as context:
             scraper = AmazonGamesScraper(context=context)
             with self.assertNoLogs(level="ERROR"):
@@ -42,7 +44,7 @@ class AmazonGamesTests(unittest.IsolatedAsyncioTestCase):
 
 
 class AmazonLootTests(unittest.IsolatedAsyncioTestCase):
-    async def test_loot(self) -> None:
+    async def test_loot(self: AmazonLootTests) -> None:
         async with get_browser_context() as context:
             scraper = AmazonLootScraper(context=context)
             with self.assertNoLogs(level="ERROR"):
@@ -60,7 +62,7 @@ class AmazonLootTests(unittest.IsolatedAsyncioTestCase):
 
 
 class AppleGamesTest(unittest.IsolatedAsyncioTestCase):
-    async def test_loot(self) -> None:
+    async def test_loot(self: AppleGamesTest) -> None:
         async with get_browser_context() as context:
             scraper = AppleGamesScraper(context=context)
             with self.assertNoLogs(level="ERROR"):
@@ -76,7 +78,7 @@ class AppleGamesTest(unittest.IsolatedAsyncioTestCase):
 
 
 class EpicGamesTest(unittest.IsolatedAsyncioTestCase):
-    async def test_loot(self) -> None:
+    async def test_loot(self: EpicGamesTest) -> None:
         async with get_browser_context() as context:
             scraper = EpicGamesScraper(context=context)
             with self.assertNoLogs(level="ERROR"):
@@ -92,7 +94,7 @@ class EpicGamesTest(unittest.IsolatedAsyncioTestCase):
 
 
 class GogGamesFreeTest(unittest.IsolatedAsyncioTestCase):
-    async def test_loot(self) -> None:
+    async def test_loot(self: GogGamesFreeTest) -> None:
         async with get_browser_context() as context:
             scraper = GogGamesAlwaysFreeScraper(context=context)
             with self.assertNoLogs(level="ERROR"):
@@ -107,7 +109,7 @@ class GogGamesFreeTest(unittest.IsolatedAsyncioTestCase):
 
 
 class GogGamesTest(unittest.IsolatedAsyncioTestCase):
-    async def test_loot(self) -> None:
+    async def test_loot(self: GogGamesTest) -> None:
         async with get_browser_context() as context:
             scraper = GogGamesScraper(context=context)
             with self.assertNoLogs(level="ERROR"):
@@ -125,7 +127,7 @@ class GogGamesTest(unittest.IsolatedAsyncioTestCase):
 
 
 class GoogleGamesTest(unittest.IsolatedAsyncioTestCase):
-    async def test_loot(self) -> None:
+    async def test_loot(self: GoogleGamesTest) -> None:
         async with get_browser_context() as context:
             scraper = GoogleGamesScraper(context=context)
             with self.assertNoLogs(level="ERROR"):
@@ -140,7 +142,7 @@ class GoogleGamesTest(unittest.IsolatedAsyncioTestCase):
 
 
 class HumbleGamesTest(unittest.IsolatedAsyncioTestCase):
-    async def test_loot(self) -> None:
+    async def test_loot(self: HumbleGamesTest) -> None:
         async with get_browser_context() as context:
             scraper = HumbleGamesScraper(context=context)
             with self.assertNoLogs(level="ERROR"):
@@ -155,7 +157,7 @@ class HumbleGamesTest(unittest.IsolatedAsyncioTestCase):
 
 
 class ItchGamesTest(unittest.IsolatedAsyncioTestCase):
-    async def test_loot(self) -> None:
+    async def test_loot(self: ItchGamesTest) -> None:
         async with get_browser_context() as context:
             scraper = ItchGamesScraper(context=context)
             with self.assertNoLogs(level="ERROR"):
@@ -170,7 +172,7 @@ class ItchGamesTest(unittest.IsolatedAsyncioTestCase):
 
 
 class SteamGamesTest(unittest.IsolatedAsyncioTestCase):
-    async def test_loot(self) -> None:
+    async def test_loot(self: SteamGamesTest) -> None:
         async with get_browser_context() as context:
             scraper = SteamGamesScraper(context=context)
             with self.assertNoLogs(level="ERROR"):
@@ -186,7 +188,7 @@ class SteamGamesTest(unittest.IsolatedAsyncioTestCase):
 
 
 class SteamLootTest(unittest.IsolatedAsyncioTestCase):
-    async def test_loot(self) -> None:
+    async def test_loot(self: SteamLootTest) -> None:
         async with get_browser_context() as context:
             scraper = SteamLootScraper(context=context)
             with self.assertNoLogs(level="ERROR"):
@@ -202,7 +204,7 @@ class SteamLootTest(unittest.IsolatedAsyncioTestCase):
 
 
 class UbisoftGamesTest(unittest.IsolatedAsyncioTestCase):
-    async def test_loot(self) -> None:
+    async def test_loot(self: UbisoftGamesTest) -> None:
         async with get_browser_context() as context:
             scraper = UbisoftGamesScraper(context=context)
             with self.assertNoLogs(level="ERROR"):

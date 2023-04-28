@@ -1,9 +1,10 @@
+from __future__ import annotations
+
 import logging
 import urllib.parse
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
-
-from playwright.async_api import Locator, Page
+from typing import TYPE_CHECKING
 
 from lootscraper.browser import get_new_page
 from lootscraper.common import OfferDuration, Source
@@ -11,6 +12,9 @@ from lootscraper.database import Offer
 from lootscraper.scraper.info.steam import skip_age_verification
 from lootscraper.scraper.info.utils import clean_title
 from lootscraper.scraper.loot.scraper import OfferHandler, RawOffer, Scraper
+
+if TYPE_CHECKING:
+    from playwright.async_api import Locator, Page
 
 logger = logging.getLogger(__name__)
 
@@ -34,10 +38,10 @@ class SteamBaseScraper(Scraper):
     def get_duration() -> OfferDuration:
         return OfferDuration.CLAIMABLE
 
-    def get_steam_category(self) -> int:
+    def get_steam_category(self: SteamBaseScraper) -> int:
         raise NotImplementedError("Please implement this method")
 
-    def get_offer_handlers(self, page: Page) -> list[OfferHandler]:
+    def get_offer_handlers(self: SteamBaseScraper, page: Page) -> list[OfferHandler]:
         return [
             OfferHandler(
                 page.locator("#search_results a"),
@@ -46,7 +50,7 @@ class SteamBaseScraper(Scraper):
             ),
         ]
 
-    def get_offers_url(self) -> str:
+    def get_offers_url(self: SteamBaseScraper) -> str:
         params = {
             "maxprice": "free",
             "category1": self.get_steam_category(),  # Games or DLC
@@ -55,13 +59,13 @@ class SteamBaseScraper(Scraper):
 
         return f"{SEARCH_URL}?{urllib.parse.urlencode(params)}"
 
-    def get_page_ready_selector(self) -> str:
+    def get_page_ready_selector(self: SteamBaseScraper) -> str:
         return "#search_results"
 
-    def get_validtext_locator(self, page: Page) -> Locator:
+    def get_validtext_locator(self: SteamBaseScraper, page: Page) -> Locator:
         raise NotImplementedError("Please implement this method")
 
-    async def read_raw_offer(self, element: Locator) -> SteamRawOffer:
+    async def read_raw_offer(self: SteamBaseScraper, element: Locator) -> SteamRawOffer:
         title = await element.locator(".title").text_content()
         if title is None:
             raise ValueError("Couldn't find title.")
@@ -95,7 +99,7 @@ class SteamBaseScraper(Scraper):
             text=text,
         )
 
-    def normalize_offer(self, raw_offer: RawOffer) -> Offer:
+    def normalize_offer(self: SteamBaseScraper, raw_offer: RawOffer) -> Offer:
         if not isinstance(raw_offer, SteamRawOffer):
             raise TypeError("Wrong type of raw offer.")
 

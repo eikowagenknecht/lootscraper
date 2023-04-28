@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import contextlib
 import logging
 from dataclasses import dataclass
@@ -30,12 +32,12 @@ class IGDBWrapper:
     Asynchronous IGDB wrapper module for the api v4 with Apicalypse syntax.
     """
 
-    def __init__(self, client_id: str, client_secret: str) -> None:
+    def __init__(self: IGDBWrapper, client_id: str, client_secret: str) -> None:
         self.client_id = client_id
         self.client_secret = client_secret
         self.auth_token: str | None = None
 
-    async def authorize(self) -> None:
+    async def authorize(self: IGDBWrapper) -> None:
         """
         Authorize with IGDB and get a token for the session.
         """
@@ -51,7 +53,9 @@ class IGDBWrapper:
             result.raise_for_status()
             self.auth_token = result.json()["access_token"]
 
-    async def api_request(self, endpoint: str, query: str) -> Any:  # noqa: ANN401
+    async def api_request(
+        self: IGDBWrapper, endpoint: str, query: str,
+    ) -> Any:  # noqa: ANN401
         """
         Takes an endpoint and the Apicalypse query and returns the api response as a json object.
         """

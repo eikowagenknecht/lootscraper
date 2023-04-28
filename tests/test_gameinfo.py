@@ -1,4 +1,6 @@
 # type: ignore
+from __future__ import annotations
+
 import unittest
 
 from lootscraper.browser import get_browser_context
@@ -7,7 +9,7 @@ from lootscraper.scraper.info.steam import get_steam_details, get_steam_id
 
 
 class IGDBGameInfoTests(unittest.IsolatedAsyncioTestCase):
-    async def test_igdb_id_resolution(self) -> None:
+    async def test_igdb_id_resolution(self: IGDBGameInfoTests) -> None:
         expected_id: int = 7360  # Tom Clancy's Rainbow Six® Siege
         with self.assertNoLogs(level="ERROR"):
             scraped_id: int = await get_igdb_id(
@@ -15,7 +17,9 @@ class IGDBGameInfoTests(unittest.IsolatedAsyncioTestCase):
             )
         assert expected_id == scraped_id
 
-    async def test_igdb_id_resolution_with_special_chars(self) -> None:
+    async def test_igdb_id_resolution_with_special_chars(
+        self: IGDBGameInfoTests,
+    ) -> None:
         expected_id: int = 66
         with self.assertNoLogs(level="ERROR"):
             scraped_id: int = await get_igdb_id(
@@ -23,7 +27,7 @@ class IGDBGameInfoTests(unittest.IsolatedAsyncioTestCase):
             )
         assert expected_id == scraped_id
 
-    async def test_igdb_details_counterstrike(self) -> None:
+    async def test_igdb_details_counterstrike(self: IGDBGameInfoTests) -> None:
         with self.assertNoLogs(level="ERROR"):
             igdb_info = await get_igdb_details(
                 title="Counter-Strike",
@@ -41,7 +45,7 @@ class IGDBGameInfoTests(unittest.IsolatedAsyncioTestCase):
 
 
 class SteamGameInfoTests(unittest.IsolatedAsyncioTestCase):
-    async def test_steam_appid_resolution(self) -> None:
+    async def test_steam_appid_resolution(self: SteamGameInfoTests) -> None:
         async with get_browser_context() as context:
             expected_id: int = 359550  # Tom Clancy's Rainbow Six® Siege
             with self.assertNoLogs(level="ERROR"):
@@ -51,7 +55,7 @@ class SteamGameInfoTests(unittest.IsolatedAsyncioTestCase):
                 )
             assert expected_id == scraped_id
 
-    async def test_steam_appid_no_match(self) -> None:
+    async def test_steam_appid_no_match(self: SteamGameInfoTests) -> None:
         async with get_browser_context() as context:
             expected_id = None  # Tom Clancy's Rainbow Six® Siege
             with self.assertNoLogs(level="ERROR"):
@@ -61,7 +65,9 @@ class SteamGameInfoTests(unittest.IsolatedAsyncioTestCase):
                 )
             assert expected_id == scraped_id
 
-    async def test_steam_appid_resolution_with_special_chars(self) -> None:
+    async def test_steam_appid_resolution_with_special_chars(
+        self: SteamGameInfoTests,
+    ) -> None:
         async with get_browser_context() as context:
             expected_id: int = 32460
             with self.assertNoLogs(level="ERROR"):
@@ -71,7 +77,7 @@ class SteamGameInfoTests(unittest.IsolatedAsyncioTestCase):
                 )
             assert expected_id == scraped_id
 
-    async def test_steam_details_counterstrike(self) -> None:
+    async def test_steam_details_counterstrike(self: SteamGameInfoTests) -> None:
         async with get_browser_context() as context:
             with self.assertNoLogs(level="ERROR"):
                 steam_info = await get_steam_details(
@@ -94,7 +100,7 @@ class SteamGameInfoTests(unittest.IsolatedAsyncioTestCase):
                 == "https://www.metacritic.com/game/pc/counter-strike?ftag=MCD-06-10aaa1f"
             )
 
-    async def test_steam_details_rainbowsix(self) -> None:
+    async def test_steam_details_rainbowsix(self: SteamGameInfoTests) -> None:
         async with get_browser_context() as context:
             with self.assertNoLogs(level="ERROR"):
                 steam_info = await get_steam_details(
@@ -114,7 +120,7 @@ class SteamGameInfoTests(unittest.IsolatedAsyncioTestCase):
             assert steam_info.metacritic_score is None
             assert steam_info.metacritic_url is None
 
-    async def test_steam_release_date(self) -> None:
+    async def test_steam_release_date(self: SteamGameInfoTests) -> None:
         async with get_browser_context() as context:
             with self.assertNoLogs(level="ERROR"):
                 steam_info = await get_steam_details(
@@ -126,7 +132,7 @@ class SteamGameInfoTests(unittest.IsolatedAsyncioTestCase):
             assert steam_info.release_date is not None
             assert steam_info.release_date.isoformat() == "2019-06-09T00:00:00+00:00"
 
-    async def test_steam_recommendations(self) -> None:
+    async def test_steam_recommendations(self: SteamGameInfoTests) -> None:
         async with get_browser_context() as context:
             with self.assertNoLogs(level="ERROR"):
                 steam_info = await get_steam_details(
@@ -137,7 +143,7 @@ class SteamGameInfoTests(unittest.IsolatedAsyncioTestCase):
             assert steam_info.name == "Riverbond"
             assert steam_info.recommendations is not None
 
-    async def test_steam_no_rating(self) -> None:
+    async def test_steam_no_rating(self: SteamGameInfoTests) -> None:
         async with get_browser_context() as context:
             with self.assertNoLogs(level="ERROR"):
                 steam_info = await get_steam_details(
@@ -151,7 +157,7 @@ class SteamGameInfoTests(unittest.IsolatedAsyncioTestCase):
     # This is a weird one where without the cc parameter the price had been
     # shown in "KWR" in the JSON, so the store page had to be used instead to
     # get the price in EUR. Hopefully not needed any more.
-    async def test_steam_price_currency(self) -> None:
+    async def test_steam_price_currency(self: SteamGameInfoTests) -> None:
         async with get_browser_context() as context:
             with self.assertNoLogs(level="ERROR"):
                 steam_info = await get_steam_details(
@@ -162,7 +168,7 @@ class SteamGameInfoTests(unittest.IsolatedAsyncioTestCase):
             assert steam_info.name == "Cities: Skylines"
             assert steam_info.recommended_price_eur == 27.99
 
-    async def test_steam_price_free(self) -> None:
+    async def test_steam_price_free(self: SteamGameInfoTests) -> None:
         async with get_browser_context() as context:
             with self.assertNoLogs(level="ERROR"):
                 steam_info = await get_steam_details(
@@ -173,7 +179,7 @@ class SteamGameInfoTests(unittest.IsolatedAsyncioTestCase):
             assert steam_info.name == "World of Tanks"
             assert steam_info.recommended_price_eur == 0
 
-    async def test_steam_price_none(self) -> None:
+    async def test_steam_price_none(self: SteamGameInfoTests) -> None:
         async with get_browser_context() as context:
             with self.assertNoLogs(level="ERROR"):
                 steam_info = await get_steam_details(
@@ -184,7 +190,7 @@ class SteamGameInfoTests(unittest.IsolatedAsyncioTestCase):
             assert steam_info.name == "Grand Theft Auto V"
             assert steam_info.recommended_price_eur is None
 
-    async def test_steam_price_weekend(self) -> None:
+    async def test_steam_price_weekend(self: SteamGameInfoTests) -> None:
         # This game is free on the weekend, that changes the page layout
         # Obviously this test will not prove anything if the game currently is
         # not free on the weekend.
@@ -198,7 +204,7 @@ class SteamGameInfoTests(unittest.IsolatedAsyncioTestCase):
             assert steam_info.name == "Call of Duty®: Modern Warfare® II"
             assert steam_info.recommended_price_eur == 69.99
 
-    async def test_steam_no_reviews(self) -> None:
+    async def test_steam_no_reviews(self: SteamGameInfoTests) -> None:
         # Obviously this test will not prove anything if the game now has reviews
         async with get_browser_context() as context:
             with self.assertNoLogs(level="ERROR"):
@@ -210,7 +216,7 @@ class SteamGameInfoTests(unittest.IsolatedAsyncioTestCase):
             assert steam_info.name == "Candy Kombat"
             assert steam_info.percent is None
 
-    async def test_steam_price_ea_included(self) -> None:
+    async def test_steam_price_ea_included(self: SteamGameInfoTests) -> None:
         # This game is included with EA Play, that changes the page layout
         async with get_browser_context() as context:
             with self.assertNoLogs(level="ERROR"):
@@ -222,7 +228,7 @@ class SteamGameInfoTests(unittest.IsolatedAsyncioTestCase):
             assert steam_info.name == "Battlefield™ 2042"
             assert steam_info.recommended_price_eur == 59.99
 
-    async def test_steam_language(self) -> None:
+    async def test_steam_language(self: SteamGameInfoTests) -> None:
         async with get_browser_context() as context:
             with self.assertNoLogs(level="ERROR"):
                 steam_info = await get_steam_details(
@@ -233,7 +239,7 @@ class SteamGameInfoTests(unittest.IsolatedAsyncioTestCase):
             assert steam_info.name == "Warframe"
             assert steam_info.short_description[0:6] == "Awaken"
 
-    async def test_steam_skip_age_check(self) -> None:
+    async def test_steam_skip_age_check(self: SteamGameInfoTests) -> None:
         async with get_browser_context() as context:
             with self.assertNoLogs(level="ERROR"):
                 steam_info = await get_steam_details(
@@ -244,7 +250,7 @@ class SteamGameInfoTests(unittest.IsolatedAsyncioTestCase):
             assert steam_info.name == "DOOM Eternal"
             assert steam_info.release_date.isoformat() == "2020-03-19T00:00:00+00:00"
 
-    async def test_steam_multiple_genres(self) -> None:
+    async def test_steam_multiple_genres(self: SteamGameInfoTests) -> None:
         async with get_browser_context() as context:
             with self.assertNoLogs(level="ERROR"):
                 steam_info = await get_steam_details(

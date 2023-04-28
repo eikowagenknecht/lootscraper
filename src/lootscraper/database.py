@@ -49,7 +49,7 @@ class AwareDateTime(sa.TypeDecorator):  # type: ignore
     cache_ok = True
 
     def process_result_value(
-        self,
+        self: AwareDateTime,
         value: datetime | None,
         dialect: sa.Dialect,  # noqa: ARG002
     ) -> datetime | None:
@@ -59,7 +59,7 @@ class AwareDateTime(sa.TypeDecorator):  # type: ignore
         return None
 
     def process_bind_param(
-        self,
+        self: AwareDateTime,
         value: datetime | None,
         dialect: sa.Dialect,  # noqa: ARG002
     ) -> datetime | None:
@@ -211,7 +211,7 @@ class Offer(Base):
         default=None,
     )
 
-    def real_valid_to(self) -> datetime | None:
+    def real_valid_to(self: Offer) -> datetime | None:
         """The real valid to date. This is calculated from valid_to and seen_last."""
         return calc_real_valid_to(self.seen_last, self.valid_to)
 
@@ -268,7 +268,7 @@ class TelegramSubscription(Base):
 
 
 class LootDatabase:
-    def __init__(self, echo: bool = False) -> None:
+    def __init__(self: LootDatabase, echo: bool = False) -> None:
         # Run Alembic migrations first before we open a session
         self.initialize_or_update()
 
@@ -282,11 +282,11 @@ class LootDatabase:
         self.Session = scoped_session(session_factory)
         # TODO: Can this be changed with SQLAlchemy 2.0 and the removal of threaded execution?
 
-    def __enter__(self) -> LootDatabase:
+    def __enter__(self: LootDatabase) -> LootDatabase:
         return self
 
     def __exit__(
-        self,
+        self: LootDatabase,
         exc_type: type[BaseException] | None,
         exc_value: BaseException | None,
         traceback: TracebackType | None,
@@ -298,7 +298,7 @@ class LootDatabase:
             session.commit()
         session.close()
 
-    def initialize_or_update(self) -> None:
+    def initialize_or_update(self: LootDatabase) -> None:
         logger.info("Running database migrations")
         alembic_cfg = AlembicConfig(
             "alembic.ini",
@@ -306,7 +306,7 @@ class LootDatabase:
         )
         command.upgrade(alembic_cfg, "head")
 
-    def read_all(self) -> Sequence[Offer]:
+    def read_all(self: LootDatabase) -> Sequence[Offer]:
         session: Session = self.Session()
         try:
             result = session.execute(sa.select(Offer)).scalars().all()
@@ -315,7 +315,9 @@ class LootDatabase:
             raise
         return result
 
-    def read_all_segmented(self) -> dict[str, dict[str, dict[str, list[Offer]]]]:
+    def read_all_segmented(
+        self: LootDatabase,
+    ) -> dict[str, dict[str, dict[str, list[Offer]]]]:
         result = self.read_all()
 
         offers: dict[str, dict[str, dict[str, list[Offer]]]] = {}
@@ -337,7 +339,7 @@ class LootDatabase:
         return offers
 
     def find_offer(
-        self,
+        self: LootDatabase,
         source: Source,
         type_: OfferType,
         title: str,
@@ -393,7 +395,7 @@ class LootDatabase:
         )
         return result[-1]
 
-    def find_offer_by_id(self, id_: int) -> Offer | None:
+    def find_offer_by_id(self: LootDatabase, id_: int) -> Offer | None:
         statement = sa.select(Offer).where(Offer.id == id_)
         session: Session = self.Session()
         try:
@@ -404,7 +406,7 @@ class LootDatabase:
 
         return result
 
-    def touch_db_offer(self, db_offer: Offer) -> None:
+    def touch_db_offer(self: LootDatabase, db_offer: Offer) -> None:
         db_offer.seen_last = datetime.now(tz=timezone.utc)
         session: Session = self.Session()
         try:
@@ -413,7 +415,7 @@ class LootDatabase:
             session.rollback()
             raise
 
-    def update_db_offer(self, db_offer: Offer, new_data: Offer) -> None:
+    def update_db_offer(self: LootDatabase, db_offer: Offer, new_data: Offer) -> None:
         db_offer.source = new_data.source
         db_offer.type = new_data.type
         db_offer.title = new_data.title
@@ -444,7 +446,7 @@ class LootDatabase:
             session.rollback()
             raise
 
-    def add_offer(self, offer: Offer) -> None:
+    def add_offer(self: LootDatabase, offer: Offer) -> None:
         offer.seen_first = offer.seen_last
         session: Session = self.Session()
         try:

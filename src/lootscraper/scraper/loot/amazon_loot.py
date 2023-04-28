@@ -1,13 +1,17 @@
+from __future__ import annotations
+
 import logging
 from dataclasses import dataclass
 from datetime import date, datetime, time, timedelta, timezone
-
-from playwright.async_api import Locator, Page
+from typing import TYPE_CHECKING
 
 from lootscraper.common import OfferType
 from lootscraper.database import Offer
 from lootscraper.scraper.loot.amazon_base import AmazonBaseScraper, AmazonRawOffer
 from lootscraper.scraper.loot.scraper import OfferHandler, RawOffer, Scraper
+
+if TYPE_CHECKING:
+    from playwright.async_api import Locator, Page
 
 logger = logging.getLogger(__name__)
 
@@ -22,7 +26,7 @@ class AmazonLootScraper(AmazonBaseScraper):
     def get_type() -> OfferType:
         return OfferType.LOOT
 
-    def get_offer_handlers(self, page: Page) -> list[OfferHandler]:
+    def get_offer_handlers(self: AmazonLootScraper, page: Page) -> list[OfferHandler]:
         return [
             OfferHandler(
                 page.locator(
@@ -33,10 +37,12 @@ class AmazonLootScraper(AmazonBaseScraper):
             ),
         ]
 
-    async def page_loaded_hook(self, page: Page) -> None:
+    async def page_loaded_hook(self: AmazonLootScraper, page: Page) -> None:
         await Scraper.scroll_element_to_bottom(page, "root")
 
-    async def read_raw_offer(self, element: Locator) -> AmazonLootRawOffer:
+    async def read_raw_offer(
+        self: AmazonLootScraper, element: Locator,
+    ) -> AmazonLootRawOffer:
         base_raw_offer = await self.read_base_raw_offer(element)
 
         game_title = await element.locator(".item-card-details__body p").text_content()
@@ -51,7 +57,7 @@ class AmazonLootScraper(AmazonBaseScraper):
             game_title=game_title,
         )
 
-    def normalize_offer(self, raw_offer: RawOffer) -> Offer:
+    def normalize_offer(self: AmazonLootScraper, raw_offer: RawOffer) -> Offer:
         if not isinstance(raw_offer, AmazonLootRawOffer):
             raise TypeError("Wrong type of raw offer.")
 

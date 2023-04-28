@@ -1,10 +1,15 @@
+from __future__ import annotations
+
 from dataclasses import dataclass
-from datetime import datetime
+from typing import TYPE_CHECKING
 
 from playwright.async_api import Error, Locator
 
 from lootscraper.common import OfferDuration, Source
 from lootscraper.scraper.loot.scraper import RawOffer, Scraper
+
+if TYPE_CHECKING:
+    from datetime import datetime
 
 BASE_URL = "https://gaming.amazon.com"
 OFFER_URL = BASE_URL + "/home"
@@ -24,13 +29,13 @@ class AmazonBaseScraper(Scraper):
     def get_duration() -> OfferDuration:
         return OfferDuration.CLAIMABLE
 
-    def offers_expected(self) -> bool:
+    def offers_expected(self: AmazonBaseScraper) -> bool:
         return True
 
-    def get_offers_url(self) -> str:
+    def get_offers_url(self: AmazonBaseScraper) -> str:
         return OFFER_URL
 
-    def get_page_ready_selector(self) -> str:
+    def get_page_ready_selector(self: AmazonBaseScraper) -> str:
         return ".offer-list__content"
 
     @staticmethod
@@ -38,7 +43,10 @@ class AmazonBaseScraper(Scraper):
         """Offers on Amazon are never valid forever."""
         return False
 
-    async def read_base_raw_offer(self, element: Locator) -> AmazonRawOffer:
+    async def read_base_raw_offer(
+        self: AmazonBaseScraper,
+        element: Locator,
+    ) -> AmazonRawOffer:
         title = await element.locator(
             ".item-card-details__body__primary h3",
         ).text_content()

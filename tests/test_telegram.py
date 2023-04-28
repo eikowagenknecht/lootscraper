@@ -1,4 +1,6 @@
 # type: ignore
+from __future__ import annotations
+
 import asyncio
 import unittest
 
@@ -11,7 +13,7 @@ from sqlalchemy import orm
 
 class TelegramTests(unittest.IsolatedAsyncioTestCase):
     @unittest.skip("This test doesn't end and is for manual execution only.")
-    async def test_run_bot_in_idle(self) -> None:
+    async def test_run_bot_in_idle(self: TelegramTests) -> None:
         # Arrange
         with LootDatabase(echo=True) as db:
             async with TelegramBot(Config.get(), db.Session):
@@ -20,7 +22,7 @@ class TelegramTests(unittest.IsolatedAsyncioTestCase):
                 # bot.updater.idle()
                 # Assert
 
-    async def test_telegram_messagesend_registered_user(self) -> None:
+    async def test_telegram_messagesend_registered_user(self: TelegramTests) -> None:
         # Arrange
         with LootDatabase(echo=True) as db:
             async with TelegramBot(Config.get(), db.Session) as bot:
@@ -42,7 +44,7 @@ class TelegramTests(unittest.IsolatedAsyncioTestCase):
                 # Assert
                 assert message
 
-    async def test_telegram_new_offers(self) -> None:
+    async def test_telegram_new_offers(self: TelegramTests) -> None:
         # Arrange
         with LootDatabase(echo=True) as db:
             async with TelegramBot(Config.get(), db.Session) as bot:
@@ -60,19 +62,19 @@ class TelegramTests(unittest.IsolatedAsyncioTestCase):
 
                 # Assert
 
-    async def test_user_flooding(self) -> None:
+    async def test_user_flooding(self: TelegramTests) -> None:
         # Arrange
         with LootDatabase(echo=True) as db:
             async with TelegramBot(Config.get(), db.Session) as bot:
                 await self.send_n_messages(bot, 724039662, 100)
 
-    async def test_group_flooding(self) -> None:
+    async def test_group_flooding(self: TelegramTests) -> None:
         # Arrange
         with LootDatabase(echo=True) as db:
             async with TelegramBot(Config.get(), db.Session) as bot:
                 await self.send_n_messages(bot, -738298064, 20)
 
-    async def test_simultaneous_flooding(self) -> None:
+    async def test_simultaneous_flooding(self: TelegramTests) -> None:
         # Arrange
         with LootDatabase(echo=True) as db:
             async with TelegramBot(Config.get(), db.Session) as bot:
@@ -81,7 +83,12 @@ class TelegramTests(unittest.IsolatedAsyncioTestCase):
                     self.send_n_messages(bot, -738298064, 20),
                 )
 
-    async def send_n_messages(self, bot: TelegramBot, user: int, nr: int) -> None:
+    async def send_n_messages(
+        self: TelegramTests,
+        bot: TelegramBot,
+        user: int,
+        nr: int,
+    ) -> None:
         for i in range(nr):
             result = await bot.send_message(user, f"Flooding Test message {i}")
             if result is None:

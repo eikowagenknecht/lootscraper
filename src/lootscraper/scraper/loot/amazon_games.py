@@ -1,13 +1,17 @@
+from __future__ import annotations
+
 import logging
 from datetime import date, datetime, time, timedelta, timezone
-
-from playwright.async_api import Locator, Page
+from typing import TYPE_CHECKING
 
 from lootscraper.common import OfferType
 from lootscraper.database import Offer
 from lootscraper.scraper.info.utils import clean_game_title
 from lootscraper.scraper.loot.amazon_base import AmazonBaseScraper, AmazonRawOffer
 from lootscraper.scraper.loot.scraper import OfferHandler, RawOffer, Scraper
+
+if TYPE_CHECKING:
+    from playwright.async_api import Locator, Page
 
 logger = logging.getLogger(__name__)
 
@@ -17,10 +21,10 @@ class AmazonGamesScraper(AmazonBaseScraper):
     def get_type() -> OfferType:
         return OfferType.GAME
 
-    def get_page_ready_selector(self) -> str:
+    def get_page_ready_selector(self: AmazonGamesScraper) -> str:
         return ".offer-list__content"
 
-    def get_offer_handlers(self, page: Page) -> list[OfferHandler]:
+    def get_offer_handlers(self: AmazonGamesScraper, page: Page) -> list[OfferHandler]:
         return [
             OfferHandler(
                 page.locator(
@@ -31,13 +35,15 @@ class AmazonGamesScraper(AmazonBaseScraper):
             ),
         ]
 
-    async def page_loaded_hook(self, page: Page) -> None:
+    async def page_loaded_hook(self: AmazonGamesScraper, page: Page) -> None:
         await Scraper.scroll_element_to_bottom(page, "root")
 
-    async def read_raw_offer(self, element: Locator) -> AmazonRawOffer:
+    async def read_raw_offer(
+        self: AmazonGamesScraper, element: Locator,
+    ) -> AmazonRawOffer:
         return await self.read_base_raw_offer(element)
 
-    def normalize_offer(self, raw_offer: RawOffer) -> Offer:
+    def normalize_offer(self: AmazonGamesScraper, raw_offer: RawOffer) -> Offer:
         if not isinstance(raw_offer, AmazonRawOffer):
             raise TypeError("Wrong type of raw offer.")
 
