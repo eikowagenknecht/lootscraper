@@ -7,9 +7,9 @@ Create Date: 2023-02-02 10:07:20.108271+00:00
 """
 
 import sqlalchemy as sa
-from lootscraper.database import AwareDateTime
 
 from alembic import op
+from lootscraper.database import AwareDateTime
 
 # revision identifiers, used by Alembic.
 revision = "023117ae895e"

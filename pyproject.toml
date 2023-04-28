@@ -89,7 +89,6 @@ ignore = [
     "E501", # Line too long
     "ANN101", # Missing type annotation for self in method
     "PLR2004", # Magic value in comparison
-    "INP001", # Implicit namespace package
     "TRY003", # Long messages in exceptions
 ] 
 
