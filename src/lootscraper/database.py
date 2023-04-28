@@ -38,7 +38,7 @@ class Base(MappedAsDataclass, DeclarativeBase):
     """
 
 
-class AwareDateTime(sa.TypeDecorator):  # type: ignore # pylint: disable=W0223
+class AwareDateTime(sa.TypeDecorator):  # type: ignore
     """
     Results returned as aware datetimes, not naive ones.
     """

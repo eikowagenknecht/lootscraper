@@ -1,8 +1,6 @@
 # The bahaviour of the config.context object is different in the env.py script,
 # so no-member errors must be ignored here. See also:
 # https://stackoverflow.com/questions/51203641/attributeerror-module-alembic-context-has-no-attribute-config
-# pylint: disable=no-member
-# pylint: disable=unused-argument
 from logging.config import fileConfig
 from pathlib import Path
 

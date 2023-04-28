@@ -6,7 +6,7 @@ from lootscraper.common import OfferType, Source
 from lootscraper.scraper.loot.scraper import Scraper
 
 
-class GogBaseScraper(Scraper):  # pylint: disable=W0223
+class GogBaseScraper(Scraper):
     @staticmethod
     def get_source() -> Source:
         return Source.GOG

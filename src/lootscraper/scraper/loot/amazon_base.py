@@ -15,7 +15,7 @@ class AmazonRawOffer(RawOffer):
     valid_to: str | None = None
 
 
-class AmazonBaseScraper(Scraper):  # pylint: disable=W0223
+class AmazonBaseScraper(Scraper):
     @staticmethod
     def get_source() -> Source:
         return Source.AMAZON

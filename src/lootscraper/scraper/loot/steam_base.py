@@ -25,7 +25,7 @@ class SteamRawOffer(RawOffer):
     text: str
 
 
-class SteamBaseScraper(Scraper):  # pylint: disable=W0223
+class SteamBaseScraper(Scraper):
     @staticmethod
     def get_source() -> Source:
         return Source.STEAM

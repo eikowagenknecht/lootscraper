@@ -406,7 +406,7 @@ class TelegramBot:
                     latest_announcement = session.execute(
                         sa.select(
                             sa.func.max(Announcement.id),
-                        ),  # pylint: disable=not-callable
+                        ),
                     ).scalar()
 
                     new_user = User(
@@ -677,7 +677,7 @@ class TelegramBot:
         session: orm.Session = self.Session()
         try:
             latest_announcement = session.execute(
-                sa.select(sa.func.max(Announcement.id)),  # pylint: disable=not-callable
+                sa.select(sa.func.max(Announcement.id)),
             ).scalar()
 
             new_user = User(
@@ -1725,7 +1725,7 @@ class TelegramLoggingHandler(logging.Handler):
                     ),
                 )
 
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             self.handleError(record)
 
 
