@@ -47,7 +47,9 @@ class AwareDateTime(sa.TypeDecorator):  # type: ignore # pylint: disable=W0223
     cache_ok = True
 
     def process_result_value(
-        self, value: datetime | None, dialect: Dialect,
+        self,
+        value: datetime | None,
+        dialect: Dialect,
     ) -> datetime | None:
         if value is not None:
             return value.replace(tzinfo=timezone.utc)
@@ -55,7 +57,9 @@ class AwareDateTime(sa.TypeDecorator):  # type: ignore # pylint: disable=W0223
         return None
 
     def process_bind_param(
-        self, value: datetime | None, dialect: Dialect,
+        self,
+        value: datetime | None,
+        dialect: Dialect,
     ) -> datetime | None:
         if value is not None:
             return value.replace(tzinfo=None)
@@ -191,7 +195,8 @@ class Offer(Base):
         init=False,
     )
     category: Mapped[Category] = mapped_column(
-        sa.Enum(Category), default=Category.VALID,
+        sa.Enum(Category),
+        default=Category.VALID,
     )
 
     img_url: Mapped[str | None] = mapped_column(default=None)
@@ -398,7 +403,7 @@ class LootDatabase:
         return result
 
     def touch_db_offer(self, db_offer: Offer) -> None:
-        db_offer.seen_last = datetime.now().replace(tzinfo=timezone.utc)
+        db_offer.seen_last = datetime.now(tz=timezone.utc)
         session: Session = self.Session()
         try:
             session.commit()

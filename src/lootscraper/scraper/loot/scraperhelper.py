@@ -1,4 +1,3 @@
-
 from lootscraper.scraper.loot.amazon_games import AmazonGamesScraper
 from lootscraper.scraper.loot.amazon_loot import AmazonLootScraper
 from lootscraper.scraper.loot.apple_games import AppleGamesScraper

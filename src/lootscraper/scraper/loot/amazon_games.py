@@ -80,23 +80,31 @@ class AmazonGamesScraper(AmazonBaseScraper):
             try:
                 raw_date = raw_offer.valid_to.removeprefix("Ends ").lower()
                 if raw_date == "today":
-                    parsed_date = datetime.now().replace(
-                        tzinfo=timezone.utc, hour=0, minute=0, second=0,
+                    parsed_date = datetime.now(tz=timezone.utc).replace(
+                        hour=0,
+                        minute=0,
+                        second=0,
                     )
                 elif raw_date == "tomorrow":
-                    parsed_date = datetime.now().replace(
-                        tzinfo=timezone.utc, hour=0, minute=0, second=0,
+                    parsed_date = datetime.now(tz=timezone.utc).replace(
+                        hour=0,
+                        minute=0,
+                        second=0,
                     ) + timedelta(days=1)
                 else:
-                    parsed_date = datetime.now().replace(
-                        tzinfo=timezone.utc, hour=0, minute=0, second=0,
+                    parsed_date = datetime.now(tz=timezone.utc).replace(
+                        hour=0,
+                        minute=0,
+                        second=0,
                     ) + timedelta(days=int(raw_date.split(" ")[1]))
 
                 # Correct the year
                 guessed_end_date = date(
-                    date.today().year, parsed_date.month, parsed_date.day,
+                    datetime.now(tz=timezone.utc).date().year,
+                    parsed_date.month,
+                    parsed_date.day,
                 )
-                yesterday = date.today() - timedelta(days=1)
+                yesterday = datetime.now(tz=timezone.utc).date() - timedelta(days=1)
                 if guessed_end_date < yesterday:
                     guessed_end_date = guessed_end_date.replace(
                         year=guessed_end_date.year + 1,
@@ -107,7 +115,8 @@ class AmazonGamesScraper(AmazonBaseScraper):
                 end_date = datetime.combine(
                     guessed_end_date + timedelta(days=1),
                     time.min,
-                ).replace(tzinfo=timezone.utc)
+                    tzinfo=timezone.utc,
+                )
             except (ValueError, IndexError):
                 logger.warning(f"Date parsing failed for {raw_offer.title}")
 

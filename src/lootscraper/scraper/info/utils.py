@@ -158,10 +158,7 @@ def calc_real_valid_to(
 ) -> datetime | None:
     """Calculate the real end date of an offer."""
 
-    if forced_now is not None:
-        now = forced_now
-    else:
-        now = datetime.now().replace(tzinfo=timezone.utc)
+    now = forced_now if forced_now is not None else datetime.now(tz=timezone.utc)
 
     if valid_to is None:
         # The offer has no end date and hasn't been seen for more than a day.

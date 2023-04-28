@@ -199,7 +199,8 @@ async def generate_feed(
     # - Contributor
     # - Generator
     feed_generator.generator(
-        generator="LootScraper", uri="https://github.com/eikowagenknecht/lootscraper",
+        generator="LootScraper",
+        uri="https://github.com/eikowagenknecht/lootscraper",
     )
     # - Icon
     # - Logo
@@ -221,7 +222,9 @@ def get_feed_id(filename: str) -> str:
 
 
 def get_feed_title(
-    source: Source | None, type_: OfferType | None, duration: OfferDuration | None,
+    source: Source | None,
+    type_: OfferType | None,
+    duration: OfferDuration | None,
 ) -> str:
     if source is None and type_ is None and duration is None:
         return "Free Games and Loot"

@@ -4,7 +4,7 @@ import logging
 import shutil
 import sys
 from contextlib import ExitStack, suppress
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
 
@@ -54,7 +54,6 @@ def main() -> None:
 
     with suppress(KeyboardInterrupt):
         asyncio.run(run())
-
 
 
 async def run() -> None:
@@ -217,7 +216,9 @@ async def run_scraper_loop(
             if time_between_runs == 0:
                 break
 
-            next_execution = datetime.now() + timedelta(seconds=time_between_runs)
+            next_execution = datetime.now(tz=timezone.utc) + timedelta(
+                seconds=time_between_runs,
+            )
 
             logger.info(f"Next scraping run will be at {next_execution.isoformat()}.")
 

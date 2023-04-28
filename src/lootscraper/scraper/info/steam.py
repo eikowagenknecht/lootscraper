@@ -172,8 +172,10 @@ async def add_data_from_steam_api(steam_info: SteamInfo) -> None:
 
     try:
         date_string = content["release_date"]["date"]
-        timestamp = datetime.strptime(date_string, "%d %b, %Y")
-        steam_info.release_date = timestamp.replace(tzinfo=timezone.utc)
+        timestamp = datetime.strptime(date_string, "%d %b, %Y").replace(
+            tzinfo=timezone.utc,
+        )
+        steam_info.release_date = timestamp
     except (KeyError, ValueError):
         pass
 
@@ -204,7 +206,6 @@ async def add_data_from_steam_api(steam_info: SteamInfo) -> None:
     with contextlib.suppress(KeyError):
         steam_info.recommendations = content["recommendations"]["total"]
 
-
     try:
         steam_info.metacritic_score = content["metacritic"]["score"]
         steam_info.metacritic_url = content["metacritic"]["url"].replace(R"\/", "/")
@@ -214,7 +215,8 @@ async def add_data_from_steam_api(steam_info: SteamInfo) -> None:
     try:
         # Prefer header image over first screenshot
         steam_info.image_url = content["screenshots"][0]["path_full"].replace(
-            R"\/", "/",
+            R"\/",
+            "/",
         )
         steam_info.image_url = content["header_image"].replace(R"\/", "/")
     except KeyError:
@@ -222,7 +224,6 @@ async def add_data_from_steam_api(steam_info: SteamInfo) -> None:
 
     with contextlib.suppress(KeyError):
         steam_info.publishers = ", ".join(content["publishers"])
-
 
 
 async def read_from_steam_api(steam_app_id: int) -> dict[str, Any] | None:
@@ -288,7 +289,9 @@ async def add_data_from_steam_store_page(
                 )
                 if review_score_percent is None:
                     logger.warning(f"No Steam percentage found for {steam_info.id}.")
-                elif review_score_percent.startswith(("Need more user reviews", "No user reviews")):
+                elif review_score_percent.startswith(
+                    ("Need more user reviews", "No user reviews"),
+                ):
                     # No percentage, but this reason is fine
                     pass
                 else:
@@ -424,7 +427,8 @@ async def add_data_from_steam_store_page(
                         pass
                     else:
                         release_date = datetime.strptime(
-                            release_date_str, "%d %b, %Y",
+                            release_date_str,
+                            "%d %b, %Y",
                         ).replace(tzinfo=timezone.utc)
                         steam_info.release_date = release_date
             except Error as e:

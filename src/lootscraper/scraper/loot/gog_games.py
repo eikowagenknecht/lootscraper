@@ -133,8 +133,9 @@ class GogGamesScraper(GogBaseScraper):
         if raw_offer.valid_to:
             try:
                 valid_to_unix = int(raw_offer.valid_to) / 1000
-                valid_to = datetime.utcfromtimestamp(valid_to_unix).replace(
-                    tzinfo=timezone.utc,
+                valid_to = datetime.fromtimestamp(
+                    valid_to_unix,
+                    tz=timezone.utc,
                 )
             except ValueError:
                 valid_to = None

@@ -207,7 +207,9 @@ async def action_generate_feed(loot_offers_in_db: Sequence[Offer]) -> None:
 
 
 async def add_game_info(
-    offer: Offer, session: Session, context: BrowserContext,
+    offer: Offer,
+    session: Session,
+    context: BrowserContext,
 ) -> None:
     """
     Update an offer with game information. If the offer already has some

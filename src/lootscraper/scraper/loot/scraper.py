@@ -124,14 +124,15 @@ class Scraper:
 
             try:
                 await page.wait_for_selector(
-                    self.get_page_ready_selector(), timeout=10000,
+                    self.get_page_ready_selector(),
+                    timeout=10000,
                 )
                 await self.page_loaded_hook(page)
             except Error as e:
                 logger.error(f"The page didn't get ready to be parsed: {e}")
                 filename = (
                     Config.data_path()
-                    / f'error_{self.get_source().name.lower()}_{datetime.now().isoformat().replace(".", "_").replace(":", "_")}.png'
+                    / f'error_{self.get_source().name.lower()}_{datetime.now(tz=timezone.utc).isoformat().replace(".", "_").replace(":", "_")}.png'
                 )
                 logger.error(f"Saving screenshot to {filename}.")
                 await page.screenshot(path=str(filename.resolve()))
@@ -278,7 +279,7 @@ class Scraper:
         if valid_to is None:
             return False
 
-        return valid_to > datetime.now().replace(tzinfo=timezone.utc) + timedelta(
+        return valid_to > datetime.now(tz=timezone.utc) + timedelta(
             days=100,
         )
 

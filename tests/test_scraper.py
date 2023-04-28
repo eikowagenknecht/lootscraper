@@ -38,7 +38,7 @@ class AmazonGamesTests(unittest.IsolatedAsyncioTestCase):
                 assert res.valid_to is not None
                 assert res.img_url is not None
                 assert res.img_url.startswith("https://")
-                assert res.valid_to > datetime.now().replace(tzinfo=timezone.utc)
+                assert res.valid_to > datetime.now(tz=timezone.utc)
 
 
 class AmazonLootTests(unittest.IsolatedAsyncioTestCase):
@@ -56,7 +56,7 @@ class AmazonLootTests(unittest.IsolatedAsyncioTestCase):
                     assert res.url.startswith("https://gaming.amazon.com")
                 assert res.img_url is not None
                 assert res.img_url.startswith("https://")
-                assert res.valid_to > datetime.now().replace(tzinfo=timezone.utc)
+                assert res.valid_to > datetime.now(tz=timezone.utc)
 
 
 class AppleGamesTest(unittest.IsolatedAsyncioTestCase):
@@ -121,7 +121,7 @@ class GogGamesTest(unittest.IsolatedAsyncioTestCase):
                 assert res.img_url.startswith("https://")
                 # Some offer types do not contain a date
                 if res.valid_to is not None:
-                    assert res.valid_to > datetime.now().replace(tzinfo=timezone.utc)
+                    assert res.valid_to > datetime.now(tz=timezone.utc)
 
 
 class GoogleGamesTest(unittest.IsolatedAsyncioTestCase):
@@ -182,7 +182,7 @@ class SteamGamesTest(unittest.IsolatedAsyncioTestCase):
                 assert res.url.startswith("https://store.steampowered.com/")
                 assert res.img_url is not None
                 assert res.img_url.startswith("https://")
-                assert res.valid_to > datetime.now().replace(tzinfo=timezone.utc)
+                assert res.valid_to > datetime.now(tz=timezone.utc)
 
 
 class SteamLootTest(unittest.IsolatedAsyncioTestCase):
@@ -198,7 +198,7 @@ class SteamLootTest(unittest.IsolatedAsyncioTestCase):
                 assert res.url.startswith("https://store.steampowered.com/")
                 assert res.img_url is not None
                 assert res.img_url.startswith("https://")
-                assert res.valid_to > datetime.now().replace(tzinfo=timezone.utc)
+                assert res.valid_to > datetime.now(tz=timezone.utc)
 
 
 class UbisoftGamesTest(unittest.IsolatedAsyncioTestCase):

@@ -123,35 +123,28 @@ class Config:
             with contextlib.suppress(KeyError):
                 parsed_config.database_file = data["common"]["database_file"]
 
-
             with contextlib.suppress(KeyError):
                 parsed_config.feed_file_prefix = data["common"]["feed_file_prefix"]
-
 
             with contextlib.suppress(KeyError):
                 parsed_config.log_file = data["common"]["log_file"]
 
-
             with contextlib.suppress(KeyError):
                 parsed_config.log_level = data["common"]["log_level"]
-
 
             with contextlib.suppress(KeyError):
                 parsed_config.wait_between_runs_seconds = data["common"][
                     "wait_between_runs_seconds"
                 ]
 
-
             # Expert
             with contextlib.suppress(KeyError):
                 parsed_config.db_echo = data["expert"]["db_echo"]
-
 
             with contextlib.suppress(KeyError):
                 parsed_config.web_timeout_seconds = data["expert"][
                     "web_timeout_seconds"
                 ]
-
 
             # Scraper
             try:
@@ -184,95 +177,74 @@ class Config:
             with contextlib.suppress(KeyError):
                 parsed_config.info_steam = "STEAM" in data["scraper"]["info_sources"]
 
-
             with contextlib.suppress(KeyError):
                 parsed_config.info_igdb = "IGDB" in data["scraper"]["info_sources"]
-
 
             # Actions
             with contextlib.suppress(KeyError):
                 parsed_config.scrape_info = data["actions"]["scrape_info"]
 
-
             with contextlib.suppress(KeyError):
                 parsed_config.generate_feed = data["actions"]["generate_feed"]
-
 
             with contextlib.suppress(KeyError):
                 parsed_config.upload_to_ftp = data["actions"]["upload_to_ftp"]
 
-
             with contextlib.suppress(KeyError):
                 parsed_config.telegram_bot = data["actions"]["telegram_bot"]
-
 
             # Telegram
             with contextlib.suppress(KeyError):
                 parsed_config.telegram_access_token = data["telegram"]["access_token"]
-
 
             with contextlib.suppress(KeyError):
                 parsed_config.telegram_developer_chat_id = data["telegram"][
                     "developer_chat_id"
                 ]
 
-
             with contextlib.suppress(KeyError):
                 parsed_config.telegram_log_level = TelegramLogLevel[
                     data["telegram"]["log_level"]
                 ]
 
-
             with contextlib.suppress(KeyError):
                 parsed_config.telegram_admin_user_id = data["telegram"]["admin_user_id"]
-
 
             # IGDB
             with contextlib.suppress(KeyError):
                 parsed_config.igdb_client_id = data["igdb"]["client_id"]
 
-
             with contextlib.suppress(KeyError):
                 parsed_config.igdb_client_secret = data["igdb"]["client_secret"]
-
 
             # FTP
             with contextlib.suppress(KeyError):
                 parsed_config.ftp_host = data["ftp"]["host"]
 
-
             with contextlib.suppress(KeyError):
                 parsed_config.ftp_user = data["ftp"]["user"]
 
-
             with contextlib.suppress(KeyError):
                 parsed_config.ftp_password = data["ftp"]["password"]
-
 
             # Feed
             with contextlib.suppress(KeyError):
                 parsed_config.feed_author_name = data["feed"]["author_name"]
 
-
             with contextlib.suppress(KeyError):
                 parsed_config.feed_author_email = data["feed"]["author_email"]
-
 
             with contextlib.suppress(KeyError):
                 parsed_config.feed_author_web = data["feed"]["author_web"]
 
-
             with contextlib.suppress(KeyError):
                 parsed_config.feed_url_prefix = data["feed"]["url_prefix"]
-
 
             with contextlib.suppress(KeyError):
                 parsed_config.feed_url_alternate = data["feed"]["url_alternate"]
 
-
             with contextlib.suppress(KeyError):
                 parsed_config.feed_id_prefix = data["feed"]["id_prefix"]
-
 
             Config.__parsed_config = parsed_config
 

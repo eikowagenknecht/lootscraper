@@ -275,7 +275,9 @@ class TelegramBot:
         # Build the exception string from the exception
         traceback_string = "".join(
             traceback.format_exception(
-                None, context.error, context.error.__traceback__
+                None,
+                context.error,
+                context.error.__traceback__,
             ),
         )
 
@@ -413,7 +415,7 @@ class TelegramBot:
                         telegram_user_details={
                             "description": "Channel user created by admin",
                         },
-                        registration_date=datetime.now().replace(tzinfo=timezone.utc),
+                        registration_date=datetime.now(tz=timezone.utc),
                         last_announcement_id=latest_announcement,
                     )
                     session.add(new_user)
@@ -684,7 +686,7 @@ class TelegramBot:
                 if update.effective_chat
                 else None,
                 telegram_user_details=update.effective_user.to_json(),
-                registration_date=datetime.now().replace(tzinfo=timezone.utc),
+                registration_date=datetime.now(tz=timezone.utc),
                 last_announcement_id=latest_announcement,
             )
             session.add(new_user)
@@ -1060,13 +1062,13 @@ class TelegramBot:
                                 Offer.id > subscription.last_offer_id,
                                 # Only send offers that are already active
                                 sa.or_(
-                                    Offer.valid_from <= datetime.now().replace(tzinfo=None),  # type: ignore
+                                    Offer.valid_from <= datetime.now(tz=None),  # type: ignore
                                     Offer.valid_from.is_(None),  # type: ignore
                                 ),
                                 # Prefilter to reduce database load. The details are handled below.
                                 sa.or_(
-                                    Offer.valid_to >= datetime.now().replace(tzinfo=None),  # type: ignore
-                                    Offer.seen_last >= datetime.now().replace(tzinfo=None) - timedelta(days=1),  # type: ignore
+                                    Offer.valid_to >= datetime.now(tz=None),  # type: ignore
+                                    Offer.seen_last >= datetime.now(tz=None) - timedelta(days=1),  # type: ignore
                                     Offer.valid_to.is_(None),  # type: ignore
                                 ),
                             ),
@@ -1081,8 +1083,8 @@ class TelegramBot:
 
                 for offer in offers:
                     real_valid_to = offer.real_valid_to()
-                    if real_valid_to is None or real_valid_to > datetime.now().replace(
-                        tzinfo=timezone.utc,
+                    if real_valid_to is None or real_valid_to > datetime.now(
+                        tz=timezone.utc,
                     ):
                         filtered_offers.append(offer)
 
@@ -1463,9 +1465,9 @@ class TelegramBot:
                 )
 
             time_to_end = humanize.naturaldelta(
-                datetime.now().replace(tzinfo=timezone.utc) - offer.valid_to,
+                datetime.now(tz=timezone.utc) - offer.valid_to,
             )
-            if datetime.now().replace(tzinfo=timezone.utc) > offer.valid_to:
+            if datetime.now(tz=timezone.utc) > offer.valid_to:
                 content += f"Offer expired {markdown_escape(time_to_end)} ago"
             else:
                 content += f"Offer expires in {markdown_escape(time_to_end)}"
@@ -1684,7 +1686,7 @@ class TelegramBot:
 
         announcement = Announcement(
             channel=Channel.TELEGRAM,
-            date=datetime.now().replace(tzinfo=timezone.utc),
+            date=datetime.now(tz=timezone.utc),
             text_markdown=announcement_full,
         )
 

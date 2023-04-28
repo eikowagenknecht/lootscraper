@@ -167,18 +167,15 @@ async def add_data_from_api(igdb_info: IgdbInfo) -> None:
     with contextlib.suppress(KeyError):
         igdb_info.name = game["name"]
 
-
     with contextlib.suppress(KeyError):
         igdb_info.url = game["url"]
-
 
     with contextlib.suppress(KeyError):
         igdb_info.short_description = game["summary"]
 
-
     try:
         unix_releasedate = game["first_release_date"]
-        timestamp = datetime.utcfromtimestamp(unix_releasedate)
+        timestamp = datetime.fromtimestamp(unix_releasedate, tz=timezone.utc)
         igdb_info.release_date = timestamp.replace(tzinfo=timezone.utc)
     except KeyError:
         pass
@@ -186,18 +183,14 @@ async def add_data_from_api(igdb_info: IgdbInfo) -> None:
     with contextlib.suppress(KeyError, ValueError):
         igdb_info.user_score = int(game["rating"])
 
-
     with contextlib.suppress(KeyError):
         igdb_info.user_ratings = game["rating_count"]
-
 
     with contextlib.suppress(KeyError, ValueError):
         igdb_info.meta_score = int(game["aggregated_rating"])
 
-
     with contextlib.suppress(KeyError):
         igdb_info.meta_ratings = game["aggregated_rating_count"]
-
 
     # TODO: Publisher, Genres, Cover
     # genres = List of genres (ids only, have to be called separately)
