@@ -39,7 +39,7 @@ class AmazonGamesScraper(AmazonBaseScraper):
 
     def normalize_offer(self, raw_offer: RawOffer) -> Offer:
         if not isinstance(raw_offer, AmazonRawOffer):
-            raise ValueError("Wrong type of raw offer.")
+            raise TypeError("Wrong type of raw offer.")
 
         rawtext = {
             "title": raw_offer.title,
