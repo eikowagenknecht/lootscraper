@@ -1,5 +1,3 @@
-from typing import Type
-
 from lootscraper.scraper.loot.amazon_games import AmazonGamesScraper
 from lootscraper.scraper.loot.amazon_loot import AmazonLootScraper
 from lootscraper.scraper.loot.apple_games import AppleGamesScraper
@@ -15,7 +13,7 @@ from lootscraper.scraper.loot.steam_loot import SteamLootScraper
 from lootscraper.scraper.loot.ubisoft_games import UbisoftGamesScraper
 
 
-def get_all_scrapers() -> list[Type[Scraper]]:
+def get_all_scrapers() -> list[type[Scraper]]:
     return [
         AmazonGamesScraper,
         AmazonLootScraper,

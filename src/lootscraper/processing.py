@@ -1,8 +1,8 @@
 import asyncio
 import hashlib
 import logging
+from collections.abc import Sequence
 from pathlib import Path
-from typing import Sequence
 
 from playwright.async_api import BrowserContext
 from sqlalchemy import select
@@ -52,13 +52,13 @@ async def scrape_offers(context: BrowserContext) -> list[Offer]:
     cfg = Config.get()
 
     scraped_offers: list[Offer] = []
-    for scraperType in get_all_scrapers():
+    for scraper_type in get_all_scrapers():
         if (
-            scraperType.get_type() in cfg.enabled_offer_types
-            and scraperType.get_duration() in cfg.enabled_offer_durations
-            and scraperType.get_source() in cfg.enabled_offer_sources
+            scraper_type.get_type() in cfg.enabled_offer_types
+            and scraper_type.get_duration() in cfg.enabled_offer_durations
+            and scraper_type.get_source() in cfg.enabled_offer_sources
         ):
-            scraper = scraperType(context=context)
+            scraper = scraper_type(context=context)
             scraper_results = await scraper.scrape()
 
             if len(scraper_results) > 0:
@@ -113,7 +113,7 @@ async def process_new_offers(
 
     if new_offer_titles:
         logging.info(
-            f'Found {nr_of_new_offers} new offers: {", ".join(new_offer_titles)}'
+            f'Found {nr_of_new_offers} new offers: {", ".join(new_offer_titles)}',
         )
 
 
@@ -155,7 +155,7 @@ async def action_generate_feed(loot_offers_in_db: Sequence[Offer]) -> None:
             continue
 
         feed_changed = False
-        feed_file_core = f"_{source.name.lower()}" + f"_{type_.name.lower()}"
+        feed_file_core = f"_{source.name.lower()}_{type_.name.lower()}"
 
         # To keep the old feed ids and names only add when the type is one of
         # the new types.
@@ -163,7 +163,7 @@ async def action_generate_feed(loot_offers_in_db: Sequence[Offer]) -> None:
             feed_file_core += f"_{duration.name.lower()}"
 
         feed_file = Config.data_path() / Path(
-            cfg.feed_file_prefix + feed_file_core + ".xml"
+            cfg.feed_file_prefix + feed_file_core + ".xml",
         )
         old_hash = hash_file(feed_file)
         await generate_feed(
@@ -207,7 +207,9 @@ async def action_generate_feed(loot_offers_in_db: Sequence[Offer]) -> None:
 
 
 async def add_game_info(
-    offer: Offer, session: Session, context: BrowserContext
+    offer: Offer,
+    session: Session,
+    context: BrowserContext,
 ) -> None:
     """
     Update an offer with game information. If the offer already has some
@@ -230,7 +232,7 @@ async def add_game_info(
     # database first (prioritize IGDB)
     igdb_id = (
         session.execute(
-            select(IgdbInfo.id).where(IgdbInfo.name == offer.probable_game_name)
+            select(IgdbInfo.id).where(IgdbInfo.name == offer.probable_game_name),
         )
         .scalars()
         .one_or_none()
@@ -254,7 +256,7 @@ async def add_game_info(
     # No IGDB match, try to find a matching entry via Steam
     steam_id = (
         session.execute(
-            select(SteamInfo.id).where(SteamInfo.name == offer.probable_game_name)
+            select(SteamInfo.id).where(SteamInfo.name == offer.probable_game_name),
         )
         .scalars()
         .one_or_none()
@@ -302,7 +304,7 @@ def hash_file(file: Path) -> str:
 
     hash_ = hashlib.sha256()
 
-    with open(file, "rb") as f:
+    with file.open(mode="rb") as f:
         while True:
             data = f.read(65536)
             if not data:

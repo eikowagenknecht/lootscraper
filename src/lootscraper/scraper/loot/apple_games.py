@@ -1,12 +1,16 @@
+from __future__ import annotations
+
 import logging
 import urllib.parse
 from datetime import datetime, timezone
-
-from playwright.async_api import Locator, Page
+from typing import TYPE_CHECKING
 
 from lootscraper.common import OfferDuration, OfferType, Source
 from lootscraper.database import Offer
 from lootscraper.scraper.loot.scraper import OfferHandler, RawOffer, Scraper
+
+if TYPE_CHECKING:
+    from playwright.async_api import Locator, Page
 
 logger = logging.getLogger(__name__)
 
@@ -32,16 +36,16 @@ class AppleGamesScraper(Scraper):
     def get_duration() -> OfferDuration:
         return OfferDuration.CLAIMABLE
 
-    def offers_expected(self) -> bool:
+    def offers_expected(self: AppleGamesScraper) -> bool:
         return True
 
-    def get_offers_url(self) -> str:
+    def get_offers_url(self: AppleGamesScraper) -> str:
         return f"{ROOT_URL}?{urllib.parse.urlencode(SEARCH_PARAMS)}"
 
-    def get_page_ready_selector(self) -> str:
+    def get_page_ready_selector(self: AppleGamesScraper) -> str:
         return "article.app"
 
-    def get_offer_handlers(self, page: Page) -> list[OfferHandler]:
+    def get_offer_handlers(self: AppleGamesScraper, page: Page) -> list[OfferHandler]:
         return [
             OfferHandler(
                 page.locator("article.app"),
@@ -50,7 +54,7 @@ class AppleGamesScraper(Scraper):
             ),
         ]
 
-    async def read_raw_offer(self, element: Locator) -> RawOffer:
+    async def read_raw_offer(self: AppleGamesScraper, element: Locator) -> RawOffer:
         title = await element.locator(".title a").get_attribute("title")
         if title is None:
             raise ValueError("Couldn't find title.")
@@ -69,7 +73,7 @@ class AppleGamesScraper(Scraper):
             img_url=img_url,
         )
 
-    def normalize_offer(self, raw_offer: RawOffer) -> Offer:
+    def normalize_offer(self: AppleGamesScraper, raw_offer: RawOffer) -> Offer:
         rawtext = {
             "title": raw_offer.title,
         }

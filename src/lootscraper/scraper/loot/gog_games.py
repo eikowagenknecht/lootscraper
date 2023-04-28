@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import logging
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -26,13 +28,13 @@ class GogGamesScraper(GogBaseScraper):
     def get_duration() -> OfferDuration:
         return OfferDuration.CLAIMABLE
 
-    def get_offers_url(self) -> str:
+    def get_offers_url(self: GogGamesScraper) -> str:
         return OFFER_URL
 
-    def get_page_ready_selector(self) -> str:
+    def get_page_ready_selector(self: GogGamesScraper) -> str:
         return ".content.cf"
 
-    def get_offer_handlers(self, page: Page) -> list[OfferHandler]:
+    def get_offer_handlers(self: GogGamesScraper, page: Page) -> list[OfferHandler]:
         return [
             OfferHandler(
                 page.locator("a.giveaway-banner"),
@@ -49,10 +51,10 @@ class GogGamesScraper(GogBaseScraper):
             ),
         ]
 
-    async def page_loaded_hook(self, page: Page) -> None:
+    async def page_loaded_hook(self: GogGamesScraper, page: Page) -> None:
         await GogBaseScraper.switch_to_english(page)
 
-    async def read_raw_offer_v1(self, element: Locator) -> GogRawOffer:
+    async def read_raw_offer_v1(self: GogGamesScraper, element: Locator) -> GogRawOffer:
         title = await element.locator(".giveaway-banner__title").text_content()
         if title is None:
             raise ValueError("Could not read title")
@@ -62,15 +64,15 @@ class GogGamesScraper(GogBaseScraper):
             .removesuffix(" and don't miss the best GOG offers in the future!")
         )
         valid_to = await element.locator("gog-countdown-timer").get_attribute(
-            "end-date"
+            "end-date",
         )
         url = await element.get_attribute("href")
         if url is not None:
             url = BASE_URL + url
         img_url = GogGamesScraper.sanitize_img_url(
             await element.locator(
-                '.giveaway-banner__image source[type="image/png"]:not([media])'
-            ).get_attribute("srcset")
+                '.giveaway-banner__image source[type="image/png"]:not([media])',
+            ).get_attribute("srcset"),
         )
 
         return GogRawOffer(
@@ -80,7 +82,9 @@ class GogGamesScraper(GogBaseScraper):
             img_url=img_url,
         )
 
-    async def read_raw_offer_v2(self, element: Locator) -> GogRawOffer | None:
+    async def read_raw_offer_v2(
+        self: GogGamesScraper, element: Locator,
+    ) -> GogRawOffer | None:
         try:
             price = element.locator('[ng-if="tile.isFreeVisible"]')
             value = await price.text_content()
@@ -93,16 +97,16 @@ class GogGamesScraper(GogBaseScraper):
 
         try:
             href = str(await element.get_attribute("href"))
-            if href.startswith("http"):
-                url = href
-            else:
-                url = BASE_URL + href
+            url = href if href.startswith("http") else BASE_URL + href
             return await self.read_offer_from_details_page(url)
         except Error:
             logger.warning("Could not read url for GOG variant 2.")
             return None
 
-    async def read_offer_from_details_page(self, url: str) -> GogRawOffer:
+    async def read_offer_from_details_page(
+        self: GogGamesScraper,
+        url: str,
+    ) -> GogRawOffer:
         async with get_new_page(self.context) as page:
             await page.goto(url, timeout=30000)
 
@@ -111,7 +115,7 @@ class GogGamesScraper(GogBaseScraper):
                 raise ValueError("Couldn't find title.")
 
             img_url = GogGamesScraper.sanitize_img_url(
-                await page.locator(".productcard-player__logo").get_attribute("srcset")
+                await page.locator(".productcard-player__logo").get_attribute("srcset"),
             )
             if img_url is None:
                 raise ValueError(f"Couldn't find image for {title}.")
@@ -122,9 +126,9 @@ class GogGamesScraper(GogBaseScraper):
                 img_url=img_url,
             )
 
-    def normalize_offer(self, raw_offer: RawOffer) -> Offer:
+    def normalize_offer(self: GogGamesScraper, raw_offer: RawOffer) -> Offer:
         if not isinstance(raw_offer, GogRawOffer):
-            raise ValueError("Wrong type of raw offer.")
+            raise TypeError("Wrong type of raw offer.")
 
         rawtext = {
             "title": raw_offer.title,
@@ -136,8 +140,9 @@ class GogGamesScraper(GogBaseScraper):
         if raw_offer.valid_to:
             try:
                 valid_to_unix = int(raw_offer.valid_to) / 1000
-                valid_to = datetime.utcfromtimestamp(valid_to_unix).replace(
-                    tzinfo=timezone.utc
+                valid_to = datetime.fromtimestamp(
+                    valid_to_unix,
+                    tz=timezone.utc,
                 )
             except ValueError:
                 valid_to = None

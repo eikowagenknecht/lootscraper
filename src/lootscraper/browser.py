@@ -1,7 +1,7 @@
 import logging
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from pathlib import Path
-from typing import AsyncGenerator
 
 from playwright.async_api import Browser, BrowserContext, Error, Page, async_playwright
 
@@ -42,11 +42,11 @@ async def get_browser_context() -> AsyncGenerator[BrowserContext, None]:
                 timezone_id="Atlantic/Reykjavik",
             )
             context.set_default_timeout(
-                Config.get().web_timeout_seconds * 1000
+                Config.get().web_timeout_seconds * 1000,
             )  # Milliseconds
 
             yield context
-    except Error as e:
-        logger.error(f"Error in Playwright Chromium context: {e}")
+    except Error:
+        logger.exception("Error in Playwright Chromium context.")
     finally:
         logger.debug("Closing Playwright Chromium context.")
