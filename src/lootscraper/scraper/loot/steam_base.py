@@ -97,7 +97,7 @@ class SteamBaseScraper(Scraper):  # pylint: disable=W0223
 
     def normalize_offer(self, raw_offer: RawOffer) -> Offer:
         if not isinstance(raw_offer, SteamRawOffer):
-            raise ValueError("Wrong type of raw offer.")
+            raise TypeError("Wrong type of raw offer.")
 
         rawtext = {
             "title": raw_offer.title,
