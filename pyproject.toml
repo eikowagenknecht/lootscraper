@@ -31,7 +31,7 @@ optional = true
 
 [tool.poetry.group.dev.dependencies]
 # Linting
-ruff = "^0.0.263"
+ruff = "^0.0.264"
 # Formatting
 black = "^23.3.0"
 # Type checking
