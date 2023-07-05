@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "lootscraper"
-version = "1.4.0"
+version = "1.5.0"
 description = "RSS feeds and Telegram bot for free game and loot offers."
 authors = ["Eiko Wagenknecht <git@eiko-wagenknecht.de>"]
 readme = "README.md"
@@ -16,14 +16,13 @@ lootscraper = 'lootscraper.main:main'
 
 [tool.poetry.dependencies]
 python = "^3.11"
-alembic = "^1.9.3"
+alembic = "^1.11.1"
 feedgen = "^0.9.0"
-humanize = "^4.6.0"
+humanize = "^4.7.0"
 httpx = "^0.23.3"
-python-telegram-bot = { extras = ["rate-limiter"], version = "^20.1" }
-pytz = "^2022.7"
-playwright = "^1.30.0"
-SQLAlchemy = "^2.0.3"
+python-telegram-bot = { version = "^20.2", extras = ["rate-limiter"] }
+playwright = "^1.35.0"
+SQLAlchemy = "^2.0.17"
 Unidecode = "^1.3.6"
 xvfbwrapper = "^0.2.9"
 
@@ -31,25 +30,65 @@ xvfbwrapper = "^0.2.9"
 optional = true
 
 [tool.poetry.group.dev.dependencies]
-# Formatting
-black = "^22.12.0"
-isort = "^5.12.0"
 # Linting
-bandit = "^1.7.4"
-pylint = "^2.16.1"
-flake8 = "^6.0.0"
-flake8-isort = "^5.0.3"
+ruff = "^0.0.277"
+# Formatting
+black = "^23.3.0"
 # Type checking
-mypy = "^0.991"
+mypy = "^1.4"
 # Profiling
-scalene = "^1.5.19"
+# scalene = "^1.5.19"
+pytest = "^7.4.0"
 
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
-[tool.isort]
-profile = "black"
+[tool.ruff]
+# See rules here: https://beta.ruff.rs/docs/rules/
+select = [
+    "F",
+    "W",
+    "B", 
+    "E", 
+    "I", 
+    "N", 
+    "PLC",
+    "PLE",
+    # "PLR",
+    "PLW",
+    "TRY",
+    "PTH",
+    "TID",
+    "SIM",
+    "ARG",
+    "TCH",
+    "RET",
+    "UP",
+    "YTT",
+    "SLF",
+    "ANN",
+    "S",
+    "A",
+    "COM",
+    "DTZ",
+    "C4",
+    "ISC",
+    "PIE",
+    "T20",
+    "PYI",
+    "PT",
+    "Q",
+    "RSE",
+    "INP",
+    "ICN"
+]
+
+ignore = [
+    "S101", # Use of assert detected
+    "E501", # Line too long
+    "TRY003", # Long messages in exceptions
+] 
 
 [tool.mypy]
 python_version = "3.11"
@@ -61,42 +100,4 @@ disallow_untyped_defs = true
 # disallow_any_unimported = true
 # disallow_any_expr = true
 disallow_any_generics = true
-
-[tool.pylint.master]
-# https://stackoverflow.com/questions/1899436/pylint-unable-to-import-error-how-to-set-pythonpath
-# Doesn't work with pyproject.toml but also doesn't seem to bee needed anymore with it
-#init-hook = "from pylint.config import find_pylintrc; import os, sys; sys.path.append(os.path.dirname(find_pylintrc()))"
-
-[tool.pylint.messages_control]
-# Some disabled because they are too verbose, some because they are handled better by flake8
-disable = [
-    "raw-checker-failed",
-    "bad-inline-option",
-    "locally-disabled",
-    "file-ignored",
-    "suppressed-message",
-    "useless-suppression",
-    "deprecated-pragma",
-    "use-symbolic-message-instead",
-    "missing-module-docstring",
-    "missing-function-docstring",
-    "missing-class-docstring",
-    "line-too-long",
-    "fixme",
-    "import-error",
-    "unused-import",
-    "invalid-name",
-    "too-few-public-methods",
-    "too-many-lines",
-    "too-many-public-methods",
-    "too-many-branches",
-    "too-many-statements",
-    "too-many-instance-attributes",
-    "too-many-nested-blocks",
-    "singleton-comparison",
-    "logging-fstring-interpolation",
-]
-
-[tool.pylint.logging]
-# Allow fstrings in logging. Might be changed later to better support log aggregators like Sentry
-logging-format-style = "new"
+# plugins = "sqlalchemy.ext.mypy.plugin" # Needed for SQLAlchemy 1.4 only

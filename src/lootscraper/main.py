@@ -3,8 +3,8 @@ import asyncio
 import logging
 import shutil
 import sys
-from contextlib import ExitStack
-from datetime import datetime, timedelta
+from contextlib import ExitStack, suppress
+from datetime import datetime, timedelta, timezone
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
 
@@ -22,10 +22,10 @@ try:
     from xvfbwrapper import Xvfb
 
     # Logging not initialized yet, so we print to stdout
-    print("Using virtual display")
+    print("Using virtual display")  # noqa: T201
     use_virtual_display = True
 except ImportError:
-    print("Using real display")
+    print("Using real display")  # noqa: T201
     use_virtual_display = False
 
 logger = logging.getLogger()
@@ -52,10 +52,8 @@ def main() -> None:
         cleanup()
         return
 
-    try:
+    with suppress(KeyboardInterrupt):
         asyncio.run(run())
-    except KeyboardInterrupt:
-        pass
 
 
 async def run() -> None:
@@ -78,8 +76,8 @@ async def run() -> None:
                 tg.create_task(run_scraper_loop(db, telegram_queue))
                 if Config.get().telegram_bot:
                     tg.create_task(run_telegram_bot(db, telegram_queue))
-    except OperationalError as db_error:
-        logger.error(f"Database error, exiting application: {db_error}")
+    except OperationalError:
+        logger.exception("Database error, exiting application.")
         sys.exit()
 
     logger.info(f"Exiting LootScraper v{__version__}")
@@ -98,7 +96,7 @@ def create_config_file(config_file: Path) -> None:
     """
     Create a new config file from the example config file.
     """
-    print(f"Config file {config_file} not found, creating a new one")
+    print(f"Config file {config_file} not found, creating a new one")  # noqa: T201
     config_file.parent.mkdir(exist_ok=True, parents=True)
     shutil.copy(EXAMPLE_CONFIG_FILE, config_file)
 
@@ -111,8 +109,8 @@ def check_config_file() -> None:
     # terminate because without a valid config continuing is useless.
     try:
         Config.get()
-    except Exception as e:  # pylint: disable=broad-except
-        print(f"Config could not be loaded: {e}")
+    except Exception as e:
+        print(f"Config could not be loaded: {e}")  # noqa: T201
         sys.exit()
 
 
@@ -159,13 +157,13 @@ async def run_telegram_bot(
             telegram_handler.setLevel(logging.ERROR)
             telegram_handler.setFormatter(logging.Formatter(LOGFORMAT))
             logger.addHandler(telegram_handler)
-        except Exception as e:  # pylint: disable=broad-except
-            logger.error(f"Could not add Telegram logging handler: {e}")
+        except Exception:
+            logger.exception("Could not add Telegram logging handler.")
 
         while True:
             run_no = await queue.get()
             logger.info(
-                f"Sending offers on Telegram that were found in scraping run #{run_no}."
+                f"Sending offers on Telegram that were found in scraping run #{run_no}.",
             )
 
             try:
@@ -173,7 +171,7 @@ async def run_telegram_bot(
             except OperationalError:
                 # We handle DB errors on a higher level
                 raise
-            except Exception as e:  # pylint: disable=broad-except
+            except Exception as e:
                 # This is our catch-all. Something really unexpected occurred.
                 # Log it with the highest priority and continue with the
                 # next run.
@@ -209,7 +207,7 @@ async def run_scraper_loop(
             except OperationalError:
                 # We handle DB errors on a higher level
                 raise
-            except Exception as e:  # pylint: disable=broad-except
+            except Exception as e:
                 # This is our catch-all. Something really unexpected occurred.
                 # Log it with the highest priority and continue with the
                 # next run.
@@ -218,7 +216,9 @@ async def run_scraper_loop(
             if time_between_runs == 0:
                 break
 
-            next_execution = datetime.now() + timedelta(seconds=time_between_runs)
+            next_execution = datetime.now(tz=timezone.utc) + timedelta(
+                seconds=time_between_runs,
+            )
 
             logger.info(f"Next scraping run will be at {next_execution.isoformat()}.")
 

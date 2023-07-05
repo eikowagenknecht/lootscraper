@@ -1,9 +1,13 @@
-import logging
+from __future__ import annotations
 
-from playwright.async_api import Locator, Page
+import logging
+from typing import TYPE_CHECKING
 
 from lootscraper.common import OfferType
 from lootscraper.scraper.loot.steam_base import SteamBaseScraper
+
+if TYPE_CHECKING:
+    from playwright.async_api import Locator, Page
 
 logger = logging.getLogger(__name__)
 
@@ -13,8 +17,8 @@ class SteamLootScraper(SteamBaseScraper):
     def get_type() -> OfferType:
         return OfferType.LOOT
 
-    def get_steam_category(self) -> int:
+    def get_steam_category(self: SteamLootScraper) -> int:
         return 21  # DLC
 
-    def get_validtext_locator(self, page: Page) -> Locator:
+    def get_validtext_locator(self: SteamLootScraper, page: Page) -> Locator:
         return page.locator(".game_purchase_discount_quantity")

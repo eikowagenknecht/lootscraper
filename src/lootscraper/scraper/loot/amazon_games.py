@@ -1,13 +1,17 @@
+from __future__ import annotations
+
 import logging
 from datetime import date, datetime, time, timedelta, timezone
-
-from playwright.async_api import Locator, Page
+from typing import TYPE_CHECKING
 
 from lootscraper.common import OfferType
 from lootscraper.database import Offer
 from lootscraper.scraper.info.utils import clean_game_title
 from lootscraper.scraper.loot.amazon_base import AmazonBaseScraper, AmazonRawOffer
 from lootscraper.scraper.loot.scraper import OfferHandler, RawOffer, Scraper
+
+if TYPE_CHECKING:
+    from playwright.async_api import Locator, Page
 
 logger = logging.getLogger(__name__)
 
@@ -17,29 +21,29 @@ class AmazonGamesScraper(AmazonBaseScraper):
     def get_type() -> OfferType:
         return OfferType.GAME
 
-    def get_page_ready_selector(self) -> str:
-        return ".offer-list__content"
-
-    def get_offer_handlers(self, page: Page) -> list[OfferHandler]:
+    def get_offer_handlers(self: AmazonGamesScraper, page: Page) -> list[OfferHandler]:
         return [
             OfferHandler(
                 page.locator(
-                    '[data-a-target="offer-list-FGWP_FULL"] .item-card__action'
+                    '[data-a-target="offer-list-FGWP_FULL"] [data-a-target="item-card"]',
                 ),
                 self.read_raw_offer,
                 self.normalize_offer,
             ),
         ]
 
-    async def page_loaded_hook(self, page: Page) -> None:
+    async def page_loaded_hook(self: AmazonGamesScraper, page: Page) -> None:
         await Scraper.scroll_element_to_bottom(page, "root")
 
-    async def read_raw_offer(self, element: Locator) -> AmazonRawOffer:
+    async def read_raw_offer(
+        self: AmazonGamesScraper,
+        element: Locator,
+    ) -> AmazonRawOffer:
         return await self.read_base_raw_offer(element)
 
-    def normalize_offer(self, raw_offer: RawOffer) -> Offer:
+    def normalize_offer(self: AmazonGamesScraper, raw_offer: RawOffer) -> Offer:
         if not isinstance(raw_offer, AmazonRawOffer):
-            raise ValueError("Wrong type of raw offer.")
+            raise TypeError("Wrong type of raw offer.")
 
         rawtext = {
             "title": raw_offer.title,
@@ -80,26 +84,34 @@ class AmazonGamesScraper(AmazonBaseScraper):
             try:
                 raw_date = raw_offer.valid_to.removeprefix("Ends ").lower()
                 if raw_date == "today":
-                    parsed_date = datetime.now().replace(
-                        tzinfo=timezone.utc, hour=0, minute=0, second=0
+                    parsed_date = datetime.now(tz=timezone.utc).replace(
+                        hour=0,
+                        minute=0,
+                        second=0,
                     )
                 elif raw_date == "tomorrow":
-                    parsed_date = datetime.now().replace(
-                        tzinfo=timezone.utc, hour=0, minute=0, second=0
+                    parsed_date = datetime.now(tz=timezone.utc).replace(
+                        hour=0,
+                        minute=0,
+                        second=0,
                     ) + timedelta(days=1)
                 else:
-                    parsed_date = datetime.now().replace(
-                        tzinfo=timezone.utc, hour=0, minute=0, second=0
+                    parsed_date = datetime.now(tz=timezone.utc).replace(
+                        hour=0,
+                        minute=0,
+                        second=0,
                     ) + timedelta(days=int(raw_date.split(" ")[1]))
 
                 # Correct the year
                 guessed_end_date = date(
-                    date.today().year, parsed_date.month, parsed_date.day
+                    datetime.now(tz=timezone.utc).date().year,
+                    parsed_date.month,
+                    parsed_date.day,
                 )
-                yesterday = date.today() - timedelta(days=1)
+                yesterday = datetime.now(tz=timezone.utc).date() - timedelta(days=1)
                 if guessed_end_date < yesterday:
                     guessed_end_date = guessed_end_date.replace(
-                        year=guessed_end_date.year + 1
+                        year=guessed_end_date.year + 1,
                     )
 
                 # Add 1 day because of the notation
@@ -107,7 +119,8 @@ class AmazonGamesScraper(AmazonBaseScraper):
                 end_date = datetime.combine(
                     guessed_end_date + timedelta(days=1),
                     time.min,
-                ).replace(tzinfo=timezone.utc)
+                    tzinfo=timezone.utc,
+                )
             except (ValueError, IndexError):
                 logger.warning(f"Date parsing failed for {raw_offer.title}")
 
