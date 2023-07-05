@@ -21,14 +21,11 @@ class AmazonGamesScraper(AmazonBaseScraper):
     def get_type() -> OfferType:
         return OfferType.GAME
 
-    def get_page_ready_selector(self: AmazonGamesScraper) -> str:
-        return ".offer-list__content"
-
     def get_offer_handlers(self: AmazonGamesScraper, page: Page) -> list[OfferHandler]:
         return [
             OfferHandler(
                 page.locator(
-                    '[data-a-target="offer-list-FGWP_FULL"] .item-card__action',
+                    '[data-a-target="offer-list-FGWP_FULL"] [data-a-target="item-card"]',
                 ),
                 self.read_raw_offer,
                 self.normalize_offer,
@@ -39,7 +36,8 @@ class AmazonGamesScraper(AmazonBaseScraper):
         await Scraper.scroll_element_to_bottom(page, "root")
 
     async def read_raw_offer(
-        self: AmazonGamesScraper, element: Locator,
+        self: AmazonGamesScraper,
+        element: Locator,
     ) -> AmazonRawOffer:
         return await self.read_base_raw_offer(element)
 

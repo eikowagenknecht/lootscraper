@@ -30,7 +30,7 @@ class AmazonLootScraper(AmazonBaseScraper):
         return [
             OfferHandler(
                 page.locator(
-                    '[data-a-target="offer-list-IN_GAME_LOOT"] .item-card__action',
+                    '[data-a-target="offer-list-IN_GAME_LOOT"] [data-a-target="item-card"]',
                 ),
                 self.read_raw_offer,
                 self.normalize_offer,
@@ -41,7 +41,8 @@ class AmazonLootScraper(AmazonBaseScraper):
         await Scraper.scroll_element_to_bottom(page, "root")
 
     async def read_raw_offer(
-        self: AmazonLootScraper, element: Locator,
+        self: AmazonLootScraper,
+        element: Locator,
     ) -> AmazonLootRawOffer:
         base_raw_offer = await self.read_base_raw_offer(element)
 
