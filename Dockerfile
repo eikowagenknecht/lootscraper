@@ -1,4 +1,4 @@
-FROM python:3.11
+FROM python:3.11-bullseye
 
 # Tini (init): Add
 ENV TINI_VERSION v0.19.0
@@ -20,7 +20,7 @@ RUN apt-get update && apt-get install -y \
 
 # Prepare installation of poetry
 ENV POETRY_HOME="/opt/poetry" \
-    POETRY_VERSION=1.3.1
+    POETRY_VERSION=1.5.1
 ENV PATH="$POETRY_HOME/bin:$PATH"
 
 # Install poetry (Python package manager)

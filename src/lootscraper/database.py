@@ -3,13 +3,9 @@ from __future__ import annotations
 import logging
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from types import TracebackType
-from typing import Any, Sequence, Type
+from typing import TYPE_CHECKING, Any
 
 import sqlalchemy as sa
-from alembic import command
-from alembic.config import Config as AlembicConfig
-from sqlalchemy.engine.interfaces import Dialect
 from sqlalchemy.orm import (
     DeclarativeBase,
     Mapped,
@@ -21,9 +17,16 @@ from sqlalchemy.orm import (
     sessionmaker,
 )
 
+from alembic import command
+from alembic.config import Config as AlembicConfig
 from lootscraper.common import Category, Channel, OfferDuration, OfferType, Source
 from lootscraper.config import Config
 from lootscraper.scraper.info.utils import calc_real_valid_to
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
+    from types import TracebackType
+
 
 logger = logging.getLogger(__name__)
 
@@ -37,7 +40,7 @@ class Base(MappedAsDataclass, DeclarativeBase):
     """
 
 
-class AwareDateTime(sa.TypeDecorator):  # type: ignore # pylint: disable=W0223
+class AwareDateTime(sa.TypeDecorator):  # type: ignore
     """
     Results returned as aware datetimes, not naive ones.
     """
@@ -46,7 +49,9 @@ class AwareDateTime(sa.TypeDecorator):  # type: ignore # pylint: disable=W0223
     cache_ok = True
 
     def process_result_value(
-        self, value: datetime | None, dialect: Dialect
+        self: AwareDateTime,
+        value: datetime | None,
+        dialect: sa.Dialect,  # noqa: ARG002
     ) -> datetime | None:
         if value is not None:
             return value.replace(tzinfo=timezone.utc)
@@ -54,7 +59,9 @@ class AwareDateTime(sa.TypeDecorator):  # type: ignore # pylint: disable=W0223
         return None
 
     def process_bind_param(
-        self, value: datetime | None, dialect: Dialect
+        self: AwareDateTime,
+        value: datetime | None,
+        dialect: sa.Dialect,  # noqa: ARG002
     ) -> datetime | None:
         if value is not None:
             return value.replace(tzinfo=None)
@@ -64,7 +71,7 @@ class AwareDateTime(sa.TypeDecorator):  # type: ignore # pylint: disable=W0223
 class Announcement(Base):
     __tablename__ = "announcements"
 
-    id: Mapped[int] = mapped_column(
+    id: Mapped[int] = mapped_column(  # noqa: A003
         init=False,
         primary_key=True,
     )
@@ -81,18 +88,18 @@ class Game(Base):
 
     __tablename__ = "games"
 
-    igdb_info: Mapped["IgdbInfo | None"] = relationship(
+    igdb_info: Mapped[IgdbInfo | None] = relationship(
         "IgdbInfo",
         back_populates="game",
         default=None,
     )
-    steam_info: Mapped["SteamInfo | None"] = relationship(
+    steam_info: Mapped[SteamInfo | None] = relationship(
         "SteamInfo",
         back_populates="game",
         default=None,
     )
 
-    id: Mapped[int] = mapped_column(
+    id: Mapped[int] = mapped_column(  # noqa: A003
         init=False,
         primary_key=True,
     )
@@ -113,11 +120,11 @@ class IgdbInfo(Base):
 
     __tablename__ = "igdb_info"
 
-    id: Mapped[int] = mapped_column(
+    id: Mapped[int] = mapped_column(  # noqa: A003
         primary_key=True,
     )
 
-    game: Mapped["Game | None"] = relationship(
+    game: Mapped[Game | None] = relationship(
         "Game",
         back_populates="igdb_info",
         default=None,
@@ -140,12 +147,12 @@ class SteamInfo(Base):
 
     __tablename__ = "steam_info"
 
-    id: Mapped[int] = mapped_column(
+    id: Mapped[int] = mapped_column(  # noqa: A003
         primary_key=True,
     )
     url: Mapped[str]
 
-    game: Mapped["Game | None"] = relationship(
+    game: Mapped[Game | None] = relationship(
         "Game",
         back_populates="steam_info",
         default=None,
@@ -172,12 +179,12 @@ class Offer(Base):
 
     __tablename__ = "offers"
 
-    id: Mapped[int] = mapped_column(
+    id: Mapped[int] = mapped_column(  # noqa: A003
         init=False,
         primary_key=True,
     )
     source: Mapped[Source] = mapped_column(sa.Enum(Source))
-    type: Mapped[OfferType] = mapped_column(sa.Enum(OfferType))
+    type: Mapped[OfferType] = mapped_column(sa.Enum(OfferType))  # noqa: A003
     duration: Mapped[OfferDuration] = mapped_column(sa.Enum(OfferDuration))
     title: Mapped[str]
     probable_game_name: Mapped[str]
@@ -190,7 +197,8 @@ class Offer(Base):
         init=False,
     )
     category: Mapped[Category] = mapped_column(
-        sa.Enum(Category), default=Category.VALID
+        sa.Enum(Category),
+        default=Category.VALID,
     )
 
     img_url: Mapped[str | None] = mapped_column(default=None)
@@ -198,12 +206,12 @@ class Offer(Base):
     valid_from: Mapped[datetime | None] = mapped_column(AwareDateTime, default=None)
     valid_to: Mapped[datetime | None] = mapped_column(AwareDateTime, default=None)
 
-    game: Mapped["Game | None"] = relationship(
+    game: Mapped[Game | None] = relationship(
         "Game",
         default=None,
     )
 
-    def real_valid_to(self) -> datetime | None:
+    def real_valid_to(self: Offer) -> datetime | None:
         """The real valid to date. This is calculated from valid_to and seen_last."""
         return calc_real_valid_to(self.seen_last, self.valid_to)
 
@@ -222,7 +230,7 @@ class User(Base):
         init=False,
     )
 
-    id: Mapped[int] = mapped_column(
+    id: Mapped[int] = mapped_column(  # noqa: A003
         init=False,
         primary_key=True,
     )
@@ -243,9 +251,9 @@ class TelegramSubscription(Base):
 
     __tablename__ = "telegram_subscriptions"
 
-    user: Mapped["User"] = relationship("User", back_populates="telegram_subscriptions")
+    user: Mapped[User] = relationship("User", back_populates="telegram_subscriptions")
 
-    id: Mapped[int] = mapped_column(
+    id: Mapped[int] = mapped_column(  # noqa: A003
         init=False,
         primary_key=True,
     )
@@ -254,13 +262,13 @@ class TelegramSubscription(Base):
         init=False,
     )
     source: Mapped[Source] = mapped_column(sa.Enum(Source))
-    type: Mapped[OfferType] = mapped_column(sa.Enum(OfferType))
+    type: Mapped[OfferType] = mapped_column(sa.Enum(OfferType))  # noqa: A003
     duration: Mapped[OfferDuration] = mapped_column(sa.Enum(OfferDuration))
     last_offer_id: Mapped[int] = mapped_column(default=0)
 
 
 class LootDatabase:
-    def __init__(self, echo: bool = False) -> None:
+    def __init__(self: LootDatabase, echo: bool = False) -> None:
         # Run Alembic migrations first before we open a session
         self.initialize_or_update()
 
@@ -274,12 +282,12 @@ class LootDatabase:
         self.Session = scoped_session(session_factory)
         # TODO: Can this be changed with SQLAlchemy 2.0 and the removal of threaded execution?
 
-    def __enter__(self) -> LootDatabase:
+    def __enter__(self: LootDatabase) -> LootDatabase:
         return self
 
     def __exit__(
-        self,
-        exc_type: Type[BaseException] | None,
+        self: LootDatabase,
+        exc_type: type[BaseException] | None,
         exc_value: BaseException | None,
         traceback: TracebackType | None,
     ) -> None:
@@ -290,7 +298,7 @@ class LootDatabase:
             session.commit()
         session.close()
 
-    def initialize_or_update(self) -> None:
+    def initialize_or_update(self: LootDatabase) -> None:
         logger.info("Running database migrations")
         alembic_cfg = AlembicConfig(
             "alembic.ini",
@@ -298,7 +306,7 @@ class LootDatabase:
         )
         command.upgrade(alembic_cfg, "head")
 
-    def read_all(self) -> Sequence[Offer]:
+    def read_all(self: LootDatabase) -> Sequence[Offer]:
         session: Session = self.Session()
         try:
             result = session.execute(sa.select(Offer)).scalars().all()
@@ -307,7 +315,9 @@ class LootDatabase:
             raise
         return result
 
-    def read_all_segmented(self) -> dict[str, dict[str, dict[str, list[Offer]]]]:
+    def read_all_segmented(
+        self: LootDatabase,
+    ) -> dict[str, dict[str, dict[str, list[Offer]]]]:
         result = self.read_all()
 
         offers: dict[str, dict[str, dict[str, list[Offer]]]] = {}
@@ -329,7 +339,7 @@ class LootDatabase:
         return offers
 
     def find_offer(
-        self,
+        self: LootDatabase,
         source: Source,
         type_: OfferType,
         title: str,
@@ -357,7 +367,7 @@ class LootDatabase:
                 sa.and_(
                     Offer.valid_to >= earliest_date,  # type: ignore
                     Offer.valid_to <= latest_date,  # type: ignore
-                )
+                ),
             )
 
         session: Session = self.Session()
@@ -381,11 +391,11 @@ class LootDatabase:
 
         # If there are multiple close matches, return the last (=newest)
         logger.warning(
-            f"Found multiple offers for {title} that are close to {valid_to}. Returning the newest of those."
+            f"Found multiple offers for {title} that are close to {valid_to}. Returning the newest of those.",
         )
         return result[-1]
 
-    def find_offer_by_id(self, id_: int) -> Offer | None:
+    def find_offer_by_id(self: LootDatabase, id_: int) -> Offer | None:
         statement = sa.select(Offer).where(Offer.id == id_)
         session: Session = self.Session()
         try:
@@ -396,8 +406,8 @@ class LootDatabase:
 
         return result
 
-    def touch_db_offer(self, db_offer: Offer) -> None:
-        db_offer.seen_last = datetime.now().replace(tzinfo=timezone.utc)
+    def touch_db_offer(self: LootDatabase, db_offer: Offer) -> None:
+        db_offer.seen_last = datetime.now(tz=timezone.utc)
         session: Session = self.Session()
         try:
             session.commit()
@@ -405,7 +415,7 @@ class LootDatabase:
             session.rollback()
             raise
 
-    def update_db_offer(self, db_offer: Offer, new_data: Offer) -> None:
+    def update_db_offer(self: LootDatabase, db_offer: Offer, new_data: Offer) -> None:
         db_offer.source = new_data.source
         db_offer.type = new_data.type
         db_offer.title = new_data.title
@@ -436,7 +446,7 @@ class LootDatabase:
             session.rollback()
             raise
 
-    def add_offer(self, offer: Offer) -> None:
+    def add_offer(self: LootDatabase, offer: Offer) -> None:
         offer.seen_first = offer.seen_last
         session: Session = self.Session()
         try:

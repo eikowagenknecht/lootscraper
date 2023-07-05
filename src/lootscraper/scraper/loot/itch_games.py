@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import logging
 from datetime import datetime, timezone
 
@@ -27,16 +29,16 @@ class ItchGamesScraper(Scraper):
     def get_duration() -> OfferDuration:
         return OfferDuration.CLAIMABLE
 
-    def offers_expected(self) -> bool:
+    def offers_expected(self: ItchGamesScraper) -> bool:
         return True
 
-    def get_offers_url(self) -> str:
+    def get_offers_url(self: ItchGamesScraper) -> str:
         return OFFER_URL
 
-    def get_page_ready_selector(self) -> str:
+    def get_page_ready_selector(self: ItchGamesScraper) -> str:
         return ".game_grid_widget .game_cell"
 
-    def get_offer_handlers(self, page: Page) -> list[OfferHandler]:
+    def get_offer_handlers(self: ItchGamesScraper, page: Page) -> list[OfferHandler]:
         return [
             OfferHandler(
                 page.locator(
@@ -45,13 +47,13 @@ class ItchGamesScraper(Scraper):
                 ),
                 self.read_raw_offer,
                 self.normalize_offer,
-            )
+            ),
         ]
 
-    async def page_loaded_hook(self, page: Page) -> None:
+    async def page_loaded_hook(self: ItchGamesScraper, page: Page) -> None:
         await Scraper.scroll_page_to_bottom(page)
 
-    async def read_raw_offer(self, element: Locator) -> RawOffer:
+    async def read_raw_offer(self: ItchGamesScraper, element: Locator) -> RawOffer:
         # Scroll into view to mage sure the image is loaded
         await element.scroll_into_view_if_needed()
 
@@ -77,7 +79,7 @@ class ItchGamesScraper(Scraper):
             img_url=img_url,
         )
 
-    def normalize_offer(self, raw_offer: RawOffer) -> Offer:
+    def normalize_offer(self: ItchGamesScraper, raw_offer: RawOffer) -> Offer:
         rawtext = {
             "title": raw_offer.title,
         }

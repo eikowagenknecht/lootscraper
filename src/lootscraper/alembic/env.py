@@ -1,8 +1,6 @@
 # The bahaviour of the config.context object is different in the env.py script,
 # so no-member errors must be ignored here. See also:
 # https://stackoverflow.com/questions/51203641/attributeerror-module-alembic-context-has-no-attribute-config
-# pylint: disable=no-member
-# pylint: disable=unused-argument
 from logging.config import fileConfig
 from pathlib import Path
 
@@ -21,7 +19,8 @@ config = context.config
 
 # Interpret the config file for Python logging. This line sets up loggers basically.
 if config.config_file_name is not None and config.attributes.get(
-    "configure_logger", True
+    "configure_logger",
+    True,
 ):
     fileConfig(config.config_file_name)
 
@@ -36,11 +35,11 @@ target_metadata = database.Base.metadata
 
 
 def include_object(
-    object_: SchemaItem,
+    object_: SchemaItem,  # noqa: ARG001
     name: str,
     type_: str,
-    reflected: bool,
-    compare_to: SchemaItem,
+    reflected: bool,  # noqa: ARG001
+    compare_to: SchemaItem,  # noqa: ARG001
 ) -> bool:
     """
     Should you include this table or not?

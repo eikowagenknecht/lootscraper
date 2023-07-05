@@ -2,8 +2,8 @@
     "python.formatting.provider": "black",
     "python.linting.flake8Enabled": true,
     "python.linting.banditEnabled": true,
-    "python.linting.enabled": true,
-    "python.linting.pylintEnabled": true,
+    "python.linting.enabled": false,
+    "python.linting.pylintEnabled": false,
     "python.linting.mypyEnabled": true,
     "python.testing.unittestArgs": [
         "-v",
@@ -12,8 +12,8 @@
         "-p",
         "test_*.py"
     ],
-    "python.testing.pytestEnabled": false,
-    "python.testing.unittestEnabled": true,
+    "python.testing.pytestEnabled": true,
+    "python.testing.unittestEnabled": false,
     "[python]": {
         "editor.defaultFormatter": "ms-python.black-formatter",
         "editor.formatOnSave": true,
@@ -24,5 +24,8 @@
     "isort.args": [
         "--profile",
         "black"
+    ],
+    "python.testing.pytestArgs": [
+        "tests"
     ]
 }

@@ -5,14 +5,18 @@ import re
 from asyncio import sleep
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
-from typing import Awaitable, Callable
+from typing import TYPE_CHECKING
 
 from playwright.async_api import BrowserContext, Error, Locator, Page
 
 from lootscraper.browser import get_new_page
 from lootscraper.common import Category, OfferDuration, OfferType, Source
 from lootscraper.config import Config
-from lootscraper.database import Offer
+
+if TYPE_CHECKING:
+    from collections.abc import Awaitable, Callable
+
+    from lootscraper.database import Offer
 
 logger = logging.getLogger(__name__)
 
@@ -34,12 +38,12 @@ class OfferHandler:
 
 
 class Scraper:
-    def __init__(self, context: BrowserContext):
+    def __init__(self: Scraper, context: BrowserContext) -> None:
         self.context = context
 
-    async def scrape(self) -> list[Offer]:
+    async def scrape(self: Scraper) -> list[Offer]:
         logging.info(
-            f"Analyzing {self.get_source().value} for offers: {self.get_type().value} / {self.get_duration().value}."
+            f"Analyzing {self.get_source().value} for offers: {self.get_type().value} / {self.get_duration().value}.",
         )
         offers = await self.read_offers()
         unique_offers = self.deduplicate_offers(offers)
@@ -76,39 +80,39 @@ class Scraper:
         """
         raise NotImplementedError("Please implement this method")
 
-    def offers_expected(self) -> bool:
+    def offers_expected(self: Scraper) -> bool:
         """
         Returns whether offers are always expected to be found on the page.
         """
         return False
 
-    def get_offers_url(self) -> str:
+    def get_offers_url(self: Scraper) -> str:
         """
         Returns the URL of the page where the offers are listed.
         """
         raise NotImplementedError("Please implement this method")
 
-    def get_page_ready_selector(self) -> str:
+    def get_page_ready_selector(self: Scraper) -> str:
         """
         Returns the CSS selector of an element that is present when the page is
         ready to be parsed.
         """
         raise NotImplementedError("Please implement this method")
 
-    def get_offer_handlers(self, page: Page) -> list[OfferHandler]:
+    def get_offer_handlers(self: Scraper, page: Page) -> list[OfferHandler]:
         """
         Returns a list of OfferHandlers that can be used to read and normalize
         offers from the page.
         """
         raise NotImplementedError("Please implement this method")
 
-    async def page_loaded_hook(self, page: Page) -> None:
+    async def page_loaded_hook(self: Scraper, page: Page) -> None:
         """
         This method is called after the page is loaded. Override for custom
         behavior that is needed here (e.g. scroll to bottom of page).
         """
 
-    async def read_offers(self) -> list[Offer]:
+    async def read_offers(self: Scraper) -> list[Offer]:
         """
         Read all offers from the page. This method calls the custom handlers
         defined in get_offer_handlers() to read and normalize the offers.
@@ -118,22 +122,24 @@ class Scraper:
         async with get_new_page(self.context) as page:
             try:
                 await page.goto(self.get_offers_url(), timeout=30000)
-            except Error as e:
-                logger.error(f"Couldn't load page: {e}")
+            except Error:
+                logger.exception("Couldn't load page.")
                 return []
 
             try:
                 await page.wait_for_selector(
-                    self.get_page_ready_selector(), timeout=10000
+                    self.get_page_ready_selector(),
+                    timeout=10000,
                 )
                 await self.page_loaded_hook(page)
-            except Error as e:
-                logger.error(f"The page didn't get ready to be parsed: {e}")
+            except Error:
                 filename = (
                     Config.data_path()
-                    / f'error_{self.get_source().name.lower()}_{datetime.now().isoformat().replace(".", "_").replace(":", "_")}.png'
+                    / f'error_{self.get_source().name.lower()}_{datetime.now(tz=timezone.utc).isoformat().replace(".", "_").replace(":", "_")}.png'
                 )
-                logger.error(f"Saving screenshot to {filename}.")
+                logger.exception(
+                    f"The page didn't get ready to be parsed. Saved screenshot to {filename}.",
+                )
                 await page.screenshot(path=str(filename.resolve()))
                 return []
 
@@ -142,9 +148,9 @@ class Scraper:
 
                 try:
                     elements = await offers_locator.all()
-                except Error as e:
+                except Error:
                     # Without offers we can't do anything
-                    logger.error(f"Couldn't find any offers: {e}")
+                    logger.exception("Couldn't find any offers.")
                     return []
 
                 for element in elements:
@@ -152,22 +158,22 @@ class Scraper:
                         raw_offer = await handler.read_offer_func(element)
                         if raw_offer is None:
                             continue
-                    except Exception as e:  # pylint: disable=broad-except
+                    except Exception:
                         # Skip offers that can't be loaded
-                        logger.error(f"Couldn't parse element {str(element)}: {e}")
+                        logger.exception(f"Couldn't parse element {str(element)}.")
                         continue
 
                     try:
                         normalized_offer = handler.normalize_offer_func(raw_offer)
-                    except Exception as e:  # pylint: disable=broad-except
-                        logger.error(f"Couldn't normalize offer {raw_offer.title}: {e}")
+                    except Exception:
+                        logger.exception(f"Couldn't normalize offer {raw_offer.title}.")
                         continue
 
                     offers.append(normalized_offer)
 
         return offers
 
-    def categorize_offers(self, offers: list[Offer]) -> list[Offer]:
+    def categorize_offers(self: Scraper, offers: list[Offer]) -> list[Offer]:
         """
         Categorize offers by title (demo, etc.)
         """
@@ -184,7 +190,7 @@ class Scraper:
 
         return offers
 
-    def deduplicate_offers(self, offers: list[Offer]) -> list[Offer]:
+    def deduplicate_offers(self: Scraper, offers: list[Offer]) -> list[Offer]:
         """
         Remove duplicate offers by title.
         """
@@ -200,7 +206,7 @@ class Scraper:
 
         return new_offers
 
-    def clean_offers(self, offers: list[Offer]) -> list[Offer]:
+    def clean_offers(self: Scraper, offers: list[Offer]) -> list[Offer]:
         """
         Only keep valid offers.
         """
@@ -209,7 +215,7 @@ class Scraper:
                 lambda offer: offer.category == Category.VALID
                 or offer.category is None,
                 offers,
-            )
+            ),
         )
 
     @staticmethod
@@ -278,8 +284,8 @@ class Scraper:
         if valid_to is None:
             return False
 
-        return valid_to > datetime.now().replace(tzinfo=timezone.utc) + timedelta(
-            days=100
+        return valid_to > datetime.now(tz=timezone.utc) + timedelta(
+            days=100,
         )
 
     @staticmethod
