@@ -33,7 +33,7 @@ optional = true
 # Linting
 ruff = "^0.0.280"
 # Formatting
-black = "^23.3.0"
+black = "^23.7.0"
 # Type checking
 mypy = "^1.4"
 # Profiling
