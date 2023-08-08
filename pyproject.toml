@@ -19,8 +19,8 @@ python = "^3.11"
 alembic = "^1.11.2"
 feedgen = "^0.9.0"
 humanize = "^4.7.0"
-httpx = "^0.23.3"
-python-telegram-bot = { version = "^20.2", extras = ["rate-limiter"] }
+httpx = "^0.24.1"
+python-telegram-bot = { version = "^20.4", extras = ["rate-limiter"] }
 playwright = "^1.36.0"
 SQLAlchemy = "^2.0.19"
 Unidecode = "^1.3.6"
@@ -35,10 +35,13 @@ ruff = "^0.0.282"
 # Formatting
 black = "^23.7.0"
 # Type checking
-mypy = "^1.4"
+mypy = "^1.4.1"
 # Profiling
 # scalene = "^1.5.19"
 pytest = "^7.4.0"
+# Python standard
+setuptools = "^68.0.0"
+wheel = "^0.41.1"
 
 [build-system]
 requires = ["poetry-core"]
