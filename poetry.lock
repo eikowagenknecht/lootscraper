@@ -571,18 +571,18 @@ test = ["appdirs (==1.4.4)", "covdefaults (>=2.3)", "pytest (>=7.3.1)", "pytest-
 
 [[package]]
 name = "playwright"
-version = "1.36.0"
+version = "1.37.0"
 description = "A high-level API to automate web browsers"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "playwright-1.36.0-py3-none-macosx_10_13_x86_64.whl", hash = "sha256:b7c6ddfca2b141b0385387cc56c125b14ea867902c39e3fc650ddd6c429b17da"},
-    {file = "playwright-1.36.0-py3-none-macosx_11_0_arm64.whl", hash = "sha256:428a719a6c7e40781c19860ed813840ac2d63678f7587abe12e800ea030d4b7e"},
-    {file = "playwright-1.36.0-py3-none-macosx_11_0_universal2.whl", hash = "sha256:4e396853034742b76654cdab27422155d238f46e4dc6369ea75854fafb935586"},
-    {file = "playwright-1.36.0-py3-none-manylinux1_x86_64.whl", hash = "sha256:72e80076e595f5fcd8ebd89bf6635ad78e4bafa633119faed8b2568d17dbd398"},
-    {file = "playwright-1.36.0-py3-none-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:ffbb927679b62fad5071439d5fe0840af46ad1844bc44bf80e1a0ad706140c98"},
-    {file = "playwright-1.36.0-py3-none-win32.whl", hash = "sha256:84213339f179fd2a70f77ea7faea0616d74871349d556c53a1ecb7dd5097973c"},
-    {file = "playwright-1.36.0-py3-none-win_amd64.whl", hash = "sha256:89ca2261bb00b67d3dff97691cf18f4347ee0529a11e431e47df67b703d4d8fa"},
+    {file = "playwright-1.37.0-py3-none-macosx_10_13_x86_64.whl", hash = "sha256:b476f63251876f1625f490af8d58ec0db90b555c623b7f54105f91d33878c06d"},
+    {file = "playwright-1.37.0-py3-none-macosx_11_0_arm64.whl", hash = "sha256:68d56efe5ce916bab349177e90726837a6f0cae77ebd6a5200f5333b787b25fb"},
+    {file = "playwright-1.37.0-py3-none-macosx_11_0_universal2.whl", hash = "sha256:428fdf9bfff586b73f96df53692d50d422afb93ca4650624f61e8181f548fed2"},
+    {file = "playwright-1.37.0-py3-none-manylinux1_x86_64.whl", hash = "sha256:41f0280472af94c426e941f6a969ff6a7ea156dc15fd01d09ac4b8f092e2346e"},
+    {file = "playwright-1.37.0-py3-none-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:b574889ef97b7f44a633aa10d72b8966a850a4354d915fd0bc7e8658e825dd63"},
+    {file = "playwright-1.37.0-py3-none-win32.whl", hash = "sha256:8b5d96aae54289129ab19d3d0e2e431171ae3e5d88d49a10900dcbe569a27d43"},
+    {file = "playwright-1.37.0-py3-none-win_amd64.whl", hash = "sha256:678b9926be2df06321d11a525d4bf08d9f4a5b151354a3b82fe2ac14476322d5"},
 ]
 
 [package.dependencies]
@@ -856,4 +856,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "c7f8bc1334a2c9760475a5e1b6fe8c4e7333a20d2fd10c93ba4e1eadcaeccb30"
+content-hash = "288ce721fc1676d3ef8fa7b64d5d268c05af7ceb8bee1551d29f8e3629044848"
