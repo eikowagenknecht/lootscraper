@@ -27,7 +27,7 @@ jobs:
       run: echo ${{ github.workflow }}-${{ github.ref }}
 
     - name: Check out repository
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - name: Extract metadata for Docker
       id: meta
