@@ -38,7 +38,7 @@ black = "^23.7.0"
 mypy = "^1.5"
 # Profiling
 # scalene = "^1.5.19"
-pytest = "^7.4.1"
+pytest = "^7.4.2"
 
 [build-system]
 requires = ["poetry-core"]
