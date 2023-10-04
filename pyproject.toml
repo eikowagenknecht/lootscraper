@@ -19,8 +19,8 @@ python = "^3.11"
 alembic = "^1.12.0"
 feedgen = "^0.9.0"
 humanize = "^4.8.0"
-httpx = "^0.23.3"
-python-telegram-bot = { version = "^20.2", extras = ["rate-limiter"] }
+httpx = "^0.24.1"
+python-telegram-bot = { version = "^20.4", extras = ["rate-limiter"] }
 playwright = "^1.38.0"
 SQLAlchemy = "^2.0.21"
 Unidecode = "^1.3.7"
@@ -39,6 +39,9 @@ mypy = "^1.5"
 # Profiling
 # scalene = "^1.5.19"
 pytest = "^7.4.2"
+# Python standard
+setuptools = "^68.0.0"
+wheel = "^0.41.1"
 
 [build-system]
 requires = ["poetry-core"]
@@ -49,10 +52,10 @@ build-backend = "poetry.core.masonry.api"
 select = [
     "F",
     "W",
-    "B", 
-    "E", 
-    "I", 
-    "N", 
+    "B",
+    "E",
+    "I",
+    "N",
     "PLC",
     "PLE",
     # "PLR",
@@ -81,14 +84,14 @@ select = [
     "Q",
     "RSE",
     "INP",
-    "ICN"
+    "ICN",
 ]
 
 ignore = [
-    "S101", # Use of assert detected
-    "E501", # Line too long
+    "S101",   # Use of assert detected
+    "E501",   # Line too long
     "TRY003", # Long messages in exceptions
-] 
+]
 
 [tool.mypy]
 python_version = "3.11"
