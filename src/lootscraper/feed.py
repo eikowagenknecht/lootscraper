@@ -174,6 +174,17 @@ async def generate_feed(
         # - Summary
         # Atom Optional
         # - category
+        # Add Steam genres as categories
+        if offer.game and offer.game.steam_info and offer.game.steam_info.genres:
+            categories: list[str] = []
+            for genre in offer.game.steam_info.genres.split(", "):
+                category = {
+                    "term": f"Genre: {genre}",
+                    "scheme": "https://store.steampowered.com/category/",
+                    "label": genre,
+                }
+                categories.append(category)
+            feed_entry.category(category=categories)
         # - contributor
         # - published
         feed_entry.published(offer.seen_first)
