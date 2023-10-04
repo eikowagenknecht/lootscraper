@@ -80,7 +80,8 @@ Run: `poetry run <package>`
 
 ### Update dependencies
 
-Install tool: `poetry self add poetry-plugin-up`
+Update poetry itself: `poetry self update`
+Install tool: `poetry self add poetry-plugin-up` (only once)
 Update all dependencies in `pyproject.toml`: `poetry up`
 Install new dependencies locally: `poetry install --with dev`
 Check if dependencies are up to date: `poetry show --outdated`
