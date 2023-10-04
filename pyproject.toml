@@ -19,8 +19,8 @@ python = "^3.11"
 alembic = "^1.12.0"
 feedgen = "^0.9.0"
 humanize = "^4.8.0"
-httpx = "^0.24.1"
-python-telegram-bot = { version = "^20.4", extras = ["rate-limiter"] }
+httpx = "^0.25.0"
+python-telegram-bot = { version = "^20.6", extras = ["rate-limiter"] }
 playwright = "^1.38.0"
 SQLAlchemy = "^2.0.21"
 Unidecode = "^1.3.7"
