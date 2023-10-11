@@ -35,7 +35,7 @@ ruff = "^0.0.292"
 # Formatting
 black = "^23.9.1"
 # Type checking
-mypy = "^1.5"
+mypy = "^1.6"
 # Profiling
 # scalene = "^1.5.19"
 pytest = "^7.4.2"
