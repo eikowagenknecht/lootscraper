@@ -62,7 +62,8 @@ class HumbleGamesScraper(Scraper):
         ]
 
     async def read_raw_offer(
-        self: HumbleGamesScraper, element: Locator,
+        self: HumbleGamesScraper,
+        element: Locator,
     ) -> HumbleRawOffer:
         title = await element.locator("span.entity-title").text_content()
         if title is None:

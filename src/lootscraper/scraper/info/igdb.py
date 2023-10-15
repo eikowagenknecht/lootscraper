@@ -54,7 +54,9 @@ class IGDBWrapper:
             self.auth_token = result.json()["access_token"]
 
     async def api_request(
-        self: IGDBWrapper, endpoint: str, query: str,
+        self: IGDBWrapper,
+        endpoint: str,
+        query: str,
     ) -> Any:  # noqa: ANN401
         """
         Takes an endpoint and the Apicalypse query and returns the api response as a json object.

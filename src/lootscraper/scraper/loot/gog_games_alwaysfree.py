@@ -33,7 +33,8 @@ class GogGamesAlwaysFreeScraper(GogBaseScraper):
         return ".content.cf"
 
     def get_offer_handlers(
-        self: GogGamesAlwaysFreeScraper, page: Page,
+        self: GogGamesAlwaysFreeScraper,
+        page: Page,
     ) -> list[OfferHandler]:
         return [
             OfferHandler(
