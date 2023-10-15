@@ -30,6 +30,9 @@ except ImportError:
 
 logger = logging.getLogger()
 
+# Tone down the logging of httpx, we don't need to see every request
+logging.getLogger("httpx").setLevel(logging.WARNING)
+
 EXAMPLE_CONFIG_FILE = "config.default.toml"
 LOGFORMAT = "%(asctime)s [%(levelname)s] (%(name)s) %(message)s"
 
