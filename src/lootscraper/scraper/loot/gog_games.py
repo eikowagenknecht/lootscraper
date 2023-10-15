@@ -83,7 +83,8 @@ class GogGamesScraper(GogBaseScraper):
         )
 
     async def read_raw_offer_v2(
-        self: GogGamesScraper, element: Locator,
+        self: GogGamesScraper,
+        element: Locator,
     ) -> GogRawOffer | None:
         try:
             price = element.locator('[ng-if="tile.isFreeVisible"]')
