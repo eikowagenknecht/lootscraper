@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Self
 
 import sqlalchemy as sa
 from alembic import command
@@ -282,7 +282,7 @@ class LootDatabase:
         self.Session = scoped_session(session_factory)
         # TODO: Can this be changed with SQLAlchemy 2.0 and the removal of threaded execution?
 
-    def __enter__(self: LootDatabase) -> LootDatabase:
+    def __enter__(self: LootDatabase) -> Self:
         return self
 
     def __exit__(
