@@ -6,6 +6,8 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 import sqlalchemy as sa
+from alembic import command
+from alembic.config import Config as AlembicConfig
 from sqlalchemy.orm import (
     DeclarativeBase,
     Mapped,
@@ -17,8 +19,6 @@ from sqlalchemy.orm import (
     sessionmaker,
 )
 
-from alembic import command
-from alembic.config import Config as AlembicConfig
 from lootscraper.common import Category, Channel, OfferDuration, OfferType, Source
 from lootscraper.config import Config
 from lootscraper.scraper.info.utils import calc_real_valid_to
