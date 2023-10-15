@@ -4,10 +4,10 @@
 from logging.config import fileConfig
 from pathlib import Path
 
+from alembic import context
 from sqlalchemy import create_engine, pool
 from sqlalchemy.schema import SchemaItem
 
-from alembic import context
 from lootscraper import database
 from lootscraper.config import Config
 
