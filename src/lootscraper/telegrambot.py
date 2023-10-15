@@ -6,7 +6,7 @@ import logging
 import traceback
 from datetime import datetime, timedelta, timezone
 from http.client import RemoteDisconnected
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Self
 
 import humanize
 import sqlalchemy as sa
@@ -101,7 +101,7 @@ class TelegramBot:
         self.Session = scoped_session
         self.application: Application | None = None  # type: ignore
 
-    async def __aenter__(self: TelegramBot) -> TelegramBot:
+    async def __aenter__(self: TelegramBot) -> Self:
         try:
             await self.start()
         except TelegramError:
