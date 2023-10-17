@@ -45,7 +45,8 @@ def main() -> None:
     parser.add_argument(
         "-c",
         "--cleanup",
-        help="do a cleanup run of the database (fix invalid offers, rescrape all game info)",
+        help="do a cleanup run of the database "
+        "(fix invalid offers, rescrape all game info)",
         action="store_true",
     )
 
@@ -87,8 +88,8 @@ async def run() -> None:
 
 
 def initialize_config_file() -> None:
-    """
-    Copy the config file to the data directory if there is not yet a config file there!
+    """Copy the config file to the data directory if there is not yet a config
+    file there.
     """
     config_file = Config.config_file()
     if not config_file.is_file():
@@ -96,18 +97,14 @@ def initialize_config_file() -> None:
 
 
 def create_config_file(config_file: Path) -> None:
-    """
-    Create a new config file from the example config file.
-    """
+    """Create a new config file from the example config file."""
     print(f"Config file {config_file} not found, creating a new one")  # noqa: T201
     config_file.parent.mkdir(exist_ok=True, parents=True)
     shutil.copy(EXAMPLE_CONFIG_FILE, config_file)
 
 
 def check_config_file() -> None:
-    """
-    Check if the config file is valid and can be read.
-    """
+    """Check if the config file is valid and can be read."""
     # Now we can try to read the config file. In case anything goes wrong, we
     # terminate because without a valid config continuing is useless.
     try:
@@ -118,9 +115,7 @@ def check_config_file() -> None:
 
 
 def setup_logging() -> None:
-    """
-    Set up the logging system.
-    """
+    """Set up the logging system."""
     filename = Config.data_path() / Path(Config.get().log_file)
     loglevel = logging.getLevelName(Config.get().log_level)
     handlers: list[logging.Handler] = []
@@ -166,7 +161,9 @@ async def run_telegram_bot(
         while True:
             run_no = await queue.get()
             logger.info(
-                f"Sending offers on Telegram that were found in scraping run #{run_no}.",
+                "Sending offers on Telegram that were found in scraping run #"
+                + run_no
+                + ".",
             )
 
             try:
@@ -192,7 +189,8 @@ async def run_scraper_loop(
     config file) between the runs.
     """
     with ExitStack() as stack:
-        # Check the "global" variable (set on import) to see if we can use a virtual display
+        # Check the "global" variable (set on import) to see if we can use a
+        # virtual display
         if use_virtual_display:
             stack.enter_context(Xvfb())
 

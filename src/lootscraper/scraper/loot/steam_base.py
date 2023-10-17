@@ -86,7 +86,8 @@ class SteamBaseScraper(Scraper):
             if img_url is None:
                 raise ValueError(f"Couldn't find image for {title}.")
 
-            # Get the resolved text here because the text_content() contains special characters
+            # Get the resolved text here because the text_content() contains
+            # special characters
             text = await page.locator(".game_purchase_discount_quantity").inner_text()
             if text is None:
                 raise ValueError(f"Couldn't find valid date for {title}.")

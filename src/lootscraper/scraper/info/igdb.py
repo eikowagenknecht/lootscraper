@@ -28,9 +28,7 @@ class IgdbEntry:
 
 
 class IGDBWrapper:
-    """
-    Asynchronous IGDB wrapper module for the api v4 with Apicalypse syntax.
-    """
+    """Asynchronous IGDB wrapper module for the api v4 with Apicalypse syntax."""
 
     def __init__(self: IGDBWrapper, client_id: str, client_secret: str) -> None:
         self.client_id = client_id
@@ -38,9 +36,7 @@ class IGDBWrapper:
         self.auth_token: str | None = None
 
     async def authorize(self: IGDBWrapper) -> None:
-        """
-        Authorize with IGDB and get a token for the session.
-        """
+        """Authorize with IGDB and get a token for the session."""
         url = TOKEN_URL
         request_params = {
             "client_id": self.client_id,
@@ -59,7 +55,8 @@ class IGDBWrapper:
         query: str,
     ) -> Any:  # noqa: ANN401
         """
-        Takes an endpoint and the Apicalypse query and returns the api response as a json object.
+        Take an endpoint and the Apicalypse query and return the api
+        response as a json object.
         """
         if self.auth_token is None:
             await self.authorize()
@@ -79,6 +76,7 @@ class IGDBWrapper:
 async def get_igdb_id(search_string: str) -> int | None:
     """
     Search IGDB via the APIv4 and return the best match in the results.
+
     The comparison is done with difflib, lower cased.
     """
     logger.info(f"Getting id for {search_string}")
@@ -92,7 +90,10 @@ async def get_igdb_id(search_string: str) -> int | None:
     try:
         response = await igdb.api_request(
             "games",
-            f'search "{api_search_string}"; fields name; where version_parent = null; limit 50;',
+            f'search "{api_search_string}"; '
+            "fields name; "
+            "where version_parent = null; "
+            "limit 50;",
         )
     except httpx.HTTPError:
         logger.exception("IGDB request failed.")
@@ -119,7 +120,8 @@ async def get_igdb_id(search_string: str) -> int | None:
         return None
 
     logger.info(
-        f"{best_match.title} ({best_match.igdb_id}) is the best match ({(best_match.score*100):.0f} %).",
+        f"{best_match.title} ({best_match.igdb_id}) is the best match "
+        f"({(best_match.score*100):.0f} %).",
     )
     return best_match.igdb_id
 

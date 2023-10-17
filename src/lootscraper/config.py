@@ -80,10 +80,7 @@ class Config:
 
     @staticmethod
     def config_file() -> Path:
-        """
-        Return the path to the config file.
-        """
-
+        """Return the path to the config file."""
         if Config.__config_file is None:
             data_path = Config.data_path()
             config_file = data_path / Path(CONFIG_FILE)
@@ -93,10 +90,7 @@ class Config:
 
     @staticmethod
     def data_path() -> Path:
-        """
-        Return the path to the data directory.
-        """
-
+        """Return the path to the data directory."""
         if Config.__data_path is None:
             docker_path = Path("/data")
             local_path = Path("data")
@@ -109,10 +103,9 @@ class Config:
 
     @staticmethod
     def get() -> ParsedConfig:  # noqa: PLR0915
+        """Parse the config file into a ParsedConfig dataclass.
+        Do this only once (lazy).
         """
-        Parse the config file into a ParsedConfig dataclass. Do this only once (lazy).
-        """
-
         if Config.__parsed_config is None:
             file = Path(Config.data_path() / CONFIG_FILE)
             with file.open(mode="rb") as f:

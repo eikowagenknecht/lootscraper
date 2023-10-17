@@ -41,10 +41,7 @@ def include_object(
     reflected: bool,  # noqa: ARG001
     compare_to: SchemaItem,  # noqa: ARG001
 ) -> bool:
-    """
-    Should you include this table or not?
-    """
-
+    """Define whether to include this table or not."""
     if type_ == "table" and (name in IGNORE_TABLES):
         return False
 
@@ -63,7 +60,6 @@ def run_migrations_offline() -> None:
     Calls to context.execute() here emit the given string to the
     script output.
     """
-
     db_file_path = Config.data_path() / Path(Config.get().database_file)
     url = f"sqlite+pysqlite:///{db_file_path}"
 
@@ -88,7 +84,6 @@ def run_migrations_online() -> None:
     In this scenario we need to create an Engine
     and associate a connection with the context.
     """
-
     db_file_path = Config.data_path() / Path(Config.get().database_file)
     url = f"sqlite+pysqlite:///{db_file_path}"
 

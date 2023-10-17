@@ -45,7 +45,8 @@ class GogBaseScraper(Scraper):
         current_language = await GogBaseScraper.get_current_language(page)
         if current_language != "English":
             raise ValueError(
-                f"Tried switching to English, but {current_language} is active instead.",
+                f"Tried switching to English, but {current_language} is active "
+                "instead.",
             )
 
     @staticmethod

@@ -23,9 +23,7 @@ logger = logging.getLogger(__name__)
 
 
 async def scrape_new_offers(db: LootDatabase) -> None:
-    """
-    Do the actual scraping and processing of new offers.
-    """
+    """Do the actual scraping and processing of new offers."""
     context: BrowserContext
     cfg = Config.get()
 
@@ -77,9 +75,8 @@ async def process_new_offers(
     Check which offers are new and which are updated, then act accordingly:
     - Offers that are neither new nor updated just get a new date
     - Offers that are new are inserted
-    - Offers that are updated are updated
+    - Offers that are updated are updated.
     """
-
     cfg = Config.get()
 
     nr_of_new_offers: int = 0
@@ -216,7 +213,6 @@ async def add_game_info(
     information, just update the missing parts. Otherwise, create a new
     Game and try to populate it with information.
     """
-
     if offer.game:
         # The offer already has a game attached, leave it alone
         return

@@ -43,7 +43,8 @@ class Scraper:
 
     async def scrape(self: Scraper) -> list[Offer]:
         logging.info(
-            f"Analyzing {self.get_source().value} for offers: {self.get_type().value} / {self.get_duration().value}.",
+            f"Analyzing {self.get_source().value} for offers: {self.get_type().value} "
+            f"/ {self.get_duration().value}.",
         )
         offers = await self.read_offers()
         unique_offers = self.deduplicate_offers(offers)
@@ -61,60 +62,54 @@ class Scraper:
 
     @staticmethod
     def get_type() -> OfferType:
-        """
-        Returns the type of the offers this scraper is looking for.
-        """
+        """Return the type of the offers this scraper is looking for."""
         raise NotImplementedError("Please implement this method")
 
     @staticmethod
     def get_source() -> Source:
-        """
-        Returns the source of the offers this scraper is looking for.
-        """
+        """Return the source of the offers this scraper is looking for."""
         raise NotImplementedError("Please implement this method")
 
     @staticmethod
     def get_duration() -> OfferDuration:
-        """
-        Returns the duration of the offers this scraper is looking for.
-        """
+        """Return the duration of the offers this scraper is looking for."""
         raise NotImplementedError("Please implement this method")
 
     def offers_expected(self: Scraper) -> bool:
-        """
-        Returns whether offers are always expected to be found on the page.
-        """
+        """Return whether offers are always expected to be found on the page."""
         return False
 
     def get_offers_url(self: Scraper) -> str:
-        """
-        Returns the URL of the page where the offers are listed.
-        """
+        """Return the URL of the page where the offers are listed."""
         raise NotImplementedError("Please implement this method")
 
     def get_page_ready_selector(self: Scraper) -> str:
         """
-        Returns the CSS selector of an element that is present when the page is
+        Return the CSS selector of an element that is present when the page is
         ready to be parsed.
         """
         raise NotImplementedError("Please implement this method")
 
     def get_offer_handlers(self: Scraper, page: Page) -> list[OfferHandler]:
         """
-        Returns a list of OfferHandlers that can be used to read and normalize
+        Return a list of OfferHandlers that can be used to read and normalize
         offers from the page.
         """
         raise NotImplementedError("Please implement this method")
 
     async def page_loaded_hook(self: Scraper, page: Page) -> None:
         """
-        This method is called after the page is loaded. Override for custom
-        behavior that is needed here (e.g. scroll to bottom of page).
+        Hook after the page is loaded.
+
+        Override for custom behavior that is needed here
+        (e.g. scroll to bottom of page).
         """
 
     async def read_offers(self: Scraper) -> list[Offer]:
         """
-        Read all offers from the page. This method calls the custom handlers
+        Read all offers from the page.
+
+        This method calls the custom handlers
         defined in get_offer_handlers() to read and normalize the offers.
         """
         offers: list[Offer] = []
@@ -134,11 +129,18 @@ class Scraper:
                 await self.page_loaded_hook(page)
             except Error:
                 filename = (
-                    Config.data_path()
-                    / f'error_{self.get_source().name.lower()}_{datetime.now(tz=timezone.utc).isoformat().replace(".", "_").replace(":", "_")}.png'
+                    Config.data_path() / "error_"
+                    + self.get_source().name.lower()
+                    + "_"
+                    + datetime.now(tz=timezone.utc)
+                    .isoformat()
+                    .replace(".", "_")
+                    .replace(":", "_")
+                    + ".png"
                 )
                 logger.exception(
-                    f"The page didn't get ready to be parsed. Saved screenshot to {filename}.",
+                    f"The page didn't get ready to be parsed. "
+                    f"Saved screenshot to {filename}.",
                 )
                 await page.screenshot(path=str(filename.resolve()))
                 return []
@@ -174,9 +176,7 @@ class Scraper:
         return offers
 
     def categorize_offers(self: Scraper, offers: list[Offer]) -> list[Offer]:
-        """
-        Categorize offers by title (demo, etc.)
-        """
+        """Categorize offers by title (demo, etc.)."""
         for offer in offers:
             if self.is_demo(offer.title):
                 offer.category = Category.DEMO
@@ -191,9 +191,7 @@ class Scraper:
         return offers
 
     def deduplicate_offers(self: Scraper, offers: list[Offer]) -> list[Offer]:
-        """
-        Remove duplicate offers by title.
-        """
+        """Remove duplicate offers by title."""
         titles = set()
         new_offers = []
 
@@ -207,9 +205,7 @@ class Scraper:
         return new_offers
 
     def clean_offers(self: Scraper, offers: list[Offer]) -> list[Offer]:
-        """
-        Only keep valid offers.
-        """
+        """Only keep valid offers."""
         return list(
             filter(
                 lambda offer: offer.category == Category.VALID
@@ -220,10 +216,7 @@ class Scraper:
 
     @staticmethod
     def is_demo(title: str) -> bool:
-        """
-        Check if the given title is a demo.
-        """
-
+        """Check if the given title is a demo."""
         # Check for demo in title
         # Catches titles like
         # - "Demo: Title"
@@ -248,10 +241,7 @@ class Scraper:
 
     @staticmethod
     def is_prerelease(title: str) -> bool:
-        """
-        Check if the given title is an alpha or beta version.
-        """
-
+        """Check if the given title is an alpha or beta version."""
         # Check for demo in title
         # Catches titles like
         # - "Alpha: Title"
@@ -277,10 +267,11 @@ class Scraper:
     @staticmethod
     def is_fake_always(valid_to: datetime | None) -> bool:
         """
-        Check if the offer is "always" valid. That means the end date is
-        unreasonably far in the future (100 days or more).
-        """
+        Check if the offer is "always" valid.
 
+        That means the end date is unreasonably far in the future
+        (100 days or more).
+        """
         if valid_to is None:
             return False
 
@@ -292,6 +283,7 @@ class Scraper:
     async def scroll_element_to_bottom(page: Page, element_id: str) -> None:
         """
         Scroll down to the bottom of the given element.
+
         Useful for pages with infinite scrolling.
         """
         selector = f'document.getElementById("{element_id}")'
@@ -326,16 +318,17 @@ class Scraper:
     async def scroll_page_to_bottom(page: Page) -> None:
         """
         Scroll down to the bottom of the current page.
+
         Useful for pages with infinite scrolling.
         """
-
         # Get scroll height
         height = await page.evaluate("document.body.scrollHeight")
 
         scolled_x_times = 0
 
         while True:
-            # Wait to load page. We do this first to give the page time for the initial load
+            # Wait to load page. We do this first to give the page time for
+            # the initial load
             await sleep(SCROLL_PAUSE_SECONDS)
 
             # Scroll down to bottom
