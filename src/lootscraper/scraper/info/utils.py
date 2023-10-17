@@ -19,9 +19,11 @@ def get_match_score(search: str, result: str) -> float:
     score = difflib.SequenceMatcher(a=cleaned_search, b=cleaned_result).ratio()
 
     if score < RESULT_MATCH_THRESHOLD:
-        # If it is no match, look for a partial match instead. Look at the first x or last x words from the
-        # result because the result often includes additional text (e.g. a prepended "Tom Clancy's ...") or
-        # an appended " - Ultimate edition". x is the number of words the search term has.
+        # If it is no match, look for a partial match instead. Look at the
+        # first x or last x words from the result because the result often
+        # includes additional text (e.g. a prepended "Tom Clancy's ...") or
+        # an appended " - Ultimate edition". x is the number of words the
+        # search term has.
 
         words_result = cleaned_result.split(" ")
         words_searchstring = cleaned_search.split(" ")
@@ -51,8 +53,9 @@ def get_match_score(search: str, result: str) -> float:
 
 def clean_nones(value: dict[str, Any]) -> dict[str, Any]:
     """
-    Recursively remove all None values from dictionaries and lists, and returns
-    the result as a new dictionary or list.
+    Recursively remove all None values from dictionaries and lists.
+
+    Returns the result as a new dictionary or list.
     """
     if isinstance(value, list):
         return [clean_nones(x) for x in value if x is not None]
@@ -88,6 +91,8 @@ def clean_game_title(title: str) -> str:
 
 def clean_loot_title(title: str) -> str:
     """
+    Clean the loot title.
+
     Unfortunately Amazon loot offers come in free text format, so we
     need to do some manual matching.
 
@@ -120,7 +125,6 @@ def clean_loot_title(title: str) -> str:
     in the name)
     4. By the ": " pattern (TITLE: LOOT)
     """
-
     probable_game_name: str | None = None
 
     match = re.compile(r"(.*) — .*: .*").match(title)
@@ -151,7 +155,6 @@ def calc_real_valid_to(
     forced_now: datetime | None = None,
 ) -> datetime | None:
     """Calculate the real end date of an offer."""
-
     now = forced_now if forced_now is not None else datetime.now(tz=timezone.utc)
 
     if valid_to is None:

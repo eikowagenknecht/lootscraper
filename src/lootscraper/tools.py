@@ -14,10 +14,9 @@ logger = logging.getLogger(__name__)
 
 async def refresh_all_games(session: Session, context: BrowserContext) -> None:
     """
-    This drops all games from the database and re-adds them, scraping all
+    Drop all games from the database and re-add them, scraping all
     information again.
     """
-
     logger.info("Dropping all existing information from database")
     session.query(Game).delete()
     session.query(SteamInfo).delete()
@@ -36,10 +35,7 @@ async def refresh_all_games(session: Session, context: BrowserContext) -> None:
 
 
 def delete_invalid_offers(session: Session) -> None:
-    """
-    Delete invalid offers from the database.
-    """
-
+    """Delete invalid offers from the database."""
     offer: Offer
     for offer in session.query(Offer):
         if offer.category in [Category.DEMO, Category.PRERELEASE]:
@@ -50,10 +46,7 @@ def delete_invalid_offers(session: Session) -> None:
 
 
 def fix_image_nones(session: Session) -> None:
-    """
-    Remove empty image URLs from the database.
-    """
-
+    """Remove empty image URLs from the database."""
     offer: Offer
     for offer in session.query(Offer):
         if offer.img_url in ("", "None"):
@@ -64,10 +57,7 @@ def fix_image_nones(session: Session) -> None:
 
 
 async def run_cleanup() -> None:
-    """
-    Run cleanup functions.
-    """
-
+    """Run cleanup functions."""
     logger.info("Running cleanup")
     with LootDatabase(echo=False) as db:
         delete_invalid_offers(db.Session())
@@ -79,9 +69,9 @@ async def run_cleanup() -> None:
 
 def cleanup() -> None:
     """
-    Synchronous wrapper for cleanup functions. Run this with
-    `python -c 'import app.tools; app.tools.cleanup()'` for now.
+    Wrap cleanup functions synchronously.
+
+    Run this with `python -c 'import app.tools; app.tools.cleanup()'` for now.
     TODO: Add an admin command for this (telegram).
     """
-
     asyncio.run(run_cleanup())

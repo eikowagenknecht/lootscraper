@@ -35,15 +35,11 @@ logger = logging.getLogger(__name__)
 
 
 class Base(MappedAsDataclass, DeclarativeBase):
-    """
-    Subclasses will be converted to dataclasses
-    """
+    """Subclasses will be converted to dataclasses."""
 
 
 class AwareDateTime(sa.TypeDecorator):  # type: ignore
-    """
-    Results returned as aware datetimes, not naive ones.
-    """
+    """Results returned as aware datetimes, not naive ones."""
 
     impl = sa.DateTime
     cache_ok = True
@@ -82,9 +78,7 @@ class Announcement(Base):
 
 
 class Game(Base):
-    """
-    A game (e.g. "The Witcher 3").
-    """
+    """A game (e.g. "The Witcher 3")."""
 
     __tablename__ = "games"
 
@@ -114,9 +108,7 @@ class Game(Base):
 
 
 class IgdbInfo(Base):
-    """
-    Information about a game, gathered from IDGB.
-    """
+    """Information about a game, gathered from IDGB."""
 
     __tablename__ = "igdb_info"
 
@@ -141,9 +133,7 @@ class IgdbInfo(Base):
 
 
 class SteamInfo(Base):
-    """
-    Information about a game, gathered from Steam.
-    """
+    """Information about a game, gathered from Steam."""
 
     __tablename__ = "steam_info"
 
@@ -173,9 +163,7 @@ class SteamInfo(Base):
 
 
 class Offer(Base):
-    """
-    An offer, can be for a game or some other game related content (loot).
-    """
+    """An offer, can be for a game or some other game related content (loot)."""
 
     __tablename__ = "offers"
 
@@ -189,7 +177,8 @@ class Offer(Base):
     title: Mapped[str]
     probable_game_name: Mapped[str]
     seen_last: Mapped[datetime] = mapped_column(AwareDateTime)
-    """The valid to date as seen on the website. Some websites sometimes remove the offer before this date."""
+    """The valid to date as seen on the website. Some websites sometimes remove
+    the offer before this date."""
     rawtext: Mapped[dict[str, Any] | None] = mapped_column(sa.JSON)
     url: Mapped[str | None]
     game_id: Mapped[int | None] = mapped_column(
@@ -212,14 +201,12 @@ class Offer(Base):
     )
 
     def real_valid_to(self: Offer) -> datetime | None:
-        """The real valid to date. This is calculated from valid_to and seen_last."""
+        """Calculate the real valid to date from valid_to and seen_last."""
         return calc_real_valid_to(self.seen_last, self.valid_to)
 
 
 class User(Base):
-    """
-    A user of the application.
-    """
+    """A user of the application."""
 
     __tablename__ = "users"
 
@@ -245,9 +232,7 @@ class User(Base):
 
 
 class TelegramSubscription(Base):
-    """
-    Subscription of a user to a category for Telegram notifications.
-    """
+    """Subscription of a user to a category for Telegram notifications."""
 
     __tablename__ = "telegram_subscriptions"
 
@@ -280,7 +265,8 @@ class LootDatabase:
         )
         session_factory = sessionmaker(bind=self.engine, future=True)
         self.Session = scoped_session(session_factory)
-        # TODO: Can this be changed with SQLAlchemy 2.0 and the removal of threaded execution?
+        # TODO: Can this be changed with SQLAlchemy 2.0 and
+        # the removal of threaded execution?
 
     def __enter__(self: LootDatabase) -> Self:
         return self
@@ -348,9 +334,8 @@ class LootDatabase:
         """
         Find an offer by its title and valid_to date. Valid_to is interpreted as
         "at most 1 day older or 1 day newer" to avoid getting duplicates for offers
-        where the exact end date is not clear (looking at you, Amazon!)
+        where the exact end date is not clear (looking at you, Amazon!).
         """
-
         statement = (
             sa.select(Offer)
             .where(Offer.source == source)
@@ -391,7 +376,10 @@ class LootDatabase:
 
         # If there are multiple close matches, return the last (=newest)
         logger.warning(
-            f"Found multiple offers for {title} that are close to {valid_to}. Returning the newest of those.",
+            (
+                f"Found multiple offers for {title} that are close to {valid_to}. "
+                "Returning the newest of those.",
+            ),
         )
         return result[-1]
 

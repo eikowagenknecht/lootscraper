@@ -25,7 +25,8 @@ class AmazonGamesScraper(AmazonBaseScraper):
         return [
             OfferHandler(
                 page.locator(
-                    '[data-a-target="offer-list-FGWP_FULL"] [data-a-target="item-card"]',
+                    '[data-a-target="offer-list-FGWP_FULL"] '
+                    '[data-a-target="item-card"]',
                 ),
                 self.read_raw_offer,
                 self.normalize_offer,

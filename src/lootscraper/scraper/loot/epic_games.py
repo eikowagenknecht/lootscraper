@@ -108,7 +108,8 @@ class EpicGamesScraper(Scraper):
                     "%Y-%m-%dT%H:%M:%S.000Z",
                 ).replace(tzinfo=timezone.utc)
             except ValueError:
-                # TODO: Error handling, put main loop into Scraper and handle normalization here for each entry
+                # TODO: Error handling, put main loop into Scraper and handle
+                # normalization here for each entry
                 utc_valid_to = None
 
         return Offer(

@@ -84,16 +84,30 @@ select = [
     "RSE",
     "INP",
     "ICN",
+    "D",   # Pydocstyle
 ]
 
 ignore = [
     "S101",   # Use of assert detected
     "TRY003", # Long messages in exceptions
+    "D100",   # Missing docstring in public module
+    "D101",   # Missing docstring in public class
+    "D102",   # Missing docstring in public method
+    "D103",   # Missing docstring in public function
+    "D104",   # Missing docstring in public package
+    "D105",   # Missing docstring in magic method
+    "D106",   # Missing docstring in public nested class
+    "D107",   # Missing docstring in __init__
+    "D401",   # First line should be in imperative mood
+    "D205",   # 1 blank line required between summary line and description
 ]
 
 [tool.ruff.format]
 line-ending = "lf"
 preview = true
+
+[tool.ruff.pydocstyle]
+convention = "pep257"
 
 [tool.mypy]
 python_version = "3.11"

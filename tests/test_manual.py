@@ -8,7 +8,9 @@ from lootscraper.tools import run_cleanup
 
 class ManualTests(unittest.IsolatedAsyncioTestCase):
     """
-    Convenience class to run specific funktions. These are *not* tests and
+    Convenience class to run specific functions.
+
+    These are *not* tests and
     some actually manipulate the database. Run with utmost caution.
     """
 

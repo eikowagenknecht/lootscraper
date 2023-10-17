@@ -1,4 +1,5 @@
-"""Initial SQLAlchemy 2.0
+"""
+Initial SQLAlchemy 2.0.
 
 Revision ID: 023117ae895e
 Revises: ---

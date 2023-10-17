@@ -30,7 +30,8 @@ class AmazonLootScraper(AmazonBaseScraper):
         return [
             OfferHandler(
                 page.locator(
-                    '[data-a-target="offer-list-IN_GAME_LOOT"] [data-a-target="item-card"]',
+                    '[data-a-target="offer-list-IN_GAME_LOOT"] '
+                    '[data-a-target="item-card"]',
                 ),
                 self.read_raw_offer,
                 self.normalize_offer,

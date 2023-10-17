@@ -39,11 +39,10 @@ async def generate_feed(
     duration: OfferDuration = None,
 ) -> None:
     """
-    Generates a feed using the ATOM standard, see
+    Generate a feed using the ATOM standard, see
     http://www.atomenabled.org/developers/syndication/#requiredFeedElements for
     details.
     """
-
     if len(offers) == 0:
         return
 
@@ -55,7 +54,8 @@ async def generate_feed(
         if not offer.seen_first and not offer.seen_last:
             continue
 
-        # Skip future entries and entries that are no longer seen before they ever were valid
+        # Skip future entries and entries that are no longer seen before they
+        # ever were valid
         if offer.valid_from and offer.valid_from > offer.seen_last:
             continue
 
@@ -104,10 +104,17 @@ async def generate_feed(
         )
         content += f"<li><b>Offer valid from:</b> {valid_from}</li>"
         if offer.valid_to:
-            content += f"<li><b>Offer valid to:</b> {offer.valid_to.strftime(TIMESTAMP_READABLE_WITH_HOUR)}</li>"
+            content += (
+                "<li><b>Offer valid to:</b> "
+                f"{offer.valid_to.strftime(TIMESTAMP_READABLE_WITH_HOUR)}</li>"
+            )
         content += "</ul>"
         if offer.url:
-            content += f'<p>Claim it now for free on <a href="{html.escape(offer.url)}">{html.escape(offer.source.value)}</a>.</p>'
+            content += (
+                "<p>Claim it now for free on "
+                f'<a href="{html.escape(offer.url)}">'
+                f"{html.escape(offer.source.value)}</a>.</p>"
+            )
         if game:
             content += "<p>About the game"
             if game.igdb_info and game.igdb_info.name:
@@ -121,7 +128,11 @@ async def generate_feed(
             if game.steam_info and game.steam_info.metacritic_score:
                 text = f"Metacritic {game.steam_info.metacritic_score} %"
                 if game.steam_info.metacritic_url:
-                    text = f'<a href="{html.escape(game.steam_info.metacritic_url)}">{text}</a>'
+                    text = (
+                        "<a href="
+                        f'"{html.escape(game.steam_info.metacritic_url)}">{text}'
+                        "</a>"
+                    )
                 ratings.append(text)
             if (
                 game.steam_info
@@ -129,7 +140,11 @@ async def generate_feed(
                 and game.steam_info.score
                 and game.steam_info.recommendations
             ):
-                text = f"Steam {game.steam_info.percent} % ({game.steam_info.score}/10, {game.steam_info.recommendations} recommendations)"
+                text = (
+                    f"Steam {game.steam_info.percent} % "
+                    f"({game.steam_info.score}/10, "
+                    f"{game.steam_info.recommendations} recommendations)"
+                )
                 text = f'<a href="{html.escape(game.steam_info.url)}">{text}</a>'
                 ratings.append(text)
             if (
@@ -137,7 +152,10 @@ async def generate_feed(
                 and game.igdb_info.meta_ratings
                 and game.igdb_info.meta_score
             ):
-                text = f"IGDB Meta {game.igdb_info.meta_score} % ({game.igdb_info.meta_ratings} sources)"
+                text = (
+                    f"IGDB Meta {game.igdb_info.meta_score} % "
+                    f"({game.igdb_info.meta_ratings} sources)"
+                )
                 text = f'<a href="{html.escape(game.igdb_info.url)}">{text}</a>'
                 ratings.append(text)
             if (
@@ -145,29 +163,65 @@ async def generate_feed(
                 and game.igdb_info.user_ratings
                 and game.igdb_info.user_score
             ):
-                text = f"IGDB User {game.igdb_info.user_score} % ({game.igdb_info.user_ratings} sources)"
+                text = (
+                    f"IGDB User {game.igdb_info.user_score} % "
+                    f"({game.igdb_info.user_ratings} sources)"
+                )
                 text = f'<a href="{html.escape(game.igdb_info.url)}">{text}</a>'
                 ratings.append(text)
             if len(ratings) > 0:
                 content += f"<li><b>Ratings:</b> {' / '.join(ratings)}</li>"
             if game.igdb_info and game.igdb_info.release_date:
-                content += f"<li><b>Release date:</b> {html.escape(game.igdb_info.release_date.strftime(TIMESTAMP_SHORT))}</li>"
+                content += (
+                    "<li><b>Release date:</b> "
+                    + html.escape(game.igdb_info.release_date.strftime(TIMESTAMP_SHORT))
+                    + "</li>"
+                )
             elif game.steam_info and game.steam_info.release_date:
-                content += f"<li><b>Release date:</b> {html.escape(game.steam_info.release_date.strftime(TIMESTAMP_SHORT))}</li>"
+                content += (
+                    "<li><b>Release date:</b> "
+                    + html.escape(
+                        game.steam_info.release_date.strftime(TIMESTAMP_SHORT),
+                    )
+                    + "</li>"
+                )
             if game.steam_info and game.steam_info.recommended_price_eur:
-                content += f"<li><b>Recommended price (Steam):</b> {game.steam_info.recommended_price_eur} EUR</li>"
+                content += (
+                    "<li><b>Recommended price (Steam):</b> "
+                    + game.steam_info.recommended_price_eur
+                    + " EUR</li>"
+                )
             if game.igdb_info and game.igdb_info.short_description:
-                content += f"<li><b>Description:</b> {html.escape(game.igdb_info.short_description)}</li>"
+                content += (
+                    "<li><b>Description:</b> "
+                    + html.escape(game.igdb_info.short_description)
+                    + "</li>"
+                )
             elif game.steam_info and game.steam_info.short_description:
-                content += f"<li><b>Description:</b> {html.escape(game.steam_info.short_description)}</li>"
+                content += (
+                    "<li><b>Description:</b> "
+                    + html.escape(game.steam_info.short_description)
+                    + "</li>"
+                )
             if game.steam_info and game.steam_info.genres:
                 content += (
-                    f"<li><b>Genres:</b> {html.escape(game.steam_info.genres)}</li>"
+                    "<li><b>Genres:</b> "
+                    + html.escape(game.steam_info.genres)
+                    + "</li>"
                 )
             content += "</ul>"
-            content += "<p>* Any information about the offer is automatically grabbed and may in rare cases not match the correct game.</p>"
+            content += (
+                "<p>* Any information about the offer is automatically grabbed "
+                "and may in rare cases not match the correct game.</p>"
+            )
 
-        content += f'<p><small>Source: {html.escape(offer.source.value)}, Seen first: {offer.seen_first.strftime(TIMESTAMP_LONG)}, Generated by <a href="https://github.com/eikowagenknecht/lootscraper">LootScraper</a></small></p>'
+        content += (
+            f"<p><small>Source: {html.escape(offer.source.value)}, Seen first: "
+            f"{offer.seen_first.strftime(TIMESTAMP_LONG)}, "
+            "Generated by "
+            '<a href="https://github.com/eikowagenknecht/lootscraper">LootScraper</a>'
+            "</small></p>"
+        )
         feed_entry.content(content, type="xhtml")
         # - Link
         feed_entry.link(rel="alternate", href=offer.url)
