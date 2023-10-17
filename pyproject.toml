@@ -30,14 +30,13 @@ xvfbwrapper = "^0.2.9"
 optional = true
 
 [tool.poetry.group.dev.dependencies]
-# Linting
+# Linting and formatting
 ruff = "^0.1.0"
-# Formatting
-black = "^23.9.1"
 # Type checking
 mypy = "^1.6"
 # Profiling
 # scalene = "^1.5.19"
+# Testing
 pytest = "^7.4.2"
 # Python standard
 setuptools = "^68.0.0"
@@ -89,9 +88,12 @@ select = [
 
 ignore = [
     "S101",   # Use of assert detected
-    "E501",   # Line too long
     "TRY003", # Long messages in exceptions
 ]
+
+[tool.ruff.format]
+line-ending = "lf"
+preview = true
 
 [tool.mypy]
 python_version = "3.11"
