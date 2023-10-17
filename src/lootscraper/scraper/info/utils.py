@@ -128,9 +128,7 @@ def clean_loot_title(title: str) -> str:
         probable_game_name = match.group(1)
     if probable_game_name is None:
         # Replace some very special characters that Steam uses sometimes
-        title = (
-            title.replace("：", ": ").replace(" — ", ": ").replace(" - ", ": ")
-        )  # noqa
+        title = title.replace("：", ": ").replace(" — ", ": ").replace(" - ", ": ")  # noqa
         title_parts: list[str] = title.split(": ")
     if probable_game_name is None and len(title_parts) >= 3:
         probable_game_name = ": ".join(title_parts[:-1])

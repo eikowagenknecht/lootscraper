@@ -92,10 +92,11 @@ Check if dependencies are up to date: `poetry show --outdated`
 - Please follow the [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) specification for commit messages. The following types can be used:
   - `feat`: A new feature (minor version bump)
   - `fix`: A bug fix (patch version bump)
-  - `docs`: Documentation only changes
-  - `style`: Changes that do not affect the meaning of the code (white-space, formatting, missing semi-colons, etc)
   - `refactor`: A code change that neither fixes a bug nor adds a feature
+  - `style`: Changes that do not affect the meaning of the code (white-space, formatting, missing semi-colons, etc)
+  - `docs`: Documentation only changes
   - `perf`: A code change that improves performance
   - `test`: Adding missing or correcting existing tests
   - `chore`: Changes to the build process or auxiliary tools and libraries such as documentation generation
+  - `ci`: Changes to the CI configuration files and scripts (GitHub Actions)
 - Run ruff (`poetry run ruff . --fix`) and ruff format (`poetry run ruff format .`) before committing.
