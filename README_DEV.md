@@ -85,3 +85,17 @@ Install tool: `poetry self add poetry-plugin-up` (only once)
 Update all dependencies in `pyproject.toml`: `poetry up`
 Install new dependencies locally: `poetry install --with dev`
 Check if dependencies are up to date: `poetry show --outdated`
+
+## Contribute
+
+- If you want to contribute, please open an issue first to discuss the changes.
+- Please follow the [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) specification for commit messages. The following types can be used:
+  - `feat`: A new feature (minor version bump)
+  - `fix`: A bug fix (patch version bump)
+  - `docs`: Documentation only changes
+  - `style`: Changes that do not affect the meaning of the code (white-space, formatting, missing semi-colons, etc)
+  - `refactor`: A code change that neither fixes a bug nor adds a feature
+  - `perf`: A code change that improves performance
+  - `test`: Adding missing or correcting existing tests
+  - `chore`: Changes to the build process or auxiliary tools and libraries such as documentation generation
+- Run ruff (`poetry run ruff . --fix`) and ruff format (`poetry run ruff format .`) before committing.
