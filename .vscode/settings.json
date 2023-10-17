@@ -1,10 +1,4 @@
 {
-    "python.formatting.provider": "black",
-    "python.linting.flake8Enabled": true,
-    "python.linting.banditEnabled": true,
-    "python.linting.enabled": false,
-    "python.linting.pylintEnabled": false,
-    "python.linting.mypyEnabled": true,
     "python.testing.unittestArgs": [
         "-v",
         "-s",
@@ -15,16 +9,12 @@
     "python.testing.pytestEnabled": true,
     "python.testing.unittestEnabled": false,
     "[python]": {
-        "editor.defaultFormatter": "ms-python.black-formatter",
+        "editor.defaultFormatter": "charliermarsh.ruff",
         "editor.formatOnSave": true,
         "editor.codeActionsOnSave": {
             "source.organizeImports": true
         },
     },
-    "isort.args": [
-        "--profile",
-        "black"
-    ],
     "python.testing.pytestArgs": [
         "tests"
     ]
