@@ -1,4 +1,6 @@
-name: Publish to Docker Hub and Github Packages
+# Publish to Docker Hub and Github Packages
+
+name: publish-docker
 
 on:
   push:
