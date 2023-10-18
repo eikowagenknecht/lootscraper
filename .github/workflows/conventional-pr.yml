@@ -25,4 +25,4 @@ jobs:
           # if the PR contains a single commit, fail if the commit message and the PR title do not match
           commitTitleMatch: "false" # default: 'true'
           # if you squash merge PRs and enabled "Default to PR title for squash merge commits", you can disable all linting of commits
-          ignoreCommits: "false" # default: 'false'
+          ignoreCommits: "true" # default: 'false'
