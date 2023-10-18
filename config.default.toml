@@ -18,7 +18,7 @@ web_timeout_seconds = 5
 # Possible Values: ["AMAZON", "APPLE", "EPIC", "GOG", "GOOGLE", "HUMBLE", "ITCH", "STEAM", "UBISOFT"]
 offer_sources = []
 # Possible Values: ["GAME", "LOOT"]
-offer_types = [] 
+offer_types = []
 # Possible Values: ["ALWAYS", "TEMPORARY", "CLAIMABLE"] 
 offer_durations = []
 # Possible Values: ["STEAM", "IGDB"]
