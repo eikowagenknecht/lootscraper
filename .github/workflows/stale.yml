@@ -3,22 +3,21 @@ name: Mark stale issues and pull requests
 
 on:
   schedule:
-  - cron: '29 5 * * *'
+    - cron: "29 5 * * *"
 
 jobs:
   stale:
-
     runs-on: ubuntu-latest
     permissions:
       issues: write
       pull-requests: write
 
     steps:
-    - uses: actions/stale@v8
-      with:
-        repo-token: ${{ secrets.GITHUB_TOKEN }}
-        days-before-stale: 30
-        stale-issue-message: This issue hasn't seen any activity for more than 30 days. It will be automatically closed in another 7 days. I you feel this is not the right thing to do, you can comment on this issue to avoid closing it.
-        stale-pr-message: This pull request hasn't seen any activity for more than 30 days. It will be automatically closed in another 7 days. I you feel this is not the right thing to do, you can comment on this pull request to avoid closing it.
-        stale-issue-label: 'stale'
-        stale-pr-label: 'stale'
+      - uses: actions/stale@v8
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          days-before-stale: 30
+          stale-issue-message: This issue hasn't seen any activity for more than 30 days. It will be automatically closed in another 7 days. I you feel this is not the right thing to do, you can comment on this issue to avoid closing it.
+          stale-pr-message: This pull request hasn't seen any activity for more than 30 days. It will be automatically closed in another 7 days. I you feel this is not the right thing to do, you can comment on this pull request to avoid closing it.
+          stale-issue-label: "stale"
+          stale-pr-label: "stale"
