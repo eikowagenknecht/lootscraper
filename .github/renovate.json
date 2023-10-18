@@ -22,14 +22,14 @@
         "patch",
         "digest"
       ],
-      "automerge": true
+      "automerge": false
     },
     {
       "description": "Automatically merge devDependencies",
       "matchDepTypes": [
         "devDependencies"
       ],
-      "automerge": true
+      "automerge": false
     }
   ],
   "automergeStrategy": "squash",
