@@ -12,6 +12,9 @@ updates:
       interval: "daily"
     target-branch: "develop"
     versioning-strategy: increase
+    commit-message:
+      prefix: "chore"
+      include: "scope"
 
   # Check for updates to GitHub Actions every weekday
   - package-ecosystem: "github-actions"
@@ -19,3 +22,6 @@ updates:
     schedule:
       interval: "daily"
     target-branch: "main"
+    commit-message:
+      prefix: "ci"
+      include: "scope"
