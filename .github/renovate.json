@@ -1,6 +1,40 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
-    "config:base"
-  ]
+    "config:recommended",
+    "docker:pinDigests",
+    "helpers:pinGitHubActionDigests",
+    ":pinDevDependencies",
+    ":semanticCommits",
+    ":preserveSemverRanges"
+  ],
+  "assignees": [
+    "eikowagenknecht"
+  ],
+  "schedule": [
+    "before 4am"
+  ],
+  "packageRules": [
+    {
+      "description": "Automatically merge minor and patch-level updates",
+      "matchUpdateTypes": [
+        "minor",
+        "patch",
+        "digest"
+      ],
+      "automerge": true
+    },
+    {
+      "description": "Automatically merge devDependencies",
+      "matchDepTypes": [
+        "devDependencies"
+      ],
+      "automerge": true
+    }
+  ],
+  "automergeStrategy": "squash",
+  "baseBranches": [
+    "main"
+  ],
+  "rollbackPrs": true
 }
