@@ -1,4 +1,4 @@
-name: Conventional Pull Request
+name: conventional-pull-request
 on:
   pull_request:
     branches:
