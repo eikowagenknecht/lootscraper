@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - "main"
-      - "develop"
     tags:
       - "v*"
 
@@ -43,7 +42,6 @@ jobs:
             latest=auto
             prefix=
             suffix=
-          # refs/branches/develop -> (develop)
           # refs/branches/main -> (main)
           # refs/tags/v1.2.3 -> (1.2.3)
           # refs/tags/v1.2.3 -> (1.2)
