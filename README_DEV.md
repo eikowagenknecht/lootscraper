@@ -97,5 +97,7 @@ Check if dependencies are up to date: `poetry show --outdated`
   - `docs`: Documentation only changes
   - `perf`: A code change that improves performance
   - `test`: Adding missing or correcting existing tests
-  - `chore`: Maintenance tasks, changes to the build process, CI, dependency updates and other non-user-facing changes
+  - `chore`: Maintenance tasks, dependency updates and other non-user-facing changes
+  - `ci`: Changes to the CI configuration files and scripts (GitHub Actions)
+  - `revert`: Reverts a previous commit. In the body, it should say: `This reverts commit <hash>.`
 - Run ruff (`poetry run ruff . --fix`) and ruff format (`poetry run ruff format .`) before committing.
