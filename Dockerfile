@@ -1,4 +1,4 @@
-FROM python:3.11-bullseye
+FROM python:3.11-bullseye@sha256:eae58ca3a59ce553e453fb535888bd1a391c6282e81fd49fd7321f147622147e
 
 # Tini (init): Add
 ENV TINI_VERSION v0.19.0
