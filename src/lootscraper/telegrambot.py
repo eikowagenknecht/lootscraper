@@ -273,7 +273,7 @@ class TelegramBot:
                 f"Deactivating user with group chat id {chat_id} because the "
                 "bot was removed from the group.",
             )
-            self.deactivate_user(chat_id, "removed group")
+            self.deactivate_chat(chat_id, "removed group")
             return
 
         # Build the exception string from the exception
@@ -1199,7 +1199,7 @@ class TelegramBot:
         Returns the user that belongs to a given chat id. If the chat id is
         negative, it is a group chat of some sort. In that case, return None.
         """
-        if int(chat_id) < 0:
+        if self.is_group_chat(chat_id):
             return None
 
         try:
@@ -1214,6 +1214,21 @@ class TelegramBot:
             raise
 
         return db_user
+
+    def get_users_by_chat_id(self, chat_id: int | str) -> list[User] | None:
+        """Returns the all users that belongs to a given chat id."""
+        try:
+            session: orm.Session = self.Session()
+            db_users = list(
+                session.execute(sa.select(User).where(User.telegram_chat_id == chat_id))
+                .scalars()
+                .all(),
+            )
+        except Exception:
+            session.rollback()
+            raise
+
+        return db_users
 
     def is_subscribed(
         self,
@@ -1675,15 +1690,12 @@ class TelegramBot:
             try:
                 send_attempt = send_attempt + 1
 
-                # If it's a single user, check if he's still active.
-                if int(chat_id) > 0:
-                    db_user = self.get_user_by_chat_id(chat_id)
-                    if db_user is None or db_user.inactive is not None:
-                        logger.info(
-                            f"Not sending to chat id {chat_id} because the user is "
-                            "inactive.",
-                        )
-                        return None
+                if not self.chat_is_active(chat_id):
+                    logger.info(
+                        f"Not sending to chat id {chat_id} because the chat is "
+                        "inactive.",
+                    )
+                    return None
 
                 logger.debug(f"Sending message to chat {chat_id} with content {text}.")
                 message = await self.application.bot.send_message(
@@ -1703,19 +1715,19 @@ class TelegramBot:
                 message_handled = True
                 # The user blocked the chat.
                 logger.info(
-                    f"Deactivating user with chat id {chat_id} "
-                    "because he blocked the chat: {e}",
+                    f"Deactivating chat id {chat_id} "
+                    "because the chat was blocked: {e}",
                 )
-                self.deactivate_user(chat_id, "blocked chat")
+                self.deactivate_chat(chat_id, "blocked chat")
             except TelegramError as e:
                 message_handled = True
                 # The chat could not be found
                 if e.message == "Chat not found":
                     logger.info(
-                        f"Deactivating user with chat id {chat_id} "
+                        f"Deactivating chat id {chat_id} "
                         "because the chat could not be found.",
                     )
-                    self.deactivate_user(chat_id, "not found")
+                    self.deactivate_chat(chat_id, "not found")
                 else:
                     logger.exception("Telegram error while sending message.")
             else:
@@ -1724,22 +1736,40 @@ class TelegramBot:
 
         return None
 
-    def deactivate_user(self, chat_id: int | str, reason: str) -> None:
-        db_user = self.get_user_by_chat_id(chat_id)
+    def is_group_chat(self, chat_id: int | str) -> bool:
+        return int(chat_id) < 0
 
-        if db_user is None:
+    def chat_is_active(self, chat_id: int | str) -> bool:
+        # Group chat (one entry being marked as inactive is enough)
+        if self.is_group_chat(chat_id):
+            db_users = self.get_users_by_chat_id(chat_id)
+            if db_users is None or any(x.inactive is not None for x in db_users):
+                return False
+        # Single user
+        else:
+            db_user = self.get_user_by_chat_id(chat_id)
+            if db_user is None or db_user.inactive is not None:
+                return False
+
+        return True
+
+    def deactivate_chat(self, chat_id: int | str, reason: str) -> None:
+        db_users = self.get_users_by_chat_id(chat_id)
+
+        if db_users is None:
             return
 
-        # User is registered, deactivate him.
-        logger.debug(f"Deactivating user {db_user.telegram_id}.")
+        # Deactivate all users that are registered for this chat.
+        for db_user in db_users:
+            logger.debug(f"Deactivating user {db_user.telegram_id}.")
 
-        session: orm.Session = self.Session()
-        try:
-            db_user.inactive = reason
-            session.commit()
-        except Exception:
-            session.rollback()
-            raise
+            session: orm.Session = self.Session()
+            try:
+                db_user.inactive = reason
+                session.commit()
+            except Exception:
+                session.rollback()
+                raise
 
     def remove_user(self, chat_id: int | str) -> None:
         db_user = self.get_user_by_chat_id(chat_id)
