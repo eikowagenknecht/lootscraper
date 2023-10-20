@@ -5,9 +5,10 @@ name: publish-docker
 on:
   push:
     branches:
-      - "main"
+      - main
+      - next
     tags:
-      - "v*"
+      - v*
 
 env:
   IMAGE_NAME: ${{ github.repository }}
