@@ -68,6 +68,9 @@ class AmazonLootScraper(AmazonBaseScraper):
             "gametitle": raw_offer.game_title,
         }
 
+        if raw_offer.game_title is None:
+            raise ValueError("No game title found.")
+
         probable_game_name = raw_offer.game_title
         title = f"{raw_offer.game_title}: {raw_offer.title}"
 
