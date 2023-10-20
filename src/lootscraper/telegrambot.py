@@ -1651,7 +1651,6 @@ class TelegramBot:
         reply_markup: ReplyMarkup | None = None,
     ) -> Message | None:  # type: ignore
         """Wrap the message sending to handle exceptions."""
-        logger.debug(f"Sending message to chat {chat_id} with content {text}.")
         if self.application is None:
             logger.error(
                 "Tried to send message while the application is not initialized.",
@@ -1674,6 +1673,7 @@ class TelegramBot:
                     )
                     return None
 
+                logger.debug(f"Sending message to chat {chat_id} with content {text}.")
                 message = await self.application.bot.send_message(
                     chat_id=chat_id,
                     text=text,
