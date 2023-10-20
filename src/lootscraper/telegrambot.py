@@ -1195,6 +1195,13 @@ class TelegramBot:
         return db_user
 
     def get_user_by_chat_id(self, chat_id: int | str) -> User | None:
+        """
+        Returns the user that belongs to a given chat id. If the chat id is
+        negative, it is a group chat of some sort. In that case, return None.
+        """
+        if int(chat_id) < 0:
+            return None
+
         try:
             session: orm.Session = self.Session()
             db_user = (
@@ -1668,14 +1675,15 @@ class TelegramBot:
             try:
                 send_attempt = send_attempt + 1
 
-                # Check if the user is still registered
-                db_user = self.get_user_by_chat_id(chat_id)
-                if db_user is None or db_user.inactive is not None:
-                    logger.info(
-                        f"Not sending to chat id {chat_id} because the user is "
-                        "inactive.",
-                    )
-                    return None
+                # If it's a single user, check if he's still active.
+                if int(chat_id) > 0:
+                    db_user = self.get_user_by_chat_id(chat_id)
+                    if db_user is None or db_user.inactive is not None:
+                        logger.info(
+                            f"Not sending to chat id {chat_id} because the user is "
+                            "inactive.",
+                        )
+                        return None
 
                 logger.debug(f"Sending message to chat {chat_id} with content {text}.")
                 message = await self.application.bot.send_message(
