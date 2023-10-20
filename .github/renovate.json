@@ -2,17 +2,12 @@
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
     "config:recommended",
-    "docker:pinDigests",
-    "helpers:pinGitHubActionDigests",
     ":pinDevDependencies",
     ":semanticCommits",
     ":preserveSemverRanges"
   ],
   "assignees": [
     "eikowagenknecht"
-  ],
-  "schedule": [
-    "before 4am"
   ],
   "packageRules": [
     {
