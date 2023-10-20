@@ -1,0 +1,54 @@
+# Lint with ruff
+# Check format with ruff
+# Check types with mypy
+
+name: quality-check
+
+on:
+  push:
+    branches:
+      - main
+      - next
+  pull_request:
+    branches:
+      - main
+      - next
+
+permissions:
+  contents: read # for checkout
+
+jobs:
+  quality-check:
+    # Do not run for automated release commits (otherwise we would run into a deadlock situation)
+    if: ${{ !contains(github.event.head_commit.message, 'chore(release):') }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python 3.11
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - name: Install Poetry
+        uses: abatilo/actions-poetry@v2.3.0
+
+      - name: Configure poetry
+        shell: bash
+        run: python -m poetry config virtualenvs.in-project true
+
+      - name: View poetry version
+        run: poetry --version
+
+      - name: Install dependencies
+        run: python -m poetry install --with dev
+
+      - name: Lint with ruff
+        run: poetry run ruff .
+
+      - name: Check format with ruff
+        run: poetry run ruff format . --check
+
+      - name: Check types with mypy
+        run: poetry run mypy .

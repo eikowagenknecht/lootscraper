@@ -1,4 +1,5 @@
 name: conventional-pull-request
+
 on:
   pull_request:
     branches:
@@ -8,6 +9,7 @@ on:
       - opened
       - edited
       - synchronize
+
 jobs:
   lint-pr:
     runs-on: ubuntu-latest

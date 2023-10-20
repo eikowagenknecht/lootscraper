@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "lootscraper"
-version = "1.7.0"
+version = "1.6.1"
 description = "RSS feeds and Telegram bot for free game and loot offers."
 authors = ["Eiko Wagenknecht <git@eiko-wagenknecht.de>"]
 readme = "README.md"
@@ -41,6 +41,36 @@ pytest = "^7.4.2"
 # Python standard
 setuptools = "^68.0.0"
 wheel = "^0.41.1"
+
+[tool.semantic_release]
+version_toml = ["pyproject.toml:tool.poetry.version"]
+build_command = "pip install poetry && poetry build"
+
+[tool.semantic_release.branches.main]
+match = "(main)"
+prerelease = false
+
+[tool.semantic_release.branches.next]
+match = "(next)"
+prerelease = true
+prerelease_token = "beta"
+
+[tool.semantic_release.commit_parser_options]
+allowed_tags = [
+    "build",
+    "chore",
+    "ci",
+    "docs",
+    "feat",
+    "fix",
+    "perf",
+    "style",
+    "refactor",
+    "test",
+    "revert",
+]
+minor_tags = ["feat"]
+patch_tags = ["fix", "perf"]
 
 [build-system]
 requires = ["poetry-core"]
