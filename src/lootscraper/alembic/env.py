@@ -6,7 +6,6 @@ from pathlib import Path
 
 from alembic import context
 from sqlalchemy import create_engine, pool
-from sqlalchemy.schema import SchemaItem
 
 from lootscraper import database
 from lootscraper.config import Config
@@ -34,13 +33,7 @@ target_metadata = database.Base.metadata
 # ... etc.
 
 
-def include_object(
-    object_: SchemaItem,  # noqa: ARG001
-    name: str,
-    type_: str,
-    reflected: bool,  # noqa: ARG001
-    compare_to: SchemaItem,  # noqa: ARG001
-) -> bool:
+def include_object(object_, name, type_, reflected, compare_to) -> bool:  # type: ignore  # noqa
     """Define whether to include this table or not."""
     if type_ == "table" and (name in IGNORE_TABLES):
         return False

@@ -699,16 +699,20 @@ class TelegramBot:
 
         # Register user if not registered yet
         session: orm.Session = self.Session()
+
+        if not update.effective_chat:
+            session.rollback()
+            raise ValueError("Effective chat doesn't exist.")
+
         try:
             latest_announcement: int = session.execute(  # type: ignore
                 sa.select(sa.func.max(Announcement.id)),
             ).scalar()
 
+            chatid: str = str(update.effective_chat.id)
             new_user = User(
                 telegram_id=str(update.effective_user.id),
-                telegram_chat_id=str(update.effective_chat.id)
-                if update.effective_chat
-                else None,
+                telegram_chat_id=chatid,
                 telegram_user_details=update.effective_user.to_dict(),
                 registration_date=datetime.now(tz=timezone.utc),
                 last_announcement_id=latest_announcement,
