@@ -36,16 +36,16 @@ class EpicGamesScraper(Scraper):
     def get_duration() -> OfferDuration:
         return OfferDuration.CLAIMABLE
 
-    def offers_expected(self: EpicGamesScraper) -> bool:
+    def offers_expected(self) -> bool:
         return True
 
-    def get_offers_url(self: EpicGamesScraper) -> str:
+    def get_offers_url(self) -> str:
         return OFFER_URL
 
-    def get_page_ready_selector(self: EpicGamesScraper) -> str:
+    def get_page_ready_selector(self) -> str:
         return "h2:has-text('Free Games')"
 
-    def get_offer_handlers(self: EpicGamesScraper, page: Page) -> list[OfferHandler]:
+    def get_offer_handlers(self, page: Page) -> list[OfferHandler]:
         return [
             OfferHandler(
                 page.locator('//span[text()="Free Now"]//ancestor::a'),
@@ -54,7 +54,7 @@ class EpicGamesScraper(Scraper):
             ),
         ]
 
-    async def read_raw_offer(self: EpicGamesScraper, element: Locator) -> RawOffer:
+    async def read_raw_offer(self, element: Locator) -> RawOffer:
         # Scroll element into view to load img url
         await element.scroll_into_view_if_needed()
 
@@ -91,7 +91,7 @@ class EpicGamesScraper(Scraper):
             img_url=img_url,
         )
 
-    def normalize_offer(self: EpicGamesScraper, raw_offer: RawOffer) -> Offer:
+    def normalize_offer(self, raw_offer: RawOffer) -> Offer:
         if not isinstance(raw_offer, EpicRawOffer):
             raise TypeError("Wrong type of raw offer.")
 

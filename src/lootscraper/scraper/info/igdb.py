@@ -30,12 +30,12 @@ class IgdbEntry:
 class IGDBWrapper:
     """Asynchronous IGDB wrapper module for the api v4 with Apicalypse syntax."""
 
-    def __init__(self: IGDBWrapper, client_id: str, client_secret: str) -> None:
+    def __init__(self, client_id: str, client_secret: str) -> None:
         self.client_id = client_id
         self.client_secret = client_secret
         self.auth_token: str | None = None
 
-    async def authorize(self: IGDBWrapper) -> None:
+    async def authorize(self) -> None:
         """Authorize with IGDB and get a token for the session."""
         url = TOKEN_URL
         request_params = {
@@ -50,7 +50,7 @@ class IGDBWrapper:
             self.auth_token = result.json()["access_token"]
 
     async def api_request(
-        self: IGDBWrapper,
+        self,
         endpoint: str,
         query: str,
     ) -> Any:  # noqa: ANN401

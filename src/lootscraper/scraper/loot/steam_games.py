@@ -17,8 +17,8 @@ class SteamGamesScraper(SteamBaseScraper):
     def get_type() -> OfferType:
         return OfferType.GAME
 
-    def get_steam_category(self: SteamGamesScraper) -> int:
+    def get_steam_category(self) -> int:
         return 998  # Games
 
-    def get_validtext_locator(self: SteamGamesScraper, page: Page) -> Locator:
+    def get_validtext_locator(self, page: Page) -> Locator:
         return page.locator(".game_purchase_discount_countdown")

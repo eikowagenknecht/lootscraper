@@ -36,16 +36,16 @@ class UbisoftGamesScraper(Scraper):
     def get_duration() -> OfferDuration:
         return OfferDuration.CLAIMABLE
 
-    def offers_expected(self: UbisoftGamesScraper) -> bool:
+    def offers_expected(self) -> bool:
         return False
 
-    def get_offers_url(self: UbisoftGamesScraper) -> str:
+    def get_offers_url(self) -> str:
         return OFFER_URL
 
-    def get_page_ready_selector(self: UbisoftGamesScraper) -> str:
+    def get_page_ready_selector(self) -> str:
         return ".wrapper"
 
-    def get_offer_handlers(self: UbisoftGamesScraper, page: Page) -> list[OfferHandler]:
+    def get_offer_handlers(self, page: Page) -> list[OfferHandler]:
         return [
             OfferHandler(
                 page.locator(".c-focus-banner__wrapper"),
@@ -55,7 +55,7 @@ class UbisoftGamesScraper(Scraper):
         ]
 
     async def read_raw_offer(
-        self: UbisoftGamesScraper,
+        self,
         element: Locator,
     ) -> RawOffer | None:
         # Scroll element into view to load img url
@@ -94,7 +94,7 @@ class UbisoftGamesScraper(Scraper):
         )
 
     def normalize_offer(
-        self: UbisoftGamesScraper,
+        self,
         raw_offer: RawOffer,
     ) -> Offer:
         if not isinstance(raw_offer, UbisoftRawOffer):

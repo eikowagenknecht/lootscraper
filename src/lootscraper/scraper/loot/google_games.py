@@ -30,16 +30,16 @@ class GoogleGamesScraper(Scraper):
     def get_duration() -> OfferDuration:
         return OfferDuration.CLAIMABLE
 
-    def offers_expected(self: GoogleGamesScraper) -> bool:
+    def offers_expected(self) -> bool:
         return True
 
-    def get_offers_url(self: GoogleGamesScraper) -> str:
+    def get_offers_url(self) -> str:
         return OFFER_URL
 
-    def get_page_ready_selector(self: GoogleGamesScraper) -> str:
+    def get_page_ready_selector(self) -> str:
         return "div.short_info"
 
-    def get_offer_handlers(self: GoogleGamesScraper, page: Page) -> list[OfferHandler]:
+    def get_offer_handlers(self, page: Page) -> list[OfferHandler]:
         return [
             OfferHandler(
                 page.locator(
@@ -50,10 +50,10 @@ class GoogleGamesScraper(Scraper):
             ),
         ]
 
-    async def page_loaded_hook(self: GoogleGamesScraper, page: Page) -> None:
+    async def page_loaded_hook(self, page: Page) -> None:
         await Scraper.scroll_page_to_bottom(page)
 
-    async def read_raw_offer(self: GoogleGamesScraper, element: Locator) -> RawOffer:
+    async def read_raw_offer(self, element: Locator) -> RawOffer:
         # Scroll into view for images to load
         await element.scroll_into_view_if_needed()
 
@@ -78,7 +78,7 @@ class GoogleGamesScraper(Scraper):
             img_url=img_url,
         )
 
-    def normalize_offer(self: GoogleGamesScraper, raw_offer: RawOffer) -> Offer:
+    def normalize_offer(self, raw_offer: RawOffer) -> Offer:
         rawtext = {
             "title": raw_offer.title,
         }

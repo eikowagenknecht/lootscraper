@@ -28,13 +28,13 @@ class GogGamesScraper(GogBaseScraper):
     def get_duration() -> OfferDuration:
         return OfferDuration.CLAIMABLE
 
-    def get_offers_url(self: GogGamesScraper) -> str:
+    def get_offers_url(self) -> str:
         return OFFER_URL
 
-    def get_page_ready_selector(self: GogGamesScraper) -> str:
+    def get_page_ready_selector(self) -> str:
         return ".content.cf"
 
-    def get_offer_handlers(self: GogGamesScraper, page: Page) -> list[OfferHandler]:
+    def get_offer_handlers(self, page: Page) -> list[OfferHandler]:
         return [
             OfferHandler(
                 page.locator("a.giveaway-banner"),
@@ -51,10 +51,10 @@ class GogGamesScraper(GogBaseScraper):
             ),
         ]
 
-    async def page_loaded_hook(self: GogGamesScraper, page: Page) -> None:
+    async def page_loaded_hook(self, page: Page) -> None:
         await GogBaseScraper.switch_to_english(page)
 
-    async def read_raw_offer_v1(self: GogGamesScraper, element: Locator) -> GogRawOffer:
+    async def read_raw_offer_v1(self, element: Locator) -> GogRawOffer:
         title = await element.locator(".giveaway-banner__title").text_content()
         if title is None:
             raise ValueError("Could not read title")
@@ -83,7 +83,7 @@ class GogGamesScraper(GogBaseScraper):
         )
 
     async def read_raw_offer_v2(
-        self: GogGamesScraper,
+        self,
         element: Locator,
     ) -> GogRawOffer | None:
         try:
@@ -105,7 +105,7 @@ class GogGamesScraper(GogBaseScraper):
             return None
 
     async def read_offer_from_details_page(
-        self: GogGamesScraper,
+        self,
         url: str,
     ) -> GogRawOffer:
         async with get_new_page(self.context) as page:
@@ -127,7 +127,7 @@ class GogGamesScraper(GogBaseScraper):
                 img_url=img_url,
             )
 
-    def normalize_offer(self: GogGamesScraper, raw_offer: RawOffer) -> Offer:
+    def normalize_offer(self, raw_offer: RawOffer) -> Offer:
         if not isinstance(raw_offer, GogRawOffer):
             raise TypeError("Wrong type of raw offer.")
 
