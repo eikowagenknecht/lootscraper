@@ -5,7 +5,7 @@ name: publish-docker
 on:
   push:
     branches:
-      - main
+    #   - main
       - next
     tags:
       - v*
@@ -14,7 +14,7 @@ env:
   IMAGE_NAME: ${{ github.repository }}
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: docker-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
