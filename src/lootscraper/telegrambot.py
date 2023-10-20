@@ -1610,7 +1610,7 @@ class TelegramBot:
                     + markdown_escape(
                         game.igdb_info.release_date.strftime(TIMESTAMP_SHORT),
                     )
-                    + "}\n"
+                    + "\n"
                 )
             elif game.steam_info and game.steam_info.release_date:
                 content += (
@@ -1651,6 +1651,7 @@ class TelegramBot:
         reply_markup: ReplyMarkup | None = None,
     ) -> Message | None:  # type: ignore
         """Wrap the message sending to handle exceptions."""
+        logger.debug(f"Sending message to chat {chat_id} with content {text}.")
         if self.application is None:
             logger.error(
                 "Tried to send message while the application is not initialized.",
@@ -1663,6 +1664,16 @@ class TelegramBot:
         while not message_handled:
             try:
                 send_attempt = send_attempt + 1
+
+                # Check if the user is still registered
+                db_user = self.get_user_by_chat_id(chat_id)
+                if db_user is None or db_user.inactive is not None:
+                    logger.info(
+                        f"Not sending to chat id {chat_id} because the user is "
+                        "inactive.",
+                    )
+                    return None
+
                 message = await self.application.bot.send_message(
                     chat_id=chat_id,
                     text=text,
