@@ -188,7 +188,7 @@ async def generate_feed(
             if game.steam_info and game.steam_info.recommended_price_eur:
                 content += (
                     "<li><b>Recommended price (Steam):</b> "
-                    + game.steam_info.recommended_price_eur
+                    + str(game.steam_info.recommended_price_eur)
                     + " EUR</li>"
                 )
             if game.igdb_info and game.igdb_info.short_description:
