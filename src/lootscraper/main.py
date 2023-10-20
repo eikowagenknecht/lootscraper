@@ -162,7 +162,7 @@ async def run_telegram_bot(
             run_no = await queue.get()
             logger.info(
                 "Sending offers on Telegram that were found in scraping run #"
-                + run_no
+                + str(run_no)
                 + ".",
             )
 
