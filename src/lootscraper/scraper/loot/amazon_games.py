@@ -21,7 +21,7 @@ class AmazonGamesScraper(AmazonBaseScraper):
     def get_type() -> OfferType:
         return OfferType.GAME
 
-    def get_offer_handlers(self: AmazonGamesScraper, page: Page) -> list[OfferHandler]:
+    def get_offer_handlers(self, page: Page) -> list[OfferHandler]:
         return [
             OfferHandler(
                 page.locator(
@@ -33,16 +33,16 @@ class AmazonGamesScraper(AmazonBaseScraper):
             ),
         ]
 
-    async def page_loaded_hook(self: AmazonGamesScraper, page: Page) -> None:
+    async def page_loaded_hook(self, page: Page) -> None:
         await Scraper.scroll_element_to_bottom(page, "root")
 
     async def read_raw_offer(
-        self: AmazonGamesScraper,
+        self,
         element: Locator,
     ) -> AmazonRawOffer:
         return await self.read_base_raw_offer(element)
 
-    def normalize_offer(self: AmazonGamesScraper, raw_offer: RawOffer) -> Offer:
+    def normalize_offer(self, raw_offer: RawOffer) -> Offer:
         if not isinstance(raw_offer, AmazonRawOffer):
             raise TypeError("Wrong type of raw offer.")
 

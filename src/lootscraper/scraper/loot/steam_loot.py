@@ -17,8 +17,8 @@ class SteamLootScraper(SteamBaseScraper):
     def get_type() -> OfferType:
         return OfferType.LOOT
 
-    def get_steam_category(self: SteamLootScraper) -> int:
+    def get_steam_category(self) -> int:
         return 21  # DLC
 
-    def get_validtext_locator(self: SteamLootScraper, page: Page) -> Locator:
+    def get_validtext_locator(self, page: Page) -> Locator:
         return page.locator(".game_purchase_discount_quantity")

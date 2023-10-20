@@ -88,6 +88,7 @@ select = [
 ]
 
 ignore = [
+    "ANN101", # Missing type annotation for self in method - Not needed with Self type
     "S101",   # Use of assert detected
     "TRY003", # Long messages in exceptions
     "D100",   # Missing docstring in public module

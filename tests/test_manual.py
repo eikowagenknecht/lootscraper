@@ -15,7 +15,7 @@ class ManualTests(unittest.IsolatedAsyncioTestCase):
     """
 
     @unittest.skip("Do *not* run this as a test. It's for manual execution only.")
-    async def test_run_db_cleanup(self: ManualTests) -> None:
+    async def test_run_db_cleanup(self) -> None:
         run_cleanup()
 
 

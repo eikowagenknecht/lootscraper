@@ -43,13 +43,13 @@ class HumbleGamesScraper(Scraper):
     def get_duration() -> OfferDuration:
         return OfferDuration.CLAIMABLE
 
-    def get_offers_url(self: HumbleGamesScraper) -> str:
+    def get_offers_url(self) -> str:
         return f"{SEARCH_URL}?{urllib.parse.urlencode(SEARCH_URL_PARAMS)}"
 
-    def get_page_ready_selector(self: HumbleGamesScraper) -> str:
+    def get_page_ready_selector(self) -> str:
         return "li div.discount-amount"
 
-    def get_offer_handlers(self: HumbleGamesScraper, page: Page) -> list[OfferHandler]:
+    def get_offer_handlers(self, page: Page) -> list[OfferHandler]:
         return [
             OfferHandler(
                 page.locator(
@@ -62,7 +62,7 @@ class HumbleGamesScraper(Scraper):
         ]
 
     async def read_raw_offer(
-        self: HumbleGamesScraper,
+        self,
         element: Locator,
     ) -> HumbleRawOffer:
         title = await element.locator("span.entity-title").text_content()
@@ -90,7 +90,7 @@ class HumbleGamesScraper(Scraper):
         return raw_offer
 
     async def add_details(
-        self: HumbleGamesScraper,
+        self,
         offer: HumbleRawOffer,
         url: str,
     ) -> None:
@@ -119,7 +119,7 @@ class HumbleGamesScraper(Scraper):
                 # May throw a ValueError, that's okay and will be handled.
                 offer.original_price = float(original_price.removeprefix("€").strip())
 
-    def normalize_offer(self: HumbleGamesScraper, raw_offer: RawOffer) -> Offer:
+    def normalize_offer(self, raw_offer: RawOffer) -> Offer:
         if not isinstance(raw_offer, HumbleRawOffer):
             raise TypeError("Wrong type of raw offer.")
 

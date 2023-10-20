@@ -39,10 +39,10 @@ class OfferHandler:
 
 
 class Scraper:
-    def __init__(self: Scraper, context: BrowserContext) -> None:
+    def __init__(self, context: BrowserContext) -> None:
         self.context = context
 
-    async def scrape(self: Scraper) -> list[Offer]:
+    async def scrape(self) -> list[Offer]:
         logging.info(
             f"Analyzing {self.get_source().value} for offers: {self.get_type().value} "
             f"/ {self.get_duration().value}.",
@@ -76,29 +76,29 @@ class Scraper:
         """Return the duration of the offers this scraper is looking for."""
         raise NotImplementedError("Please implement this method")
 
-    def offers_expected(self: Scraper) -> bool:
+    def offers_expected(self) -> bool:
         """Return whether offers are always expected to be found on the page."""
         return False
 
-    def get_offers_url(self: Scraper) -> str:
+    def get_offers_url(self) -> str:
         """Return the URL of the page where the offers are listed."""
         raise NotImplementedError("Please implement this method")
 
-    def get_page_ready_selector(self: Scraper) -> str:
+    def get_page_ready_selector(self) -> str:
         """
         Return the CSS selector of an element that is present when the page is
         ready to be parsed.
         """
         raise NotImplementedError("Please implement this method")
 
-    def get_offer_handlers(self: Scraper, page: Page) -> list[OfferHandler]:
+    def get_offer_handlers(self, page: Page) -> list[OfferHandler]:
         """
         Return a list of OfferHandlers that can be used to read and normalize
         offers from the page.
         """
         raise NotImplementedError("Please implement this method")
 
-    async def page_loaded_hook(self: Scraper, page: Page) -> None:
+    async def page_loaded_hook(self, page: Page) -> None:
         """
         Hook after the page is loaded.
 
@@ -106,7 +106,7 @@ class Scraper:
         (e.g. scroll to bottom of page).
         """
 
-    async def read_offers(self: Scraper) -> list[Offer]:
+    async def read_offers(self) -> list[Offer]:
         """
         Read all offers from the page.
 
@@ -176,7 +176,7 @@ class Scraper:
 
         return offers
 
-    def categorize_offers(self: Scraper, offers: list[Offer]) -> list[Offer]:
+    def categorize_offers(self, offers: list[Offer]) -> list[Offer]:
         """Categorize offers by title (demo, etc.)."""
         for offer in offers:
             if self.is_demo(offer.title):
@@ -191,7 +191,7 @@ class Scraper:
 
         return offers
 
-    def deduplicate_offers(self: Scraper, offers: list[Offer]) -> list[Offer]:
+    def deduplicate_offers(self, offers: list[Offer]) -> list[Offer]:
         """Remove duplicate offers by title."""
         titles = set()
         new_offers = []
@@ -205,7 +205,7 @@ class Scraper:
 
         return new_offers
 
-    def clean_offers(self: Scraper, offers: list[Offer]) -> list[Offer]:
+    def clean_offers(self, offers: list[Offer]) -> list[Offer]:
         """Only keep valid offers."""
         return list(
             filter(

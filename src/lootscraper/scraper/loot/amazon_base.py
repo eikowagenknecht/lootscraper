@@ -29,13 +29,13 @@ class AmazonBaseScraper(Scraper):
     def get_duration() -> OfferDuration:
         return OfferDuration.CLAIMABLE
 
-    def offers_expected(self: AmazonBaseScraper) -> bool:
+    def offers_expected(self) -> bool:
         return True
 
-    def get_offers_url(self: AmazonBaseScraper) -> str:
+    def get_offers_url(self) -> str:
         return OFFER_URL
 
-    def get_page_ready_selector(self: AmazonBaseScraper) -> str:
+    def get_page_ready_selector(self) -> str:
         return ".offer-list__content"
 
     @staticmethod
@@ -44,7 +44,7 @@ class AmazonBaseScraper(Scraper):
         return False
 
     async def read_base_raw_offer(
-        self: AmazonBaseScraper,
+        self,
         element: Locator,
     ) -> AmazonRawOffer:
         title = await element.locator(

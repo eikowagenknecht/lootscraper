@@ -23,17 +23,17 @@ class GogGamesAlwaysFreeScraper(GogBaseScraper):
     def get_duration() -> OfferDuration:
         return OfferDuration.ALWAYS
 
-    def offers_expected(self: GogGamesAlwaysFreeScraper) -> bool:
+    def offers_expected(self) -> bool:
         return True
 
-    def get_offers_url(self: GogGamesAlwaysFreeScraper) -> str:
+    def get_offers_url(self) -> str:
         return OFFER_URL
 
-    def get_page_ready_selector(self: GogGamesAlwaysFreeScraper) -> str:
+    def get_page_ready_selector(self) -> str:
         return ".content.cf"
 
     def get_offer_handlers(
-        self: GogGamesAlwaysFreeScraper,
+        self,
         page: Page,
     ) -> list[OfferHandler]:
         return [
@@ -44,7 +44,7 @@ class GogGamesAlwaysFreeScraper(GogBaseScraper):
             ),
         ]
 
-    async def page_loaded_hook(self: GogGamesAlwaysFreeScraper, page: Page) -> None:
+    async def page_loaded_hook(self, page: Page) -> None:
         await GogBaseScraper.switch_to_english(page)
 
     @staticmethod
@@ -71,7 +71,7 @@ class GogGamesAlwaysFreeScraper(GogBaseScraper):
             img_url=img_url,
         )
 
-    def normalize_offer(self: GogGamesAlwaysFreeScraper, raw_offer: RawOffer) -> Offer:
+    def normalize_offer(self, raw_offer: RawOffer) -> Offer:
         rawtext = {
             "title": raw_offer.title,
         }
