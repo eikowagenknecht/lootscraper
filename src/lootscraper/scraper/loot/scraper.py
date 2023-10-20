@@ -5,6 +5,7 @@ import re
 from asyncio import sleep
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 from playwright.async_api import BrowserContext, Error, Locator, Page
@@ -128,15 +129,15 @@ class Scraper:
                 )
                 await self.page_loaded_hook(page)
             except Error:
-                filename = (
-                    Config.data_path() / "error_"
+                filename = Config.data_path() / Path(
+                    "error_"
                     + self.get_source().name.lower()
                     + "_"
                     + datetime.now(tz=timezone.utc)
                     .isoformat()
                     .replace(".", "_")
                     .replace(":", "_")
-                    + ".png"
+                    + ".png",
                 )
                 logger.exception(
                     f"The page didn't get ready to be parsed. "
