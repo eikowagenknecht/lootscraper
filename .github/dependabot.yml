@@ -12,6 +12,8 @@ updates:
     commit-message:
       prefix: "chore"
       include: "scope"
+    assignees:
+      - "eikowagenknecht"
 
   # Check for updates to GitHub Actions every weekday
   - package-ecosystem: "github-actions"
@@ -22,3 +24,17 @@ updates:
     commit-message:
       prefix: "ci"
       include: "scope"
+    assignees:
+      - "eikowagenknecht"
+
+  # Check for updates to Docker Images every weekday
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "daily"
+    target-branch: "main"
+    commit-message:
+      prefix: "build"
+      include: "scope"
+    assignees:
+      - "eikowagenknecht"
