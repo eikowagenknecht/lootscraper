@@ -30,7 +30,7 @@ TEMPLATE_STR = """
     <div class="container mx-auto p-8">
         <h1 class="text-4xl font-bold mb-4">{{ feed.title }}</h1>
 
-        {% for entry in entries|sort(attribute='valid_from', reverse=true) %}
+        {% for entry in entries %}
 
         <!-- Header & Validity -->
         {% if entry.is_expired %}
@@ -40,9 +40,9 @@ TEMPLATE_STR = """
         {% endif %}
 
         <span class="font-bold">{{ entry.title }}</span>
-        {% if entry.valid_from and entry.valid_to %}
-        <span class="text-sm">Valid from {{ entry.valid_from }} to {{ entry.valid_to }}</span>
-        {% endif %}
+
+        <span class="text-sm">Valid from {{ entry.valid_from }}{% if entry.valid_to %} to {{ entry.valid_to }}{% endif %}</span>
+
         </h2>
 
         <div class="flex bg-white rounded-lg shadow-md p-6 mb-8">
@@ -57,6 +57,7 @@ TEMPLATE_STR = """
             <div class="flex-1 ml-4">
 
                 <!-- Game Info -->
+                {% if entry.has_game %}
                 <div class="bg-gray-200 p-4 rounded-lg text-sm">
                     <div class="flex justify-between mb-2">
                     <h3 class="font-bold underline">
@@ -78,7 +79,7 @@ TEMPLATE_STR = """
                         {% elif entry.steam_percent > 80 %}bg-green-500
                         {% elif entry.steam_percent > 60 %}bg-yellow-500
                         {% else %}bg-red-600{% endif %}">
-                            Steam: {{ entry.steam_percent }}% / {{ entry.steam_score }} ({{ entry.steam_recommendations }} recommendations)
+                            <a href={{ entry.steam_url }}>Steam: {{ entry.steam_percent }}% / {{ entry.steam_score }} ({{ entry.steam_recommendations }} recommendations)</a>
                         </span>
                         {% endif %}
                         {% if entry.igdb_meta_score %}
@@ -87,7 +88,7 @@ TEMPLATE_STR = """
                         {% elif entry.igdb_meta_score > 80 %}bg-green-500
                         {% elif entry.igdb_meta_score > 60 %}bg-yellow-500
                         {% else %}bg-red-600{% endif %}">
-                            IGDB Meta: {{ entry.igdb_meta_score }}% ({{ entry.igdb_meta_ratings }} sources)
+                            <a href={{ entry.igdb_url }}>IGDB Meta: {{ entry.igdb_meta_score }}% ({{ entry.igdb_meta_ratings }} sources)</a>
                         </span>
                         {% endif %}
                         {% if entry.metacritic_score %}
@@ -96,7 +97,7 @@ TEMPLATE_STR = """
                         {% elif entry.metacritic_score > 80 %}bg-green-500
                         {% elif entry.metacritic_score > 60 %}bg-yellow-500
                         {% else %}bg-red-600{% endif %}">
-                            Metacritic: {{ entry.metacritic_score }}%
+                            {% if entry.metacritic_url %}<a href={{entry.metacritic_url}}>{% endif %}Metacritic: {{ entry.metacritic_score }}%{% if entry.metacritic_url %}</a>{% endif %}
                         </span>
                         {% endif %}
                         {% if entry.igdb_user_score %}
@@ -105,7 +106,7 @@ TEMPLATE_STR = """
                         {% elif entry.igdb_user_score > 80 %}bg-green-500
                         {% elif entry.igdb_user_score > 60 %}bg-yellow-500
                         {% else %}bg-red-600{% endif %}">
-                            IGDB User: {{ entry.igdb_user_score }}% ({{ entry.igdb_user_ratings }} sources)
+                            <a href={{ entry.igdb_url }}>IGDB User: {{ entry.igdb_user_score }}% ({{ entry.igdb_user_ratings }} sources)</a>
                         </span>
                         {% endif %}
                     </div>
@@ -118,8 +119,6 @@ TEMPLATE_STR = """
                             <span class="text-white bg-gray-500 rounded-full px-3 py-1 text-sm font-semibold m-1">#{{ genre }}</span>
                             {% endfor %}
                         </div>
-                        {% else %}
-                        <span class="text-white bg-gray-500 rounded-full px-3 py-1 text-sm font-semibold m-1">#Unknown</span>
                         {% endif %}
                     </div>
 
@@ -127,9 +126,8 @@ TEMPLATE_STR = """
                     <div>
                         {{ entry.description }}
                     </div>
-
-
                 </div>
+                {% endif %}
 
                 <!-- Claim Button -->
                 <div class="flex justify-between items-center mt-4">
@@ -169,9 +167,6 @@ def generate_html(
     duration: OfferDuration | None = None,
 ) -> None:
     """Generate a html view with the given offers."""
-    if len(offers) == 0:
-        return
-
     latest_date: datetime | None = None
 
     entries = []
@@ -298,6 +293,9 @@ def generate_html(
 
         # Add to array
         entries.append(entry)
+
+    # Sort entries dictionary by valid_from date, newest first
+    entries.sort(key=lambda x: x["valid_from"], reverse=True)
 
     feed = {
         "author_name": author_name,

@@ -295,21 +295,26 @@ class LootDatabase:
     def read_active_offers(self, time: datetime) -> Sequence[Offer]:
         session: Session = self.Session()
         try:
+            # Prefilter to reduce database load. The details are handled below.
             offers = (
                 session.execute(
                     sa.select(Offer).where(
                         sa.and_(
-                            # Only send offers that are already active
                             sa.or_(
+                                # Offers that are definitely still active
                                 Offer.valid_from <= time,
+                                # For some offers we don't really know,
+                                # we will filter this later.
                                 Offer.valid_from.is_(None),
                             ),
-                            # Prefilter to reduce database load.
-                            # The details are handled below.
                             sa.or_(
+                                # Offers that are definitely still active
                                 Offer.valid_to >= time,
-                                Offer.seen_last >= time - timedelta(days=1),
+                                # For some offers we don't really know, but...
                                 Offer.valid_to.is_(None),
+                                # ... when they have been seen in the last 24
+                                # hours, we consider them active.
+                                Offer.seen_last >= time - timedelta(days=1),
                             ),
                         ),
                     ),

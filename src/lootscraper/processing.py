@@ -1,7 +1,7 @@
 import asyncio
 import hashlib
 import logging
-from collections.abc import Sequence
+from datetime import datetime, timezone
 from pathlib import Path
 
 from playwright.async_api import BrowserContext
@@ -40,9 +40,7 @@ async def scrape_new_offers(db: LootDatabase) -> None:
                 raise
 
     if cfg.generate_feed:
-        all_offers = db.read_all()
-
-        await action_generate_feed(all_offers)
+        await action_generate_feed(db)
     else:
         logging.info("Skipping feed generation because it is disabled.")
 
@@ -128,7 +126,7 @@ async def send_new_offers_telegram(db: LootDatabase, bot: TelegramBot) -> None:
         raise
 
 
-async def action_generate_feed(loot_offers_in_db: Sequence[Offer]) -> None:
+async def action_generate_feed(db: LootDatabase) -> None:
     cfg = Config.get()
     feed_file_base = Config.data_path() / Path(cfg.feed_file_prefix + ".xml")
 
@@ -138,19 +136,30 @@ async def action_generate_feed(loot_offers_in_db: Sequence[Offer]) -> None:
     type_: OfferType
     duration: OfferDuration
 
+    all_offers = db.read_all()
+    active_offers = db.read_active_offers(datetime.now(tz=timezone.utc))
+
     # Generate and upload feeds split by source
     for source, type_, duration in [
         (x.get_source(), x.get_type(), x.get_duration()) for x in get_all_scrapers()
     ]:
-        offers = [
+        filtered_offers = [
             offer
-            for offer in loot_offers_in_db
+            for offer in all_offers
             if offer.source == source
             and offer.type == type_
             and offer.duration == duration
         ]
-        if not offers:
+        if not filtered_offers:
             continue
+
+        filtered_active_offers = [
+            offer
+            for offer in active_offers
+            if offer.source == source
+            and offer.type == type_
+            and offer.duration == duration
+        ]
 
         feed_file_core = f"_{source.name.lower()}_{type_.name.lower()}"
 
@@ -162,9 +171,10 @@ async def action_generate_feed(loot_offers_in_db: Sequence[Offer]) -> None:
         feed_file = Config.data_path() / Path(
             cfg.feed_file_prefix + feed_file_core + ".xml",
         )
+
         old_hash = hash_file(feed_file)
         await generate_feed(
-            offers=offers,
+            offers=filtered_offers,
             file=feed_file,
             author_name=cfg.feed_author_name,
             author_web=cfg.feed_author_web,
@@ -187,7 +197,7 @@ async def action_generate_feed(loot_offers_in_db: Sequence[Offer]) -> None:
 
         # Also generate a html version of the feed
         generate_html(
-            offers=offers,
+            offers=filtered_active_offers,
             file=feed_file.with_suffix(".html"),
             author_name=cfg.feed_author_name,
             author_web=cfg.feed_author_web,
@@ -205,7 +215,7 @@ async def action_generate_feed(loot_offers_in_db: Sequence[Offer]) -> None:
     if any_feed_changed:
         feed_file = Config.data_path() / Path(cfg.feed_file_prefix + ".xml")
         await generate_feed(
-            offers=loot_offers_in_db,
+            offers=all_offers,
             file=feed_file,
             author_name=cfg.feed_author_name,
             author_web=cfg.feed_author_web,
@@ -214,9 +224,10 @@ async def action_generate_feed(loot_offers_in_db: Sequence[Offer]) -> None:
             feed_url_alternate=cfg.feed_url_alternate,
             feed_id_prefix=cfg.feed_id_prefix,
         )
+
         # Also generate a html version of the feed
         generate_html(
-            offers=loot_offers_in_db,
+            offers=active_offers,
             file=feed_file.with_suffix(".html"),
             author_name=cfg.feed_author_name,
             author_web=cfg.feed_author_web,
