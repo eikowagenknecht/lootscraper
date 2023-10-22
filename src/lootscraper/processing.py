@@ -28,20 +28,20 @@ async def scrape_new_offers(db: LootDatabase) -> None:
     context: BrowserContext
     cfg = Config.get()
 
-    async with get_browser_context() as context:
-        session: Session = db.Session()
-        try:
-            scraped_offers = await scrape_offers(context)
-            await process_new_offers(db, context, session, scraped_offers)
-
-            all_offers = db.read_all()
-
-            session.commit()
-        except Exception:
-            session.rollback()
-            raise
+    if len(cfg.enabled_offer_sources) > 0:
+        async with get_browser_context() as context:
+            session: Session = db.Session()
+            try:
+                scraped_offers = await scrape_offers(context)
+                await process_new_offers(db, context, session, scraped_offers)
+                session.commit()
+            except Exception:
+                session.rollback()
+                raise
 
     if cfg.generate_feed:
+        all_offers = db.read_all()
+
         await action_generate_feed(all_offers)
     else:
         logging.info("Skipping feed generation because it is disabled.")
