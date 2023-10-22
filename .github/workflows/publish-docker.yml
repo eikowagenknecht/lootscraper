@@ -5,7 +5,7 @@ name: publish-docker
 on:
   push:
     branches:
-    #   - main
+      - main
       - next
     tags:
       - v*
