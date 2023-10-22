@@ -122,6 +122,19 @@ class Scraper:
                 logger.exception("Couldn't load page.")
                 return []
 
+            # TODO: Instead of logging in, read the cookies from the config
+            if self.get_source() == Source.TWITCH:
+                # Fill in Username "input"
+                await page.fill("input[id=login-username]", "user")
+                # Fill in Password "input"
+                await page.fill("input[id=password-input]", "pass")
+                # Click Log In button
+                await page.click("button[data-a-target=passport-login-button]")
+
+                # Unfortunately, this only leads to a "Browser not supported" message
+                # Store cookies for later use
+                storage = await page.context.storage_state(path="twitchstate.json")
+
             try:
                 await page.wait_for_selector(
                     self.get_page_ready_selector(),
