@@ -20,6 +20,7 @@ class Source(Enum):
     ITCH = "itch.io"
     STEAM = "Steam"
     UBISOFT = "Ubisoft"
+    TWITCH = "Twitch"
 
 
 class Channel(Enum):
