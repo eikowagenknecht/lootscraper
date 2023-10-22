@@ -4,8 +4,8 @@ from __future__ import annotations
 import unittest
 
 from lootscraper.browser import get_browser_context
-from lootscraper.scraper.info.igdb import get_igdb_details, get_igdb_id
-from lootscraper.scraper.info.steam import get_steam_details, get_steam_id
+from lootscraper.scraper.info_igdb import get_igdb_details, get_igdb_id
+from lootscraper.scraper.info_steam import get_steam_details, get_steam_id
 
 
 class IGDBGameInfoTests(unittest.IsolatedAsyncioTestCase):

@@ -1,14 +1,14 @@
 from __future__ import annotations
 
 import logging
+from dataclasses import dataclass
 from datetime import date, datetime, time, timedelta, timezone
 from typing import TYPE_CHECKING
 
 from lootscraper.common import OfferType
 from lootscraper.database import Offer
-from lootscraper.scraper.info.utils import clean_game_title
-from lootscraper.scraper.loot.amazon_base import AmazonBaseScraper, AmazonRawOffer
-from lootscraper.scraper.loot.scraper import OfferHandler, RawOffer, Scraper
+from lootscraper.scraper.amazon_base import AmazonBaseScraper, AmazonRawOffer
+from lootscraper.scraper.scraper_base import OfferHandler, RawOffer, Scraper
 
 if TYPE_CHECKING:
     from playwright.async_api import Locator, Page
@@ -16,16 +16,21 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
-class AmazonGamesScraper(AmazonBaseScraper):
+@dataclass
+class AmazonLootRawOffer(AmazonRawOffer):
+    game_title: str | None = None
+
+
+class AmazonLootScraper(AmazonBaseScraper):
     @staticmethod
     def get_type() -> OfferType:
-        return OfferType.GAME
+        return OfferType.LOOT
 
     def get_offer_handlers(self, page: Page) -> list[OfferHandler]:
         return [
             OfferHandler(
                 page.locator(
-                    '[data-a-target="offer-list-FGWP_FULL"] '
+                    '[data-a-target="offer-list-IN_GAME_LOOT"] '
                     '[data-a-target="item-card"]',
                 ),
                 self.read_raw_offer,
@@ -39,18 +44,35 @@ class AmazonGamesScraper(AmazonBaseScraper):
     async def read_raw_offer(
         self,
         element: Locator,
-    ) -> AmazonRawOffer:
-        return await self.read_base_raw_offer(element)
+    ) -> AmazonLootRawOffer:
+        base_raw_offer = await self.read_base_raw_offer(element)
+
+        game_title = await element.locator(".item-card-details__body p").text_content()
+        if game_title is None:
+            raise ValueError("Couldn't find game title.")
+
+        return AmazonLootRawOffer(
+            title=base_raw_offer.title,
+            valid_to=base_raw_offer.valid_to,
+            url=base_raw_offer.url,
+            img_url=base_raw_offer.img_url,
+            game_title=game_title,
+        )
 
     def normalize_offer(self, raw_offer: RawOffer) -> Offer:
-        if not isinstance(raw_offer, AmazonRawOffer):
+        if not isinstance(raw_offer, AmazonLootRawOffer):
             raise TypeError("Wrong type of raw offer.")
 
         rawtext = {
             "title": raw_offer.title,
+            "gametitle": raw_offer.game_title,
         }
 
-        probable_game_name = clean_game_title(raw_offer.title)
+        if raw_offer.game_title is None:
+            raise ValueError("No game title found.")
+
+        probable_game_name = raw_offer.game_title
+        title = f"{raw_offer.game_title}: {raw_offer.title}"
 
         # Date
         # This is a bit more complicated as only the relative end is
@@ -126,10 +148,10 @@ class AmazonGamesScraper(AmazonBaseScraper):
                 logger.warning(f"Date parsing failed for {raw_offer.title}")
 
         return Offer(
-            source=AmazonGamesScraper.get_source(),
-            duration=AmazonGamesScraper.get_duration(),
-            type=AmazonGamesScraper.get_type(),
-            title=raw_offer.title,
+            source=AmazonLootScraper.get_source(),
+            duration=AmazonLootScraper.get_duration(),
+            type=AmazonLootScraper.get_type(),
+            title=title,
             probable_game_name=probable_game_name,
             seen_last=datetime.now(timezone.utc),
             valid_to=end_date,

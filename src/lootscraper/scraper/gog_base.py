@@ -3,7 +3,7 @@ import asyncio
 from playwright.async_api import Page
 
 from lootscraper.common import OfferType, Source
-from lootscraper.scraper.loot.scraper import Scraper
+from lootscraper.scraper.scraper_base import Scraper
 
 
 class GogBaseScraper(Scraper):

@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 from playwright.async_api import Error, Locator
 
 from lootscraper.common import OfferDuration, Source
-from lootscraper.scraper.loot.scraper import RawOffer, Scraper
+from lootscraper.scraper.scraper_base import RawOffer, Scraper
 
 if TYPE_CHECKING:
     from datetime import datetime

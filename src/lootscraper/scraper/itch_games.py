@@ -8,7 +8,7 @@ from playwright.async_api import TimeoutError as PlaywrightTimeoutError
 
 from lootscraper.common import OfferDuration, OfferType, Source
 from lootscraper.database import Offer
-from lootscraper.scraper.loot.scraper import OfferHandler, RawOffer, Scraper
+from lootscraper.scraper.scraper_base import OfferHandler, RawOffer, Scraper
 
 logger = logging.getLogger(__name__)
 

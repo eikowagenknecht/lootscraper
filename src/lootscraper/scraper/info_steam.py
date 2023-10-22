@@ -10,7 +10,7 @@ from playwright.async_api import BrowserContext, Error, Page
 
 from lootscraper.browser import get_new_page
 from lootscraper.database import SteamInfo
-from lootscraper.scraper.info.utils import RESULT_MATCH_THRESHOLD, get_match_score
+from lootscraper.utils import RESULT_MATCH_THRESHOLD, get_match_score
 
 logger = logging.getLogger(__name__)
 

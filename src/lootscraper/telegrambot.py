@@ -38,7 +38,7 @@ from lootscraper.common import (
 )
 from lootscraper.config import Config, ParsedConfig, TelegramLogLevel
 from lootscraper.database import Announcement, Game, Offer, TelegramSubscription, User
-from lootscraper.scraper.loot.scraperhelper import get_all_scrapers
+from lootscraper.scraper import get_all_scrapers
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
