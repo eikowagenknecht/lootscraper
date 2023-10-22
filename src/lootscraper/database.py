@@ -21,7 +21,7 @@ from sqlalchemy.orm import (
 
 from lootscraper.common import Category, Channel, OfferDuration, OfferType, Source
 from lootscraper.config import Config
-from lootscraper.scraper.info.utils import calc_real_valid_to
+from lootscraper.utils import calc_real_valid_to
 
 if TYPE_CHECKING:
     from collections.abc import Sequence

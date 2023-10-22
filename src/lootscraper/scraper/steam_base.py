@@ -9,9 +9,9 @@ from typing import TYPE_CHECKING
 from lootscraper.browser import get_new_page
 from lootscraper.common import OfferDuration, Source
 from lootscraper.database import Offer
-from lootscraper.scraper.info.steam import skip_age_verification
-from lootscraper.scraper.info.utils import clean_title
-from lootscraper.scraper.loot.scraper import OfferHandler, RawOffer, Scraper
+from lootscraper.scraper.info_steam import skip_age_verification
+from lootscraper.scraper.scraper_base import OfferHandler, RawOffer, Scraper
+from lootscraper.utils import clean_title
 
 if TYPE_CHECKING:
     from playwright.async_api import Locator, Page

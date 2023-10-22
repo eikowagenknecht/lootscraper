@@ -3,7 +3,7 @@ from __future__ import annotations
 import unittest
 from datetime import datetime, timezone
 
-from lootscraper.scraper.info.utils import (
+from lootscraper.utils import (
     calc_real_valid_to,
     clean_loot_title,
     get_match_score,

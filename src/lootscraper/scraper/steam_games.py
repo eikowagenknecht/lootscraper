@@ -4,7 +4,7 @@ import logging
 from typing import TYPE_CHECKING
 
 from lootscraper.common import OfferType
-from lootscraper.scraper.loot.steam_base import SteamBaseScraper
+from lootscraper.scraper.steam_base import SteamBaseScraper
 
 if TYPE_CHECKING:
     from playwright.async_api import Locator, Page

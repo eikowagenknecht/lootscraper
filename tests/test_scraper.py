@@ -5,18 +5,18 @@ import unittest
 from datetime import datetime, timezone
 
 from lootscraper.browser import get_browser_context
-from lootscraper.scraper.loot.amazon_games import AmazonGamesScraper
-from lootscraper.scraper.loot.amazon_loot import AmazonLootScraper
-from lootscraper.scraper.loot.apple_games import AppleGamesScraper
-from lootscraper.scraper.loot.epic_games import EpicGamesScraper
-from lootscraper.scraper.loot.gog_games import GogGamesScraper
-from lootscraper.scraper.loot.gog_games_alwaysfree import GogGamesAlwaysFreeScraper
-from lootscraper.scraper.loot.google_games import GoogleGamesScraper
-from lootscraper.scraper.loot.humble_games import HumbleGamesScraper
-from lootscraper.scraper.loot.itch_games import ItchGamesScraper
-from lootscraper.scraper.loot.steam_games import SteamGamesScraper
-from lootscraper.scraper.loot.steam_loot import SteamLootScraper
-from lootscraper.scraper.loot.ubisoft_games import UbisoftGamesScraper
+from lootscraper.scraper.amazon_games import AmazonGamesScraper
+from lootscraper.scraper.amazon_loot import AmazonLootScraper
+from lootscraper.scraper.apple_games import AppleGamesScraper
+from lootscraper.scraper.epic_games import EpicGamesScraper
+from lootscraper.scraper.gog_games import GogGamesScraper
+from lootscraper.scraper.gog_games_alwaysfree import GogGamesAlwaysFreeScraper
+from lootscraper.scraper.google_games import GoogleGamesScraper
+from lootscraper.scraper.humble_games import HumbleGamesScraper
+from lootscraper.scraper.info_steam_games import SteamGamesScraper
+from lootscraper.scraper.info_steam_loot import SteamLootScraper
+from lootscraper.scraper.itch_games import ItchGamesScraper
+from lootscraper.scraper.ubisoft_games import UbisoftGamesScraper
 
 
 class PlaywrightTests(unittest.IsolatedAsyncioTestCase):

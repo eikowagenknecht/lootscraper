@@ -9,8 +9,8 @@ from playwright.async_api import Error, Locator, Page
 from lootscraper.browser import get_new_page
 from lootscraper.common import OfferDuration
 from lootscraper.database import Offer
-from lootscraper.scraper.loot.gog_base import GogBaseScraper
-from lootscraper.scraper.loot.scraper import OfferHandler, RawOffer
+from lootscraper.scraper.gog_base import GogBaseScraper
+from lootscraper.scraper.scraper_base import OfferHandler, RawOffer
 
 logger = logging.getLogger(__name__)
 

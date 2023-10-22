@@ -14,9 +14,9 @@ from lootscraper.config import Config
 from lootscraper.database import Game, IgdbInfo, LootDatabase, Offer, SteamInfo, User
 from lootscraper.feed import generate_feed
 from lootscraper.html import generate_html
-from lootscraper.scraper.info.igdb import get_igdb_details, get_igdb_id
-from lootscraper.scraper.info.steam import get_steam_details, get_steam_id
-from lootscraper.scraper.loot.scraperhelper import get_all_scrapers
+from lootscraper.scraper import get_all_scrapers
+from lootscraper.scraper.info_igdb import get_igdb_details, get_igdb_id
+from lootscraper.scraper.info_steam import get_steam_details, get_steam_id
 from lootscraper.telegrambot import TelegramBot
 from lootscraper.upload import upload_to_server
 

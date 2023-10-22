@@ -11,7 +11,7 @@ from unidecode import unidecode
 
 from lootscraper.config import Config
 from lootscraper.database import IgdbInfo
-from lootscraper.scraper.info.utils import RESULT_MATCH_THRESHOLD, get_match_score
+from lootscraper.utils import RESULT_MATCH_THRESHOLD, get_match_score
 
 logger = logging.getLogger(__name__)
 
