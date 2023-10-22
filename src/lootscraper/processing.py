@@ -13,6 +13,7 @@ from lootscraper.common import TIMESTAMP_LONG, OfferDuration, OfferType, Source
 from lootscraper.config import Config
 from lootscraper.database import Game, IgdbInfo, LootDatabase, Offer, SteamInfo, User
 from lootscraper.feed import generate_feed
+from lootscraper.html import generate_html
 from lootscraper.scraper.info.igdb import get_igdb_details, get_igdb_id
 from lootscraper.scraper.info.steam import get_steam_details, get_steam_id
 from lootscraper.scraper.loot.scraperhelper import get_all_scrapers
@@ -151,7 +152,6 @@ async def action_generate_feed(loot_offers_in_db: Sequence[Offer]) -> None:
         if not offers:
             continue
 
-        feed_changed = False
         feed_file_core = f"_{source.name.lower()}_{type_.name.lower()}"
 
         # To keep the old feed ids and names only add when the type is one of
@@ -178,11 +178,28 @@ async def action_generate_feed(loot_offers_in_db: Sequence[Offer]) -> None:
         )
         new_hash = hash_file(feed_file)
         if old_hash != new_hash:
-            feed_changed = True
             any_feed_changed = True
+
+        feed_changed = old_hash != new_hash
 
         if feed_changed and cfg.upload_to_ftp:
             await asyncio.to_thread(upload_to_server, feed_file)
+
+        # Also generate a html version of the feed
+        generate_html(
+            offers=offers,
+            file=feed_file.with_suffix(".html"),
+            author_name=cfg.feed_author_name,
+            author_web=cfg.feed_author_web,
+            author_mail=cfg.feed_author_email,
+            feed_id_prefix=cfg.feed_id_prefix,
+            source=source,
+            type_=type_,
+            duration=duration,
+        )
+
+        if feed_changed and cfg.upload_to_ftp:
+            await asyncio.to_thread(upload_to_server, feed_file.with_suffix(".html"))
 
     # Generate and upload cumulated feed
     if any_feed_changed:
@@ -197,8 +214,21 @@ async def action_generate_feed(loot_offers_in_db: Sequence[Offer]) -> None:
             feed_url_alternate=cfg.feed_url_alternate,
             feed_id_prefix=cfg.feed_id_prefix,
         )
+        # Also generate a html version of the feed
+        generate_html(
+            offers=loot_offers_in_db,
+            file=feed_file.with_suffix(".html"),
+            author_name=cfg.feed_author_name,
+            author_web=cfg.feed_author_web,
+            author_mail=cfg.feed_author_email,
+            feed_id_prefix=cfg.feed_id_prefix,
+        )
         if cfg.upload_to_ftp:
             await asyncio.to_thread(upload_to_server, feed_file_base)
+            await asyncio.to_thread(
+                upload_to_server,
+                feed_file_base.with_suffix(".html"),
+            )
         else:
             logging.info("Skipping upload, disabled")
 
