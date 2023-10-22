@@ -13,9 +13,9 @@ from lootscraper.scraper.gog_games import GogGamesScraper
 from lootscraper.scraper.gog_games_alwaysfree import GogGamesAlwaysFreeScraper
 from lootscraper.scraper.google_games import GoogleGamesScraper
 from lootscraper.scraper.humble_games import HumbleGamesScraper
-from lootscraper.scraper.info_steam_games import SteamGamesScraper
-from lootscraper.scraper.info_steam_loot import SteamLootScraper
 from lootscraper.scraper.itch_games import ItchGamesScraper
+from lootscraper.scraper.steam_games import SteamGamesScraper
+from lootscraper.scraper.steam_loot import SteamLootScraper
 from lootscraper.scraper.ubisoft_games import UbisoftGamesScraper
 
 
