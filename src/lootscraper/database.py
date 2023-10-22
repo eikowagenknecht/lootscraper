@@ -292,6 +292,44 @@ class LootDatabase:
         )
         command.upgrade(alembic_cfg, "head")
 
+    def read_active_offers(self, time: datetime) -> Sequence[Offer]:
+        session: Session = self.Session()
+        try:
+            offers = (
+                session.execute(
+                    sa.select(Offer).where(
+                        sa.and_(
+                            # Only send offers that are already active
+                            sa.or_(
+                                Offer.valid_from <= time,
+                                Offer.valid_from.is_(None),
+                            ),
+                            # Prefilter to reduce database load.
+                            # The details are handled below.
+                            sa.or_(
+                                Offer.valid_to >= time,
+                                Offer.seen_last >= time - timedelta(days=1),
+                                Offer.valid_to.is_(None),
+                            ),
+                        ),
+                    ),
+                )
+                .scalars()
+                .all()
+            )
+
+            # Filter out offers that have a real end date that is in the future
+            filtered_offers = []
+            for offer in offers:
+                real_valid_to = offer.real_valid_to()
+                if real_valid_to is None or real_valid_to > time:
+                    filtered_offers.append(offer)
+
+        except Exception:
+            session.rollback()
+            raise
+        return filtered_offers
+
     def read_all(self) -> Sequence[Offer]:
         session: Session = self.Session()
         try:
