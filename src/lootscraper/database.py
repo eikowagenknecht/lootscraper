@@ -292,6 +292,49 @@ class LootDatabase:
         )
         command.upgrade(alembic_cfg, "head")
 
+    def read_active_offers(self, time: datetime) -> Sequence[Offer]:
+        session: Session = self.Session()
+        try:
+            # Prefilter to reduce database load. The details are handled below.
+            offers = (
+                session.execute(
+                    sa.select(Offer).where(
+                        sa.and_(
+                            sa.or_(
+                                # Offers that are definitely still active
+                                Offer.valid_from <= time,
+                                # For some offers we don't really know,
+                                # we will filter this later.
+                                Offer.valid_from.is_(None),
+                            ),
+                            sa.or_(
+                                # Offers that are definitely still active
+                                Offer.valid_to >= time,
+                                # For some offers we don't really know, but...
+                                Offer.valid_to.is_(None),
+                                # ... when they have been seen in the last 24
+                                # hours, we consider them active.
+                                Offer.seen_last >= time - timedelta(days=1),
+                            ),
+                        ),
+                    ),
+                )
+                .scalars()
+                .all()
+            )
+
+            # Filter out offers that have a real end date that is in the future
+            filtered_offers = []
+            for offer in offers:
+                real_valid_to = offer.real_valid_to()
+                if real_valid_to is None or real_valid_to > time:
+                    filtered_offers.append(offer)
+
+        except Exception:
+            session.rollback()
+            raise
+        return filtered_offers
+
     def read_all(self) -> Sequence[Offer]:
         session: Session = self.Session()
         try:

@@ -37,7 +37,14 @@ from lootscraper.common import (
     markdown_url,
 )
 from lootscraper.config import Config, ParsedConfig, TelegramLogLevel
-from lootscraper.database import Announcement, Game, Offer, TelegramSubscription, User
+from lootscraper.database import (
+    Announcement,
+    Game,
+    LootDatabase,
+    Offer,
+    TelegramSubscription,
+    User,
+)
 from lootscraper.scraper import get_all_scrapers
 
 if TYPE_CHECKING:
@@ -97,10 +104,12 @@ class TelegramBot:
     def __init__(
         self,
         config: ParsedConfig,
-        scoped_session: orm.scoped_session[orm.Session],
+        db: LootDatabase,
     ) -> None:
         self.config = config
-        self.Session = scoped_session
+        self.database: LootDatabase = db
+        # TODO: Can this Session be removed and db.Session be used instead?
+        self.Session: orm.scoped_session[orm.Session] = db.Session
         self.application: Application | None = None  # type: ignore
 
     async def __aenter__(self) -> Self:
@@ -1085,42 +1094,17 @@ class TelegramBot:
         session: orm.Session = self.Session()
         try:
             for subscription in subscriptions:
-                offers: Sequence[Offer] = (
-                    session.execute(
-                        sa.select(Offer).where(
-                            sa.and_(
-                                Offer.type == subscription.type,
-                                Offer.source == subscription.source,
-                                Offer.duration == subscription.duration,
-                                Offer.id > subscription.last_offer_id,
-                                # Only send offers that are already active
-                                sa.or_(
-                                    Offer.valid_from <= datetime.now(tz=timezone.utc),
-                                    Offer.valid_from.is_(None),
-                                ),
-                                # Prefilter to reduce database load.
-                                # The details are handled below.
-                                sa.or_(
-                                    Offer.valid_to >= datetime.now(tz=timezone.utc),
-                                    Offer.seen_last
-                                    >= datetime.now(tz=timezone.utc)
-                                    - timedelta(days=1),
-                                    Offer.valid_to.is_(None),
-                                ),
-                            ),
-                        ),
-                    )
-                    .scalars()
-                    .all()
+                offers: Sequence[Offer] = self.database.read_active_offers(
+                    datetime.now(tz=timezone.utc),
                 )
-
-                # Filter out offers that have a real end date that is in the future
                 filtered_offers = []
 
                 for offer in offers:
-                    real_valid_to = offer.real_valid_to()
-                    if real_valid_to is None or real_valid_to > datetime.now(
-                        tz=timezone.utc,
+                    if (
+                        Offer.type == subscription.type
+                        and Offer.source == subscription.source
+                        and Offer.duration == subscription.duration
+                        and Offer.id > subscription.last_offer_id
                     ):
                         filtered_offers.append(offer)
 

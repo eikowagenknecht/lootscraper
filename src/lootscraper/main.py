@@ -147,7 +147,7 @@ async def run_telegram_bot(
     Run the Telegram bot and send new offers when there is a new entry in the
     queue.
     """
-    async with TelegramBot(Config.get(), db.Session) as bot:
+    async with TelegramBot(Config.get(), db) as bot:
         # The bot is running now and will stop when the context exits
         try:
             telegram_handler = TelegramLoggingHandler(bot)
