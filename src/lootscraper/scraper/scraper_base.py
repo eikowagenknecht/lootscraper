@@ -48,9 +48,10 @@ class Scraper:
             f"/ {self.get_duration().value}.",
         )
         offers = await self.read_offers()
+        offers = self.clean_offers(offers)
         unique_offers = self.deduplicate_offers(offers)
         categorized_offers = self.categorize_offers(unique_offers)
-        filtered_offers = self.clean_offers(categorized_offers)
+        filtered_offers = self.filter_for_valid_offers(categorized_offers)
 
         titles = ", ".join([offer.title for offer in filtered_offers])
         if len(filtered_offers) > 0:
@@ -176,6 +177,17 @@ class Scraper:
 
         return offers
 
+    def clean_offers(self, offers: list[Offer]) -> list[Offer]:
+        """Clean offer title etc."""
+        for offer in offers:
+            offer.title = offer.title.replace("\n", "").strip()
+            if offer.url is not None:
+                offer.url = offer.url.replace("\n", "").strip()
+            if offer.img_url is not None:
+                offer.img_url = offer.img_url.replace("\n", "").strip()
+
+        return offers
+
     def categorize_offers(self, offers: list[Offer]) -> list[Offer]:
         """Categorize offers by title (demo, etc.)."""
         for offer in offers:
@@ -205,7 +217,7 @@ class Scraper:
 
         return new_offers
 
-    def clean_offers(self, offers: list[Offer]) -> list[Offer]:
+    def filter_for_valid_offers(self, offers: list[Offer]) -> list[Offer]:
         """Only keep valid offers."""
         return list(
             filter(
