@@ -74,7 +74,8 @@ def clean_title(title: str, type_: OfferType) -> str:
         return clean_game_title(title)
 
     if type_ == OfferType.LOOT:
-        return clean_loot_title(title)[1]  # The second element is the full offer title
+        # The second element is the full offer title
+        return clean_combined_title(title)[1]
 
     raise ValueError(f"Unknown type {type_}")
 
@@ -83,7 +84,10 @@ def clean_game_title(title: str) -> str:
     return (
         title.replace("\n", "")
         .replace(" - ", ": ")
+        .replace(" : ", ": ")
         .strip()
+        .removeprefix("[VIP]")
+        .removeprefix("[ VIP ]")
         .removesuffix(" on Origin")
         .removesuffix(" Game of the Year Edition Deluxe")
         .removesuffix(" Game of the Year Edition")
@@ -97,9 +101,21 @@ def clean_game_title(title: str) -> str:
     )
 
 
-def clean_loot_title(title: str) -> tuple[str, str]:
+def clean_loot_title(title: str) -> str:
+    return (
+        title.replace("\n", "")
+        .replace(" - ", ": ")
+        .replace(" : ", ": ")
+        .strip()
+        .removesuffix(":")
+        .removesuffix("-")
+        .strip()
+    )
+
+
+def clean_combined_title(title: str) -> tuple[str, str]:
     """
-    Clean the loot title.
+    Clean the combined title.
 
     Unfortunately loot offers come in free text format, so we need to do some
     manual matching.
@@ -144,25 +160,25 @@ def clean_loot_title(title: str) -> tuple[str, str]:
         probable_game_name = match.group(1)
         probable_loot_name = match.group(2)
     # By the second colon (TITLE: TITLEDETAIL: LOOTDETAIL)
-    if probable_game_name is None:
+    if not probable_game_name:
         # Replace some very special characters that Steam uses sometimes
         title = title.replace("：", ": ").replace(" — ", ": ").replace(" - ", ": ")  # noqa
         title_parts: list[str] = title.split(": ")
-    if probable_game_name is None and len(title_parts) >= 3:
+    if not probable_game_name and len(title_parts) >= 3:
         probable_game_name = ": ".join(title_parts[:-1])
         probable_loot_name = title_parts[-1]
     # By the "Get ... in [Game] pattern" (to catch games with a colon in the name)
-    if probable_game_name is None:
+    if not probable_game_name:
         match = re.compile(r"Get (.*) in (.*)").match(title)
         if match and match.group(1):
             probable_game_name = match.group(2)
             probable_loot_name = match.group(1)
     # By the ": " pattern (TITLE: LOOT)
-    if probable_game_name is None and len(title_parts) == 2:
+    if not probable_game_name and len(title_parts) == 2:
         probable_game_name = ": ".join(title_parts[:-1])
         probable_loot_name = title_parts[-1]
     # If we still don't have a game name, we just use the whole title
-    if probable_game_name is None:
+    if not probable_game_name:
         probable_game_name = title
 
     probable_game_name = clean_game_title(probable_game_name)

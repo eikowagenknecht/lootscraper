@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 
 from lootscraper.utils import (
     calc_real_valid_to,
-    clean_loot_title,
+    clean_combined_title,
     get_match_score,
 )
 
@@ -29,37 +29,37 @@ class LocalTests(unittest.TestCase):
         title = "Tom Clancy's Rainbow Six® Siege"
         cleaned = "Tom Clancy's Rainbow Six® Siege"
 
-        assert clean_loot_title(title) == cleaned
+        assert clean_combined_title(title) == cleaned
 
     def test_loot_title_cleaning_2(self) -> None:
         title = "Lords Mobile: Warlord Pack"
         cleaned = "Lords Mobile"
 
-        assert clean_loot_title(title) == cleaned
+        assert clean_combined_title(title) == cleaned
 
     def test_loot_title_cleaning_3(self) -> None:
         title = "Mobile Legends: Bang Bang: Amazon Prime Chest"
         cleaned = "Mobile Legends: Bang Bang"
 
-        assert clean_loot_title(title) == cleaned
+        assert clean_combined_title(title) == cleaned
 
     def test_loot_title_cleaning_4(self) -> None:
         title = "Get up to GTA$400,000 this month in GTA Online"
         cleaned = "GTA Online"
 
-        assert clean_loot_title(title) == cleaned
+        assert clean_combined_title(title) == cleaned
 
     def test_loot_title_cleaning_5(self) -> None:
         title = "Get up to GTA$400,000 this week in GTA Online"
         cleaned = "GTA Online"
 
-        assert clean_loot_title(title) == cleaned
+        assert clean_combined_title(title) == cleaned
 
     def test_loot_title_cleaning_6(self) -> None:
         title = "World of Warships — Starter Pack: Dreadnought"
         cleaned = "World of Warships"
 
-        assert clean_loot_title(title) == cleaned
+        assert clean_combined_title(title) == cleaned
 
     def test_real_valid_to_date(self) -> None:
         seen_last = datetime(2020, 6, 1, 0, 0, 0, tzinfo=timezone.utc)

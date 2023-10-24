@@ -15,14 +15,30 @@ db_echo = false
 web_timeout_seconds = 5
 
 [scraper]
-# Possible Values: ["AMAZON", "APPLE", "EPIC", "GOG", "GOOGLE", "HUMBLE", "ITCH", "STEAM", "UBISOFT"]
-offer_sources = []
-# Possible Values: ["GAME", "LOOT"]
-offer_types = []
-# Possible Values: ["ALWAYS", "TEMPORARY", "CLAIMABLE"] 
-offer_durations = []
-# Possible Values: ["STEAM", "IGDB"]
-info_sources = []
+offer_sources = [
+    # "AMAZON",
+    # "APPLE",
+    # "EPIC",
+    # "GOG",
+    # "GOOGLE",
+    # "HUMBLE",
+    # "ITCH",
+    # "STEAM",
+    # "UBISOFT",
+]
+offer_types = [
+    # "GAME",
+    # "LOOT",
+]
+offer_durations = [
+    # "ALWAYS",
+    # "TEMPORARY",
+    # "CLAIMABLE",
+]
+info_sources = [
+    # "STEAM",
+    # "IGDB",
+]
 
 [actions]
 scrape_info = true

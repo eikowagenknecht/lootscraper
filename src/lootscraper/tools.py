@@ -11,7 +11,11 @@ from lootscraper.common import Category, OfferDuration
 from lootscraper.database import Game, IgdbInfo, LootDatabase, Offer, SteamInfo
 from lootscraper.processing import add_game_info
 from lootscraper.scraper.scraper_base import Scraper
-from lootscraper.utils import clean_title
+from lootscraper.utils import (
+    clean_game_title,
+    clean_loot_title,
+    clean_title,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -72,14 +76,31 @@ def fix_offer_titles(session: Session) -> None:
     for offer in session.query(Offer):
         if offer.rawtext is None:
             continue
-        raw_title = offer.rawtext["title"]
-        title_new = clean_title(raw_title, offer.type)
+
+        try:
+            raw_title = offer.rawtext["gametitle"]
+            title_new = clean_game_title(raw_title) + " - " + clean_loot_title(offer.rawtext["title"])
+        except KeyError:
+            raw_title = offer.rawtext["title"]
+            title_new = clean_title(raw_title, offer.type)
+
         if title_new != offer.title:
             log(
                 f"Cleaning up title for offer {offer.id}. "
                 f"Old: {offer.title}, new: {title_new}.",
             )
             offer.title = title_new
+
+        if offer.probable_game_name is not None:
+            new_name = clean_game_title(
+                offer.probable_game_name,
+            )
+            if new_name != offer.probable_game_name:
+                log(
+                    f"Cleaning up probable game name for offer {offer.id}. "
+                    f"Old: {offer.probable_game_name}, new: {new_name}.",
+                )
+                offer.probable_game_name = new_name
 
     session.commit()
 

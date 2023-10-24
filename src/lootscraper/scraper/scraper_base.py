@@ -13,7 +13,7 @@ from playwright.async_api import BrowserContext, Error, Locator, Page
 from lootscraper.browser import get_new_page
 from lootscraper.common import Category, OfferDuration, OfferType, Source
 from lootscraper.config import Config
-from lootscraper.utils import clean_title
+from lootscraper.utils import clean_game_title, clean_loot_title, clean_title
 
 if TYPE_CHECKING:
     from collections.abc import Awaitable, Callable
@@ -181,12 +181,24 @@ class Scraper:
     def clean_offers(self, offers: list[Offer]) -> list[Offer]:
         """Clean offer title etc."""
         for offer in offers:
-            offer.title = clean_title(offer.title, offer.type)
+            if offer.rawtext is None:
+                continue
+
+            try:
+                raw_title = offer.rawtext["gametitle"]
+                title_new = clean_game_title(raw_title) + " - " + clean_loot_title(offer.rawtext["title"])
+            except KeyError:
+                raw_title = offer.rawtext["title"]
+                title_new = clean_title(raw_title, offer.type)
+
+            if title_new != offer.title:
+                offer.title = title_new
+
             if offer.probable_game_name is not None:
-                offer.probable_game_name = clean_title(
+                offer.probable_game_name = clean_game_title(
                     offer.probable_game_name,
-                    OfferType.GAME,
                 )
+
             if offer.url is not None:
                 offer.url = offer.url.replace("\n", "").strip()
             if offer.img_url is not None:
