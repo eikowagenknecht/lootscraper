@@ -42,18 +42,18 @@ jobs:
           python-version: "3.11"
 
       # Can't use this because it's Docker based and uses the wrong Python version
-      # - name: Semantic Release
-      #   uses: python-semantic-release/python-semantic-release@master
-      #   with:
-      #     github_token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Semantic Release
+        uses: python-semantic-release/python-semantic-release@v8.3.0
+        with:
+          github_token: ${{ secrets.GH_SEMREL }}
 
-      - name: Install python-semantic-release
-        run: |
-          pip install python-semantic-release
+      # - name: Install python-semantic-release
+      #   run: |
+      #     pip install python-semantic-release
 
-      # Does not work, the token is not used
-      - name: Semantic release
-        env:
-          GH_TOKEN: ${{ secrets.GH_SEMREL }}
-        run: |
-          semantic-release version
+      # # Does not work, the token is not used
+      # - name: Semantic release
+      #   env:
+      #     GH_TOKEN: ${{ secrets.GH_SEMREL }}
+      #   run: |
+      #     semantic-release version
