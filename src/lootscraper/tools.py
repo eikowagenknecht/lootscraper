@@ -116,10 +116,11 @@ async def run_cleanup() -> None:
     """Clean common problems."""
     log("Running cleanup")
     with LootDatabase(echo=False) as db:
-        delete_invalid_offers(db.Session())
         fix_image_nones(db.Session())
         fix_offer_titles(db.Session())
         fix_offer_categories(db.Session())
+        # Delete offers that have been invalidated by the above.
+        delete_invalid_offers(db.Session())
 
 
 async def run_refresh() -> None:
