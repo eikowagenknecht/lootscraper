@@ -58,7 +58,7 @@ class Scraper:
         if len(filtered_offers) > 0:
             logger.info(f"Found {len(filtered_offers)} offers: {titles}.")
         elif self.offers_expected():
-            logger.error("Found no offers, even though there hould be at least one.")
+            logger.error("Found no offers, even though there should be at least one.")
         else:
             logger.info("No offers found.")
         return filtered_offers
