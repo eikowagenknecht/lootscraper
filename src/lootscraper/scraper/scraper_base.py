@@ -184,7 +184,8 @@ class Scraper:
             offer.title = clean_title(offer.title, offer.type)
             if offer.probable_game_name is not None:
                 offer.probable_game_name = clean_title(
-                    offer.probable_game_name, OfferType.GAME,
+                    offer.probable_game_name,
+                    OfferType.GAME,
                 )
             if offer.url is not None:
                 offer.url = offer.url.replace("\n", "").strip()

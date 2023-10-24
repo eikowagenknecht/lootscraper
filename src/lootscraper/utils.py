@@ -133,8 +133,8 @@ def clean_loot_title(title: str) -> tuple[str, str]:
     in the name)
     4. By the ": " pattern (TITLE: LOOT)
     """
-    probable_game_name: str | None = None
-    probable_loot_name: str | None = None
+    probable_game_name: str = ""
+    probable_loot_name: str = ""
 
     title = title.replace("\n", " ").strip()
 
@@ -164,7 +164,6 @@ def clean_loot_title(title: str) -> tuple[str, str]:
     # If we still don't have a game name, we just use the whole title
     if probable_game_name is None:
         probable_game_name = title
-        probable_loot_name = ""
 
     probable_game_name = clean_game_title(probable_game_name)
 
