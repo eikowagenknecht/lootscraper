@@ -11,6 +11,7 @@ from lootscraper.common import Category, OfferDuration
 from lootscraper.database import Game, IgdbInfo, LootDatabase, Offer, SteamInfo
 from lootscraper.processing import add_game_info
 from lootscraper.scraper.scraper_base import Scraper
+from lootscraper.utils import clean_title
 
 logger = logging.getLogger(__name__)
 
@@ -69,7 +70,10 @@ def fix_offer_titles(session: Session) -> None:
     """Trim offer titles and remove line breaks."""
     offer: Offer
     for offer in session.query(Offer):
-        title_new = offer.title.replace("\n", " ").strip()
+        if offer.rawtext is None:
+            continue
+        raw_title = offer.rawtext["title"]
+        title_new = clean_title(raw_title, offer.type)
         if title_new != offer.title:
             log(
                 f"Cleaning up title for offer {offer.id}. "

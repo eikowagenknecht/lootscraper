@@ -7,11 +7,11 @@ from datetime import datetime, timedelta, timezone
 from typing import TYPE_CHECKING
 
 from lootscraper.browser import get_new_page
-from lootscraper.common import OfferDuration, Source
+from lootscraper.common import OfferDuration, OfferType, Source
 from lootscraper.database import Offer
 from lootscraper.scraper.info_steam import skip_age_verification
 from lootscraper.scraper.scraper_base import OfferHandler, RawOffer, Scraper
-from lootscraper.utils import clean_title
+from lootscraper.utils import clean_game_title
 
 if TYPE_CHECKING:
     from playwright.async_api import Locator, Page
@@ -129,7 +129,11 @@ class SteamBaseScraper(Scraper):
             except ValueError:
                 logger.warning(f"Couldn't parse date {maybe_date}.")
 
-        probable_game_name = clean_title(raw_offer.title, self.get_type())
+        probable_game_name = (
+            clean_game_title(raw_offer.title)
+            if self.get_type() == OfferType.GAME
+            else clean_game_title(raw_offer.title)[0]
+        )
 
         return Offer(
             source=self.get_source(),

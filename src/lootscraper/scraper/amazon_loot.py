@@ -71,7 +71,6 @@ class AmazonLootScraper(AmazonBaseScraper):
         if raw_offer.game_title is None:
             raise ValueError("No game title found.")
 
-        probable_game_name = raw_offer.game_title
         title = f"{raw_offer.game_title}: {raw_offer.title}"
 
         # Date
@@ -152,7 +151,7 @@ class AmazonLootScraper(AmazonBaseScraper):
             duration=AmazonLootScraper.get_duration(),
             type=AmazonLootScraper.get_type(),
             title=title,
-            probable_game_name=probable_game_name,
+            probable_game_name=raw_offer.game_title,
             seen_last=datetime.now(timezone.utc),
             valid_to=end_date,
             rawtext=rawtext,
