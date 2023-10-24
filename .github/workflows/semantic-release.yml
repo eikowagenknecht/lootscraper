@@ -1,22 +1,25 @@
 name: semantic-release
 
 on:
-  workflow_run:
-    workflows:
-      - "quality-check"
-    branches:
-      - main
-      - next
-    types:
-      - completed
+  # Run after the quality check workflow on main and next
+  # workflow_run:
+  #   workflows:
+  #     - "quality-check"
+  #   branches:
+  #     - main
+  #     - next
+  #   types:
+  #     - completed
+  # Also allow manual triggering
+  workflow_dispatch:
 
 permissions:
   contents: read # for checkout
 
 jobs:
   release:
-    # Only run if the quality check workflow succeeded
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    # Only run if manually triggered or the quality check workflow succeeded
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
 
     concurrency:
