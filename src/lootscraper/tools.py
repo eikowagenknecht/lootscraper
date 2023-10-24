@@ -79,7 +79,11 @@ def fix_offer_titles(session: Session) -> None:
 
         try:
             raw_title = offer.rawtext["gametitle"]
-            title_new = clean_game_title(raw_title) + " - " + clean_loot_title(offer.rawtext["title"])
+            title_new = (
+                clean_game_title(raw_title)
+                + " - "
+                + clean_loot_title(offer.rawtext["title"])
+            )
         except KeyError:
             raw_title = offer.rawtext["title"]
             title_new = clean_title(raw_title, offer.type)
