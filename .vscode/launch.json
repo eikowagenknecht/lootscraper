@@ -5,7 +5,7 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Debug Lootscraper",
+            "name": "Lootscraper",
             "type": "python",
             "request": "launch",
             "module": "lootscraper",
@@ -13,7 +13,23 @@
             "console": "integratedTerminal"
         },
         {
-            "name": "Python: Debug Unit Tests",
+            "name": "Cleanup Tool",
+            "type": "python",
+            "request": "launch",
+            "code": "import lootscraper.tools; lootscraper.tools.cleanup()",
+            "args": [],
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "Refresh Tool",
+            "type": "python",
+            "request": "launch",
+            "code": "import lootscraper.tools; lootscraper.tools.refresh()",
+            "args": [],
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "Unit Tests",
             "type": "python",
             "request": "launch",
             "purpose": [

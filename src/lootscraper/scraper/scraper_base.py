@@ -13,6 +13,7 @@ from playwright.async_api import BrowserContext, Error, Locator, Page
 from lootscraper.browser import get_new_page
 from lootscraper.common import Category, OfferDuration, OfferType, Source
 from lootscraper.config import Config
+from lootscraper.utils import clean_game_title, clean_loot_title, clean_title
 
 if TYPE_CHECKING:
     from collections.abc import Awaitable, Callable
@@ -57,7 +58,7 @@ class Scraper:
         if len(filtered_offers) > 0:
             logger.info(f"Found {len(filtered_offers)} offers: {titles}.")
         elif self.offers_expected():
-            logger.error("Found no offers, even though there hould be at least one.")
+            logger.error("Found no offers, even though there should be at least one.")
         else:
             logger.info("No offers found.")
         return filtered_offers
@@ -180,7 +181,28 @@ class Scraper:
     def clean_offers(self, offers: list[Offer]) -> list[Offer]:
         """Clean offer title etc."""
         for offer in offers:
-            offer.title = offer.title.replace("\n", "").strip()
+            if offer.rawtext is None:
+                continue
+
+            try:
+                raw_title = offer.rawtext["gametitle"]
+                title_new = (
+                    clean_game_title(raw_title)
+                    + " - "
+                    + clean_loot_title(offer.rawtext["title"])
+                )
+            except KeyError:
+                raw_title = offer.rawtext["title"]
+                title_new = clean_title(raw_title, offer.type)
+
+            if title_new != offer.title:
+                offer.title = title_new
+
+            if offer.probable_game_name is not None:
+                offer.probable_game_name = clean_game_title(
+                    offer.probable_game_name,
+                )
+
             if offer.url is not None:
                 offer.url = offer.url.replace("\n", "").strip()
             if offer.img_url is not None:
@@ -255,7 +277,6 @@ class Scraper:
     @staticmethod
     def is_prerelease(title: str) -> bool:
         """Check if the given title is an alpha or beta version."""
-        # Check for demo in title
         # Catches titles like
         # - "Alpha: Title"
         # - "Title (Alpha)"
@@ -271,6 +292,12 @@ class Scraper:
             return True
         if re.search(
             r"^[\W]?beta[\W]|\Wbeta\W?((.*version.*)|(\(.*\)))?$",
+            title,
+            re.IGNORECASE,
+        ):
+            return True
+        if re.search(
+            r"^[\W]?early access[\W]|\Wearly access\W?((.*version.*)|(\(.*\)))?$",
             title,
             re.IGNORECASE,
         ):

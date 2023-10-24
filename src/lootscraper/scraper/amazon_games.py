@@ -8,7 +8,6 @@ from lootscraper.common import OfferType
 from lootscraper.database import Offer
 from lootscraper.scraper.amazon_base import AmazonBaseScraper, AmazonRawOffer
 from lootscraper.scraper.scraper_base import OfferHandler, RawOffer, Scraper
-from lootscraper.utils import clean_game_title
 
 if TYPE_CHECKING:
     from playwright.async_api import Locator, Page
@@ -49,8 +48,6 @@ class AmazonGamesScraper(AmazonBaseScraper):
         rawtext = {
             "title": raw_offer.title,
         }
-
-        probable_game_name = clean_game_title(raw_offer.title)
 
         # Date
         # This is a bit more complicated as only the relative end is
@@ -130,7 +127,7 @@ class AmazonGamesScraper(AmazonBaseScraper):
             duration=AmazonGamesScraper.get_duration(),
             type=AmazonGamesScraper.get_type(),
             title=raw_offer.title,
-            probable_game_name=probable_game_name,
+            probable_game_name=raw_offer.title,
             seen_last=datetime.now(timezone.utc),
             valid_to=end_date,
             rawtext=rawtext,
