@@ -19,7 +19,8 @@ permissions:
 jobs:
   release:
     # Only run if manually triggered or the quality check workflow succeeded
-    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    if: github.event_name == 'workflow_dispatch'
+    # || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
 
     concurrency:
@@ -41,7 +42,6 @@ jobs:
         with:
           python-version: "3.11"
 
-      # Can't use this because it's Docker based and uses the wrong Python version
       - name: Semantic Release
         uses: python-semantic-release/python-semantic-release@v8.3.0
         with:
