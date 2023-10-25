@@ -3,7 +3,7 @@
 {% if (type_ == "fix") or (type_ == "feat") %}
 ## {{ type_ | capitalize }}
 {% for commit in commits %}
-* {{ commit.descriptions[0] }} by {{commit.commit.author.name}} in [`{{ commit.short_hash }}`]({{ commit.hexsha | commit_hash_url }})
+* {{ commit.descriptions[0] | capitalize }} by {{commit.commit.author.name}} in [`{{ commit.short_hash }}`]({{ commit.hexsha | commit_hash_url }})
 {% endfor %}
 {% endif %}
 {% endfor %}
