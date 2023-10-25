@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "lootscraper"
-version = "1.8.1"
+version = "1.8.2"
 description = "RSS feeds and Telegram bot for free game and loot offers."
 authors = ["Eiko Wagenknecht <git@eiko-wagenknecht.de>"]
 readme = "README.md"
