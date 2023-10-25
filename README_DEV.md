@@ -86,6 +86,10 @@ Update all dependencies in `pyproject.toml`: `poetry up`
 Install new dependencies locally: `poetry install --with dev`
 Check if dependencies are up to date: `poetry show --outdated`
 
+## Profiling
+
+For profiling, run `scalene -m lootscraper`.
+
 ## Contribute
 
 - If you want to contribute, please open an issue first to discuss the changes.
