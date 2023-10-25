@@ -7,14 +7,14 @@ from playwright.async_api import BrowserContext
 from sqlalchemy.orm import Session
 
 from lootscraper.browser import get_browser_context
-from lootscraper.common import Category, OfferDuration
+from lootscraper.common import Category, OfferDuration, OfferType
 from lootscraper.database import Game, IgdbInfo, LootDatabase, Offer, SteamInfo
 from lootscraper.processing import add_game_info
 from lootscraper.scraper.scraper_base import Scraper
 from lootscraper.utils import (
+    clean_combined_title,
     clean_game_title,
     clean_loot_title,
-    clean_title,
 )
 
 logger = logging.getLogger(__name__)
@@ -31,21 +31,29 @@ async def refresh_all_games(session: Session, context: BrowserContext) -> None:
     Drop all games from the database and re-add them, scraping all
     information again.
     """
+    all_offers = session.query(Offer).all()
+    # Remove all games from the database. Skip this step if you don't want to
+    # re-scrape all games.
     logger.info("Dropping all existing information from database")
+    for offer in all_offers:
+        offer.game_id = None
     session.query(Game).delete()
     session.query(SteamInfo).delete()
     session.query(IgdbInfo).delete()
+    # Commit all changes at once to keep the database consistent.
     session.commit()
-
-    all_offers = session.query(Offer).all()
 
     log("Gathering new information")
     offer: Offer
     for offer in all_offers:
+        # Use this to skip offers that have already been processed (e.g. when
+        # the script crashed).
+        # if offer.id < 2678:
+        #     continue
         log(f"Adding game info for offer {offer.id}.")
         await add_game_info(offer, session, context)
-
-    session.commit()
+        # Save after every offer to avoid losing progress.
+        session.commit()
 
 
 def delete_invalid_offers(session: Session) -> None:
@@ -77,34 +85,36 @@ def fix_offer_titles(session: Session) -> None:
         if offer.rawtext is None:
             continue
 
-        try:
-            raw_title = offer.rawtext["gametitle"]
-            title_new = (
-                clean_game_title(raw_title)
-                + " - "
-                + clean_loot_title(offer.rawtext["title"])
-            )
-        except KeyError:
-            raw_title = offer.rawtext["title"]
-            title_new = clean_title(raw_title, offer.type)
+        new_title = None
+        new_probable_name = None
 
-        if title_new != offer.title:
+        if offer.type == OfferType.GAME:
+            new_title = clean_game_title(offer.rawtext["title"])
+            new_probable_name = new_title
+        elif offer.type == OfferType.LOOT:
+            try:
+                new_probable_name = clean_game_title(offer.rawtext["gametitle"])
+                new_title = (
+                    new_probable_name + " - " + clean_loot_title(offer.rawtext["title"])
+                )
+            except KeyError:
+                new_probable_name, new_title = clean_combined_title(
+                    offer.rawtext["title"],
+                )
+
+        if new_title != offer.title:
             log(
                 f"Cleaning up title for offer {offer.id}. "
-                f"Old: {offer.title}, new: {title_new}.",
+                f"Old: {offer.title}, new: {new_title}.",
             )
-            offer.title = title_new
+            offer.title = new_title
 
-        if offer.probable_game_name is not None:
-            new_name = clean_game_title(
-                offer.probable_game_name,
+        if new_probable_name != offer.probable_game_name:
+            log(
+                f"Cleaning up probable game name for offer {offer.id}. "
+                f"Old: {offer.probable_game_name}, new: {new_probable_name}.",
             )
-            if new_name != offer.probable_game_name:
-                log(
-                    f"Cleaning up probable game name for offer {offer.id}. "
-                    f"Old: {offer.probable_game_name}, new: {new_name}.",
-                )
-                offer.probable_game_name = new_name
+            offer.probable_game_name = new_probable_name
 
     session.commit()
 
