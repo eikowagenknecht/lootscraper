@@ -3,8 +3,6 @@ import re
 from datetime import datetime, timedelta, timezone
 from typing import Any
 
-from lootscraper.common import OfferType
-
 RESULT_MATCH_THRESHOLD = 0.85
 
 
@@ -64,20 +62,6 @@ def clean_nones(value: dict[str, Any]) -> dict[str, Any]:
         return {key: clean_nones(val) for key, val in value.items() if val is not None}
 
     return value
-
-
-def clean_title(title: str, type_: OfferType) -> str:
-    """Cleans the title of an offer. This is different for games and loot.
-    For games, we remove some common parts of the title that are not needed.
-    """
-    if type_ == OfferType.GAME:
-        return clean_game_title(title)
-
-    if type_ == OfferType.LOOT:
-        # The second element is the full offer title
-        return clean_combined_title(title)[1]
-
-    raise ValueError(f"Unknown type {type_}")
 
 
 def clean_game_title(title: str) -> str:
