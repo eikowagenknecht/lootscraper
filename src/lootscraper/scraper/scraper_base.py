@@ -13,7 +13,11 @@ from playwright.async_api import BrowserContext, Error, Locator, Page
 from lootscraper.browser import get_new_page
 from lootscraper.common import Category, OfferDuration, OfferType, Source
 from lootscraper.config import Config
-from lootscraper.utils import clean_game_title, clean_loot_title, clean_title
+from lootscraper.utils import (
+    clean_combined_title,
+    clean_game_title,
+    clean_loot_title,
+)
 
 if TYPE_CHECKING:
     from collections.abc import Awaitable, Callable
@@ -184,24 +188,40 @@ class Scraper:
             if offer.rawtext is None:
                 continue
 
-            try:
-                raw_title = offer.rawtext["gametitle"]
-                title_new = (
-                    clean_game_title(raw_title)
-                    + " - "
-                    + clean_loot_title(offer.rawtext["title"])
-                )
-            except KeyError:
-                raw_title = offer.rawtext["title"]
-                title_new = clean_title(raw_title, offer.type)
+            # TODO: Since it's refreshed from the rawtext, there is no need to
+            # set the title and probable_game_name in the scrapers anymore.
 
-            if title_new != offer.title:
-                offer.title = title_new
+            new_title = None
+            new_probable_name = None
 
-            if offer.probable_game_name is not None:
-                offer.probable_game_name = clean_game_title(
-                    offer.probable_game_name,
+            if offer.type == OfferType.GAME:
+                new_title = clean_game_title(offer.rawtext["title"])
+                new_probable_name = new_title
+            elif offer.type == OfferType.LOOT:
+                try:
+                    new_probable_name = clean_game_title(offer.rawtext["gametitle"])
+                    new_title = (
+                        new_probable_name
+                        + " - "
+                        + clean_loot_title(offer.rawtext["title"])
+                    )
+                except KeyError:
+                    new_probable_name, new_title = clean_combined_title(
+                        offer.rawtext["title"],
+                    )
+
+            if new_title != offer.title:
+                logging.debug(
+                    f"Cleaning up title. Old: {offer.title}, new: {new_title}.",
                 )
+                offer.title = new_title
+
+            if new_probable_name != offer.probable_game_name:
+                logging.debug(
+                    "Cleaning up probable game name. "
+                    f"Old: {offer.probable_game_name}, new: {new_probable_name}.",
+                )
+                offer.probable_game_name = new_probable_name
 
             if offer.url is not None:
                 offer.url = offer.url.replace("\n", "").strip()
