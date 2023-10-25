@@ -44,7 +44,6 @@ async def refresh_all_games(session: Session, context: BrowserContext) -> None:
     session.commit()
 
     log("Gathering new information")
-    offer: Offer
     for offer in all_offers:
         # Use this to skip offers that have already been processed (e.g. when
         # the script crashed).
