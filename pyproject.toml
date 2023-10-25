@@ -38,7 +38,7 @@ mypy = "^1.6"
 # Profiling
 # scalene = "^1.5.19"
 # Testing
-pytest = "^7.4.2"
+pytest = "^7.4.3"
 # Python standard
 setuptools = "^68.0.0"
 wheel = "^0.41.1"
