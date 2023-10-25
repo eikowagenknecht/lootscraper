@@ -371,6 +371,7 @@ class LootDatabase:
         self,
         source: Source,
         type_: OfferType,
+        duration: OfferDuration,
         title: str,
         valid_to: datetime | None,
     ) -> Offer | None:
@@ -383,6 +384,7 @@ class LootDatabase:
             sa.select(Offer)
             .where(Offer.source == source)
             .where(Offer.type == type_)
+            .where(Offer.duration == duration)
             .where(Offer.title == title)
         )
 

@@ -322,6 +322,9 @@ class Scraper:
             re.IGNORECASE,
         ):
             return True
+        # Used by GOG sometimes
+        if "Playable Teaser" in title:
+            return True
         return False
 
     @staticmethod

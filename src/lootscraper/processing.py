@@ -86,6 +86,7 @@ async def process_new_offers(
         existing_entry: Offer | None = db.find_offer(
             scraped_offer.source,
             scraped_offer.type,
+            scraped_offer.duration,
             scraped_offer.title,
             scraped_offer.valid_to,
         )
