@@ -15,7 +15,7 @@ lootscraper = 'lootscraper.main:main'
 "Bug Tracker" = "https://github.com/eikowagenknecht/lootscraper/issues"
 
 [tool.poetry.dependencies]
-python = "^3.11"
+python = "^3.11.1"
 alembic = "^1.12.0"
 feedgen = "^0.9.0"
 humanize = "^4.8.0"
@@ -36,7 +36,7 @@ ruff = "^0.1.2"
 # Type checking
 mypy = "^1.6"
 # Profiling
-# scalene = "^1.5.19"
+scalene = "^1.5.31.1"
 # Testing
 pytest = "^7.4.3"
 # Python standard
