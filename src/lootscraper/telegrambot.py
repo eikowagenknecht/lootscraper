@@ -1101,10 +1101,10 @@ class TelegramBot:
 
                 for offer in offers:
                     if (
-                        Offer.type == subscription.type
-                        and Offer.source == subscription.source
-                        and Offer.duration == subscription.duration
-                        and Offer.id > subscription.last_offer_id
+                        offer.type == subscription.type
+                        and offer.source == subscription.source
+                        and offer.duration == subscription.duration
+                        and offer.id > subscription.last_offer_id
                     ):
                         filtered_offers.append(offer)
 
