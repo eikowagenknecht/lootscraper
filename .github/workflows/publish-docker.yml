@@ -3,12 +3,25 @@
 name: publish-docker
 
 on:
+  # Build images for main and next branch
   push:
     branches:
       - main
       - next
-    tags:
-      - v*
+    # Tags can not be used any more because they are set from the semantic-release workflow
+    # tags:
+    #   - v*
+  # Build semantic images after the semantic-release workflow
+  workflow_run:
+    workflows:
+      - "semantic-release"
+    branches:
+      - main
+      - next
+    types:
+      - completed
+  # Also allow manual triggering
+  workflow_dispatch:
 
 env:
   IMAGE_NAME: ${{ github.repository }}
