@@ -6,6 +6,8 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from typing import TYPE_CHECKING
 
+import schedule
+
 from lootscraper.browser import get_new_page
 from lootscraper.common import OfferDuration, OfferType, Source
 from lootscraper.database import Offer
@@ -37,6 +39,10 @@ class SteamBaseScraper(Scraper):
     @staticmethod
     def get_duration() -> OfferDuration:
         return OfferDuration.CLAIMABLE
+
+    @staticmethod
+    def get_schedule() -> list[schedule.Job]:
+        return [schedule.every(30).minutes]
 
     def get_steam_category(self) -> int:
         raise NotImplementedError("Please implement this method")

@@ -733,6 +733,17 @@ socks = ["httpx[socks]"]
 webhooks = ["tornado (>=6.3.3,<6.4.0)"]
 
 [[package]]
+name = "pytz"
+version = "2023.3.post1"
+description = "World timezone definitions, modern and historical"
+optional = false
+python-versions = "*"
+files = [
+    {file = "pytz-2023.3.post1-py2.py3-none-any.whl", hash = "sha256:ce42d816b81b68506614c11e8937d3aa9e41007ceb50bfdcb0749b921bf646c7"},
+    {file = "pytz-2023.3.post1.tar.gz", hash = "sha256:7b4fddbeb94a1eba4b557da24f19fdf9db575192544270a9101d8509f9f43d7b"},
+]
+
+[[package]]
 name = "rich"
 version = "13.6.0"
 description = "Render rich text, tables, progress bars, syntax highlighting, markdown and more to the terminal"
@@ -808,6 +819,17 @@ psutil = ">=5.9.2"
 pynvml = ">=11.0.0,<11.5"
 rich = ">=10.7.0"
 wheel = ">=0.36.1"
+
+[[package]]
+name = "schedule"
+version = "1.2.1"
+description = "Job scheduling for humans."
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "schedule-1.2.1-py2.py3-none-any.whl", hash = "sha256:14cdeb083a596aa1de6dc77639a1b2ac8bf6eaafa82b1c9279d3612823063d01"},
+    {file = "schedule-1.2.1.tar.gz", hash = "sha256:843bc0538b99c93f02b8b50e3e39886c06f2d003b24f48e1aa4cadfa3f341279"},
+]
 
 [[package]]
 name = "setuptools"
@@ -982,4 +1004,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11.1"
-content-hash = "5a586b085348b207c38a6e4b7a3cf879890622d45834e91e5d3a4043d3c76008"
+content-hash = "fb1ca4485ef1c626d3b673f12423d1d7dcc2cff4c89dfe2e7550b3d908e8837c"

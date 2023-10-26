@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
+import schedule
 from playwright.async_api import Error, Locator
 
 from lootscraper.common import OfferDuration, Source
@@ -28,6 +29,10 @@ class AmazonBaseScraper(Scraper):
     @staticmethod
     def get_duration() -> OfferDuration:
         return OfferDuration.CLAIMABLE
+
+    @staticmethod
+    def get_schedule() -> list[schedule.Job]:
+        return [schedule.every(30).minutes]
 
     def offers_expected(self) -> bool:
         return True

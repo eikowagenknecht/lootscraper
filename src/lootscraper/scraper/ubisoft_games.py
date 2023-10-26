@@ -5,6 +5,8 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import TYPE_CHECKING
 
+import schedule
+
 from lootscraper.common import OfferDuration, OfferType, Source
 from lootscraper.database import Offer
 from lootscraper.scraper.scraper_base import OfferHandler, RawOffer, Scraper
@@ -31,6 +33,10 @@ class UbisoftGamesScraper(Scraper):
     @staticmethod
     def get_type() -> OfferType:
         return OfferType.GAME
+
+    @staticmethod
+    def get_schedule() -> list[schedule.Job]:
+        return [schedule.every(3).hours]
 
     @staticmethod
     def get_duration() -> OfferDuration:

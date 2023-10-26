@@ -5,6 +5,8 @@ import urllib.parse
 from datetime import datetime, timezone
 from typing import TYPE_CHECKING
 
+import schedule
+
 from lootscraper.common import OfferDuration, OfferType, Source
 from lootscraper.database import Offer
 from lootscraper.scraper.scraper_base import OfferHandler, RawOffer, Scraper
@@ -31,6 +33,11 @@ class AppleGamesScraper(Scraper):
     @staticmethod
     def get_type() -> OfferType:
         return OfferType.GAME
+
+    @staticmethod
+    def get_schedule() -> list[schedule.Job]:
+        # Run once per day only to avoid getting blocked
+        return [schedule.every().day.at("12:00")]
 
     @staticmethod
     def get_duration() -> OfferDuration:
