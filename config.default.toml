@@ -5,8 +5,6 @@ feed_file_prefix = "lootscraper"
 log_file = "lootscraper.log"
 # One of: DEBUG, INFO, WARNING, ERROR, CRITICAL
 log_level = "INFO"
-# How long the script waits between runs (in seconds). 0 for single run.
-wait_between_runs_seconds = 0
 
 [expert]
 # Output all database queries to the console

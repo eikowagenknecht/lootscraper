@@ -28,7 +28,6 @@ class ParsedConfig:
     feed_file_prefix: str = "lootscraper"
     log_file: str = "lootscraper.log"
     log_level: str = "INFO"
-    wait_between_runs_seconds: int = 0
 
     # Expert
     db_echo: bool = False
@@ -125,11 +124,6 @@ class Config:
 
             with contextlib.suppress(KeyError):
                 parsed_config.log_level = data["common"]["log_level"]
-
-            with contextlib.suppress(KeyError):
-                parsed_config.wait_between_runs_seconds = data["common"][
-                    "wait_between_runs_seconds"
-                ]
 
             # Expert
             with contextlib.suppress(KeyError):

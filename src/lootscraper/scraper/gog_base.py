@@ -1,5 +1,6 @@
 import asyncio
 
+import schedule
 from playwright.async_api import Page
 
 from lootscraper.common import OfferType, Source
@@ -14,6 +15,10 @@ class GogBaseScraper(Scraper):
     @staticmethod
     def get_type() -> OfferType:
         return OfferType.GAME
+
+    @staticmethod
+    def get_schedule() -> list[schedule.Job]:
+        return [schedule.every(30).minutes]
 
     @staticmethod
     def sanitize_img_url(img_url: str | None) -> str | None:

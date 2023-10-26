@@ -5,6 +5,8 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import TYPE_CHECKING
 
+import schedule
+
 from lootscraper.common import OfferDuration, OfferType, Source
 from lootscraper.database import Offer
 from lootscraper.scraper.scraper_base import OfferHandler, RawOffer, Scraper
@@ -31,6 +33,15 @@ class EpicGamesScraper(Scraper):
     @staticmethod
     def get_type() -> OfferType:
         return OfferType.GAME
+
+    @staticmethod
+    def get_schedule() -> list[schedule.Job]:
+        # Run every thursday at 11:05 US eastern time (new offers are usually
+        # available then) and as a backup every day at 13:00 US eastern time.
+        return [
+            schedule.every().thursday.at("11:05", "US/Eastern"),
+            schedule.every().day.at("13:00", "US/Eastern"),
+        ]
 
     @staticmethod
     def get_duration() -> OfferDuration:
