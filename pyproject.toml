@@ -26,6 +26,8 @@ SQLAlchemy = "^2.0.22"
 Unidecode = "^1.3.7"
 xvfbwrapper = "^0.2.9"
 jinja2 = "^3.1.2"
+schedule = "^1.2.1"
+pytz = "^2023.3.post1"
 
 [tool.poetry.group.dev]
 optional = true
@@ -120,6 +122,7 @@ select = [
 
 ignore = [
     "ANN101", # Missing type annotation for self in method - Not needed with Self type
+    "ANN102", # Missing type annotation for cls in classmethod - Not needed
     "S101",   # Use of assert detected
     "TRY003", # Long messages in exceptions
     "D100",   # Missing docstring in public module

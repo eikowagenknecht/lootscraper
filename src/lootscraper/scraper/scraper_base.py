@@ -22,6 +22,8 @@ from lootscraper.utils import (
 if TYPE_CHECKING:
     from collections.abc import Awaitable, Callable
 
+    import schedule
+
     from lootscraper.database import Offer
 
 logger = logging.getLogger(__name__)
@@ -67,9 +69,24 @@ class Scraper:
             logger.info("No offers found.")
         return filtered_offers
 
+    @classmethod
+    def is_enabled(cls) -> bool:
+        cfg = Config.get()
+
+        return (
+            cls.get_type() in cfg.enabled_offer_types
+            and cls.get_duration() in cfg.enabled_offer_durations
+            and cls.get_source() in cfg.enabled_offer_sources
+        )
+
     @staticmethod
     def get_type() -> OfferType:
         """Return the type of the offers this scraper is looking for."""
+        raise NotImplementedError("Please implement this method")
+
+    @staticmethod
+    def get_schedule() -> list[schedule.Job]:
+        """Return when the scraper should run."""
         raise NotImplementedError("Please implement this method")
 
     @staticmethod

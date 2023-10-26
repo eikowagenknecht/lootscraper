@@ -6,6 +6,8 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from typing import TYPE_CHECKING
 
+import schedule
+
 from lootscraper.browser import get_new_page
 from lootscraper.common import Category, OfferDuration, OfferType, Source
 from lootscraper.database import Offer
@@ -38,6 +40,10 @@ class HumbleGamesScraper(Scraper):
     @staticmethod
     def get_type() -> OfferType:
         return OfferType.GAME
+
+    @staticmethod
+    def get_schedule() -> list[schedule.Job]:
+        return [schedule.every(3).hours]
 
     @staticmethod
     def get_duration() -> OfferDuration:

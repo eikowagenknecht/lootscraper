@@ -8,7 +8,6 @@ from playwright.async_api import BrowserContext
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from lootscraper.browser import get_browser_context
 from lootscraper.common import TIMESTAMP_LONG, OfferDuration, OfferType, Source
 from lootscraper.config import Config
 from lootscraper.database import Game, IgdbInfo, LootDatabase, Offer, SteamInfo, User
@@ -21,47 +20,6 @@ from lootscraper.telegrambot import TelegramBot
 from lootscraper.upload import upload_to_server
 
 logger = logging.getLogger(__name__)
-
-
-async def scrape_new_offers(db: LootDatabase) -> None:
-    """Do the actual scraping and processing of new offers."""
-    context: BrowserContext
-    cfg = Config.get()
-
-    if len(cfg.enabled_offer_sources) > 0:
-        async with get_browser_context() as context:
-            session: Session = db.Session()
-            try:
-                scraped_offers = await scrape_offers(context)
-                await process_new_offers(db, context, session, scraped_offers)
-                session.commit()
-            except Exception:
-                session.rollback()
-                raise
-
-    if cfg.generate_feed:
-        await action_generate_feed(db)
-    else:
-        logging.info("Skipping feed generation because it is disabled.")
-
-
-async def scrape_offers(context: BrowserContext) -> list[Offer]:
-    cfg = Config.get()
-
-    scraped_offers: list[Offer] = []
-    for scraper_type in get_all_scrapers():
-        if (
-            scraper_type.get_type() in cfg.enabled_offer_types
-            and scraper_type.get_duration() in cfg.enabled_offer_durations
-            and scraper_type.get_source() in cfg.enabled_offer_sources
-        ):
-            scraper = scraper_type(context=context)
-            scraper_results = await scraper.scrape()
-
-            if len(scraper_results) > 0:
-                scraped_offers.extend(scraper_results)
-
-    return scraped_offers
 
 
 async def process_new_offers(
@@ -81,37 +39,43 @@ async def process_new_offers(
     nr_of_new_offers: int = 0
     new_offer_titles: list[str] = []
 
-    for scraped_offer in scraped_offers:
-        # Get the existing entry if there is one
-        existing_entry: Offer | None = db.find_offer(
-            scraped_offer.source,
-            scraped_offer.type,
-            scraped_offer.duration,
-            scraped_offer.title,
-            scraped_offer.valid_to,
-        )
+    try:
+        for scraped_offer in scraped_offers:
+            # Get the existing entry if there is one
+            existing_entry: Offer | None = db.find_offer(
+                scraped_offer.source,
+                scraped_offer.type,
+                scraped_offer.duration,
+                scraped_offer.title,
+                scraped_offer.valid_to,
+            )
 
-        if not existing_entry:
-            if scraped_offer.title:
-                new_offer_titles.append(scraped_offer.title)
+            if not existing_entry:
+                if scraped_offer.title:
+                    new_offer_titles.append(scraped_offer.title)
 
-                # The enddate has been changed or it is a new offer,
-                # get information about it (if it's a game)
-                # and insert it into the database
-            if cfg.scrape_info:
-                await add_game_info(scraped_offer, session, context)
+                    # The enddate has been changed or it is a new offer,
+                    # get information about it (if it's a game)
+                    # and insert it into the database
+                if cfg.scrape_info:
+                    await add_game_info(scraped_offer, session, context)
 
-            # Insert the new offer into the database.
-            db.add_offer(scraped_offer)
-            nr_of_new_offers += 1
-        else:
-            # Update offers that already have been scraped.
-            db.touch_db_offer(existing_entry)
+                # Insert the new offer into the database.
+                db.add_offer(scraped_offer)
+                nr_of_new_offers += 1
+            else:
+                # Update offers that already have been scraped.
+                db.touch_db_offer(existing_entry)
 
-    if new_offer_titles:
-        logging.info(
-            f'Found {nr_of_new_offers} new offers: {", ".join(new_offer_titles)}',
-        )
+        if new_offer_titles:
+            logging.info(
+                f'Found {nr_of_new_offers} new offers: {", ".join(new_offer_titles)}',
+            )
+
+        session.commit()
+    except Exception:
+        session.rollback()
+        raise
 
 
 async def send_new_offers_telegram(db: LootDatabase, bot: TelegramBot) -> None:

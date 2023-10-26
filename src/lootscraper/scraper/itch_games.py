@@ -3,6 +3,7 @@ from __future__ import annotations
 import logging
 from datetime import datetime, timezone
 
+import schedule
 from playwright.async_api import Locator, Page
 from playwright.async_api import TimeoutError as PlaywrightTimeoutError
 
@@ -24,6 +25,10 @@ class ItchGamesScraper(Scraper):
     @staticmethod
     def get_type() -> OfferType:
         return OfferType.GAME
+
+    @staticmethod
+    def get_schedule() -> list[schedule.Job]:
+        return [schedule.every(6).hours]
 
     @staticmethod
     def get_duration() -> OfferDuration:

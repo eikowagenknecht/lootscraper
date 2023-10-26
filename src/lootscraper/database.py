@@ -295,6 +295,7 @@ class LootDatabase:
     def read_active_offers(self, time: datetime) -> Sequence[Offer]:
         session: Session = self.Session()
         try:
+            # TODO: Add option for custom prefiltering because this is a lot!
             # Prefilter to reduce database load. The details are handled below.
             offers = (
                 session.execute(
