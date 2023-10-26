@@ -292,48 +292,70 @@ class LootDatabase:
         )
         command.upgrade(alembic_cfg, "head")
 
-    def read_active_offers(self, time: datetime) -> Sequence[Offer]:
+    def read_active_offers(
+        self,
+        time: datetime,
+        *,
+        type_: str | None = None,
+        source: str | None = None,
+        duration: str | None = None,
+        last_offer_id: str | None = None,
+    ) -> Sequence[Offer]:
         session: Session = self.Session()
+
+        # Build prefiltered query to reduce database load.
+        # The detailled filtering is then handled after execution.
+        query = sa.select(Offer).where(
+            sa.and_(
+                sa.or_(
+                    # Offers that are definitely still active
+                    Offer.valid_from <= time,
+                    # For some offers we don't really know,
+                    # we will filter this later.
+                    Offer.valid_from.is_(None),
+                ),
+                sa.or_(
+                    # Offers that are definitely still active
+                    Offer.valid_to >= time,
+                    # For some offers we don't really know, but...
+                    Offer.valid_to.is_(None),
+                    # ... when they have been seen in the last 24
+                    # hours, we consider them active.
+                    Offer.seen_last >= time - timedelta(days=1),
+                ),
+            ),
+        )
+
+        filter_conditions = []
+        if type_ is not None:
+            filter_conditions.append(Offer.type == type_)
+        if source is not None:
+            filter_conditions.append(Offer.source == source)
+        if duration is not None:
+            filter_conditions.append(Offer.duration == duration)
+        if last_offer_id is not None:
+            filter_conditions.append(Offer.id > last_offer_id)
+
+        if filter_conditions:
+            query = query.where(sa.and_(*filter_conditions))
+
+        filtered_offers = []
+
         try:
-            # TODO: Add option for custom prefiltering because this is a lot!
-            # Prefilter to reduce database load. The details are handled below.
-            offers = (
-                session.execute(
-                    sa.select(Offer).where(
-                        sa.and_(
-                            sa.or_(
-                                # Offers that are definitely still active
-                                Offer.valid_from <= time,
-                                # For some offers we don't really know,
-                                # we will filter this later.
-                                Offer.valid_from.is_(None),
-                            ),
-                            sa.or_(
-                                # Offers that are definitely still active
-                                Offer.valid_to >= time,
-                                # For some offers we don't really know, but...
-                                Offer.valid_to.is_(None),
-                                # ... when they have been seen in the last 24
-                                # hours, we consider them active.
-                                Offer.seen_last >= time - timedelta(days=1),
-                            ),
-                        ),
-                    ),
-                )
-                .scalars()
-                .all()
-            )
+            offers = session.execute(query).scalars().all()
 
             # Filter out offers that have a real end date that is in the future
-            filtered_offers = []
-            for offer in offers:
-                real_valid_to = offer.real_valid_to()
-                if real_valid_to is None or real_valid_to > time:
-                    filtered_offers.append(offer)
+            filtered_offers = [
+                offer
+                for offer in offers
+                if (real_valid_to := offer.real_valid_to()) is None
+                or real_valid_to > time
+            ]
 
         except Exception:
             session.rollback()
             raise
+
         return filtered_offers
 
     def read_all(self) -> Sequence[Offer]:
