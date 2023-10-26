@@ -64,11 +64,11 @@ class GoogleGamesScraper(Scraper):
         # Scroll into view for images to load
         await element.scroll_into_view_if_needed()
 
-        title = await element.locator("a.nwel").text_content()
+        title = await element.locator("li.si_tit a").text_content()
         if title is None:
             raise ValueError("Couldn't find title.")
 
-        url = await element.locator("a.nwel").get_attribute("href")
+        url = await element.locator("li.si_tit a").get_attribute("href")
         if url is None:
             raise ValueError(f"Couldn't find url for {title}.")
         if not url.startswith("http"):
