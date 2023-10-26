@@ -296,10 +296,10 @@ class LootDatabase:
         self,
         time: datetime,
         *,
-        type_: str | None = None,
-        source: str | None = None,
-        duration: str | None = None,
-        last_offer_id: str | None = None,
+        type_: OfferType | None = None,
+        source: Source | None = None,
+        duration: OfferDuration | None = None,
+        last_offer_id: int | None = None,
     ) -> Sequence[Offer]:
         session: Session = self.Session()
 
