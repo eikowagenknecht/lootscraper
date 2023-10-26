@@ -26,8 +26,6 @@ if TYPE_CHECKING:
 
     from lootscraper.database import Offer
 
-logger = logging.getLogger(__name__)
-
 SCROLL_PAUSE_SECONDS = 1  # Long enough so even slow JS can catch up
 
 
@@ -47,10 +45,11 @@ class OfferHandler:
 
 class Scraper:
     def __init__(self, context: BrowserContext) -> None:
+        self.logger = logging.getLogger(self.__module__)
         self.context = context
 
     async def scrape(self) -> list[Offer]:
-        logging.info(
+        self.logger.info(
             f"Analyzing {self.get_source().value} for offers: {self.get_type().value} "
             f"/ {self.get_duration().value}.",
         )
@@ -62,11 +61,13 @@ class Scraper:
 
         titles = ", ".join([offer.title for offer in filtered_offers])
         if len(filtered_offers) > 0:
-            logger.info(f"Found {len(filtered_offers)} offers: {titles}.")
+            self.logger.info(f"Found {len(filtered_offers)} offers: {titles}.")
         elif self.offers_expected():
-            logger.error("Found no offers, even though there should be at least one.")
+            self.logger.error(
+                "Found no offers, even though there should be at least one.",
+            )
         else:
-            logger.info("No offers found.")
+            self.logger.info("No offers found.")
         return filtered_offers
 
     @classmethod
@@ -142,7 +143,7 @@ class Scraper:
             try:
                 await page.goto(self.get_offers_url(), timeout=30000)
             except Error:
-                logger.exception("Couldn't load page.")
+                self.logger.exception("Couldn't load page.")
                 return []
 
             try:
@@ -162,7 +163,7 @@ class Scraper:
                     .replace(":", "_")
                     + ".png",
                 )
-                logger.exception(
+                self.logger.exception(
                     f"The page didn't get ready to be parsed. "
                     f"Saved screenshot to {filename}.",
                 )
@@ -176,7 +177,7 @@ class Scraper:
                     elements = await offers_locator.all()
                 except Error:
                     # Without offers we can't do anything
-                    logger.exception("Couldn't find any offers.")
+                    self.logger.exception("Couldn't find any offers.")
                     return []
 
                 for element in elements:
@@ -186,13 +187,15 @@ class Scraper:
                             continue
                     except Exception:
                         # Skip offers that can't be loaded
-                        logger.exception(f"Couldn't parse element {str(element)}.")
+                        self.logger.exception(f"Couldn't parse element {str(element)}.")
                         continue
 
                     try:
                         normalized_offer = handler.normalize_offer_func(raw_offer)
                     except Exception:
-                        logger.exception(f"Couldn't normalize offer {raw_offer.title}.")
+                        self.logger.exception(
+                            f"Couldn't normalize offer {raw_offer.title}.",
+                        )
                         continue
 
                     offers.append(normalized_offer)
@@ -272,7 +275,7 @@ class Scraper:
                 titles.add(offer.title)
                 new_offers.append(offer)
             else:
-                logger.debug(f"Duplicate offer: {offer.title}")
+                self.logger.debug(f"Duplicate offer: {offer.title}")
 
         return new_offers
 
