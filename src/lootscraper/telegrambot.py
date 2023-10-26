@@ -1096,31 +1096,25 @@ class TelegramBot:
             for subscription in subscriptions:
                 offers: Sequence[Offer] = self.database.read_active_offers(
                     datetime.now(tz=timezone.utc),
+                    type_=subscription.type,
+                    source=subscription.source,
+                    duration=subscription.duration,
+                    last_offer_id=subscription.last_offer_id,
                 )
-                filtered_offers = []
 
-                for offer in offers:
-                    if (
-                        offer.type == subscription.type
-                        and offer.source == subscription.source
-                        and offer.duration == subscription.duration
-                        and offer.id > subscription.last_offer_id
-                    ):
-                        filtered_offers.append(offer)
-
-                if len(filtered_offers) == 0:
+                if len(offers) == 0:
                     continue
 
-                offers_sent += len(filtered_offers)
+                offers_sent += len(offers)
 
                 # Send the offers
-                for offer in filtered_offers:
+                for offer in offers:
                     await self.send_offer(offer, user)
 
                 # Update the last offer id
-                subscription.last_offer_id = filtered_offers[-1].id
+                subscription.last_offer_id = offers[-1].id
                 user.offers_received_count = user.offers_received_count + len(
-                    filtered_offers,
+                    offers,
                 )
                 session.commit()
         except Exception:
