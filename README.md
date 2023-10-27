@@ -31,6 +31,8 @@ For our mobile gamers:
 
 Want to receive only the offers *you* want in a single chat? Subscribe directly to the source: The [Telegram LootScraperBot](https://t.me/LootScraperBot) will happily send you push notifications for new offers. You can choose which categories you want to subscribe to.
 
+If you want, you can even add the bot to your own groups (including threaded groups) and channels. Just make sure to give it the neccessary permissions (admin rights work best).
+
 This is what it currently looks like in Telegram:
 
 ![image](https://user-images.githubusercontent.com/1475672/166058823-98e2beb9-7eb5-403d-94c7-7e17966fe9b7.png)

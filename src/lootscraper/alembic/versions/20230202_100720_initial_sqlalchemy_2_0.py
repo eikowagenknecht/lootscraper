@@ -174,13 +174,3 @@ def upgrade() -> None:
         ),
         sa.PrimaryKeyConstraint("id"),
     )
-
-
-def downgrade() -> None:
-    op.drop_table("offers")
-    op.drop_table("telegram_subscriptions")
-    op.drop_table("games")
-    op.drop_table("users")
-    op.drop_table("steam_info")
-    op.drop_table("igdb_info")
-    op.drop_table("announcements")

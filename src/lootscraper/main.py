@@ -14,7 +14,7 @@ from sqlalchemy.exc import OperationalError
 from lootscraper import __version__
 from lootscraper.browser import get_browser_context
 from lootscraper.common import TIMESTAMP_LONG
-from lootscraper.config import Config
+from lootscraper.config import Config, TelegramLogLevel
 from lootscraper.database import LootDatabase
 from lootscraper.processing import (
     action_generate_feed,
@@ -138,7 +138,12 @@ def setup_logging() -> None:
     handlers.append(stream_handler)
 
     # Create a rotating log file, size: 5 MB, keep 10 files
-    file_handler = RotatingFileHandler(filename, maxBytes=5 * 1024**2, backupCount=10)
+    file_handler = RotatingFileHandler(
+        filename,
+        maxBytes=5 * 1024**2,
+        backupCount=10,
+        encoding="utf-8",
+    )
     file_handler.setFormatter(logging.Formatter(LOGFORMAT))
     handlers.append(file_handler)
 
@@ -162,11 +167,21 @@ async def run_telegram_bot(
     async with TelegramBot(Config.get(), db) as bot:
         # The bot is running now and will stop when the context exits
         try:
-            telegram_handler = TelegramLoggingHandler(bot)
-            # Only log errors and above to Telegram. TODO: Make this configurable.
-            telegram_handler.setLevel(logging.ERROR)
-            telegram_handler.setFormatter(logging.Formatter(LOGFORMAT))
-            logger.addHandler(telegram_handler)
+            lvl = Config.get().telegram_log_level
+            if lvl != TelegramLogLevel.DISABLED:
+                telegram_handler = TelegramLoggingHandler(bot)
+                if lvl == TelegramLogLevel.DEBUG:
+                    telegram_handler.setLevel(logging.DEBUG)
+                elif lvl == TelegramLogLevel.INFO:
+                    telegram_handler.setLevel(logging.INFO)
+                elif lvl == TelegramLogLevel.WARNING:
+                    telegram_handler.setLevel(logging.WARNING)
+                elif lvl == TelegramLogLevel.ERROR:
+                    telegram_handler.setLevel(logging.ERROR)
+
+                telegram_handler.setLevel(logging.ERROR)
+                telegram_handler.setFormatter(logging.Formatter(LOGFORMAT))
+                logger.addHandler(telegram_handler)
         except Exception:
             logger.exception("Could not add Telegram logging handler.")
 
