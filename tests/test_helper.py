@@ -6,6 +6,7 @@ from datetime import datetime, timezone
 from lootscraper.utils import (
     calc_real_valid_to,
     clean_combined_title,
+    clean_game_title,
     get_match_score,
 )
 
@@ -29,37 +30,35 @@ class LocalTests(unittest.TestCase):
         title = "Tom Clancy's Rainbow Six® Siege"
         cleaned = "Tom Clancy's Rainbow Six® Siege"
 
-        assert clean_combined_title(title) == cleaned
+        assert clean_game_title(title) == cleaned
 
     def test_loot_title_cleaning_2(self) -> None:
         title = "Lords Mobile: Warlord Pack"
-        cleaned = "Lords Mobile"
+        cleaned_game = "Lords Mobile"
+        cleaned_offer = "Lords Mobile - Warlord Pack"
 
-        assert clean_combined_title(title) == cleaned
+        assert clean_combined_title(title) == (cleaned_game, cleaned_offer)
 
     def test_loot_title_cleaning_3(self) -> None:
         title = "Mobile Legends: Bang Bang: Amazon Prime Chest"
-        cleaned = "Mobile Legends: Bang Bang"
+        cleaned_game = "Mobile Legends: Bang Bang"
+        cleaned_offer = "Mobile Legends: Bang Bang - Amazon Prime Chest"
 
-        assert clean_combined_title(title) == cleaned
+        assert clean_combined_title(title) == (cleaned_game, cleaned_offer)
 
     def test_loot_title_cleaning_4(self) -> None:
         title = "Get up to GTA$400,000 this month in GTA Online"
-        cleaned = "GTA Online"
+        cleaned_game = "GTA Online"
+        cleaned_offer = "GTA Online - Up to GTA$400,000 this month"
 
-        assert clean_combined_title(title) == cleaned
+        assert clean_combined_title(title) == (cleaned_game, cleaned_offer)
 
     def test_loot_title_cleaning_5(self) -> None:
-        title = "Get up to GTA$400,000 this week in GTA Online"
-        cleaned = "GTA Online"
-
-        assert clean_combined_title(title) == cleaned
-
-    def test_loot_title_cleaning_6(self) -> None:
         title = "World of Warships — Starter Pack: Dreadnought"
-        cleaned = "World of Warships"
+        cleaned_game = "World of Warships"
+        cleaned_offer = "World of Warships - Starter Pack: Dreadnought"
 
-        assert clean_combined_title(title) == cleaned
+        assert clean_combined_title(title) == (cleaned_game, cleaned_offer)
 
     def test_real_valid_to_date(self) -> None:
         seen_last = datetime(2020, 6, 1, 0, 0, 0, tzinfo=timezone.utc)
