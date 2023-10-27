@@ -10,7 +10,14 @@ from sqlalchemy.orm import Session
 
 from lootscraper.common import TIMESTAMP_LONG, OfferDuration, OfferType, Source
 from lootscraper.config import Config
-from lootscraper.database import Game, IgdbInfo, LootDatabase, Offer, SteamInfo, User
+from lootscraper.database import (
+    Game,
+    IgdbInfo,
+    LootDatabase,
+    Offer,
+    SteamInfo,
+    TelegramChat,
+)
 from lootscraper.feed import generate_feed
 from lootscraper.html import generate_html
 from lootscraper.scraper import get_all_scrapers
@@ -81,9 +88,9 @@ async def process_new_offers(
 async def send_new_offers_telegram(db: LootDatabase, bot: TelegramBot) -> None:
     session: Session = db.Session()
     try:
-        user: User
-        for user in session.execute(select(User)).scalars().all():
-            if not user.inactive:
+        user: TelegramChat
+        for user in session.execute(select(TelegramChat)).scalars().all():
+            if not user.inactive_reason:
                 await bot.send_new_announcements(user)
                 await bot.send_new_offers(user)
     except Exception:

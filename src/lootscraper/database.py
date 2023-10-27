@@ -18,8 +18,15 @@ from sqlalchemy.orm import (
     scoped_session,
     sessionmaker,
 )
+from telegram.constants import ChatType
 
-from lootscraper.common import Category, Channel, OfferDuration, OfferType, Source
+from lootscraper.common import (
+    Category,
+    Channel,
+    OfferDuration,
+    OfferType,
+    Source,
+)
 from lootscraper.config import Config
 from lootscraper.utils import calc_real_valid_to
 
@@ -31,11 +38,22 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
-# mapper_registry = orm.registry()
+# Naming convention for keys and constraints
+convention = {
+    "ix": "ix_%(column_0_label)s",
+    "uq": "uq_%(table_name)s_%(column_0_name)s",
+    "ck": "ck_%(table_name)s_%(constraint_name)s",
+    "fk": "fk_%(table_name)s_%(column_0_name)s_%(referred_table_name)s",
+    "pk": "pk_%(table_name)s",
+}
+
+metadata_obj = sa.MetaData(naming_convention=convention)
 
 
 class Base(MappedAsDataclass, DeclarativeBase):
     """Subclasses will be converted to dataclasses."""
+
+    metadata = metadata_obj
 
 
 class AwareDateTime(sa.TypeDecorator):  # type: ignore
@@ -205,45 +223,49 @@ class Offer(Base):
         return calc_real_valid_to(self.seen_last, self.valid_to)
 
 
-class User(Base):
-    """A user of the application."""
+class TelegramChat(Base):
+    """A Telegram chat. Can be a single user, a group or a channel."""
 
-    __tablename__ = "users"
+    __tablename__ = "telegram_chats"
 
-    telegram_subscriptions: Mapped[list[TelegramSubscription]] = relationship(
+    subscriptions: Mapped[list[TelegramSubscription]] = relationship(
         "TelegramSubscription",
-        back_populates="user",
+        back_populates="chat",
         cascade="all, delete-orphan",
         init=False,
     )
 
-    id: Mapped[int] = mapped_column(  # noqa: A003
-        init=False,
-        primary_key=True,
-    )
+    id: Mapped[int] = mapped_column(init=False, primary_key=True)  # noqa: A003
     registration_date: Mapped[datetime] = mapped_column(AwareDateTime)
-    telegram_id: Mapped[str | None]
-    telegram_chat_id: Mapped[str]
-    telegram_user_details: Mapped[dict[str, Any] | None] = mapped_column(sa.JSON)
+    chat_type: Mapped[ChatType] = mapped_column(sa.Enum(ChatType))
+    chat_id: Mapped[int]
+    user_id: Mapped[int | None] = mapped_column(default=None)
+    thread_id: Mapped[int | None] = mapped_column(default=None)
+    chat_details: Mapped[dict[str, Any] | None] = mapped_column(sa.JSON, default=None)
+    user_details: Mapped[dict[str, Any] | None] = mapped_column(sa.JSON, default=None)
     timezone_offset: Mapped[int] = mapped_column(default=0)
-    inactive: Mapped[str | None] = mapped_column(default=None)
+    active: Mapped[bool] = mapped_column(default=True)
+    inactive_reason: Mapped[str | None] = mapped_column(default=None)
     offers_received_count: Mapped[int] = mapped_column(default=0)
     last_announcement_id: Mapped[int] = mapped_column(default=0)
 
 
 class TelegramSubscription(Base):
-    """Subscription of a user to a category for Telegram notifications."""
+    """Subscription of a chat to a category for Telegram notifications."""
 
     __tablename__ = "telegram_subscriptions"
 
-    user: Mapped[User] = relationship("User", back_populates="telegram_subscriptions")
+    chat: Mapped[TelegramChat] = relationship(
+        "TelegramChat",
+        back_populates="subscriptions",
+    )
 
     id: Mapped[int] = mapped_column(  # noqa: A003
         init=False,
         primary_key=True,
     )
-    user_id: Mapped[int] = mapped_column(
-        sa.ForeignKey("users.id"),
+    chat_id: Mapped[int] = mapped_column(
+        sa.ForeignKey("telegram_chats.id"),
         init=False,
     )
     source: Mapped[Source] = mapped_column(sa.Enum(Source))
