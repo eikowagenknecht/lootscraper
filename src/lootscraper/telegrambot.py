@@ -432,7 +432,7 @@ class TelegramBot:
         if update.effective_message is None or update.effective_chat is None:
             return
 
-        db_chat = self.get_chat_by_id(update.effective_chat.id)
+        db_chat = self.get_chat_by_update(update)
 
         if db_chat is None:
             message = (
@@ -475,7 +475,8 @@ class TelegramBot:
         if update.effective_message is None or update.effective_chat is None:
             return
 
-        db_chat = self.get_chat_by_id(update.effective_chat.id)
+        db_chat = self.get_chat_by_update(update)
+
         if db_chat is None:
             await update.effective_message.reply_text(MESSAGE_CHAT_NOT_REGISTERED)
             return
@@ -501,7 +502,8 @@ class TelegramBot:
         if update.effective_message is None or update.effective_chat is None:
             return
 
-        db_chat = self.get_chat_by_id(update.effective_chat.id)
+        db_chat = self.get_chat_by_update(update)
+
         if db_chat is None:
             await update.effective_message.reply_text(MESSAGE_CHAT_NOT_REGISTERED)
             return
@@ -564,7 +566,7 @@ class TelegramBot:
             R"Also, I will be sad to see you go\."
         )
 
-        db_chat = self.get_chat_by_id(update.effective_chat.id)
+        db_chat = self.get_chat_by_update(update)
 
         if db_chat is not None:
             message = (
@@ -631,7 +633,8 @@ class TelegramBot:
         if not update.effective_chat or not update.effective_message:
             return
 
-        db_chat = self.get_chat_by_id(update.effective_chat.id)
+        db_chat = self.get_chat_by_update(update)
+
         if db_chat is None:
             message = (
                 Rf"Hi {self.get_caller_name(update)}, "
@@ -797,7 +800,8 @@ class TelegramBot:
         if query.data is None:
             return
 
-        db_chat = self.get_chat_by_id(update.effective_chat.id)
+        db_chat = self.get_chat_by_update(update)
+
         if db_chat is None:
             return
 
@@ -910,7 +914,8 @@ class TelegramBot:
         if query is None or update.effective_chat is None or query.data is None:
             return
 
-        db_chat = self.get_chat_by_id(update.effective_chat.id)
+        db_chat = self.get_chat_by_update(update)
+
         if db_chat is None:
             await query.answer(text=MESSAGE_CHAT_NOT_REGISTERED)
             return
@@ -953,7 +958,7 @@ class TelegramBot:
 
         session: orm.Session = self.Session()
         try:
-            db_chat = self.get_chat_by_id(update.effective_chat.id)
+            db_chat = self.get_chat_by_update(update)
             if db_chat is None:
                 await query.answer(text=MESSAGE_CHAT_NOT_REGISTERED)
                 return
@@ -1038,12 +1043,33 @@ class TelegramBot:
             session.rollback()
             raise
 
-    def get_chat_by_id(self, chat_id: int | str) -> TelegramChat | None:
+    def get_chat_by_update(self, update: Update) -> TelegramChat | None:
+        if update.effective_chat is None:
+            return None
+
+        if update.effective_message.message_thread_id:
+            return self.get_chat_by_id(
+                update.effective_chat.id,
+                update.effective_message.message_thread_id,
+            )
+
+        return self.get_chat_by_id(update.effective_chat.id)
+
+    def get_chat_by_id(
+        self,
+        chat_id: int | str,
+        thread_id: int | None = None,
+    ) -> TelegramChat | None:
         try:
             session: orm.Session = self.Session()
             db_chat = (
                 session.execute(
-                    sa.select(TelegramChat).where(TelegramChat.chat_id == chat_id),
+                    sa.select(TelegramChat).where(
+                        sa.and_(
+                            TelegramChat.chat_id == chat_id,
+                            TelegramChat.thread_id == thread_id,
+                        ),
+                    ),
                 )
                 .scalars()
                 .one_or_none()
@@ -1139,7 +1165,8 @@ class TelegramBot:
         if update.callback_query is None or update.effective_chat is None:
             return
 
-        db_chat = self.get_chat_by_id(update.effective_chat.id)
+        db_chat = self.get_chat_by_update(update)
+
         if db_chat is None:
             await update.callback_query.answer(text=MESSAGE_CHAT_NOT_REGISTERED)
             return
@@ -1264,22 +1291,20 @@ class TelegramBot:
             f"Sending offer {offer.title} to Telegram chat {chat.chat_id}.",
         )
 
-        # Special handling for supergroups, because we need to send into
-        # the right thread.
-        if chat.chat_type == ChatType.SUPERGROUP:
-            pass  # TODO
-
-        # Always display details for channels
-        if chat.chat_type == ChatType.CHANNEL:
-            markup = self.offer_keyboard(offer)
-
+        # Directly display details for channels, groups and supergroups.
+        # The details button would toggle for all users in the chat, so that
+        # would be confusing. The dismiss button would also delete for
+        # everyone, which probably is a bad idea.
+        # Also rate limiting is harder for those chats and button presses
+        # count as messages, so it's better to avoid them.
+        if chat.chat_type in [ChatType.CHANNEL, ChatType.GROUP, ChatType.SUPERGROUP]:
             success = await self.send_message(
                 chat=chat,
                 text=self.offer_details_message(
                     offer,
                     tzoffset=chat.timezone_offset,
                 ),
-                reply_markup=markup,
+                reply_markup=self.offer_keyboard(offer),
             )
             return success is not None
 
@@ -1531,19 +1556,20 @@ class TelegramBot:
         send_attempt = 0
 
         while not message_handled:
-            try:
-                send_attempt = send_attempt + 1
+            send_attempt = send_attempt + 1
 
-                if not chat.active:
-                    logger.info(
-                        f"Not sending to chat id {chat.chat_id} because the chat is "
-                        "inactive.",
-                    )
-                    return None
-
-                logger.debug(
-                    f"Sending message to chat {chat.chat_id} with content {text}.",
+            if not chat.active:
+                logger.info(
+                    f"Not sending to chat id {chat.chat_id} because the chat is "
+                    "inactive.",
                 )
+                return None
+
+            logger.debug(
+                f"Sending message to chat {chat.chat_id} with content {text}.",
+            )
+
+            try:
                 message = await self.application.bot.send_message(
                     chat_id=chat.chat_id,
                     text=text,
@@ -1565,7 +1591,7 @@ class TelegramBot:
                     f"Deactivating chat id {chat.chat_id} "
                     "because the chat was blocked: {e}",
                 )
-                self.deactivate_chat(chat.chat_id, "blocked chat")
+                self.deactivate_chat(chat, "blocked chat")
             except TelegramError as e:
                 message_handled = True
                 # The chat could not be found
@@ -1574,7 +1600,7 @@ class TelegramBot:
                         f"Deactivating chat id {chat.chat_id} "
                         "because the chat could not be found.",
                     )
-                    self.deactivate_chat(chat.chat_id, "not found")
+                    self.deactivate_chat(chat, "not found")
                 else:
                     logger.exception("Telegram error while sending message.")
             else:
@@ -1586,35 +1612,12 @@ class TelegramBot:
     def is_group_chat(self, chat_id: int | str) -> bool:
         return int(chat_id) < 0
 
-    def deactivate_chat(self, chat_id: int | str, reason: str) -> None:
-        db_chat = self.get_chat_by_id(chat_id)
-
-        if db_chat is None:
-            logger.warn(f"Could not deactivate chat {chat_id} because it is not found.")
-            return
-
-        logger.debug(f"Deactivating chat {db_chat.chat_id}.")
+    def deactivate_chat(self, chat: TelegramChat, reason: str) -> None:
+        logger.debug(f"Deactivating chat {chat.chat_id}.")
 
         session: orm.Session = self.Session()
         try:
-            db_chat.inactive_reason = reason
-            session.commit()
-        except Exception:
-            session.rollback()
-            raise
-
-    def remove_chat(self, chat_id: int | str) -> None:
-        db_chat = self.get_chat_by_id(chat_id)
-
-        if db_chat is None:
-            return
-
-        # Chat is registered, remove it from the database.
-        logger.debug(f"Removing chat {db_chat.chat_id} from database.")
-
-        session: orm.Session = self.Session()
-        try:
-            session.delete(db_chat)
+            chat.inactive_reason = reason
             session.commit()
         except Exception:
             session.rollback()
