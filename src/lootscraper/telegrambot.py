@@ -330,7 +330,7 @@ class TelegramBot:
 
         # Check if the user is an admin (no matter if in a group or private chat)
         if update.effective_user.id != Config.get().telegram_admin_user_id:
-            update.effective_message.reply_text(
+            await update.effective_message.reply_text(
                 "You are not an admin, so you can't use this command.",
             )
             return
@@ -369,9 +369,9 @@ class TelegramBot:
 
         await update.effective_message.reply_markdown_v2(
             markdown_json_formatted(
-                "update.effective_user = "
+                "update.effective_chat = "
                 + json.dumps(
-                    update.effective_user.to_dict(),
+                    update.effective_chat.to_dict(),
                     indent=2,
                     ensure_ascii=False,
                 ),
@@ -381,9 +381,9 @@ class TelegramBot:
         if update.effective_user is not None:
             await update.effective_message.reply_markdown_v2(
                 markdown_json_formatted(
-                    "update.effective_chat = "
+                    "update.effective_user = "
                     + json.dumps(
-                        update.effective_chat.to_dict(),
+                        update.effective_user.to_dict(),
                         indent=2,
                         ensure_ascii=False,
                     ),
@@ -578,15 +578,11 @@ class TelegramBot:
                 sa.select(sa.func.max(Announcement.id)),
             ).scalar()
 
-            chatid: str = str(update.effective_chat.id)
-
             new_chat = TelegramChat(
                 registration_date=datetime.now(tz=timezone.utc),
-                chat_type=update.effective_chat.type,
-                chat_id=chatid,
-                user_id=str(update.effective_user.id)
-                if update.effective_user
-                else None,
+                chat_type=update.effective_chat.type,  # type: ignore
+                chat_id=update.effective_chat.id,
+                user_id=update.effective_user.id if update.effective_user else None,
                 chat_details=update.effective_chat.to_dict(),
                 user_details=update.effective_user.to_dict()
                 if update.effective_user
@@ -706,7 +702,7 @@ class TelegramBot:
 
         await self.log_call(update)
 
-        if not update.effective_chat:
+        if not update.effective_chat or not update.effective_message:
             return
 
         await update.effective_message.reply_text(
@@ -720,11 +716,9 @@ class TelegramBot:
         context: ContextTypes.DEFAULT_TYPE,
     ) -> None:
         """Handle unknown commands."""
-        del context  # Unused
-
         await self.log_call(update)
 
-        if not update.effective_chat:
+        if not update.effective_chat or not update.effective_message:
             return
 
         # Special handling for channels
@@ -732,7 +726,7 @@ class TelegramBot:
             message_text = update.effective_message.text
             bot_username = update.get_bot().username
 
-            if f"@{bot_username}" not in message_text:
+            if message_text is None or f"@{bot_username}" not in message_text:
                 await update.effective_message.reply_text(
                     "Commands in channels (like this one with the id "
                     f"{update.effective_chat.id}) need to use the "
@@ -744,27 +738,25 @@ class TelegramBot:
             # Extract the actual command from the message_text.
             # Perform appropriate action.
             if message_text.startswith("/start"):
-                await self.start_command(update, None)
+                await self.start_command(update, context)
             elif message_text.startswith("/help"):
-                await self.help_command(update, None)
+                await self.help_command(update, context)
             elif message_text.startswith("/status"):
-                await self.status_command(update, None)
+                await self.status_command(update, context)
             elif message_text.startswith("/manage"):
-                await self.manage_command(update, None)
+                await self.manage_command(update, context)
             elif message_text.startswith("/refresh"):
-                await self.refresh_command(update, None)
+                await self.refresh_command(update, context)
             elif message_text.startswith("/leave"):
-                await self.leave_command(update, None)
+                await self.leave_command(update, context)
             elif message_text.startswith("/announce"):
-                await self.announce_command(update, None)
+                await self.announce_command(update, context)
             elif message_text.startswith("/debug"):
-                await self.debug_command(update, None)
+                await self.debug_command(update, context)
             elif message_text.startswith("/error"):
-                await self.error_command(update, None)
-            elif message_text.startswith("/channel"):
-                await self.channel_command(update, None)
+                await self.error_command(update, context)
             elif message_text.startswith("/timezone"):
-                await self.timezone_command(update, None)
+                await self.timezone_command(update, context)
             else:
                 await update.effective_message.reply_text(
                     "Commands in channels (like this one with the id "
@@ -1502,6 +1494,12 @@ class TelegramBot:
         text: str,
         parse_mode: str | None = None,
     ) -> None:
+        if self.application is None:
+            logger.error(
+                "Tried to send message while the application is not initialized: "
+                f"{text}",
+            )
+            return
         await self.application.bot.send_message(
             chat_id=Config.get().telegram_developer_chat_id,
             text=text,

@@ -80,15 +80,15 @@ def upgrade() -> None:
                 chat_type = ChatType.PRIVATE
                 user_details = user.telegram_user_details
 
-            user_id = user.telegram_id if int(user.telegram_id) > 0 else None
+            user_id = int(user.telegram_id) if int(user.telegram_id) > 0 else None
 
             if user_details and not isinstance(user_details, dict):
-                user_details = json.loads(user_details)
+                user_details = json.loads(user_details)  # type: ignore
 
             new_chat = TelegramChat(
                 registration_date=user.registration_date,
                 user_id=user_id,
-                chat_id=user.telegram_chat_id,
+                chat_id=int(user.telegram_chat_id),
                 user_details=user_details,
                 chat_details=None,
                 timezone_offset=user.timezone_offset,
