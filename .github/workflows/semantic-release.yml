@@ -37,10 +37,10 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Setup Python 3.11
+      - name: Setup Python 3.12
         uses: actions/setup-python@v4
         with:
-          python-version: "3.11"
+          python-version: "3.12"
 
       - name: Semantic Release
         uses: python-semantic-release/python-semantic-release@v8.3.0

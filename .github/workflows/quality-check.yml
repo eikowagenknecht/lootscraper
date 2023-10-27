@@ -26,10 +26,10 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
 
-      - name: Setup Python 3.11
+      - name: Setup Python 3.12
         uses: actions/setup-python@v4
         with:
-          python-version: "3.11"
+          python-version: "3.12"
 
       - name: Install Poetry
         uses: abatilo/actions-poetry@v2.3.0
