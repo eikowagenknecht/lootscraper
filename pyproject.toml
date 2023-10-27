@@ -15,7 +15,7 @@ lootscraper = 'lootscraper.main:main'
 "Bug Tracker" = "https://github.com/eikowagenknecht/lootscraper/issues"
 
 [tool.poetry.dependencies]
-python = "^3.11.1"
+python = "^3.12.0"
 alembic = "^1.12.1"
 feedgen = "^0.9.0"
 humanize = "^4.8.0"
