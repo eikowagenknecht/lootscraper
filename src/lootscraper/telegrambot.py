@@ -37,7 +37,7 @@ from lootscraper.common import (
     markdown_escape,
     markdown_url,
 )
-from lootscraper.config import Config, ParsedConfig, TelegramLogLevel
+from lootscraper.config import Config, ParsedConfig
 from lootscraper.database import (
     Announcement,
     Game,
@@ -519,6 +519,8 @@ class TelegramBot:
         context: ContextTypes.DEFAULT_TYPE,
     ) -> None:
         """Handle the /start command: Register the chat and display guide."""
+        del context  # Unused
+
         await self.log_call(update)
 
         if update.effective_message is None or update.effective_chat is None:
