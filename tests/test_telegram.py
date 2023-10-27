@@ -6,7 +6,7 @@ import unittest
 
 import sqlalchemy as sa
 from lootscraper.config import Config
-from lootscraper.database import LootDatabase, Offer, User
+from lootscraper.database import LootDatabase, Offer, TelegramChat
 from lootscraper.telegrambot import TelegramBot
 from sqlalchemy import orm
 
@@ -31,9 +31,11 @@ class TelegramTests(unittest.IsolatedAsyncioTestCase):
                 # Act
                 # TODO: Replace with mock offer
                 offer: Offer = session.execute(sa.select(Offer)).scalars().first()
-                user: User = (
+                user: TelegramChat = (
                     session.execute(
-                        sa.select(User).where(User.telegram_id == 724039662),
+                        sa.select(TelegramChat).where(
+                            TelegramChat.user_id == 724039662,
+                        ),
                     )  # Eiko
                     .scalars()
                     .first()
@@ -51,9 +53,11 @@ class TelegramTests(unittest.IsolatedAsyncioTestCase):
                 session: orm.Session = db.Session()
 
                 # Act
-                user: User = (
+                user: TelegramChat = (
                     session.execute(
-                        sa.select(User).where(User.telegram_id == 724039662),
+                        sa.select(TelegramChat).where(
+                            TelegramChat.user_id == 724039662,
+                        ),
                     )
                     .scalars()
                     .first()
