@@ -273,12 +273,13 @@ class TelegramBot:
             and update.effective_chat
         ):
             # The bot was removed from a group chat.
-            chat_id = update.effective_chat.id
-            logger.info(
-                f"Deactivating chat with id {chat_id} because the bot was"
-                "removed from the group.",
-            )
-            self.deactivate_chat(chat_id, "removed group")
+            chat = self.get_chat_by_update(update)
+            if chat is not None:
+                logger.info(
+                    f"Deactivating chat with id {chat.chat_id} because the bot was"
+                    "removed from the group.",
+                )
+                self.deactivate_chat(chat, "removed group")
             return
 
         # Build the exception string from the exception
@@ -1047,7 +1048,7 @@ class TelegramBot:
         if update.effective_chat is None:
             return None
 
-        if update.effective_message.message_thread_id:
+        if update.effective_message and update.effective_message.message_thread_id:
             return self.get_chat_by_id(
                 update.effective_chat.id,
                 update.effective_message.message_thread_id,
