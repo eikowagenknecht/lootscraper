@@ -16,7 +16,7 @@ lootscraper = 'lootscraper.main:main'
 
 [tool.poetry.dependencies]
 python = "^3.11.1"
-alembic = "^1.12.0"
+alembic = "^1.12.1"
 feedgen = "^0.9.0"
 humanize = "^4.8.0"
 httpx = "^0.25.0"
