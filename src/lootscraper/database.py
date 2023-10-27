@@ -235,16 +235,14 @@ class TelegramChat(Base):
         init=False,
     )
 
-    id: Mapped[int] = mapped_column(  # noqa: A003
-        init=False,
-        primary_key=True,
-    )
+    id: Mapped[int] = mapped_column(init=False, primary_key=True)  # noqa: A003
     registration_date: Mapped[datetime] = mapped_column(AwareDateTime)
     chat_type: Mapped[ChatType] = mapped_column(sa.Enum(ChatType))
-    user_id: Mapped[str | None]
-    chat_id: Mapped[str]
-    user_details: Mapped[dict[str, Any] | None] = mapped_column(sa.JSON)
-    chat_details: Mapped[dict[str, Any] | None] = mapped_column(sa.JSON)
+    chat_id: Mapped[int]
+    user_id: Mapped[int | None] = mapped_column(default=None)
+    thread_id: Mapped[int | None] = mapped_column(default=None)
+    chat_details: Mapped[dict[str, Any] | None] = mapped_column(sa.JSON, default=None)
+    user_details: Mapped[dict[str, Any] | None] = mapped_column(sa.JSON, default=None)
     timezone_offset: Mapped[int] = mapped_column(default=0)
     active: Mapped[bool] = mapped_column(default=True)
     inactive_reason: Mapped[str | None] = mapped_column(default=None)

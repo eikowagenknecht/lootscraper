@@ -156,7 +156,6 @@ class TelegramBot:
 
         # Register "/..." commands
         self.application.add_handler(CommandHandler("announce", self.announce_command))
-        # self.application.add_handler(CommandHandler("channel", self.channel_command))
         self.application.add_handler(CommandHandler("debug", self.debug_command))
         self.application.add_handler(CommandHandler("error", self.error_command))
         self.application.add_handler(CommandHandler("help", self.help_command))
@@ -167,6 +166,7 @@ class TelegramBot:
         self.application.add_handler(CommandHandler("status", self.status_command))
         self.application.add_handler(CommandHandler("timezone", self.timezone_command))
         # Fallback for all other messages starting with "/"
+        # (also messages in channels)
         self.application.add_handler(
             MessageHandler(filters.COMMAND, self.unknown_command),
         )
@@ -232,12 +232,7 @@ class TelegramBot:
         logger.error(f"Error while polling for messages from Telegram: {error}")
 
     async def notify_admin_and_stop(self, error_text: str) -> None:
-        await self.send_message(
-            chat_id=Config.get().telegram_developer_chat_id,
-            text=error_text,
-            parse_mode=None,
-        )
-
+        await self.send_dev_message(error_text)
         await self.stop()
 
     async def error_handler(
@@ -335,12 +330,8 @@ class TelegramBot:
 
         # Check if the user is an admin (no matter if in a group or private chat)
         if update.effective_user.id != Config.get().telegram_admin_user_id:
-            await self.send_message(
-                chat_id=update.effective_chat.id,
-                text=markdown_escape(
-                    "You are not an admin, so you can't use this command.",
-                ),
-                parse_mode=telegram.constants.ParseMode.MARKDOWN_V2,
+            update.effective_message.reply_text(
+                "You are not an admin, so you can't use this command.",
             )
             return
 
@@ -352,132 +343,16 @@ class TelegramBot:
             text = message_parts[1].strip()
 
             self.add_announcement(header, text)
-            await self.send_message(
-                chat_id=update.effective_chat.id,
-                text=markdown_escape(
-                    "Announcement added successfully. "
-                    "Sending it with the next scraping run.",
-                ),
-                parse_mode=telegram.constants.ParseMode.MARKDOWN_V2,
+            await update.effective_message.reply_text(
+                "Announcement added successfully. "
+                "Sending it with the next scraping run.",
             )
 
         except IndexError:
-            await self.send_message(
-                chat_id=update.effective_chat.id,
-                text=markdown_escape(
-                    "Invalid announcement command. "
-                    "Format needs to be /announce <header> || <text>",
-                ),
-                parse_mode=telegram.constants.ParseMode.MARKDOWN_V2,
+            await update.effective_message.reply_text(
+                "Invalid announcement command. "
+                "Format needs to be /announce <header> || <text>",
             )
-
-    # async def channel_command(
-    #     self,
-    #     update: Update,
-    #     context: ContextTypes.DEFAULT_TYPE,
-    # ) -> None:
-    #     """Handle the /channel command: Manage channels (admin only)."""
-    #     del context  # Unused
-
-    #     await self.log_call(update)
-
-    #     if (
-    #         not update.effective_user
-    #         or not update.effective_chat
-    #         or not update.effective_message
-    #         or not update.effective_message.text
-    #     ):
-    #         return
-
-    #     # Check if the user is an admin
-    #     if update.effective_user.id != Config.get().telegram_admin_user_id:
-    #         await self.send_message(
-    #             chat_id=update.effective_chat.id,
-    #             text=markdown_escape(
-    #                 "You are not an admin, so you can't use this command.",
-    #             ),
-    #             parse_mode=telegram.constants.ParseMode.MARKDOWN_V2,
-    #         )
-    #         return
-
-    #     try:
-    #         message = update.effective_message.text.removeprefix("/channel ")
-    #         message_parts = message.split(" ")
-    #         channel_name = message_parts[0].strip()
-    #         offer_type = OfferType[message_parts[1].strip()]
-    #         source = Source[message_parts[2].strip()]
-    #         duration = OfferDuration[message_parts[3].strip()]
-
-    #         # Add the channel as a "user" to the database and set it to receive
-    #         # the appropriate type of messages.
-
-    #         channel_db_user = self.get_user_by_telegram_id(channel_name)
-
-    #         if channel_db_user is None:
-    #             # Register channel user if not registered yet
-    #             session: orm.Session = self.Session()
-    #             try:
-    #                 latest_announcement: int = session.execute(  # type: ignore
-    #                     sa.select(
-    #                         sa.func.max(Announcement.id),
-    #                     ),
-    #                 ).scalar()
-
-    #                 new_user = TelegramChat(
-    #                     user_id=channel_name,
-    #                     chat_id=channel_name,
-    #                     user_details={
-    #                         "description": "Channel user created by admin",
-    #                     },
-    #                     registration_date=datetime.now(tz=timezone.utc),
-    #                     last_announcement_id=latest_announcement,
-    #                 )
-    #                 session.add(new_user)
-    #                 session.commit()
-
-    #                 channel_db_user = self.get_user_by_telegram_id(channel_name)
-    #             except Exception:
-    #                 session.rollback()
-    #                 raise
-
-    #         if channel_db_user is None:
-    #             raise Exception("Channel user not found.")  # noqa: TRY301, TRY002
-
-    #         if self.is_subscribed(channel_db_user, offer_type, source, duration):
-    #             self.unsubscribe(channel_db_user, offer_type, source, duration)
-
-    #             await self.send_message(
-    #                 chat_id=update.effective_chat.id,
-    #                 text=markdown_escape(
-    #                     f"Channel {channel_db_user.chat_id} is now "
-    #                     f"unsubscribed to offers from: "
-    #                     f"{offer_type.value} / {source.value} / {duration.value}.",
-    #                 ),
-    #                 parse_mode=telegram.constants.ParseMode.MARKDOWN_V2,
-    #             )
-    #         else:
-    #             self.subscribe(channel_db_user, offer_type, source, duration)
-
-    #             await self.send_message(
-    #                 chat_id=update.effective_chat.id,
-    #                 text=markdown_escape(
-    #                     f"Channel {channel_db_user.chat_id} is now subscribed "
-    #                     f"to offers from: "
-    #                     f"{offer_type.value} / {source.value} / {duration.value}."
-    #                     f"Sending new offers with the next scraping run.",
-    #                 ),
-    #                 parse_mode=telegram.constants.ParseMode.MARKDOWN_V2,
-    #             )
-
-    #     except IndexError:
-    #         await self.send_message(
-    #             chat_id=update.effective_chat.id,
-    #             text=markdown_escape(
-    #                 "Invalid channel command. Format needs to be "
-    #                 "/channel <channel_name> <offer_type> <source> <duration>.",
-    #             ),
-    #             parse_mode=telegram.constants.ParseMode.MARKDOWN_V2,
-    #         )
 
     async def debug_command(
         self,
@@ -492,9 +367,8 @@ class TelegramBot:
         if update.effective_message is None or update.effective_chat is None:
             return
 
-        await self.send_message(
-            chat_id=update.effective_chat.id,
-            text=markdown_json_formatted(
+        await update.effective_message.reply_markdown_v2(
+            markdown_json_formatted(
                 "update.effective_user = "
                 + json.dumps(
                     update.effective_user.to_dict(),
@@ -502,13 +376,11 @@ class TelegramBot:
                     ensure_ascii=False,
                 ),
             ),
-            parse_mode=telegram.constants.ParseMode.MARKDOWN_V2,
         )
 
         if update.effective_user is not None:
-            await self.send_message(
-                chat_id=update.effective_chat.id,
-                text=markdown_json_formatted(
+            await update.effective_message.reply_markdown_v2(
+                markdown_json_formatted(
                     "update.effective_chat = "
                     + json.dumps(
                         update.effective_chat.to_dict(),
@@ -516,7 +388,6 @@ class TelegramBot:
                         ensure_ascii=False,
                     ),
                 ),
-                parse_mode=telegram.constants.ParseMode.MARKDOWN_V2,
             )
 
     async def error_command(
@@ -627,32 +498,20 @@ class TelegramBot:
 
         await self.log_call(update)
 
-        if update.effective_chat is None or update.effective_chat is None:
+        if update.effective_message is None or update.effective_chat is None:
             return
 
         db_chat = self.get_chat_by_id(update.effective_chat.id)
         if db_chat is None:
-            await self.send_message(
-                chat_id=update.effective_chat.id,
-                text=MESSAGE_CHAT_NOT_REGISTERED,
-                parse_mode=None,
-            )
+            await update.effective_message.reply_text(MESSAGE_CHAT_NOT_REGISTERED)
             return
 
         if db_chat.subscriptions is None or len(db_chat.subscriptions) == 0:
-            await self.send_message(
-                chat_id=update.effective_chat.id,
-                text=MESSAGE_NO_SUBSCRIPTIONS,
-                parse_mode=None,
-            )
+            await update.effective_message.reply_text(MESSAGE_NO_SUBSCRIPTIONS)
             return
 
         if not await self.send_new_offers(db_chat):
-            await self.send_message(
-                chat_id=update.effective_chat.id,
-                text=MESSAGE_NO_NEW_OFFERS,
-                parse_mode=None,
-            )
+            await update.effective_message.reply_text(MESSAGE_NO_NEW_OFFERS)
 
     async def start_command(
         self,
@@ -669,11 +528,11 @@ class TelegramBot:
             R"I belong to the [LootScraper]"
             R"(https://github\.com/eikowagenknecht/lootscraper) project\. "
             R"If you have any issues or feature request, please use the "
-            R"[Github issues]"
+            R"[GitHub issues]"
             R"(https://github\.com/eikowagenknecht/lootscraper/issues) "
             R"to report them\. "
             R"And if you like it, please consider "
-            R"[⭐ starring it on GitHub]"
+            R"[starring it ⭐]"
             R"(https://github\.com/eikowagenknecht/lootscraper/stargazers)\. "
             R"Thanks\!"
             "\n\n"
@@ -718,17 +577,21 @@ class TelegramBot:
             ).scalar()
 
             chatid: str = str(update.effective_chat.id)
+
             new_chat = TelegramChat(
+                registration_date=datetime.now(tz=timezone.utc),
+                chat_type=update.effective_chat.type,
                 chat_id=chatid,
                 user_id=str(update.effective_user.id)
                 if update.effective_user
                 else None,
+                chat_details=update.effective_chat.to_dict(),
                 user_details=update.effective_user.to_dict()
                 if update.effective_user
                 else None,
-                chat_details=update.effective_chat.to_dict(),
-                chat_type=update.effective_chat.type,
-                registration_date=datetime.now(tz=timezone.utc),
+                thread_id=update.effective_message.message_thread_id
+                if update.effective_message.message_thread_id
+                else None,
                 last_announcement_id=latest_announcement,
             )
             session.add(new_chat)
@@ -749,19 +612,6 @@ class TelegramBot:
         )
         logger.debug(f"Sending /start reply: {message}")
         await update.effective_message.reply_markdown_v2(message)
-
-        # Send all current offers once
-        await self.refresh_command(update, context)
-
-        # Notify about the new registration
-        if Config.get().telegram_log_level.value >= TelegramLogLevel.DEBUG.value:
-            message = Rf"New chat {self.get_caller_name(update)} registered\."
-            logger.debug(f"Sending chat registered message: {message}")
-            await self.send_message(
-                chat_id=Config.get().telegram_developer_chat_id,
-                text=message,
-                parse_mode=telegram.constants.ParseMode.MARKDOWN_V2,
-            )
 
     async def status_command(
         self,
@@ -794,7 +644,7 @@ class TelegramBot:
             subscriptions_text = (
                 Rf"\- You have {len(db_chat.subscriptions)} subscriptions\. "
             )
-            subscriptions_text += R"Here are the categories you are subscribed to: \n"
+            subscriptions_text += "Here are the categories you are subscribed to: \n"
             for subscription in db_chat.subscriptions:
                 subscriptions_text += markdown_escape(
                     f"  * {subscription.source.value} / {subscription.type.value} / "
@@ -857,11 +707,9 @@ class TelegramBot:
         if not update.effective_chat:
             return
 
-        await self.send_message(
-            chat_id=update.effective_chat.id,
-            text="Choose one of these available timezones:",
+        await update.effective_message.reply_text(
+            "Choose one of these available timezones:",
             reply_markup=self.timezone_keyboard(),
-            parse_mode=None,
         )
 
     async def unknown_command(
@@ -883,15 +731,11 @@ class TelegramBot:
             bot_username = update.get_bot().username
 
             if f"@{bot_username}" not in message_text:
-                await self.send_message(
-                    chat_id=update.effective_chat.id,
-                    text=markdown_escape(
-                        "Commands in channels (like this one with the id "
-                        f"{update.effective_chat.id}) need to use the "
-                        f"/command@Bot syntax. "
-                        f"For example: /start@{bot_username}.",
-                    ),
-                    parse_mode=telegram.constants.ParseMode.MARKDOWN_V2,
+                await update.effective_message.reply_text(
+                    "Commands in channels (like this one with the id "
+                    f"{update.effective_chat.id}) need to use the "
+                    f"/command@Bot syntax. "
+                    f"For example: /start@{bot_username}.",
                 )
                 return
 
@@ -920,24 +764,16 @@ class TelegramBot:
             elif message_text.startswith("/timezone"):
                 await self.timezone_command(update, None)
             else:
-                await self.send_message(
-                    chat_id=update.effective_chat.id,
-                    text=markdown_escape(
-                        "Commands in channels (like this one with the id "
-                        f"{update.effective_chat.id}) need to use the "
-                        f"/command@Bot syntax. "
-                        f"For example: /start@{bot_username}.",
-                    ),
-                    parse_mode=telegram.constants.ParseMode.MARKDOWN_V2,
+                await update.effective_message.reply_text(
+                    "Commands in channels (like this one with the id "
+                    f"{update.effective_chat.id}) need to use the "
+                    f"/command@Bot syntax. "
+                    f"For example: /start@{bot_username}.",
                 )
             return
 
         # Normal chats
-        await self.send_message(
-            chat_id=update.effective_chat.id,
-            text=MESSAGE_UNKNOWN_COMMAND,
-            parse_mode=None,
-        )
+        await update.effective_message.reply_text(MESSAGE_UNKNOWN_COMMAND)
 
     async def offer_callback(
         self,
@@ -1437,7 +1273,7 @@ class TelegramBot:
             markup = self.offer_keyboard(offer)
 
             success = await self.send_message(
-                chat_id=chat.chat_id,
+                chat=chat,
                 text=self.offer_details_message(
                     offer,
                     tzoffset=chat.timezone_offset,
@@ -1459,7 +1295,7 @@ class TelegramBot:
         )
 
         success = await self.send_message(
-            chat_id=chat.chat_id,
+            chat=chat,
             text=self.offer_message(
                 offer,
                 tzoffset=chat.timezone_offset,
@@ -1478,7 +1314,7 @@ class TelegramBot:
             f"to Telegram chat {chat.chat_id}.",
         )
         await self.send_message(
-            chat_id=chat.chat_id,
+            chat=chat,
             text=announcement.text_markdown,
             reply_markup=None,
         )
@@ -1659,10 +1495,20 @@ class TelegramBot:
 
         return content
 
-    # TODO: Change signature to use the TelegramChat object
+    async def send_dev_message(
+        self,
+        text: str,
+        parse_mode: str | None = None,
+    ) -> None:
+        await self.application.bot.send_message(
+            chat_id=Config.get().telegram_developer_chat_id,
+            text=text,
+            parse_mode=parse_mode,
+        )
+
     async def send_message(
         self,
-        chat_id: int | str,
+        chat: TelegramChat,
         text: str,
         parse_mode: str | None = telegram.constants.ParseMode.MARKDOWN_V2,
         reply_markup: ReplyMarkup | None = None,
@@ -1681,19 +1527,22 @@ class TelegramBot:
             try:
                 send_attempt = send_attempt + 1
 
-                if not self.chat_is_active(chat_id):
+                if not chat.active:
                     logger.info(
-                        f"Not sending to chat id {chat_id} because the chat is "
+                        f"Not sending to chat id {chat.chat_id} because the chat is "
                         "inactive.",
                     )
                     return None
 
-                logger.debug(f"Sending message to chat {chat_id} with content {text}.")
+                logger.debug(
+                    f"Sending message to chat {chat.chat_id} with content {text}.",
+                )
                 message = await self.application.bot.send_message(
-                    chat_id=chat_id,
+                    chat_id=chat.chat_id,
                     text=text,
                     parse_mode=parse_mode,
                     reply_markup=reply_markup,
+                    message_thread_id=chat.thread_id if chat.thread_id else None,
                 )
             except telegram.error.TimedOut:
                 # Telegram is not responding. This is not handled by the AIORateLimiter.
@@ -1706,19 +1555,19 @@ class TelegramBot:
                 message_handled = True
                 # The chat was blocked.
                 logger.info(
-                    f"Deactivating chat id {chat_id} "
+                    f"Deactivating chat id {chat.chat_id} "
                     "because the chat was blocked: {e}",
                 )
-                self.deactivate_chat(chat_id, "blocked chat")
+                self.deactivate_chat(chat.chat_id, "blocked chat")
             except TelegramError as e:
                 message_handled = True
                 # The chat could not be found
                 if e.message == "Chat not found":
                     logger.info(
-                        f"Deactivating chat id {chat_id} "
+                        f"Deactivating chat id {chat.chat_id} "
                         "because the chat could not be found.",
                     )
-                    self.deactivate_chat(chat_id, "not found")
+                    self.deactivate_chat(chat.chat_id, "not found")
                 else:
                     logger.exception("Telegram error while sending message.")
             else:
@@ -1729,13 +1578,6 @@ class TelegramBot:
 
     def is_group_chat(self, chat_id: int | str) -> bool:
         return int(chat_id) < 0
-
-    def chat_is_active(self, chat_id: int | str) -> bool:
-        db_chat = self.get_chat_by_id(chat_id)
-        if db_chat is None or db_chat.inactive_reason is not None:
-            return False
-
-        return True
 
     def deactivate_chat(self, chat_id: int | str, reason: str) -> None:
         db_chat = self.get_chat_by_id(chat_id)
@@ -1772,32 +1614,17 @@ class TelegramBot:
             raise
 
     async def log_call(self, update: Update) -> None:
-        # Only log calls from chats if the log level is set to debug.
-        if Config.get().telegram_log_level.value >= TelegramLogLevel.DEBUG.value:
-            type_ = "Callback query" if update.callback_query else "Message"
+        type_ = "Callback query" if update.callback_query else "Message"
 
-            # if update.effective_user:
-            #     user = update.effective_user.name
-            #     if user and user.startswith("@"):
-            #         user = "(@)" + user.removeprefix("@")
-            # else:
-            #     user = "unknown user"
+        if update.callback_query and update.callback_query.data:
+            content = f"with content {update.callback_query.data}"
+        elif update.effective_message:
+            content = f"with content {update.effective_message.text_markdown_v2}"
+        else:
+            content = "without content"
 
-            if update.callback_query and update.callback_query.data:
-                content = f"with content {update.callback_query.data}"
-            elif update.effective_message:
-                content = f"with content {update.effective_message.text_markdown_v2}"
-            else:
-                content = "without content"
-
-            message = markdown_escape(
-                f"{type_} from {self.get_caller_name(update)} {content}",
-            )
-            logger.debug(message)
-            await self.send_message(
-                chat_id=Config.get().telegram_developer_chat_id,
-                text=message,
-            )
+        message = f"{type_} from {self.get_caller_name(update)} {content}"
+        logger.debug(message)
 
     def add_announcement(self, header: str, text: str) -> None:
         """Add an announcement to the database."""
@@ -1820,11 +1647,12 @@ class TelegramBot:
             raise
 
     def get_caller_name(self, update: Update) -> str:
-        return (
-            update.effective_user.mention_markdown_v2()
-            if update.effective_user
-            else markdown_escape(update.effective_chat.title)
-        )
+        if update.effective_chat and update.effective_chat.title:
+            return markdown_escape(update.effective_chat.title)
+        if update.effective_user:
+            return update.effective_user.mention_markdown_v2()
+
+        return "unknown user"
 
 
 class TelegramLoggingHandler(logging.Handler):
@@ -1845,9 +1673,8 @@ class TelegramLoggingHandler(logging.Handler):
                 message = "```\n" + (markdown_escape(chunk)) + "\n```"
 
                 asyncio.create_task(
-                    self.bot.send_message(
-                        chat_id=Config.get().telegram_developer_chat_id,
-                        text=message,
+                    self.bot.send_dev_message(
+                        message,
                         parse_mode=telegram.constants.ParseMode.MARKDOWN_V2,
                     ),
                 )
