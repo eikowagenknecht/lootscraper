@@ -46,6 +46,8 @@ async def get_browser_context() -> AsyncGenerator[BrowserContext, None]:
             )  # Milliseconds
 
             yield context
+
+            await context.close()
     except Error:
         logger.exception("Error in Playwright Chromium context.")
     finally:
