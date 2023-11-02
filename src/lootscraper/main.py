@@ -263,56 +263,53 @@ async def scrape_worker(
     task_queue: asyncio.Queue[Type[Scraper]],
     telegram_queue: asyncio.Queue[int],
 ) -> None:
-    async with AsyncExitStack() as stack:
-        # Check the "global" variable (set on import) to see if we can use a
-        # virtual display
-        if use_virtual_display:
-            stack.enter_context(Xvfb())
+    run_no = 0
+    while True:
+        # This triggers when the time has come to run a scraper
+        scraper_class = await task_queue.get()
 
-        # Use one single browser instance for all scrapers
-        browser_context: BrowserContext = await stack.enter_async_context(
-            get_browser_context(),
-        )
+        run_no += 1
+        logger.debug(f"Executing scheduled task #{run_no}.")
 
-        # Use a single database session for all worker runs
-        db_session = db.Session()
+        try:
+            async with AsyncExitStack() as stack:
+                # Check the "global" variable (set on import) to see if we can use a
+                # virtual display. If so, we create one and add it to the stack
+                if use_virtual_display:
+                    stack.enter_context(Xvfb())
 
-        run_no = 0
-        while True:
-            # This triggers when the time has come to run a scraper
-            scraper_class = await task_queue.get()
+                # Use one browser instance per scraper (to avoid memory leaks)
+                browser_context: BrowserContext = await stack.enter_async_context(
+                    get_browser_context(),
+                )
 
-            run_no += 1
-            logger.debug(f"Executing scheduled task #{run_no}.")
-
-            try:
                 scraper_instance = scraper_class(context=browser_context)
                 scraped_offers = await scraper_instance.scrape()
                 await process_new_offers(
                     db,
                     browser_context,
-                    db_session,
+                    db.Session(),
                     scraped_offers,
                 )
 
-                if Config.get().generate_feed:
-                    await action_generate_feed(db)
-                else:
-                    logging.info("Skipping feed generation because it is disabled.")
+            if Config.get().generate_feed:
+                await action_generate_feed(db)
+            else:
+                logging.info("Skipping feed generation because it is disabled.")
 
-                if Config.get().telegram_bot:
-                    await telegram_queue.put(run_no)
-                else:
-                    logging.debug(
-                        "Skipping Telegram notification because it is disabled.",
-                    )
-            except OperationalError:
-                # We handle DB errors on a higher level
-                raise
-            except Exception as e:
-                # This is our catch-all. Something really unexpected occurred.
-                # Log it with the highest priority and continue with the
-                # next scheduled run when it's due.
-                logger.critical(e)
+            if Config.get().telegram_bot:
+                await telegram_queue.put(run_no)
+            else:
+                logging.debug(
+                    "Skipping Telegram notification because it is disabled.",
+                )
+        except OperationalError:
+            # We handle DB errors on a higher level
+            raise
+        except Exception as e:
+            # This is our catch-all. Something really unexpected occurred.
+            # Log it with the highest priority and continue with the
+            # next scheduled run when it's due.
+            logger.critical(e)
 
-            task_queue.task_done()
+        task_queue.task_done()
