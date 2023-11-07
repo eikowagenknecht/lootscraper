@@ -1,6 +1,7 @@
 # {{ version.as_tag() }} ({{ release.tagged_date.strftime("%Y-%m-%d") }})
+This release contains the following types: {% for type_ in release["elements"] | dictsort %}{{ type_[0] }}{% if not loop.last %}, {% endif %}{% endfor %}
 {% for type_, commits in release["elements"] | dictsort %}
-{% if (type_ == "fix") or (type_ == "feat") %}
+{% if (type_ != "unknown") %}
 ## {{ type_ | capitalize }}
 {% for commit in commits %}
 * {{ commit.descriptions[0] | capitalize }} by {{commit.commit.author.name}} in [`{{ commit.short_hash }}`]({{ commit.hexsha | commit_hash_url }})
