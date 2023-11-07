@@ -1,5 +1,4 @@
-# {{ version.as_tag() }} ({{ release.tagged_date.strftime("%Y-%m-%d") }})
-This release contains the following types: {% for type_ in release["elements"] | dictsort %}{{ type_[0] }}{% if not loop.last %}, {% endif %}{% endfor %}
+This release contains the following commit types: {% for type_ in release["elements"] | dictsort %}{{ type_[0] }}{% if not loop.last %}, {% endif %}{% endfor %}
 {% for type_, commits in release["elements"] | dictsort %}
 {% if (type_ != "unknown") %}
 ## {{ type_ | capitalize }}
