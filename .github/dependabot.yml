@@ -1,5 +1,3 @@
-# Dependabot as a fallback for a transition period
-
 version: 2
 updates:
   # Check for updates to the used Python packages every weekday
