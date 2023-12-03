@@ -77,7 +77,7 @@ class UbisoftGamesScraper(Scraper):
         # Filter out various other promotions
         compare_title = title.lower()
         if not compare_title.startswith("get ") or not compare_title.endswith(
-            " for free!"
+            " for free!",
         ):
             return None
 
