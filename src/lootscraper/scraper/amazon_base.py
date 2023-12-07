@@ -4,8 +4,9 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 import schedule
-from playwright.async_api import Error, Locator
+from playwright.async_api import Error, Locator, TimeoutError
 
+from lootscraper.browser import get_new_page
 from lootscraper.common import OfferDuration, Source
 from lootscraper.scraper.scraper_base import RawOffer, Scraper
 
@@ -32,7 +33,7 @@ class AmazonBaseScraper(Scraper):
 
     @staticmethod
     def get_schedule() -> list[schedule.Job]:
-        return [schedule.every(30).minutes]
+        return [schedule.every(60).minutes]
 
     def offers_expected(self) -> bool:
         return True
@@ -58,12 +59,6 @@ class AmazonBaseScraper(Scraper):
         if title is None:
             raise ValueError("Couldn't find title.")
 
-        valid_to = await element.locator(
-            ".item-card__availability-date p",
-        ).text_content()
-        if valid_to is None:
-            raise ValueError(f"Couldn't find valid to for {title}.")
-
         img_url = await element.locator(
             '[data-a-target="card-image"] img',
         ).get_attribute("src")
@@ -73,15 +68,17 @@ class AmazonBaseScraper(Scraper):
         url = BASE_URL
 
         try:
-            path = await element.locator(
-                '[data-a-target="learn-more-card"]',
-            ).get_attribute("href", timeout=500)
+            path = await element.get_attribute("href", timeout=500)
             if path is not None and not path.startswith("http"):
                 url += path
         except Error:
-            # Some offers are claimed on site and don't have a specific path.
-            # That's fine.
-            pass
+            raise ValueError(f"Couldn't find detail page for {title}.") from None
+
+        try:
+            valid_to = await self.read_date_from_details_page(url)
+        except TimeoutError:
+            # Some offers just have no date. That's fine.
+            valid_to = None
 
         return AmazonRawOffer(
             title=title,
@@ -89,3 +86,18 @@ class AmazonBaseScraper(Scraper):
             url=url,
             img_url=img_url,
         )
+
+    async def read_date_from_details_page(
+        self,
+        url: str,
+    ) -> str:
+        async with get_new_page(self.context) as page:
+            await page.goto(url, timeout=30000)
+
+            date = await page.locator(
+                ".availability-date span:nth-child(2)",
+            ).text_content()
+            if date is None:
+                raise ValueError("Couldn't find date.")
+
+            return date

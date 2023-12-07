@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import logging
-from datetime import date, datetime, time, timedelta, timezone
+from datetime import datetime, timedelta, timezone
 from typing import TYPE_CHECKING
 
 from lootscraper.common import OfferType
@@ -25,7 +25,7 @@ class AmazonGamesScraper(AmazonBaseScraper):
             OfferHandler(
                 page.locator(
                     '[data-a-target="offer-list-FGWP_FULL"] '
-                    '[data-a-target="item-card"]',
+                    " .item-card__action > a:first-child",
                 ),
                 self.read_raw_offer,
                 self.normalize_offer,
@@ -35,10 +35,32 @@ class AmazonGamesScraper(AmazonBaseScraper):
     async def page_loaded_hook(self, page: Page) -> None:
         await Scraper.scroll_element_to_bottom(page, "root")
 
+        # Scroll through the carousel to load all offers
+        for _ in range(10):
+            next_button = page.locator(
+                '[data-a-target="grid-carousel-next-arrow-container"]',
+            )
+
+            if await next_button.is_disabled():
+                break
+
+            await next_button.click()
+
     async def read_raw_offer(
         self,
         element: Locator,
     ) -> AmazonRawOffer:
+        # Rescroll to the right again (if it got lost)
+        for _ in range(10):
+            next_button = element.page.locator(
+                '[data-a-target="grid-carousel-next-arrow-container"]',
+            )
+
+            if await next_button.is_disabled():
+                break
+
+            await next_button.click()
+
         return await self.read_base_raw_offer(element)
 
     def normalize_offer(self, raw_offer: RawOffer) -> Offer:
@@ -80,45 +102,28 @@ class AmazonGamesScraper(AmazonBaseScraper):
         if raw_offer.valid_to:
             logger.debug(f"Found date: {raw_offer.valid_to} for {raw_offer.title}")
             try:
-                raw_date = raw_offer.valid_to.removeprefix("Ends ").lower()
-                if raw_date == "today":
+                raw_date = raw_offer.valid_to.removeprefix("Ends ")
+                if raw_date.lower() == "today":
                     parsed_date = datetime.now(tz=timezone.utc).replace(
                         hour=0,
                         minute=0,
                         second=0,
                     )
-                elif raw_date == "tomorrow":
+                elif raw_date.lower() == "tomorrow":
                     parsed_date = datetime.now(tz=timezone.utc).replace(
                         hour=0,
                         minute=0,
                         second=0,
                     ) + timedelta(days=1)
                 else:
-                    parsed_date = datetime.now(tz=timezone.utc).replace(
+                    parsed_date = datetime.strptime(raw_date, "%b %d, %Y").replace(
+                        tzinfo=timezone.utc,
                         hour=0,
                         minute=0,
                         second=0,
-                    ) + timedelta(days=int(raw_date.split(" ")[1]))
-
-                # Correct the year
-                guessed_end_date = date(
-                    datetime.now(tz=timezone.utc).date().year,
-                    parsed_date.month,
-                    parsed_date.day,
-                )
-                yesterday = datetime.now(tz=timezone.utc).date() - timedelta(days=1)
-                if guessed_end_date < yesterday:
-                    guessed_end_date = guessed_end_date.replace(
-                        year=guessed_end_date.year + 1,
                     )
 
-                # Add 1 day because of the notation
-                # ("Ends today" means "Ends at 00:00:00 the next day")
-                end_date = datetime.combine(
-                    guessed_end_date + timedelta(days=1),
-                    time.min,
-                    tzinfo=timezone.utc,
-                )
+                end_date = parsed_date
             except (ValueError, IndexError):
                 logger.warning(f"Date parsing failed for {raw_offer.title}")
 

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
-from datetime import date, datetime, time, timedelta, timezone
+from datetime import datetime, timedelta, timezone
 from typing import TYPE_CHECKING
 
 from lootscraper.common import OfferType
@@ -31,7 +31,7 @@ class AmazonLootScraper(AmazonBaseScraper):
             OfferHandler(
                 page.locator(
                     '[data-a-target="offer-list-IN_GAME_LOOT"] '
-                    '[data-a-target="item-card"]',
+                    " .item-card__action > a:first-child",
                 ),
                 self.read_raw_offer,
                 self.normalize_offer,
@@ -104,45 +104,28 @@ class AmazonLootScraper(AmazonBaseScraper):
         if raw_offer.valid_to:
             logger.debug(f"Found date: {raw_offer.valid_to} for {raw_offer.title}")
             try:
-                raw_date = raw_offer.valid_to.removeprefix("Ends ").lower()
-                if raw_date == "today":
+                raw_date = raw_offer.valid_to.removeprefix("Ends ")
+                if raw_date.lower() == "today":
                     parsed_date = datetime.now(tz=timezone.utc).replace(
                         hour=0,
                         minute=0,
                         second=0,
                     )
-                elif raw_date == "tomorrow":
+                elif raw_date.lower() == "tomorrow":
                     parsed_date = datetime.now(tz=timezone.utc).replace(
                         hour=0,
                         minute=0,
                         second=0,
                     ) + timedelta(days=1)
                 else:
-                    parsed_date = datetime.now(tz=timezone.utc).replace(
+                    parsed_date = datetime.strptime(raw_date, "%b %d, %Y").replace(
+                        tzinfo=timezone.utc,
                         hour=0,
                         minute=0,
                         second=0,
-                    ) + timedelta(days=int(raw_date.split(" ")[1]))
-
-                # Correct the year
-                guessed_end_date = date(
-                    datetime.now(tz=timezone.utc).date().year,
-                    parsed_date.month,
-                    parsed_date.day,
-                )
-                yesterday = datetime.now(tz=timezone.utc).date() - timedelta(days=1)
-                if guessed_end_date < yesterday:
-                    guessed_end_date = guessed_end_date.replace(
-                        year=guessed_end_date.year + 1,
                     )
 
-                # Add 1 day because of the notation
-                # ("Ends today" means "Ends at 00:00:00 the next day")
-                end_date = datetime.combine(
-                    guessed_end_date + timedelta(days=1),
-                    time.min,
-                    tzinfo=timezone.utc,
-                )
+                end_date = parsed_date
             except (ValueError, IndexError):
                 logger.warning(f"Date parsing failed for {raw_offer.title}")
 
