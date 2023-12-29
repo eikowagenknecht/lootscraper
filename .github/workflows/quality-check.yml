@@ -32,7 +32,7 @@ jobs:
           python-version: "3.12"
 
       - name: Install Poetry
-        uses: abatilo/actions-poetry@v2.3.0
+        uses: abatilo/actions-poetry@v2.4.0
 
       - name: Configure poetry
         shell: bash
