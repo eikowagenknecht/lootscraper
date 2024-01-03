@@ -36,10 +36,10 @@ class EpicGamesScraper(Scraper):
 
     @staticmethod
     def get_schedule() -> list[schedule.Job]:
-        # Run every thursday at 11:05 US eastern time (new offers are usually
+        # Run every day at 11:05 US eastern time (new offers are usually
         # available then) and as a backup every day at 13:00 US eastern time.
         return [
-            schedule.every().thursday.at("11:05", "US/Eastern"),
+            schedule.every().day.at("11:05", "US/Eastern"),
             schedule.every().day.at("13:00", "US/Eastern"),
         ]
 
