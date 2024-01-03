@@ -72,7 +72,7 @@ async def process_new_offers(
                 nr_of_new_offers += 1
             else:
                 # Update offers that already have been scraped.
-                db.touch_db_offer(existing_entry)
+                db.update_db_offer(existing_entry, scraped_offer)
 
         if new_offer_titles:
             logging.info(
