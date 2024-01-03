@@ -421,9 +421,13 @@ class LootDatabase:
         valid_to: datetime | None,
     ) -> Offer | None:
         """
-        Find an offer by its title and valid_to date. Valid_to is interpreted as
-        "at most 1 day older or 1 day newer" to avoid getting duplicates for offers
-        where the exact end date is not clear (looking at you, Amazon!).
+        Find an offer by its title and valid_to date. Valid_to is interpreted
+        as "at most 1 day older or 1 day newer" to avoid getting duplicates
+        for offers where the exact end date is not clear.
+
+        Offers that previously had no valid_to date but now do have one are
+        considered the same offer because some sites (Steam) add the "valid to"
+        date only when the offer already has been there for a while.
         """
         statement = (
             sa.select(Offer)
@@ -433,15 +437,27 @@ class LootDatabase:
             .where(Offer.title == title)
         )
 
+        # If no valid to date is given in the search criteria, match offers
+        # with any valid to date. This will also match offers that previously
+        # had no valid to date but now do have one. This is necessary to
+        # avoid duplicates for offers that previously had no valid to date.
         if valid_to is None:
-            statement = statement.where(Offer.valid_to.is_(None))  # type: ignore
+            pass
+            # statement = statement.where(Offer.valid_to.is_(None))  # type: ignore
+
+        # If a valid to date is given in the search criteria, match offers
+        # that have the same valid to date or are close to it. Also match
+        # offers that previously had no valid to date.
         else:
             earliest_date = valid_to.replace(tzinfo=timezone.utc) - timedelta(days=1)
             latest_date = valid_to.replace(tzinfo=timezone.utc) + timedelta(days=1)
             statement = statement.where(
-                sa.and_(
-                    Offer.valid_to >= earliest_date,  # type: ignore
-                    Offer.valid_to <= latest_date,  # type: ignore
+                sa.or_(
+                    sa.and_(
+                        Offer.valid_to >= earliest_date,  # type: ignore
+                        Offer.valid_to <= latest_date,  # type: ignore
+                    ),
+                    Offer.valid_to.is_(None),
                 ),
             )
 
@@ -493,29 +509,35 @@ class LootDatabase:
             session.rollback()
             raise
 
-    def update_db_offer(self, db_offer: Offer, new_data: Offer) -> None:
-        db_offer.source = new_data.source
-        db_offer.type = new_data.type
-        db_offer.title = new_data.title
+    def update_db_offer(self, db_offer: Offer, new_offer: Offer) -> None:
+        """
+        Update an offer in the database with new data. This is used to update
+        the offer with the real valid to date after it has been added to the
+        offer.
+        """
+        self.touch_db_offer(db_offer)
 
-        if new_data.seen_first:
-            db_offer.seen_first = new_data.seen_first
-        if new_data.seen_last:
-            db_offer.seen_last = new_data.seen_last
-        if new_data.valid_from:
-            db_offer.valid_from = new_data.valid_from
-        if new_data.valid_to:
-            db_offer.valid_to = new_data.valid_to
+        if db_offer.source != new_offer.source:
+            raise ValueError("Can't change source of offer.")
+        if db_offer.duration != new_offer.duration:
+            raise ValueError("Can't change duration of offer.")
+        if db_offer.type != new_offer.type:
+            raise ValueError("Can't change type of offer.")
 
-        if new_data.rawtext:
-            db_offer.rawtext = new_data.rawtext
-        if new_data.url:
-            db_offer.url = new_data.url
-        if new_data.img_url:
-            db_offer.img_url = new_data.img_url
+        if new_offer.valid_from and not db_offer.valid_from:
+            db_offer.valid_from = new_offer.valid_from
+        if new_offer.valid_to and not db_offer.valid_to:
+            db_offer.valid_to = new_offer.valid_to
 
-        if new_data.game_id:
-            db_offer.game_id = new_data.game_id
+        if new_offer.rawtext and new_offer.rawtext != db_offer.rawtext:
+            db_offer.rawtext = new_offer.rawtext
+        if new_offer.url and not db_offer.url:
+            db_offer.url = new_offer.url
+        if new_offer.img_url and not db_offer.img_url:
+            db_offer.img_url = new_offer.img_url
+
+        if new_offer.game_id and not db_offer.game_id:
+            db_offer.game_id = new_offer.game_id
 
         session: Session = self.Session()
         try:
