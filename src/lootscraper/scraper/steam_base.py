@@ -71,7 +71,7 @@ class SteamBaseScraper(Scraper):
     def get_validtext_locator(self, page: Page) -> Locator:
         raise NotImplementedError("Please implement this method")
 
-    async def read_raw_offer(self, element: Locator) -> SteamRawOffer:
+    async def read_raw_offer(self, element: Locator) -> SteamRawOffer | None:
         title = await element.locator(".title").text_content()
         if title is None:
             raise ValueError("Couldn't find title.")
@@ -79,6 +79,14 @@ class SteamBaseScraper(Scraper):
         appid = await element.get_attribute("data-ds-appid")
         if appid is None:
             raise ValueError(f"Couldn't find appid for {title}.")
+
+        # new_price = await element.locator(".discount_final_price").text_content()
+
+        # logger.info(f"Price seen: {new_price} for {title}")
+
+        # if new_price and "€" in new_price and "0,00" not in new_price:
+        #     logger.warning(f"Price is not free for {title}.")
+        #     return None
 
         url = DETAILS_URL + str(appid)
 
@@ -93,10 +101,22 @@ class SteamBaseScraper(Scraper):
                 raise ValueError(f"Couldn't find image for {title}.")
 
             # Get the resolved text here because the text_content() contains
-            # special characters
-            text = await page.locator(".game_purchase_discount_quantity").inner_text()
-            if text is None:
-                raise ValueError(f"Couldn't find valid date for {title}.")
+            # special characters.
+            # Sometimes this does not exist, when a game is not free any more
+            # or only some DLCs of the game are free.
+            try:
+                text = await page.locator(
+                    ".game_purchase_discount_quantity",
+                ).inner_text()
+                if text is None:
+                    logger.warning(
+                        f"Offer for {title} seems to be broken, skipping it.",
+                    )
+            except Exception:
+                logger.warning(
+                    f"Offer for {title} doesn't contain any free items, skipping it.",
+                )
+                return None
 
         return SteamRawOffer(
             title=title,
