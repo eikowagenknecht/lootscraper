@@ -35,14 +35,13 @@ jobs:
         uses: abatilo/actions-poetry@v2.4.0
 
       - name: Configure poetry
-        shell: bash
-        run: python -m poetry config virtualenvs.in-project true
+        run: poetry config virtualenvs.in-project true
 
       - name: View poetry version
         run: poetry --version
 
       - name: Install dependencies
-        run: python -m poetry install --with dev
+        run: poetry install --with dev
 
       - name: Lint with ruff
         run: poetry run ruff .
