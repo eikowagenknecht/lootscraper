@@ -45,6 +45,16 @@ class IGDBGameInfoTests(unittest.IsolatedAsyncioTestCase):
 
 
 class SteamGameInfoTests(unittest.IsolatedAsyncioTestCase):
+    async def test_steam_appid_resolution_issue_310(self) -> None:
+        async with get_browser_context() as context:
+            expected_id: int = 269270  # LOVE
+            with self.assertNoLogs(level="ERROR"):
+                scraped_id: int = await get_steam_id(
+                    "LOVE",
+                    context=context,
+                )
+            assert expected_id == scraped_id
+
     async def test_steam_appid_resolution(self) -> None:
         async with get_browser_context() as context:
             expected_id: int = 359550  # Tom Clancy's Rainbow Six® Siege

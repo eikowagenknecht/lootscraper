@@ -230,14 +230,14 @@ async def add_game_info(
         # The offer already has a game attached, leave it alone
         return
 
-    # Offer hast no game name, so we can't add any game related information
+    # Offer has no game name, so we can't add any game related information
     if offer.probable_game_name is None:
-        logging.warning(f"Offer {offer} has no game name")
+        logging.warning(f"Offer {offer} has no game name, so we can't add any info")
         return
 
     existing_game: Game | None = None
 
-    # Offer has a name but no game. Try to find a matching entry in our local
+    # Offer has a name but no game. Try to find an exact match in our local
     # database first (prioritize IGDB)
     igdb_id = (
         session.execute(
@@ -247,10 +247,12 @@ async def add_game_info(
         .one_or_none()
     )
 
-    # Use the api if no local entry exists
+    # If there's no exact local match, check the IGDB api
     if igdb_id is None and Config.get().info_igdb:
         igdb_id = await get_igdb_id(offer.probable_game_name)
 
+    # If we found a match, check if we already have a local entry for it, so we
+    # don't have to query the slow Steam API
     if igdb_id is not None:
         existing_game = (
             session.execute(select(Game).where(Game.igdb_id == igdb_id))
@@ -262,7 +264,7 @@ async def add_game_info(
         offer.game = existing_game
         return
 
-    # No IGDB match, try to find a matching entry via Steam
+    # No local entry yet, try to find a matching entry via Steam
     steam_id = (
         session.execute(
             select(SteamInfo.id).where(SteamInfo.name == offer.probable_game_name),
@@ -271,7 +273,7 @@ async def add_game_info(
         .one_or_none()
     )
 
-    # Use the api if no local entry exists
+    # Use the Steam api if no local entry exists
     if steam_id is None and Config.get().info_steam:
         steam_id = await get_steam_id(offer.probable_game_name, context=context)
 
@@ -291,12 +293,36 @@ async def add_game_info(
         # No game found, nothing further to do
         return
 
-    # We have some new match. Create a new game and attach it to the offer
+    # We have some new match. Get additional details from the APIs
+    igdb_info = (
+        await get_igdb_details(id_=igdb_id)
+        if igdb_id and Config.get().info_igdb
+        else None
+    )
+    steam_info = (
+        await get_steam_details(id_=steam_id, context=context)
+        if steam_id and Config.get().info_steam
+        else None
+    )
+
+    # If one of the two APIs returned an exact match and the other one didn't,
+    # only use the exact match. Otherwise, use both (as available).
     offer.game = Game()
-    if igdb_id and Config.get().info_igdb:
-        offer.game.igdb_info = await get_igdb_details(id_=igdb_id)
-    if steam_id and Config.get().info_steam:
-        offer.game.steam_info = await get_steam_details(id_=steam_id, context=context)
+    igdb_exact_match = (
+        igdb_info
+        and igdb_info.name
+        and igdb_info.name.lower() == offer.probable_game_name.lower()
+    )
+    steam_exact_match = (
+        steam_info
+        and steam_info.name
+        and steam_info.name.lower() == offer.probable_game_name.lower()
+    )
+
+    if igdb_info and (igdb_exact_match or not steam_exact_match):
+        offer.game.igdb_info = igdb_info
+    if steam_info and (steam_exact_match or not igdb_exact_match):
+        offer.game.steam_info = steam_info
 
 
 def log_new_offer(offer: Offer) -> None:
