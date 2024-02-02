@@ -33,34 +33,16 @@ class AmazonGamesScraper(AmazonBaseScraper):
         ]
 
     async def page_loaded_hook(self, page: Page) -> None:
+        # Switch to the "Games" tab
+        games_tab = page.locator('button[data-a-target="offer-filter-button-Game"]')
+        await games_tab.click()
+
         await Scraper.scroll_element_to_bottom(page, "root")
-
-        # Scroll through the carousel to load all offers
-        for _ in range(10):
-            next_button = page.locator(
-                '[data-a-target="grid-carousel-next-arrow-container"]',
-            )
-
-            if await next_button.is_disabled():
-                break
-
-            await next_button.click()
 
     async def read_raw_offer(
         self,
         element: Locator,
     ) -> AmazonRawOffer:
-        # Rescroll to the right again (if it got lost)
-        for _ in range(10):
-            next_button = element.page.locator(
-                '[data-a-target="grid-carousel-next-arrow-container"]',
-            )
-
-            if await next_button.is_disabled():
-                break
-
-            await next_button.click()
-
         return await self.read_base_raw_offer(element)
 
     def normalize_offer(self, raw_offer: RawOffer) -> Offer:
