@@ -70,18 +70,16 @@ class EpicGamesScraper(Scraper):
         await element.scroll_into_view_if_needed()
 
         title = await element.locator(
-            '[data-testid="offer-title-info-title"] div',
+            '//span[text()="Free Now - "]/ancestor::div[2]/descendant::span[1]',
         ).text_content()
         if title is None:
             raise ValueError("Couldn't find title.")
 
-        # For current offers, the date is included twice but only means the enddate
-        # format 2022-02-24T16:00:00.000Z
-        valid_to = (
-            await element.locator('[data-testid="offer-title-info-subtitle"] time')
-            .nth(1)
-            .get_attribute("datetime")
-        )
+        # For current offers, the date is included twice but both mean the enddate
+        # Format: 2022-02-24T16:00:00.000Z
+        valid_to = await element.locator(
+            '//span[text()="Free Now - "]/time[1]',
+        ).get_attribute("datetime")
         if valid_to is None:
             raise ValueError(f"Couldn't find valid to for {title}.")
 
