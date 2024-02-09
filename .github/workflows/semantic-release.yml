@@ -43,7 +43,7 @@ jobs:
           python-version: "3.12"
 
       - name: Semantic Release
-        uses: python-semantic-release/python-semantic-release@v9.0.1
+        uses: python-semantic-release/python-semantic-release@v9.0.3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           changelog: "false"
