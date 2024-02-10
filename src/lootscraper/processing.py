@@ -146,7 +146,7 @@ async def action_generate_feed(db: LootDatabase) -> None:
 
         old_hash = hash_file(feed_file)
         await generate_feed(
-            offers=filtered_offers,
+            offers=filtered_active_offers,
             file=feed_file,
             author_name=cfg.feed_author_name,
             author_web=cfg.feed_author_web,
@@ -187,7 +187,7 @@ async def action_generate_feed(db: LootDatabase) -> None:
     if any_feed_changed:
         feed_file = Config.data_path() / Path(cfg.feed_file_prefix + ".xml")
         await generate_feed(
-            offers=all_offers,
+            offers=active_offers,
             file=feed_file,
             author_name=cfg.feed_author_name,
             author_web=cfg.feed_author_web,
