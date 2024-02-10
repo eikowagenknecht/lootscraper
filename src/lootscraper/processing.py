@@ -180,6 +180,23 @@ async def action_generate_feed(db: LootDatabase) -> None:
             duration=duration,
         )
 
+        html_file_all = Config.data_path() / Path(
+            cfg.feed_file_prefix + feed_file_core + "_all.html",
+        )
+
+        # Also generate a full html version of the feed
+        generate_html(
+            offers=filtered_offers,
+            file=html_file_all,
+            author_name=cfg.feed_author_name,
+            author_web=cfg.feed_author_web,
+            author_mail=cfg.feed_author_email,
+            feed_id_prefix=cfg.feed_id_prefix,
+            source=source,
+            type_=type_,
+            duration=duration,
+        )
+
         if feed_changed and cfg.upload_to_ftp:
             await asyncio.to_thread(upload_to_server, feed_file.with_suffix(".html"))
 
@@ -197,7 +214,6 @@ async def action_generate_feed(db: LootDatabase) -> None:
             feed_id_prefix=cfg.feed_id_prefix,
         )
 
-        # Also generate a html version of the feed
         generate_html(
             offers=active_offers,
             file=feed_file.with_suffix(".html"),
@@ -206,6 +222,19 @@ async def action_generate_feed(db: LootDatabase) -> None:
             author_mail=cfg.feed_author_email,
             feed_id_prefix=cfg.feed_id_prefix,
         )
+
+        html_file_all = Config.data_path() / Path(cfg.feed_file_prefix + "_all.html")
+
+        # Also generate a full html version of the feed
+        generate_html(
+            offers=all_offers,
+            file=html_file_all,
+            author_name=cfg.feed_author_name,
+            author_web=cfg.feed_author_web,
+            author_mail=cfg.feed_author_email,
+            feed_id_prefix=cfg.feed_id_prefix,
+        )
+
         if cfg.upload_to_ftp:
             await asyncio.to_thread(upload_to_server, feed_file_base)
             await asyncio.to_thread(
