@@ -9,7 +9,14 @@ You like getting games for free but you *don’t* like having to keep track of t
 
 ## Public feeds / channels / bots
 
-Let's face it, you're probably not here because you're interested in the technical details of how this works. You just want free games. And that's fine. So without further ado, here's where to find them!
+Let's face it, you're probably not here because you're interested in the technical details of how this works. You just want free games. And that's fine. So without further ado, here's where to find them! You have the following options:
+
+- [Telegram channels](#telegram-channels)
+- [Telegram bot](#telegram-bot)
+- [RSS feeds](#rss-feeds)
+- [E-Mail](#e-mail)
+- [Discord](#discord)
+- [HTML pages](#html-pages)
 
 ### Telegram channels
 
@@ -39,7 +46,7 @@ This is what it currently looks like in Telegram:
 
 ### RSS feeds
 
-Prefer the anonymity and manageability of RSS feeds? Sure. You can use the links below.
+Prefer the anonymity and manageability of RSS feeds? Sure. You can use the links below. These feeds contain all active offers.
 
 - Amazon Prime ([games](https://feed.phenx.de/lootscraper_amazon_game.xml) and [ingame loot](https://feed.phenx.de/lootscraper_amazon_loot.xml))
 - [Epic Games](https://feed.phenx.de/lootscraper_epic_game.xml)
@@ -51,13 +58,33 @@ Prefer the anonymity and manageability of RSS feeds? Sure. You can use the links
 - [Apple iPhone games](https://feed.phenx.de/lootscraper_apple_game.xml)
 - [Google Android games](https://feed.phenx.de/lootscraper_google_game.xml)
 
-If you want *everything* in one feed, use [this link](https://feed.phenx.de/lootscraper.xml). If you want to get the offers by email instead, you can use free services like <https://blogtrottr.com/> or <https://feedsub.com/> to convert from RSS to email.
+You can also have *all sources* in [one feed](https://feed.phenx.de/lootscraper.xml).
 
 This is how it looks in Feedly:
 
 ![image](https://user-images.githubusercontent.com/1475672/161056100-2fcf005f-19a9-4279-a2d3-5a90855426ff.png)
 
-### Static HTML pages
+### E-Mail
+
+If you want to get the offers by email, you can use free services like [Blogtrottr](https://blogtrottr.com/) or [Feedsub](https://feedsub.com/) to convert from RSS to email.
+
+### Discord
+
+If you want to get the offers in a Discord channel, you can use the free [MonitoRSS](https://monitorss.xyz/) bot to post them there for you. I suggest the following settings:
+
+- **Feed URL**: Use the RSS feed links above
+- **Content**:
+
+    ```md
+    **{{title}}**
+
+    {{description}}
+    ```
+
+- **Button**: Label: `Claim`, URL: `{{link}}`
+- **Embed**: Just select `Image URL` with the `{{extracted::atom:content__#::image1}}` variable
+
+### HTML pages
 
 Want to check a website for new deals once in a while, but not be bothered by push notifications? Here are the latest offers in a nice and clean HTML page:
 
@@ -71,15 +98,37 @@ Want to check a website for new deals once in a while, but not be bothered by pu
 - [Apple iPhone games](https://feed.phenx.de/lootscraper_apple_game.html)
 - [Google Android games](https://feed.phenx.de/lootscraper_google_game.html)
 
-If you want *everything* on one giant page, use [this link](https://feed.phenx.de/lootscraper.html).
+You can also have *all sources* on [one page](https://feed.phenx.de/lootscraper.html).
+
+This is how it looks like:
+
+![image](https://github.com/eikowagenknecht/lootscraper/assets/1475672/845042a8-372d-4f4e-9d01-d9fdfec77038)
+
+### HTML archive
+
+There is also an archive version of the HTML pages. These contain all offers that have been discovered so far, including expired ones.
+
+- Amazon Prime ([games](https://feed.phenx.de/lootscraper_amazon_game_all.html) and [ingame loot](https://feed.phenx.de/lootscraper_amazon_loot_all.html))
+- [Epic Games](https://feed.phenx.de/lootscraper_epic_game_all.html)
+- [Gog games](https://feed.phenx.de/lootscraper_gog_game_all.html)
+- [Humble games](https://feed.phenx.de/lootscraper_humble_game_all.html)
+- [itch.io games](https://feed.phenx.de/lootscraper_itch_game_all.html)
+- Steam ([games](https://feed.phenx.de/lootscraper_steam_game_all.html) and [ingame loot](https://feed.phenx.de/lootscraper_steam_loot_all.html))
+- [Ubisoft games](https://feed.phenx.de/lootscraper_ubisoft_game_all.html)
+- [Apple iPhone games](https://feed.phenx.de/lootscraper_apple_game_all.html)
+- [Google Android games](https://feed.phenx.de/lootscraper_google_game_all.html)
+
+You can also have *all sources* on [one page](https://feed.phenx.de/lootscraper_all.html).
+
+This is how it looks like:
 
 ![image](https://github.com/eikowagenknecht/lootscraper/assets/1475672/845042a8-372d-4f4e-9d01-d9fdfec77038)
 
 ## How it works
 
-This Python (3.11+) application uses Playwright to automatically visit websites with free game-related offers (see below for the supported sources) and then puts the collected information neatly into RSS feeds and a Telegram bot. 
+This Python (3.11+) application uses Playwright to automatically visit websites with free game-related offers (see below for the supported sources) and then puts the collected information neatly into RSS feeds and a Telegram bot.
 
-If you encounter any problems feel free to open an issue here and I'll do my best to help. I'd also love to hear your feature requests! This is also tracked in the Github issues.
+If you encounter any problems feel free to open an issue here and I'll do my best to help. I'd also love to hear your feature requests! This is also tracked in the GitHub issues.
 
 ### For power users and developers
 
