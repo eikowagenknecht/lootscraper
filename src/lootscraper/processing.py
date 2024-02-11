@@ -199,6 +199,7 @@ async def action_generate_feed(db: LootDatabase) -> None:
 
         if feed_changed and cfg.upload_to_ftp:
             await asyncio.to_thread(upload_to_server, feed_file.with_suffix(".html"))
+            await asyncio.to_thread(upload_to_server, html_file_all)
 
     # Generate and upload cumulated feed
     if any_feed_changed:
@@ -241,6 +242,7 @@ async def action_generate_feed(db: LootDatabase) -> None:
                 upload_to_server,
                 feed_file_base.with_suffix(".html"),
             )
+            await asyncio.to_thread(upload_to_server, html_file_all)
         else:
             logging.info("Skipping upload, disabled")
 
