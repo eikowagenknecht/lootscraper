@@ -80,7 +80,11 @@ Run: `poetry run <package>`
 
 ### Update dependencies
 
-Update poetry itself: `poetry self update`
+Update poetry itself:
+
+- `(Invoke-WebRequest -Uri https://install.python-poetry.org -UseBasicParsing).Content | py - --uninstall`
+- `(Invoke-WebRequest -Uri https://install.python-poetry.org -UseBasicParsing).Content | py -`
+
 Install tool: `poetry self add poetry-plugin-up` (only once)
 Update all dependencies in `pyproject.toml`: `poetry up --with dev`
 Install new dependencies locally: `poetry install --with dev`
