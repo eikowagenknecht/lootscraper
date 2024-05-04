@@ -32,7 +32,7 @@ class GogGamesScraper(GogBaseScraper):
         return OFFER_URL
 
     def get_page_ready_selector(self) -> str:
-        return ".content.cf"
+        return ".wrapper"
 
     def get_offer_handlers(self, page: Page) -> list[OfferHandler]:
         return [
