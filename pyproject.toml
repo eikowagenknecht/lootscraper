@@ -147,7 +147,7 @@ preview = true
 convention = "pep257"
 
 [tool.mypy]
-python_version = "3.11"
+python_version = "3.12"
 # ignore imports from 3rd party libraries where no stubs are available
 ignore_missing_imports = true
 warn_unused_configs = true
