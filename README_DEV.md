@@ -4,7 +4,7 @@ Most people will probably just use the feeds and bot I provide, so there is no n
 
 ## Run this locally
 
-So if you actually want to run this yourself, you first need an installed Python 3.11+ environment. The commands below are for Windows. If you use Linux, you probably know the right substitutes.
+So if you actually want to run this yourself, you first need an installed Python 3.12+ environment. The commands below are for Windows. If you use Linux, you probably know the right substitutes.
 
 - Download repository
 - Install poetry (<https://python-poetry.org/>)

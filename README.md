@@ -126,7 +126,7 @@ This is how it looks like:
 
 ## How it works
 
-This Python (3.11+) application uses Playwright to automatically visit websites with free game-related offers (see below for the supported sources) and then puts the collected information neatly into RSS feeds and a Telegram bot.
+This Python (3.12+) application uses Playwright to automatically visit websites with free game-related offers (see below for the supported sources) and then puts the collected information neatly into RSS feeds and a Telegram bot.
 
 If you encounter any problems feel free to open an issue here and I'll do my best to help. I'd also love to hear your feature requests! This is also tracked in the GitHub issues.
 
