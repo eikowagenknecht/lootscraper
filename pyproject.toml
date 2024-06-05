@@ -81,6 +81,8 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.ruff]
 # See rules here: https://beta.ruff.rs/docs/rules/
+
+[tool.ruff.lint]
 select = [
     "F",
     "W",
@@ -139,12 +141,12 @@ ignore = [
     # "ISC001", # Single line concatenation (incompatible with ruff format)
 ]
 
+[tool.ruff.lint.pydocstyle]
+convention = "pep257"
+
 [tool.ruff.format]
 line-ending = "lf"
 preview = true
-
-[tool.ruff.pydocstyle]
-convention = "pep257"
 
 [tool.mypy]
 python_version = "3.12"
