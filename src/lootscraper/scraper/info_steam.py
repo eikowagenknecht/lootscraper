@@ -78,12 +78,12 @@ async def get_steam_id(
                     best_match is None or score > best_match.score
                 ):
                     logger.debug(
-                        f"Found match {title} with a score of {(score*100):.0f} %.",
+                        f"Found match {title} with a score of {(score * 100):.0f} %.",
                     )
                     best_match = SteamEntry(int(appid), score, title)
                 else:
                     logger.debug(
-                        f"Ignoring {title} as it's score of {(score*100):.0f} % "
+                        f"Ignoring {title} as it's score of {(score * 100):.0f} % "
                         "is too low.",
                     )
             except Error as e:
@@ -101,7 +101,7 @@ async def get_steam_id(
 
     logger.info(
         f"{best_match.title} ({best_match.appid}) is the best match "
-        f"({(best_match.score*100):.0f} %).",
+        f"({(best_match.score * 100):.0f} %).",
     )
     return best_match.appid
 

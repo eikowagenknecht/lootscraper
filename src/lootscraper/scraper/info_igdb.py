@@ -109,10 +109,10 @@ async def get_igdb_id(search_string: str) -> int | None:
             best_match is None or score > best_match.score
         ):
             best_match = IgdbEntry(entry["id"], score, title)
-            logger.debug(f"Found match {title} with a score of {(score*100):.0f} %.")
+            logger.debug(f"Found match {title} with a score of {(score * 100):.0f} %.")
         else:
             logger.debug(
-                f"Ignoring {title} as it's score of {(score*100):.0f} % is too low.",
+                f"Ignoring {title} as it's score of {(score * 100):.0f} % is too low.",
             )
 
     if best_match is None:
@@ -121,7 +121,7 @@ async def get_igdb_id(search_string: str) -> int | None:
 
     logger.info(
         f"{best_match.title} ({best_match.igdb_id}) is the best match "
-        f"({(best_match.score*100):.0f} %).",
+        f"({(best_match.score * 100):.0f} %).",
     )
     return best_match.igdb_id
 
