@@ -43,7 +43,7 @@ scalene = "^1.5.41"
 pytest = "^8.2.2"
 # Python standard
 setuptools = "^70.0.0"
-wheel = "^0.41.3"
+wheel = "^0.43.0"
 
 [tool.semantic_release]
 version_toml = ["pyproject.toml:tool.poetry.version"]
