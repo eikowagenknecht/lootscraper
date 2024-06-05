@@ -21,7 +21,7 @@ updates:
       prefix: "ci"
       include: "scope"
 
-  # Check for updates to Docker Images every weekday
+  # Check for updates to Docker images every weekday
   - package-ecosystem: "docker"
     directory: "/"
     schedule:
