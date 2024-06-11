@@ -767,13 +767,13 @@ six = ">=1.5"
 
 [[package]]
 name = "python-telegram-bot"
-version = "21.2"
+version = "21.3"
 description = "We have made you a wrapper you can't refuse"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "python-telegram-bot-21.2.tar.gz", hash = "sha256:2ebb462a98f502727d108c00bb50c513a68ddaf9545298c42f13996a9acf8354"},
-    {file = "python_telegram_bot-21.2-py3-none-any.whl", hash = "sha256:af0f45d61521126de98f5bdc8a75a9df8b93d0c35d18b018181ca7648a38b017"},
+    {file = "python-telegram-bot-21.3.tar.gz", hash = "sha256:1be3c8b6f2b7354418109daa3f23c522e82ed22e7fc904346bee0c7b4aab52ae"},
+    {file = "python_telegram_bot-21.3-py3-none-any.whl", hash = "sha256:8f575e6da903edd1e78967b5b481455ee6b27f2804d2384029177eab165f2e93"},
 ]
 
 [package.dependencies]
@@ -1074,4 +1074,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.12.0"
-content-hash = "4c199b7228223bb547a9436d292b88feb1e9182b5a7c8c1a6d692d73fb02c86c"
+content-hash = "f52ac17809cdb79c650b8a3c7cb3806493587a63c1e1f25f889c9262153faac6"
