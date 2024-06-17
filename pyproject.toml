@@ -38,7 +38,7 @@ ruff = "^0.4.8"
 # Type checking
 mypy = "^1.10.0"
 # Profiling
-scalene = "^1.5.41"
+scalene = "^1.5.42"
 # Testing
 pytest = "^8.2.2"
 # Python standard
