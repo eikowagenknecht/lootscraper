@@ -42,7 +42,7 @@ scalene = "^1.5.42"
 # Testing
 pytest = "^8.2.2"
 # Python standard
-setuptools = "^70.0.0"
+setuptools = "^70.1.0"
 wheel = "^0.43.0"
 
 [tool.semantic_release]
