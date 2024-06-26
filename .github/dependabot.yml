@@ -10,6 +10,15 @@ updates:
     commit-message:
       prefix: "chore"
       include: "scope"
+    groups:
+      "pip patches":
+        patterns:
+          - ".*"
+        update-types: ["patch"]
+      "pip minor updates":
+        patterns:
+          - ".*"
+        update-types: ["minor"]
 
   # Check for updates to GitHub Actions every weekday
   - package-ecosystem: "github-actions"
