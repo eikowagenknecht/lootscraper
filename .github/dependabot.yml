@@ -11,14 +11,13 @@ updates:
       prefix: "chore"
       include: "scope"
     groups:
-      "pip patches":
+      pip-minor-and-patch:
+        applies-to: version-updates
         patterns:
-          - ".*"
-        update-types: ["patch"]
-      "pip minor updates":
-        patterns:
-          - ".*"
-        update-types: ["minor"]
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
 
   # Check for updates to GitHub Actions every weekday
   - package-ecosystem: "github-actions"
