@@ -108,4 +108,4 @@ For profiling, run `scalene -m lootscraper`.
   - `chore`: Maintenance tasks, dependency updates and other non-user-facing changes
   - `ci`: Changes to the CI configuration files and scripts (GitHub Actions)
   - `revert`: Reverts a previous commit. In the body, it should say: `This reverts commit <hash>.`
-- Run ruff (`poetry run ruff ckeck . --fix`) and ruff format (`poetry run ruff format .`) before committing.
+- Run ruff (`poetry run ruff check . --fix`) and ruff format (`poetry run ruff format .`) before committing.

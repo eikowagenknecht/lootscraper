@@ -44,7 +44,7 @@ jobs:
         run: poetry install --with dev
 
       - name: Lint with ruff
-        run: poetry run ruff ckeck .
+        run: poetry run ruff check .
 
       - name: Check format with ruff
         run: poetry run ruff format . --check
