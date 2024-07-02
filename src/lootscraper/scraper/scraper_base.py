@@ -306,13 +306,13 @@ class Scraper:
             re.IGNORECASE,
         ):
             return True
-        if re.search(
-            r"^[\W]?teaser[\W]|\Wteaser\W?((.*version.*)|(\(.*\)))?$",
-            title,
-            re.IGNORECASE,
-        ):
-            return True
-        return False
+        return bool(
+            re.search(
+                "^[\\W]?teaser[\\W]|\\Wteaser\\W?((.*version.*)|(\\(.*\\)))?$",
+                title,
+                re.IGNORECASE,
+            ),
+        )
 
     @staticmethod
     def is_prerelease(title: str) -> bool:
@@ -343,9 +343,7 @@ class Scraper:
         ):
             return True
         # Used by GOG sometimes
-        if "Playable Teaser" in title:
-            return True
-        return False
+        return "Playable Teaser" in title
 
     @staticmethod
     def is_fake_always(valid_to: datetime | None) -> bool:

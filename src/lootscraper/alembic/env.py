@@ -35,10 +35,7 @@ target_metadata = database.Base.metadata
 
 def include_object(object_, name, type_, reflected, compare_to) -> bool:  # type: ignore  # noqa
     """Define whether to include this table or not."""
-    if type_ == "table" and (name in IGNORE_TABLES):
-        return False
-
-    return True
+    return not (type_ == "table" and name in IGNORE_TABLES)
 
 
 def run_migrations_offline() -> None:
