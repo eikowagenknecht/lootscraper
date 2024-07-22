@@ -34,15 +34,15 @@ optional = true
 
 [tool.poetry.group.dev.dependencies]
 # Linting and formatting
-ruff = "^0.5.2"
+ruff = "^0.5.4"
 # Type checking
-mypy = "^1.10.1"
+mypy = "^1.11.0"
 # Profiling
 scalene = "^1.5.42.2"
 # Testing
-pytest = "^8.2.2"
+pytest = "^8.3.1"
 # Python standard
-setuptools = "^71.0.1"
+setuptools = "^71.1.0"
 wheel = "^0.43.0"
 
 [tool.semantic_release]
