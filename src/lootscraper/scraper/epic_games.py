@@ -54,7 +54,7 @@ class EpicGamesScraper(Scraper):
         return OFFER_URL
 
     def get_page_ready_selector(self) -> str:
-        return "h2:has-text('Free Games')"
+        return "h5:has-text('Free Games')"
 
     def get_offer_handlers(self, page: Page) -> list[OfferHandler]:
         return [
@@ -70,7 +70,7 @@ class EpicGamesScraper(Scraper):
         await element.scroll_into_view_if_needed()
 
         title = await element.locator(
-            '//span[text()="Free Now - "]/ancestor::div[2]/descendant::span[1]',
+            "//h6",
         ).text_content()
         if title is None:
             raise ValueError("Couldn't find title.")
