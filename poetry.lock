@@ -684,18 +684,18 @@ files = [
 
 [[package]]
 name = "playwright"
-version = "1.45.1"
+version = "1.46.0"
 description = "A high-level API to automate web browsers"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "playwright-1.45.1-py3-none-macosx_10_13_x86_64.whl", hash = "sha256:360607e37c00cdf97c74317f010e106ac4671aeaec6a192431dd71a30941da9d"},
-    {file = "playwright-1.45.1-py3-none-macosx_11_0_arm64.whl", hash = "sha256:20adc2abf164c5e8969f9066011b152e12c210549edec78cd05bd0e9cf4135b7"},
-    {file = "playwright-1.45.1-py3-none-macosx_11_0_universal2.whl", hash = "sha256:5f047cdc6accf4c7084dfc7587a2a5ef790cddc44cbb111e471293c5a91119db"},
-    {file = "playwright-1.45.1-py3-none-manylinux1_x86_64.whl", hash = "sha256:f06f6659abe0abf263e5f6661d379fbf85c112745dd31d82332ceae914f58df7"},
-    {file = "playwright-1.45.1-py3-none-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:87dc3b3d17e12c68830c29b7fdf5e93315221bbb4c6090e83e967e154e2c1828"},
-    {file = "playwright-1.45.1-py3-none-win32.whl", hash = "sha256:2b8f517886ef1e2151982f6e7be84be3ef7d8135bdcf8ee705b4e4e99566e866"},
-    {file = "playwright-1.45.1-py3-none-win_amd64.whl", hash = "sha256:0d236cf427784e77de352ba1b7d700693c5fe455b8e5f627f6d84ad5b84b5bf5"},
+    {file = "playwright-1.46.0-py3-none-macosx_10_13_x86_64.whl", hash = "sha256:fa60b95c16f6ce954636229a6c9dd885485326bca52d5ba20d02c0bc731a2bbb"},
+    {file = "playwright-1.46.0-py3-none-macosx_11_0_arm64.whl", hash = "sha256:73dcfc24834f4d004bc862ed0d74b4c1406793a8164734238ad035356fddc8ac"},
+    {file = "playwright-1.46.0-py3-none-macosx_11_0_universal2.whl", hash = "sha256:f5acfec1dbdc84d02dc696a17a344227e66c91413eab2036428dab405f195b82"},
+    {file = "playwright-1.46.0-py3-none-manylinux1_x86_64.whl", hash = "sha256:3b418509f45879f1403d070858657a39bd0b333b23d92c37355682b671726df9"},
+    {file = "playwright-1.46.0-py3-none-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:23580f6a3f99757bb9779d29be37144cb9328cd9bafa178e6db5b3ab4b7faf4c"},
+    {file = "playwright-1.46.0-py3-none-win32.whl", hash = "sha256:85f44dd32a23d02850f0ff4dafe51580e5199531fff5121a62489d9838707782"},
+    {file = "playwright-1.46.0-py3-none-win_amd64.whl", hash = "sha256:f14a7fd7e24e954eec6ce61d787d499e41937ade811a0818e9a088aabe28ebb6"},
 ]
 
 [package.dependencies]
@@ -947,18 +947,18 @@ timezone = ["pytz"]
 
 [[package]]
 name = "setuptools"
-version = "72.1.0"
+version = "72.2.0"
 description = "Easily download, build, install, upgrade, and uninstall Python packages"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "setuptools-72.1.0-py3-none-any.whl", hash = "sha256:5a03e1860cf56bb6ef48ce186b0e557fdba433237481a9a625176c2831be15d1"},
-    {file = "setuptools-72.1.0.tar.gz", hash = "sha256:8d243eff56d095e5817f796ede6ae32941278f542e0f941867cc05ae52b162ec"},
+    {file = "setuptools-72.2.0-py3-none-any.whl", hash = "sha256:f11dd94b7bae3a156a95ec151f24e4637fb4fa19c878e4d191bfb8b2d82728c4"},
+    {file = "setuptools-72.2.0.tar.gz", hash = "sha256:80aacbf633704e9c8bfa1d99fa5dd4dc59573efcf9e4042c13d3bcef91ac2ef9"},
 ]
 
 [package.extras]
 core = ["importlib-metadata (>=6)", "importlib-resources (>=5.10.2)", "jaraco.text (>=3.7)", "more-itertools (>=8.8)", "ordered-set (>=3.1.1)", "packaging (>=24)", "platformdirs (>=2.6.2)", "tomli (>=2.0.1)", "wheel (>=0.43.0)"]
-doc = ["furo", "jaraco.packaging (>=9.3)", "jaraco.tidelift (>=1.4)", "pygments-github-lexers (==0.0.5)", "pyproject-hooks (!=1.1)", "rst.linker (>=1.9)", "sphinx (>=3.5)", "sphinx-favicon", "sphinx-inline-tabs", "sphinx-lint", "sphinx-notfound-page (>=1,<2)", "sphinx-reredirects", "sphinxcontrib-towncrier"]
+doc = ["furo", "jaraco.packaging (>=9.3)", "jaraco.tidelift (>=1.4)", "pygments-github-lexers (==0.0.5)", "pyproject-hooks (!=1.1)", "rst.linker (>=1.9)", "sphinx (>=3.5)", "sphinx-favicon", "sphinx-inline-tabs", "sphinx-lint", "sphinx-notfound-page (>=1,<2)", "sphinx-reredirects", "sphinxcontrib-towncrier", "towncrier (<24.7)"]
 test = ["build[virtualenv] (>=1.0.3)", "filelock (>=3.4.0)", "importlib-metadata", "ini2toml[lite] (>=0.14)", "jaraco.develop (>=7.21)", "jaraco.envs (>=2.2)", "jaraco.path (>=3.2.0)", "jaraco.test", "mypy (==1.11.*)", "packaging (>=23.2)", "pip (>=19.1)", "pyproject-hooks (!=1.1)", "pytest (>=6,!=8.1.*)", "pytest-checkdocs (>=2.4)", "pytest-cov", "pytest-enabler (>=2.2)", "pytest-home (>=0.5)", "pytest-mypy", "pytest-perf", "pytest-ruff (<0.4)", "pytest-ruff (>=0.2.1)", "pytest-ruff (>=0.3.2)", "pytest-subprocess", "pytest-timeout", "pytest-xdist (>=3)", "tomli", "tomli-w (>=1.0.0)", "virtualenv (>=13.0.0)", "wheel"]
 
 [[package]]
@@ -1119,4 +1119,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.12.0"
-content-hash = "d6791b79c540d52e107682e3ceac24fd3722c1c946f0e63c0e823c47d146ba06"
+content-hash = "2bf4bef2cc3c14e6934cf517903009def411f416e3fafcdcdafc9d184e941765"
