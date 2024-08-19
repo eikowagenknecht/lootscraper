@@ -34,11 +34,11 @@ optional = true
 
 [tool.poetry.group.dev.dependencies]
 # Linting and formatting
-ruff = "^0.5.7"
+ruff = "^0.6.1"
 # Type checking
 mypy = "^1.11.1"
 # Profiling
-scalene = "^1.5.43.2"
+scalene = "^1.5.44"
 # Testing
 pytest = "^8.3.2"
 # Python standard
