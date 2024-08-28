@@ -19,7 +19,7 @@ python = "^3.12.0"
 alembic = "^1.13.2"
 feedgen = "^1.0.0"
 humanize = "^4.10.0"
-httpx = "^0.27.0"
+httpx = "^0.27.2"
 python-telegram-bot = { version = "^21.4", extras = ["rate-limiter"] }
 playwright = "^1.46.0"
 SQLAlchemy = "^2.0.32"
@@ -34,11 +34,11 @@ optional = true
 
 [tool.poetry.group.dev.dependencies]
 # Linting and formatting
-ruff = "^0.5.7"
+ruff = "^0.6.2"
 # Type checking
-mypy = "^1.11.1"
+mypy = "^1.11.2"
 # Profiling
-scalene = "^1.5.43.2"
+scalene = "^1.5.44.1"
 # Testing
 pytest = "^8.3.2"
 # Python standard
