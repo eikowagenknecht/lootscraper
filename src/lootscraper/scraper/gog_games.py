@@ -3,7 +3,6 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass
 from datetime import datetime, timezone
-from os import link
 
 from playwright.async_api import Error, Locator, Page
 
