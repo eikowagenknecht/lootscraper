@@ -11,6 +11,7 @@ So if you actually want to run this yourself, you first need an installed Python
 - Create virtual environment (`python -m venv .venv`)
 - Activate virtual environment (`./.venv/Scripts/Activate`)
 - Install the required packages (`poetry install`)
+- Install playwright browser (`playwright install chrome`)
 - Run (`poetry run lootscraper`)
 
 ### Settings

@@ -36,9 +36,9 @@ optional = true
 # Linting and formatting
 ruff = "^0.5.7"
 # Type checking
-mypy = "^1.11.1"
+mypy = "^1.11.2"
 # Profiling
-scalene = "^1.5.43.2"
+scalene = "^1.5.44.1"
 # Testing
 pytest = "^8.3.2"
 # Python standard
