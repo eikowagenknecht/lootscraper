@@ -3,6 +3,7 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass
 from datetime import datetime, timezone
+from os import link
 
 from playwright.async_api import Error, Locator, Page
 
@@ -47,6 +48,11 @@ class GogGamesScraper(GogBaseScraper):
                     has=page.locator('[ng-if="tile.isFreeVisible"]'),
                 ),
                 self.read_raw_offer_v2,
+                self.normalize_offer,
+            ),
+            OfferHandler(
+                page.locator("giveaway"),
+                self.read_raw_offer_v3,
                 self.normalize_offer,
             ),
         ]
@@ -102,6 +108,19 @@ class GogGamesScraper(GogBaseScraper):
             return await self.read_offer_from_details_page(url)
         except Error:
             logger.warning("Could not read url for GOG variant 2.")
+            return None
+
+    async def read_raw_offer_v3(
+        self,
+        element: Locator,
+    ) -> GogRawOffer | None:
+        try:
+            link = element.locator("a.giveaway__overlay-link")
+            href = str(await link.get_attribute("href"))
+            url = href if href.startswith("http") else BASE_URL + href
+            return await self.read_offer_from_details_page(url)
+        except Error as err:
+            logger.warning(f"Could not read url for GOG variant 3 ({err}).")
             return None
 
     async def read_offer_from_details_page(
