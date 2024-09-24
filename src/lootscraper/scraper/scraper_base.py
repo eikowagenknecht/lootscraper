@@ -8,7 +8,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from playwright.async_api import BrowserContext, Error, Locator, Mouse, Page
+from playwright.async_api import BrowserContext, Error, Locator, Page
 
 from lootscraper.browser import get_new_page
 from lootscraper.common import Category, OfferDuration, OfferType, Source
