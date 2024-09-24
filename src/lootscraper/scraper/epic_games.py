@@ -54,7 +54,7 @@ class EpicGamesScraper(Scraper):
         return OFFER_URL
 
     def get_page_ready_selector(self) -> str:
-        return "h5:has-text('Free Games')"
+        return "h1"
 
     def get_offer_handlers(self, page: Page) -> list[OfferHandler]:
         return [
@@ -64,6 +64,10 @@ class EpicGamesScraper(Scraper):
                 self.normalize_offer,
             ),
         ]
+
+    async def page_loaded_hook(self, page: Page) -> None:
+        # Scroll to bottom to make free games section load
+        await Scraper.scroll_page_to_bottom(page)
 
     async def read_raw_offer(self, element: Locator) -> RawOffer:
         # Scroll element into view to load img url

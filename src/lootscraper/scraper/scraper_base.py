@@ -8,7 +8,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from playwright.async_api import BrowserContext, Error, Locator, Page
+from playwright.async_api import BrowserContext, Error, Locator, Mouse, Page
 
 from lootscraper.browser import get_new_page
 from lootscraper.common import Category, OfferDuration, OfferType, Source
@@ -424,6 +424,10 @@ class Scraper:
             # Do not scroll more than 100 times, something is wrong here!
             if scolled_x_times > 100:
                 break
+
+        # Wait to load page by scrolling the mouse wheel
+        await page.mouse.wheel(0, -100)
+        await page.mouse.wheel(0, 100)
 
         # One final wait so the content may load
         await sleep(SCROLL_PAUSE_SECONDS)
