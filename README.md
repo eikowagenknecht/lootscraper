@@ -136,6 +136,16 @@ You can either run this project locally on your computer or in any environment c
 
 If you want to do this or even contribute, please see the [README for developers](README_DEV.md) file.
 
+## Usage Stats
+
+Just in case anyone is interested, these are the stats as of 2024-09-26:
+
+- The Telegram bot has 311 active subscribers (out of a total of 388, so retention is pretty good).
+- I can't say for sure how many people use the RSS feeds. But my web hosting provider tells me that there is about 10GB of traffic per month from about 2 million hits in total. Epic is the most popular with around 600k hits, Steam follows with 400k hits, GOG 300k, Humble 200k, Amazon 200k, Ubisoft 150k, Itch and the mobile platforms have around 50k each and the all-in-one has 90k. How hits translate to users I can't say. Since the feeds are probably pulled regularly by readers and aggregators like Feedly, the actual number of users will be lower.
+- The HTML pages are a very mixed bag. The Epic page is the most popular with about 10k hits per month. Steam games get 9k hits per month, the rest are between 5 and 25 hits. The all-in-one page is at 400 hits per month.
+
+[![Star History Chart](https://api.star-history.com/svg?repos=eikowagenknecht/lootscraper&type=Date)](https://star-history.com/#eikowagenknecht/lootscraper&Date)
+
 ## License
 
 [![CC BY-NC-SA 4.0][cc-by-nc-sa-image]][cc-by-nc-sa]
