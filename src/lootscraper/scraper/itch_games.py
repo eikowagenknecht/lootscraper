@@ -56,7 +56,7 @@ class ItchGamesScraper(Scraper):
         ]
 
     async def page_loaded_hook(self, page: Page) -> None:
-        await Scraper.scroll_page_to_bottom(page)
+        await Scraper.scroll_page_to_bottom(self, page)
 
     async def read_raw_offer(self, element: Locator) -> RawOffer:
         # Scroll into view to mage sure the image is loaded
