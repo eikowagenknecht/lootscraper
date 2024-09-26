@@ -412,12 +412,6 @@ class Scraper:
         scolled_x_times = 0
 
         while True:
-            # Take screenshot
-            filename = self.get_screenshot_filename(
-                f"debug_scroll_{str(scolled_x_times)}",
-            )
-            await page.screenshot(path=str(filename.resolve()))
-
             # Wait to load page. We do this first to give the page time for
             # the initial load
             await sleep(SCROLL_PAUSE_SECONDS)
@@ -435,35 +429,12 @@ class Scraper:
             if scolled_x_times > 100:
                 break
 
-        # Wait to load page by scrolling the mouse wheel
-
-        # Take screenshot
-        filename = self.get_screenshot_filename(
-            "debug_scroll_endloop",
-        )
-        await page.screenshot(path=str(filename.resolve()))
-
+        # Wait to load page by scrolling the mouse wheel up and down again
+        await sleep(SCROLL_PAUSE_SECONDS)
         await page.mouse.wheel(0, -100)
 
-        # Take screenshot
-        filename = self.get_screenshot_filename(
-            "debug_scroll_wheel_1",
-        )
-        await page.screenshot(path=str(filename.resolve()))
-
+        await sleep(SCROLL_PAUSE_SECONDS)
         await page.mouse.wheel(0, 100)
-
-        # Take screenshot
-        filename = self.get_screenshot_filename(
-            "debug_scroll_wheel_2",
-        )
-        await page.screenshot(path=str(filename.resolve()))
 
         # One final wait so the content may load
         await sleep(SCROLL_PAUSE_SECONDS)
-
-        # Take screenshot
-        filename = self.get_screenshot_filename(
-            "debug_scroll_final",
-        )
-        await page.screenshot(path=str(filename.resolve()))
