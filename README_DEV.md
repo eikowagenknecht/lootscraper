@@ -32,13 +32,13 @@ In addition to the above steps ("Run this locally"), I recommend installing the 
 
 ## Build and run as Docker container
 
-Docker needs to be installed first of course. If you want to skip the build step, you can use <https://hub.docker.com/r/eikowagenknecht/lootscraper> as the image. Use the "main" tag to get the latest build from this repository.
+Docker needs to be [downloaded](https://www.docker.com/) and installed first. If you want to skip the build step, you can use <https://hub.docker.com/r/eikowagenknecht/lootscraper> as the image. Use the "main" tag to get the latest build from this repository.
 
 - Download repository
 - In terminal go to directory
 - First run:
   - Build: `docker build . -t eikowagenknecht/lootscraper:develop`
-  - Start: `docker run --detach --volume /your/local/path:/data --name lootscraper eikowagenknecht/lootscraper:develop`
+  - Start: `docker run --detach --volume /your/local/path/to/data:/data --name lootscraper eikowagenknecht/lootscraper:develop`
 - Update:
   - Stop: `docker stop lootscraper`
   - Remove: `docker container rm lootscraper`
