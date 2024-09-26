@@ -130,6 +130,20 @@ class Scraper:
         (e.g. scroll to bottom of page).
         """
 
+    def get_screenshot_filename(self, suffix: str) -> Path:
+        """Return the filename of the screenshot to be saved."""
+        return Config.data_path() / Path(
+            self.get_source().name.lower()
+            + "_"
+            + datetime.now(tz=timezone.utc)
+            .isoformat()
+            .replace(".", "_")
+            .replace(":", "_")
+            + "_"
+            + suffix
+            + ".png",
+        )
+
     async def read_offers(self) -> list[Offer]:
         """
         Read all offers from the page.
@@ -153,16 +167,7 @@ class Scraper:
                 )
                 await self.page_loaded_hook(page)
             except Error:
-                filename = Config.data_path() / Path(
-                    "error_"
-                    + self.get_source().name.lower()
-                    + "_"
-                    + datetime.now(tz=timezone.utc)
-                    .isoformat()
-                    .replace(".", "_")
-                    .replace(":", "_")
-                    + ".png",
-                )
+                filename = self.get_screenshot_filename("page_not_ready")
                 self.logger.exception(
                     f"The page didn't get ready to be parsed. "
                     f"Saved screenshot to {filename}.",
@@ -395,8 +400,7 @@ class Scraper:
         # One final wait so the content may load
         await sleep(SCROLL_PAUSE_SECONDS)
 
-    @staticmethod
-    async def scroll_page_to_bottom(page: Page) -> None:
+    async def scroll_page_to_bottom(self, page: Page) -> None:
         """
         Scroll down to the bottom of the current page.
 
@@ -408,6 +412,12 @@ class Scraper:
         scolled_x_times = 0
 
         while True:
+            # Take screenshot
+            filename = self.get_screenshot_filename(
+                f"debug_scroll_{str(scolled_x_times)}",
+            )
+            await page.screenshot(path=str(filename.resolve()))
+
             # Wait to load page. We do this first to give the page time for
             # the initial load
             await sleep(SCROLL_PAUSE_SECONDS)
@@ -426,8 +436,34 @@ class Scraper:
                 break
 
         # Wait to load page by scrolling the mouse wheel
+
+        # Take screenshot
+        filename = self.get_screenshot_filename(
+            "debug_scroll_endloop",
+        )
+        await page.screenshot(path=str(filename.resolve()))
+
         await page.mouse.wheel(0, -100)
+
+        # Take screenshot
+        filename = self.get_screenshot_filename(
+            "debug_scroll_wheel_1",
+        )
+        await page.screenshot(path=str(filename.resolve()))
+
         await page.mouse.wheel(0, 100)
+
+        # Take screenshot
+        filename = self.get_screenshot_filename(
+            "debug_scroll_wheel_2",
+        )
+        await page.screenshot(path=str(filename.resolve()))
 
         # One final wait so the content may load
         await sleep(SCROLL_PAUSE_SECONDS)
+
+        # Take screenshot
+        filename = self.get_screenshot_filename(
+            "debug_scroll_final",
+        )
+        await page.screenshot(path=str(filename.resolve()))

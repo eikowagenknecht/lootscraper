@@ -67,7 +67,7 @@ class EpicGamesScraper(Scraper):
 
     async def page_loaded_hook(self, page: Page) -> None:
         # Scroll to bottom to make free games section load
-        await Scraper.scroll_page_to_bottom(page)
+        await Scraper.scroll_page_to_bottom(self, page)
 
     async def read_raw_offer(self, element: Locator) -> RawOffer:
         # Scroll element into view to load img url
