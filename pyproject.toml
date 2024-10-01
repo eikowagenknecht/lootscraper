@@ -34,7 +34,7 @@ optional = true
 
 [tool.poetry.group.dev.dependencies]
 # Linting and formatting
-ruff = "^0.6.7"
+ruff = "^0.6.8"
 # Type checking
 mypy = "^1.11.2"
 # Profiling
