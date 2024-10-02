@@ -1,4 +1,4 @@
-FROM python:3.12.6-bullseye
+FROM python:3.12.7-bullseye
 
 # Tini (init): Add
 ENV TINI_VERSION=v0.19.0
