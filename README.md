@@ -5,11 +5,16 @@
 [![Publish to Docker Hub and Github Packages](https://github.com/eikowagenknecht/lootscraper/actions/workflows/publish-docker.yml/badge.svg)](https://github.com/eikowagenknecht/lootscraper/actions/workflows/publish-docker.yml)
 [![CC BY-NC-SA 4.0][cc-by-nc-sa-shield]][cc-by-nc-sa]
 
-You like getting games for free but you *don’t* like having to keep track of the various sources (Amazon Prime, Epic Games, Steam, ...) for free offers? Also your F5 key starts to look a bit worn out? Then this is for you!
+You like getting games for free, but you *don't* like having to keep track of the various sources (Amazon Prime, Epic Games, Steam, ...) for free offers?
+Also your F5 key starts to look a bit worn out? Then this is for you!
 
 ## Public feeds / channels / bots
 
-Let's face it, you're probably not here because you're interested in the technical details of how this works. You just want free games. And that's fine. So without further ado, here's where to find them! You have the following options:
+Let's face it, you're probably not here because you're interested in the technical details of how this works.
+You just want free games.
+And that's fine.
+Here's where to find them!
+You have the following options:
 
 - [Telegram channels](#telegram-channels)
 - [Telegram bot](#telegram-bot)
@@ -20,7 +25,8 @@ Let's face it, you're probably not here because you're interested in the technic
 
 ### Telegram channels
 
-Want to get a Telegram notification every time a new offer is discovered? Simply subscribe to the Telegram channels.
+Want to get a Telegram notification every time a new offer is discovered?
+Simply subscribe to the Telegram channels.
 
 - Amazon Prime ([games](https://t.me/free_amazon_games_ls) and [ingame loot](https://t.me/free_amazon_loot_ls))
 - [Epic Games](https://t.me/free_epic_games_ls)
@@ -36,9 +42,13 @@ For our mobile gamers:
 
 ### Telegram bot
 
-Want to receive only the offers *you* want in a single chat? Subscribe directly to the source: The [Telegram LootScraperBot](https://t.me/LootScraperBot) will happily send you push notifications for new offers. You can choose which categories you want to subscribe to.
+Want to receive only the offers *you* want in a single chat?
+Subscribe directly to the source:
+The [Telegram LootScraperBot](https://t.me/LootScraperBot) will happily send you push notifications for new offers.
+You can choose which categories you want to subscribe to.
 
-If you want, you can even add the bot to your own groups (including threaded groups) and channels. Just make sure to give it the neccessary permissions (admin rights work best).
+If you want, you can even add the bot to your own groups (including threaded groups) and channels.
+Just make sure to give it the neccessary permissions (admin rights work best).
 
 This is what it currently looks like in Telegram:
 
@@ -46,7 +56,10 @@ This is what it currently looks like in Telegram:
 
 ### RSS feeds
 
-Prefer the anonymity and manageability of RSS feeds? Sure. You can use the links below. These feeds contain all active offers.
+Prefer the anonymity and manageability of RSS feeds?
+Sure.
+You can use the links below.
+These feeds contain all active offers.
 
 - Amazon Prime ([games](https://feed.phenx.de/lootscraper_amazon_game.xml) and [ingame loot](https://feed.phenx.de/lootscraper_amazon_loot.xml))
 - [Epic Games](https://feed.phenx.de/lootscraper_epic_game.xml)
@@ -70,7 +83,8 @@ If you want to get the offers by email, you can use free services like [Blogtrot
 
 ### Discord
 
-If you want to get the offers in a Discord channel, you can use the free [MonitoRSS](https://monitorss.xyz/) bot to post them there for you. I suggest the following settings:
+If you want to get the offers in a Discord channel, you can use the free [MonitoRSS](https://monitorss.xyz/) bot to post them there for you.
+I suggest the following settings:
 
 - **Feed URL**: Use the RSS feed links above
 - **Content**:
@@ -86,7 +100,8 @@ If you want to get the offers in a Discord channel, you can use the free [Monito
 
 ### HTML pages
 
-Want to check a website for new deals once in a while, but not be bothered by push notifications? Here are the latest offers in a nice and clean HTML page:
+Want to check a website for new deals once in a while, but not be bothered by push notifications?
+Here are the latest offers in a nice and clean HTML page:
 
 - Amazon Prime ([games](https://feed.phenx.de/lootscraper_amazon_game.html) and [ingame loot](https://feed.phenx.de/lootscraper_amazon_loot.html))
 - [Epic Games](https://feed.phenx.de/lootscraper_epic_game.html)
@@ -106,7 +121,8 @@ This is how it looks like:
 
 ### HTML archive
 
-There is also an archive version of the HTML pages. These contain all offers that have been discovered so far, including expired ones.
+There is also an archive version of the HTML pages.
+These contain all offers that have been discovered so far, including expired ones.
 
 - Amazon Prime ([games](https://feed.phenx.de/lootscraper_amazon_game_all.html) and [ingame loot](https://feed.phenx.de/lootscraper_amazon_loot_all.html))
 - [Epic Games](https://feed.phenx.de/lootscraper_epic_game_all.html)
@@ -128,7 +144,9 @@ This is how it looks like:
 
 This Python (3.12+) application uses Playwright to automatically visit websites with free game-related offers (see below for the supported sources) and then puts the collected information neatly into RSS feeds and a Telegram bot.
 
-If you encounter any problems feel free to open an issue here and I'll do my best to help. I'd also love to hear your feature requests! This is also tracked in the GitHub issues.
+If you encounter any problems feel free to open an issue here and I'll do my best to help.
+I'd also love to hear your feature requests!
+This is also tracked in the GitHub issues.
 
 ### For power users and developers
 
@@ -141,8 +159,17 @@ If you want to do this or even contribute, please see the [README for developers
 Just in case anyone is interested, these are the stats as of 2024-09-26:
 
 - The Telegram bot has 311 active subscribers (out of a total of 388, so retention is pretty good).
-- I can't say for sure how many people use the RSS feeds. But my web hosting provider tells me that there is about 10GB of traffic per month from about 2 million hits in total. Epic is the most popular with around 600k hits, Steam follows with 400k hits, GOG 300k, Humble 200k, Amazon 200k, Ubisoft 150k, Itch and the mobile platforms have around 50k each and the all-in-one has 90k. How hits translate to users I can't say. Since the feeds are probably pulled regularly by readers and aggregators like Feedly, the actual number of users will be lower.
-- The HTML pages are a very mixed bag. The Epic page is the most popular with about 10k hits per month. Steam games get 9k hits per month, the rest are between 5 and 25 hits. The all-in-one page is at 400 hits per month.
+- I can't say for sure how many people use the RSS feeds.
+  But my web hosting provider tells me that there is about 10GB of traffic per month from about 2 million hits in total.
+  Epic is the most popular with around 600k hits.
+  Steam follows with 400k hits, GOG 300k, Humble 200k, Amazon 200k, Ubisoft 150k.
+  Itch and the mobile platforms have around 50k each and the all-in-one has 90k.
+  How hits translate to users I can't say.
+  Since the feeds are probably pulled regularly by readers and aggregators like Feedly, the actual number of users will be lower.
+- The HTML pages are a very mixed bag.
+  The Epic page is the most popular with about 10k hits per month.
+  Steam games get 9k hits per month, the rest are between 5 and 25 hits.
+  The all-in-one page is at 400 hits per month.
 
 [![Star History Chart](https://api.star-history.com/svg?repos=eikowagenknecht/lootscraper&type=Date)](https://star-history.com/#eikowagenknecht/lootscraper&Date)
 
