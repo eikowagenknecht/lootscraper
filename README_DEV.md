@@ -87,8 +87,8 @@ Update poetry itself:
 - `(Invoke-WebRequest -Uri https://install.python-poetry.org -UseBasicParsing).Content | py -`
 
 Install tool: `poetry self add poetry-plugin-up` (only once)
-Update all dependencies in `pyproject.toml`: `poetry up --with dev`
-Install new dependencies locally: `poetry install --with dev`
+Update all dependencies in `pyproject.toml`: `poetry up --latest --with dev`
+Install new dependencies locally: `poetry install --with dev --sync`
 Check if dependencies are up to date: `poetry show --outdated --all`
 
 ## Profiling
