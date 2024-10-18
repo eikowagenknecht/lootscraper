@@ -6,7 +6,8 @@
 [![CC BY-NC-SA 4.0][cc-by-nc-sa-shield]][cc-by-nc-sa]
 
 You like getting games for free, but you *don't* like having to keep track of the various sources (Amazon Prime, Epic Games, Steam, ...) for free offers?
-Also your F5 key starts to look a bit worn out? Then this is for you!
+Also your F5 key starts to look a bit worn out?
+Then this is for you!
 
 ## Public feeds / channels / bots
 
@@ -139,6 +140,12 @@ You can also have *all sources* on [one page](https://feed.phenx.de/lootscraper_
 This is how it looks like:
 
 ![image](https://github.com/eikowagenknecht/lootscraper/assets/1475672/845042a8-372d-4f4e-9d01-d9fdfec77038)
+
+## Even more convenience
+
+Now that you get notified about all the free games, you might want to make the process of claiming them even easier.
+For this, I created some userscripts that can be used with Tampermonkey / Greasemonkey / Violentmonkey.
+You can find them [here](https://eikowagenknecht.de/posts/userscripts-to-claim-free-games/).
 
 ## How it works
 
