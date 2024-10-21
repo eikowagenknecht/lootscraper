@@ -36,7 +36,7 @@ optional = true
 # Linting and formatting
 ruff = "^0.7.0"
 # Type checking
-mypy = "^1.12.0"
+mypy = "^1.12.1"
 # Profiling
 scalene = "^1.5.45"
 # Testing
