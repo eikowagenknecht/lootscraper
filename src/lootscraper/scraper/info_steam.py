@@ -199,7 +199,7 @@ async def add_data_from_steam_api(steam_info: SteamInfo) -> None:
             elif content["price_overview"]["currency"] != "EUR":
                 logger.error(
                     f"Steam app id {steam_info.id} has a currency other than EUR "
-                    f'({content["price_overview"]["currency"]}).',
+                    f"({content['price_overview']['currency']}).",
                 )
             else:
                 steam_info.recommended_price_eur = recommended_price_value / 100

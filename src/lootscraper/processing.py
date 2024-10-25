@@ -76,7 +76,7 @@ async def process_new_offers(
 
         if new_offer_titles:
             logging.info(
-                f'Found {nr_of_new_offers} new offers: {", ".join(new_offer_titles)}',
+                f"Found {nr_of_new_offers} new offers: {', '.join(new_offer_titles)}",
             )
 
         session.commit()

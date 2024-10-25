@@ -1376,8 +1376,7 @@ class TelegramBot:
         chat: TelegramChat,
     ) -> None:
         logger.debug(
-            f"Sending announcement {announcement.id} "
-            f"to Telegram chat {chat.chat_id}.",
+            f"Sending announcement {announcement.id} to Telegram chat {chat.chat_id}.",
         )
         await self.send_message(
             chat=chat,
@@ -1683,8 +1682,7 @@ class TelegramBot:
 
         # Unknown chat type, no control
         logger.warning(
-            "Cannot control bot: Unknown chat type with id "
-            f"{update.effective_chat.id}",
+            f"Cannot control bot: Unknown chat type with id {update.effective_chat.id}",
         )
         return False
 
