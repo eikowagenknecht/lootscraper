@@ -47,7 +47,9 @@ class AmazonLootScraper(AmazonBaseScraper):
     ) -> AmazonLootRawOffer:
         base_raw_offer = await self.read_base_raw_offer(element)
 
-        game_title = await element.locator(".item-card-details__body p").text_content()
+        game_title = (
+            await element.locator(".item-card-details__body p").nth(0).text_content()
+        )
         if game_title is None:
             raise ValueError("Couldn't find game title.")
 
