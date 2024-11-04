@@ -1043,58 +1043,58 @@ jupyter = ["ipywidgets (>=7.5.1,<9)"]
 
 [[package]]
 name = "ruff"
-version = "0.7.1"
+version = "0.7.2"
 description = "An extremely fast Python linter and code formatter, written in Rust."
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "ruff-0.7.1-py3-none-linux_armv6l.whl", hash = "sha256:cb1bc5ed9403daa7da05475d615739cc0212e861b7306f314379d958592aaa89"},
-    {file = "ruff-0.7.1-py3-none-macosx_10_12_x86_64.whl", hash = "sha256:27c1c52a8d199a257ff1e5582d078eab7145129aa02721815ca8fa4f9612dc35"},
-    {file = "ruff-0.7.1-py3-none-macosx_11_0_arm64.whl", hash = "sha256:588a34e1ef2ea55b4ddfec26bbe76bc866e92523d8c6cdec5e8aceefeff02d99"},
-    {file = "ruff-0.7.1-py3-none-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:94fc32f9cdf72dc75c451e5f072758b118ab8100727168a3df58502b43a599ca"},
-    {file = "ruff-0.7.1-py3-none-manylinux_2_17_armv7l.manylinux2014_armv7l.whl", hash = "sha256:985818742b833bffa543a84d1cc11b5e6871de1b4e0ac3060a59a2bae3969250"},
-    {file = "ruff-0.7.1-py3-none-manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:32f1e8a192e261366c702c5fb2ece9f68d26625f198a25c408861c16dc2dea9c"},
-    {file = "ruff-0.7.1-py3-none-manylinux_2_17_ppc64.manylinux2014_ppc64.whl", hash = "sha256:699085bf05819588551b11751eff33e9ca58b1b86a6843e1b082a7de40da1565"},
-    {file = "ruff-0.7.1-py3-none-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl", hash = "sha256:344cc2b0814047dc8c3a8ff2cd1f3d808bb23c6658db830d25147339d9bf9ea7"},
-    {file = "ruff-0.7.1-py3-none-manylinux_2_17_s390x.manylinux2014_s390x.whl", hash = "sha256:4316bbf69d5a859cc937890c7ac7a6551252b6a01b1d2c97e8fc96e45a7c8b4a"},
-    {file = "ruff-0.7.1-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:79d3af9dca4c56043e738a4d6dd1e9444b6d6c10598ac52d146e331eb155a8ad"},
-    {file = "ruff-0.7.1-py3-none-musllinux_1_2_aarch64.whl", hash = "sha256:c5c121b46abde94a505175524e51891f829414e093cd8326d6e741ecfc0a9112"},
-    {file = "ruff-0.7.1-py3-none-musllinux_1_2_armv7l.whl", hash = "sha256:8422104078324ea250886954e48f1373a8fe7de59283d747c3a7eca050b4e378"},
-    {file = "ruff-0.7.1-py3-none-musllinux_1_2_i686.whl", hash = "sha256:56aad830af8a9db644e80098fe4984a948e2b6fc2e73891538f43bbe478461b8"},
-    {file = "ruff-0.7.1-py3-none-musllinux_1_2_x86_64.whl", hash = "sha256:658304f02f68d3a83c998ad8bf91f9b4f53e93e5412b8f2388359d55869727fd"},
-    {file = "ruff-0.7.1-py3-none-win32.whl", hash = "sha256:b517a2011333eb7ce2d402652ecaa0ac1a30c114fbbd55c6b8ee466a7f600ee9"},
-    {file = "ruff-0.7.1-py3-none-win_amd64.whl", hash = "sha256:f38c41fcde1728736b4eb2b18850f6d1e3eedd9678c914dede554a70d5241307"},
-    {file = "ruff-0.7.1-py3-none-win_arm64.whl", hash = "sha256:19aa200ec824c0f36d0c9114c8ec0087082021732979a359d6f3c390a6ff2a37"},
-    {file = "ruff-0.7.1.tar.gz", hash = "sha256:9d8a41d4aa2dad1575adb98a82870cf5db5f76b2938cf2206c22c940034a36f4"},
+    {file = "ruff-0.7.2-py3-none-linux_armv6l.whl", hash = "sha256:b73f873b5f52092e63ed540adefc3c36f1f803790ecf2590e1df8bf0a9f72cb8"},
+    {file = "ruff-0.7.2-py3-none-macosx_10_12_x86_64.whl", hash = "sha256:5b813ef26db1015953daf476202585512afd6a6862a02cde63f3bafb53d0b2d4"},
+    {file = "ruff-0.7.2-py3-none-macosx_11_0_arm64.whl", hash = "sha256:853277dbd9675810c6826dad7a428d52a11760744508340e66bf46f8be9701d9"},
+    {file = "ruff-0.7.2-py3-none-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:21aae53ab1490a52bf4e3bf520c10ce120987b047c494cacf4edad0ba0888da2"},
+    {file = "ruff-0.7.2-py3-none-manylinux_2_17_armv7l.manylinux2014_armv7l.whl", hash = "sha256:ccc7e0fc6e0cb3168443eeadb6445285abaae75142ee22b2b72c27d790ab60ba"},
+    {file = "ruff-0.7.2-py3-none-manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:fd77877a4e43b3a98e5ef4715ba3862105e299af0c48942cc6d51ba3d97dc859"},
+    {file = "ruff-0.7.2-py3-none-manylinux_2_17_ppc64.manylinux2014_ppc64.whl", hash = "sha256:e00163fb897d35523c70d71a46fbaa43bf7bf9af0f4534c53ea5b96b2e03397b"},
+    {file = "ruff-0.7.2-py3-none-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl", hash = "sha256:f3c54b538633482dc342e9b634d91168fe8cc56b30a4b4f99287f4e339103e88"},
+    {file = "ruff-0.7.2-py3-none-manylinux_2_17_s390x.manylinux2014_s390x.whl", hash = "sha256:7b792468e9804a204be221b14257566669d1db5c00d6bb335996e5cd7004ba80"},
+    {file = "ruff-0.7.2-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:dba53ed84ac19ae4bfb4ea4bf0172550a2285fa27fbb13e3746f04c80f7fa088"},
+    {file = "ruff-0.7.2-py3-none-musllinux_1_2_aarch64.whl", hash = "sha256:b19fafe261bf741bca2764c14cbb4ee1819b67adb63ebc2db6401dcd652e3748"},
+    {file = "ruff-0.7.2-py3-none-musllinux_1_2_armv7l.whl", hash = "sha256:28bd8220f4d8f79d590db9e2f6a0674f75ddbc3847277dd44ac1f8d30684b828"},
+    {file = "ruff-0.7.2-py3-none-musllinux_1_2_i686.whl", hash = "sha256:9fd67094e77efbea932e62b5d2483006154794040abb3a5072e659096415ae1e"},
+    {file = "ruff-0.7.2-py3-none-musllinux_1_2_x86_64.whl", hash = "sha256:576305393998b7bd6c46018f8104ea3a9cb3fa7908c21d8580e3274a3b04b691"},
+    {file = "ruff-0.7.2-py3-none-win32.whl", hash = "sha256:fa993cfc9f0ff11187e82de874dfc3611df80852540331bc85c75809c93253a8"},
+    {file = "ruff-0.7.2-py3-none-win_amd64.whl", hash = "sha256:dd8800cbe0254e06b8fec585e97554047fb82c894973f7ff18558eee33d1cb88"},
+    {file = "ruff-0.7.2-py3-none-win_arm64.whl", hash = "sha256:bb8368cd45bba3f57bb29cbb8d64b4a33f8415d0149d2655c5c8539452ce7760"},
+    {file = "ruff-0.7.2.tar.gz", hash = "sha256:2b14e77293380e475b4e3a7a368e14549288ed2931fce259a6f99978669e844f"},
 ]
 
 [[package]]
 name = "scalene"
-version = "1.5.45"
+version = "1.5.46"
 description = "Scalene: A high-resolution, low-overhead CPU, GPU, and memory profiler for Python with AI-powered optimization suggestions"
 optional = false
 python-versions = "!=3.11.0,>=3.8"
 files = [
-    {file = "scalene-1.5.45-cp310-cp310-macosx_13_0_universal2.whl", hash = "sha256:18d76bca68cd6be7f6c0efc734085b63ca006e2a9f2249a69a55ffa0059cc1b2"},
-    {file = "scalene-1.5.45-cp310-cp310-macosx_14_0_universal2.whl", hash = "sha256:28cf3f3a1fe1c82b3f599833314bb79b2ef9cdaff472f8be6972a3c871323a14"},
-    {file = "scalene-1.5.45-cp310-cp310-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:7f91951140d533b35f91e83b65ac69c23bbcb0f048cea586c3669700be628795"},
-    {file = "scalene-1.5.45-cp310-cp310-win_amd64.whl", hash = "sha256:04529738d14e1c47e0874dca745dadf05f3d5da329c32779bc15e446b92d0c7d"},
-    {file = "scalene-1.5.45-cp311-cp311-macosx_13_0_universal2.whl", hash = "sha256:3f0f68d6895e4d12215307b0593e1c38437ce2c032044e5b3a2a7cc99fd5de5d"},
-    {file = "scalene-1.5.45-cp311-cp311-macosx_14_0_universal2.whl", hash = "sha256:d92b109c3526da3c3242e75b50f0a30f5d5a5ed0d599e363a05f0dbb18cb2559"},
-    {file = "scalene-1.5.45-cp311-cp311-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:ca53428d7fb8bf1b892203ffc13520341f47865fd7753374b449b2efd3c553ff"},
-    {file = "scalene-1.5.45-cp312-cp312-macosx_13_0_universal2.whl", hash = "sha256:047f60f3b3c78e2f105d7da40a22d724ce7a15755b390211c4c69c803bb19ce3"},
-    {file = "scalene-1.5.45-cp312-cp312-macosx_14_0_universal2.whl", hash = "sha256:2f3f36487cf852477abe9844eb189bcdab5ef532b4bdf3e0969ce171ce8c3cd6"},
-    {file = "scalene-1.5.45-cp312-cp312-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:3cd9b97410633cf6c58cfb951003cfbca7e05dd13cc8b8030f94580272db7cc8"},
-    {file = "scalene-1.5.45-cp312-cp312-win_amd64.whl", hash = "sha256:5f63d0b62b74d3d37b5e92d41465f46821bee3d684f7c2a8dab864aac37ebacb"},
-    {file = "scalene-1.5.45-cp38-cp38-macosx_13_0_universal2.whl", hash = "sha256:326acc139520654bcc932af22ca3e178ee19721c477947a86eb1d80ace844ca1"},
-    {file = "scalene-1.5.45-cp38-cp38-macosx_14_0_universal2.whl", hash = "sha256:2e6c726c79a5e22d2d2794326df4c2be58000dd6ee1a85524b7820a823cab94c"},
-    {file = "scalene-1.5.45-cp38-cp38-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:4d6baf3b812a96049ca156eb4bccbdf3ae78f8960a76644b82796e8ebcd0bed7"},
-    {file = "scalene-1.5.45-cp38-cp38-win_amd64.whl", hash = "sha256:024058c10e7bc2175d7d797b5af651bac5f33404376863a2b28b7efeb2bcef99"},
-    {file = "scalene-1.5.45-cp39-cp39-macosx_13_0_universal2.whl", hash = "sha256:e9280554413f1e07daa2df39a40672035b7da30f6888b0ff16d3ecfdd7db55b6"},
-    {file = "scalene-1.5.45-cp39-cp39-macosx_14_0_universal2.whl", hash = "sha256:a4cf2f2d11b4caa64caabb1ac939edb75b309ad1163e6a8b5cc6472978930270"},
-    {file = "scalene-1.5.45-cp39-cp39-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:c283cc5a84dc838fb582df38ac3655d74f58e0fca3714d0b6620169b0b92bf5d"},
-    {file = "scalene-1.5.45-cp39-cp39-win_amd64.whl", hash = "sha256:af82baa1564964b121a49066fb2383640deccbd37107cf7fd303f969976fadaa"},
-    {file = "scalene-1.5.45.tar.gz", hash = "sha256:47796aa5662bb9ea9e9d4dc4cfe4677ace6f6051701fc6ddaa457769876cf2ed"},
+    {file = "scalene-1.5.46-cp310-cp310-macosx_13_0_universal2.whl", hash = "sha256:b290acf6739cf2d6cbc0ef763e02cd3090af6e93df7abac6efdf04da11de89b6"},
+    {file = "scalene-1.5.46-cp310-cp310-macosx_14_0_universal2.whl", hash = "sha256:e6a2e2cec1f00faf105cbce10b05f0c23bdf51ef394a19373d95620bb393de21"},
+    {file = "scalene-1.5.46-cp310-cp310-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:b9e0fcced5d30fb635b6e2e27e85d81d4b54d7cdd95617de5537d31e9de449bf"},
+    {file = "scalene-1.5.46-cp310-cp310-win_amd64.whl", hash = "sha256:62fb6b2aa8ea1e0931222e74798ffbe02302fc6909ed5677ff72e30010c9f902"},
+    {file = "scalene-1.5.46-cp311-cp311-macosx_13_0_universal2.whl", hash = "sha256:6699138dca8bade0ce0ff09501310277aacdd2dd1cff272a2ee72b2be9dc211f"},
+    {file = "scalene-1.5.46-cp311-cp311-macosx_14_0_universal2.whl", hash = "sha256:05e74318c0b1e687789bc6ece08a86464cd2b7b3a23fc8232cc255de21495846"},
+    {file = "scalene-1.5.46-cp311-cp311-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:646e7977c9c436407a5d77775a1d280dc7f65b5bf758c8506757bafe506ace17"},
+    {file = "scalene-1.5.46-cp312-cp312-macosx_13_0_universal2.whl", hash = "sha256:decf05f55845751f0f898ad9e1d2087e498e4e95724485f9767b46e3fedd7f72"},
+    {file = "scalene-1.5.46-cp312-cp312-macosx_14_0_universal2.whl", hash = "sha256:2cc606edb0390f3437581c3b4dad3836422039611f5156aaab6cb5f391f568a1"},
+    {file = "scalene-1.5.46-cp312-cp312-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:9ffe1cd94925081995ec8c174d7ed6c046acde60cf8e57e9fb863ce4d9a25465"},
+    {file = "scalene-1.5.46-cp312-cp312-win_amd64.whl", hash = "sha256:8f61162f9e97ea09ba52d21032021d9e3de2d4b46aadc7a27b96ef61e956733e"},
+    {file = "scalene-1.5.46-cp38-cp38-macosx_13_0_universal2.whl", hash = "sha256:ea87a576e218a798260c9f6611359f873bdd3bb44a6a99c33a59dc1f07689705"},
+    {file = "scalene-1.5.46-cp38-cp38-macosx_14_0_universal2.whl", hash = "sha256:60acb244b6a21ce52f73448a18ac244d795bfd0f6f7025a2d287bc105a9e5bcb"},
+    {file = "scalene-1.5.46-cp38-cp38-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:9e315912984a266c61b3b3b7bf35275f451b8e90e84324a2974b3725c36a8708"},
+    {file = "scalene-1.5.46-cp38-cp38-win_amd64.whl", hash = "sha256:a146bb21dbf924a45bbfae5cbe2f12eacf4f9e79a9557c407380511c97fc834a"},
+    {file = "scalene-1.5.46-cp39-cp39-macosx_13_0_universal2.whl", hash = "sha256:cfbbf67a944d2c0f07ae986c95511aa09b3251014e028ad377aca9cdb27cc032"},
+    {file = "scalene-1.5.46-cp39-cp39-macosx_14_0_universal2.whl", hash = "sha256:e9aa8db52a8866678e814b455fdd3e04471e3f21492f6f8cc3206b1d13460f10"},
+    {file = "scalene-1.5.46-cp39-cp39-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:fdce53dc17af45fe360e04406b0cfbb78a3d03438a27fa4fb980ff1f19c5ebbd"},
+    {file = "scalene-1.5.46-cp39-cp39-win_amd64.whl", hash = "sha256:79ceecba0238fd036a5b440195baf59fc0191fb2ec9ac9a2598e84e8a751538d"},
+    {file = "scalene-1.5.46.tar.gz", hash = "sha256:86d6de574489b48a291a569b59dab283cbdf0c4c17e576ec2a89af2cd76274a9"},
 ]
 
 [package.dependencies]
@@ -1307,4 +1307,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.12.0"
-content-hash = "86ba25d8436dd8bc9f68f07623006c64ebab7ad15b1536e47e7348ab150914a4"
+content-hash = "ebd7d00271c729661cdbdecded8e05f787100b6a9923b0ecb68c782e6895aadd"
