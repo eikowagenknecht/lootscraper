@@ -1043,58 +1043,58 @@ jupyter = ["ipywidgets (>=7.5.1,<9)"]
 
 [[package]]
 name = "ruff"
-version = "0.7.2"
+version = "0.7.3"
 description = "An extremely fast Python linter and code formatter, written in Rust."
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "ruff-0.7.2-py3-none-linux_armv6l.whl", hash = "sha256:b73f873b5f52092e63ed540adefc3c36f1f803790ecf2590e1df8bf0a9f72cb8"},
-    {file = "ruff-0.7.2-py3-none-macosx_10_12_x86_64.whl", hash = "sha256:5b813ef26db1015953daf476202585512afd6a6862a02cde63f3bafb53d0b2d4"},
-    {file = "ruff-0.7.2-py3-none-macosx_11_0_arm64.whl", hash = "sha256:853277dbd9675810c6826dad7a428d52a11760744508340e66bf46f8be9701d9"},
-    {file = "ruff-0.7.2-py3-none-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:21aae53ab1490a52bf4e3bf520c10ce120987b047c494cacf4edad0ba0888da2"},
-    {file = "ruff-0.7.2-py3-none-manylinux_2_17_armv7l.manylinux2014_armv7l.whl", hash = "sha256:ccc7e0fc6e0cb3168443eeadb6445285abaae75142ee22b2b72c27d790ab60ba"},
-    {file = "ruff-0.7.2-py3-none-manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:fd77877a4e43b3a98e5ef4715ba3862105e299af0c48942cc6d51ba3d97dc859"},
-    {file = "ruff-0.7.2-py3-none-manylinux_2_17_ppc64.manylinux2014_ppc64.whl", hash = "sha256:e00163fb897d35523c70d71a46fbaa43bf7bf9af0f4534c53ea5b96b2e03397b"},
-    {file = "ruff-0.7.2-py3-none-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl", hash = "sha256:f3c54b538633482dc342e9b634d91168fe8cc56b30a4b4f99287f4e339103e88"},
-    {file = "ruff-0.7.2-py3-none-manylinux_2_17_s390x.manylinux2014_s390x.whl", hash = "sha256:7b792468e9804a204be221b14257566669d1db5c00d6bb335996e5cd7004ba80"},
-    {file = "ruff-0.7.2-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:dba53ed84ac19ae4bfb4ea4bf0172550a2285fa27fbb13e3746f04c80f7fa088"},
-    {file = "ruff-0.7.2-py3-none-musllinux_1_2_aarch64.whl", hash = "sha256:b19fafe261bf741bca2764c14cbb4ee1819b67adb63ebc2db6401dcd652e3748"},
-    {file = "ruff-0.7.2-py3-none-musllinux_1_2_armv7l.whl", hash = "sha256:28bd8220f4d8f79d590db9e2f6a0674f75ddbc3847277dd44ac1f8d30684b828"},
-    {file = "ruff-0.7.2-py3-none-musllinux_1_2_i686.whl", hash = "sha256:9fd67094e77efbea932e62b5d2483006154794040abb3a5072e659096415ae1e"},
-    {file = "ruff-0.7.2-py3-none-musllinux_1_2_x86_64.whl", hash = "sha256:576305393998b7bd6c46018f8104ea3a9cb3fa7908c21d8580e3274a3b04b691"},
-    {file = "ruff-0.7.2-py3-none-win32.whl", hash = "sha256:fa993cfc9f0ff11187e82de874dfc3611df80852540331bc85c75809c93253a8"},
-    {file = "ruff-0.7.2-py3-none-win_amd64.whl", hash = "sha256:dd8800cbe0254e06b8fec585e97554047fb82c894973f7ff18558eee33d1cb88"},
-    {file = "ruff-0.7.2-py3-none-win_arm64.whl", hash = "sha256:bb8368cd45bba3f57bb29cbb8d64b4a33f8415d0149d2655c5c8539452ce7760"},
-    {file = "ruff-0.7.2.tar.gz", hash = "sha256:2b14e77293380e475b4e3a7a368e14549288ed2931fce259a6f99978669e844f"},
+    {file = "ruff-0.7.3-py3-none-linux_armv6l.whl", hash = "sha256:34f2339dc22687ec7e7002792d1f50712bf84a13d5152e75712ac08be565d344"},
+    {file = "ruff-0.7.3-py3-none-macosx_10_12_x86_64.whl", hash = "sha256:fb397332a1879b9764a3455a0bb1087bda876c2db8aca3a3cbb67b3dbce8cda0"},
+    {file = "ruff-0.7.3-py3-none-macosx_11_0_arm64.whl", hash = "sha256:37d0b619546103274e7f62643d14e1adcbccb242efda4e4bdb9544d7764782e9"},
+    {file = "ruff-0.7.3-py3-none-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:5d59f0c3ee4d1a6787614e7135b72e21024875266101142a09a61439cb6e38a5"},
+    {file = "ruff-0.7.3-py3-none-manylinux_2_17_armv7l.manylinux2014_armv7l.whl", hash = "sha256:44eb93c2499a169d49fafd07bc62ac89b1bc800b197e50ff4633aed212569299"},
+    {file = "ruff-0.7.3-py3-none-manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:6d0242ce53f3a576c35ee32d907475a8d569944c0407f91d207c8af5be5dae4e"},
+    {file = "ruff-0.7.3-py3-none-manylinux_2_17_ppc64.manylinux2014_ppc64.whl", hash = "sha256:6b6224af8b5e09772c2ecb8dc9f3f344c1aa48201c7f07e7315367f6dd90ac29"},
+    {file = "ruff-0.7.3-py3-none-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl", hash = "sha256:c50f95a82b94421c964fae4c27c0242890a20fe67d203d127e84fbb8013855f5"},
+    {file = "ruff-0.7.3-py3-none-manylinux_2_17_s390x.manylinux2014_s390x.whl", hash = "sha256:7f3eff9961b5d2644bcf1616c606e93baa2d6b349e8aa8b035f654df252c8c67"},
+    {file = "ruff-0.7.3-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:b8963cab06d130c4df2fd52c84e9f10d297826d2e8169ae0c798b6221be1d1d2"},
+    {file = "ruff-0.7.3-py3-none-musllinux_1_2_aarch64.whl", hash = "sha256:61b46049d6edc0e4317fb14b33bd693245281a3007288b68a3f5b74a22a0746d"},
+    {file = "ruff-0.7.3-py3-none-musllinux_1_2_armv7l.whl", hash = "sha256:10ebce7696afe4644e8c1a23b3cf8c0f2193a310c18387c06e583ae9ef284de2"},
+    {file = "ruff-0.7.3-py3-none-musllinux_1_2_i686.whl", hash = "sha256:3f36d56326b3aef8eeee150b700e519880d1aab92f471eefdef656fd57492aa2"},
+    {file = "ruff-0.7.3-py3-none-musllinux_1_2_x86_64.whl", hash = "sha256:5d024301109a0007b78d57ab0ba190087b43dce852e552734ebf0b0b85e4fb16"},
+    {file = "ruff-0.7.3-py3-none-win32.whl", hash = "sha256:4ba81a5f0c5478aa61674c5a2194de8b02652f17addf8dfc40c8937e6e7d79fc"},
+    {file = "ruff-0.7.3-py3-none-win_amd64.whl", hash = "sha256:588a9ff2fecf01025ed065fe28809cd5a53b43505f48b69a1ac7707b1b7e4088"},
+    {file = "ruff-0.7.3-py3-none-win_arm64.whl", hash = "sha256:1713e2c5545863cdbfe2cbce21f69ffaf37b813bfd1fb3b90dc9a6f1963f5a8c"},
+    {file = "ruff-0.7.3.tar.gz", hash = "sha256:e1d1ba2e40b6e71a61b063354d04be669ab0d39c352461f3d789cac68b54a313"},
 ]
 
 [[package]]
 name = "scalene"
-version = "1.5.46"
+version = "1.5.47"
 description = "Scalene: A high-resolution, low-overhead CPU, GPU, and memory profiler for Python with AI-powered optimization suggestions"
 optional = false
 python-versions = "!=3.11.0,>=3.8"
 files = [
-    {file = "scalene-1.5.46-cp310-cp310-macosx_13_0_universal2.whl", hash = "sha256:b290acf6739cf2d6cbc0ef763e02cd3090af6e93df7abac6efdf04da11de89b6"},
-    {file = "scalene-1.5.46-cp310-cp310-macosx_14_0_universal2.whl", hash = "sha256:e6a2e2cec1f00faf105cbce10b05f0c23bdf51ef394a19373d95620bb393de21"},
-    {file = "scalene-1.5.46-cp310-cp310-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:b9e0fcced5d30fb635b6e2e27e85d81d4b54d7cdd95617de5537d31e9de449bf"},
-    {file = "scalene-1.5.46-cp310-cp310-win_amd64.whl", hash = "sha256:62fb6b2aa8ea1e0931222e74798ffbe02302fc6909ed5677ff72e30010c9f902"},
-    {file = "scalene-1.5.46-cp311-cp311-macosx_13_0_universal2.whl", hash = "sha256:6699138dca8bade0ce0ff09501310277aacdd2dd1cff272a2ee72b2be9dc211f"},
-    {file = "scalene-1.5.46-cp311-cp311-macosx_14_0_universal2.whl", hash = "sha256:05e74318c0b1e687789bc6ece08a86464cd2b7b3a23fc8232cc255de21495846"},
-    {file = "scalene-1.5.46-cp311-cp311-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:646e7977c9c436407a5d77775a1d280dc7f65b5bf758c8506757bafe506ace17"},
-    {file = "scalene-1.5.46-cp312-cp312-macosx_13_0_universal2.whl", hash = "sha256:decf05f55845751f0f898ad9e1d2087e498e4e95724485f9767b46e3fedd7f72"},
-    {file = "scalene-1.5.46-cp312-cp312-macosx_14_0_universal2.whl", hash = "sha256:2cc606edb0390f3437581c3b4dad3836422039611f5156aaab6cb5f391f568a1"},
-    {file = "scalene-1.5.46-cp312-cp312-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:9ffe1cd94925081995ec8c174d7ed6c046acde60cf8e57e9fb863ce4d9a25465"},
-    {file = "scalene-1.5.46-cp312-cp312-win_amd64.whl", hash = "sha256:8f61162f9e97ea09ba52d21032021d9e3de2d4b46aadc7a27b96ef61e956733e"},
-    {file = "scalene-1.5.46-cp38-cp38-macosx_13_0_universal2.whl", hash = "sha256:ea87a576e218a798260c9f6611359f873bdd3bb44a6a99c33a59dc1f07689705"},
-    {file = "scalene-1.5.46-cp38-cp38-macosx_14_0_universal2.whl", hash = "sha256:60acb244b6a21ce52f73448a18ac244d795bfd0f6f7025a2d287bc105a9e5bcb"},
-    {file = "scalene-1.5.46-cp38-cp38-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:9e315912984a266c61b3b3b7bf35275f451b8e90e84324a2974b3725c36a8708"},
-    {file = "scalene-1.5.46-cp38-cp38-win_amd64.whl", hash = "sha256:a146bb21dbf924a45bbfae5cbe2f12eacf4f9e79a9557c407380511c97fc834a"},
-    {file = "scalene-1.5.46-cp39-cp39-macosx_13_0_universal2.whl", hash = "sha256:cfbbf67a944d2c0f07ae986c95511aa09b3251014e028ad377aca9cdb27cc032"},
-    {file = "scalene-1.5.46-cp39-cp39-macosx_14_0_universal2.whl", hash = "sha256:e9aa8db52a8866678e814b455fdd3e04471e3f21492f6f8cc3206b1d13460f10"},
-    {file = "scalene-1.5.46-cp39-cp39-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:fdce53dc17af45fe360e04406b0cfbb78a3d03438a27fa4fb980ff1f19c5ebbd"},
-    {file = "scalene-1.5.46-cp39-cp39-win_amd64.whl", hash = "sha256:79ceecba0238fd036a5b440195baf59fc0191fb2ec9ac9a2598e84e8a751538d"},
-    {file = "scalene-1.5.46.tar.gz", hash = "sha256:86d6de574489b48a291a569b59dab283cbdf0c4c17e576ec2a89af2cd76274a9"},
+    {file = "scalene-1.5.47-cp310-cp310-macosx_13_0_universal2.whl", hash = "sha256:db0f17a4080d015af31895264dbedfc59505535b269a3e50c85061d013f79526"},
+    {file = "scalene-1.5.47-cp310-cp310-macosx_14_0_universal2.whl", hash = "sha256:217ddf3f0ef0c5d8b0dcb313eec83c858c348cb6d988c87298cabc7cc665c94c"},
+    {file = "scalene-1.5.47-cp310-cp310-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:f825df6cf71a31b8afde8e86d6ed151ef196d0dcec8da2eec4b108fa00258ca4"},
+    {file = "scalene-1.5.47-cp310-cp310-win_amd64.whl", hash = "sha256:99dc813cd84b551afb1b23ddb7746c7e206557b181aebbe2a913889e85a1c2c9"},
+    {file = "scalene-1.5.47-cp311-cp311-macosx_13_0_universal2.whl", hash = "sha256:0722ccd4057620c14230dc07823966885315d64cc83803208d4e9e17e103e377"},
+    {file = "scalene-1.5.47-cp311-cp311-macosx_14_0_universal2.whl", hash = "sha256:807fa2b3b6ba60b8c23b15174e29ad08e4e3c536d088acf94077fb07d70f679d"},
+    {file = "scalene-1.5.47-cp311-cp311-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:5fa2252f5dd02eeedc36f1a27efb1c750d64b4760d3cf6f976e4e0ddd96227c7"},
+    {file = "scalene-1.5.47-cp312-cp312-macosx_13_0_universal2.whl", hash = "sha256:0f16e1522a015edbe92ee2e30a48801d4c4f184846736d1be1efb962002d03a0"},
+    {file = "scalene-1.5.47-cp312-cp312-macosx_14_0_universal2.whl", hash = "sha256:312324102571f3274203aeb053546ac1a37648d2c7cffc6b31e59346796d9dc5"},
+    {file = "scalene-1.5.47-cp312-cp312-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:2981d0715f2da6135bd83bde00fed828df318aef0687f92084e07fa848b7621a"},
+    {file = "scalene-1.5.47-cp312-cp312-win_amd64.whl", hash = "sha256:e303153e38d274aded960268340df8d5a82028536bfb8b0a2a409d52d25bf543"},
+    {file = "scalene-1.5.47-cp38-cp38-macosx_13_0_universal2.whl", hash = "sha256:b1ac4fc19b284020230bcfee09fa09597ec823447bd008f2d267848787a394e6"},
+    {file = "scalene-1.5.47-cp38-cp38-macosx_14_0_universal2.whl", hash = "sha256:459fc37f73b66ced55e22bd3b1ea25df2d71af7a2ca5fdb28932268e213b5666"},
+    {file = "scalene-1.5.47-cp38-cp38-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:cc8f8f750b8933217472a75126d8b5ea9a3818fc4b2a866a41d1a5bba9c35a7d"},
+    {file = "scalene-1.5.47-cp38-cp38-win_amd64.whl", hash = "sha256:259445d52966e50b2090f3b1e09533cace4fd08ed2a30db9f4d3d0d6f827ae29"},
+    {file = "scalene-1.5.47-cp39-cp39-macosx_13_0_universal2.whl", hash = "sha256:ecc1d27e2f870b2bafe92ae80665f399a78e177e4be67e90a16c6e201444bc21"},
+    {file = "scalene-1.5.47-cp39-cp39-macosx_14_0_universal2.whl", hash = "sha256:f473405f082a6047700dff6e46e8b60af6ffdb52c53fe2dfe35a21f07e6fca30"},
+    {file = "scalene-1.5.47-cp39-cp39-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:48e8aa7dd099d58055e53fd65d0351d79ee8c633aa51c1818209b5cd66b180c6"},
+    {file = "scalene-1.5.47-cp39-cp39-win_amd64.whl", hash = "sha256:f286012d68523b34a3f90af565354a3b4ec03726c0705e60fa5467db90d8ff70"},
+    {file = "scalene-1.5.47.tar.gz", hash = "sha256:483063d72816204fe308e02d1142b1182b28cfc38ff0e17ced9e3f8175876e9e"},
 ]
 
 [package.dependencies]
@@ -1123,23 +1123,23 @@ timezone = ["pytz"]
 
 [[package]]
 name = "setuptools"
-version = "75.3.0"
+version = "75.4.0"
 description = "Easily download, build, install, upgrade, and uninstall Python packages"
 optional = false
-python-versions = ">=3.8"
+python-versions = ">=3.9"
 files = [
-    {file = "setuptools-75.3.0-py3-none-any.whl", hash = "sha256:f2504966861356aa38616760c0f66568e535562374995367b4e69c7143cf6bcd"},
-    {file = "setuptools-75.3.0.tar.gz", hash = "sha256:fba5dd4d766e97be1b1681d98712680ae8f2f26d7881245f2ce9e40714f1a686"},
+    {file = "setuptools-75.4.0-py3-none-any.whl", hash = "sha256:b3c5d862f98500b06ffdf7cc4499b48c46c317d8d56cb30b5c8bce4d88f5c216"},
+    {file = "setuptools-75.4.0.tar.gz", hash = "sha256:1dc484f5cf56fd3fe7216d7b8df820802e7246cfb534a1db2aa64f14fcb9cdcb"},
 ]
 
 [package.extras]
-check = ["pytest-checkdocs (>=2.4)", "pytest-ruff (>=0.2.1)", "ruff (>=0.5.2)"]
-core = ["importlib-metadata (>=6)", "importlib-resources (>=5.10.2)", "jaraco.collections", "jaraco.functools", "jaraco.text (>=3.7)", "more-itertools", "more-itertools (>=8.8)", "packaging", "packaging (>=24)", "platformdirs (>=4.2.2)", "tomli (>=2.0.1)", "wheel (>=0.43.0)"]
+check = ["pytest-checkdocs (>=2.4)", "pytest-ruff (>=0.2.1)", "ruff (>=0.7.0)"]
+core = ["importlib-metadata (>=6)", "jaraco.collections", "jaraco.functools (>=4)", "jaraco.text (>=3.7)", "more-itertools", "more-itertools (>=8.8)", "packaging", "packaging (>=24.2)", "platformdirs (>=4.2.2)", "tomli (>=2.0.1)", "wheel (>=0.43.0)"]
 cover = ["pytest-cov"]
 doc = ["furo", "jaraco.packaging (>=9.3)", "jaraco.tidelift (>=1.4)", "pygments-github-lexers (==0.0.5)", "pyproject-hooks (!=1.1)", "rst.linker (>=1.9)", "sphinx (>=3.5)", "sphinx-favicon", "sphinx-inline-tabs", "sphinx-lint", "sphinx-notfound-page (>=1,<2)", "sphinx-reredirects", "sphinxcontrib-towncrier", "towncrier (<24.7)"]
 enabler = ["pytest-enabler (>=2.2)"]
-test = ["build[virtualenv] (>=1.0.3)", "filelock (>=3.4.0)", "ini2toml[lite] (>=0.14)", "jaraco.develop (>=7.21)", "jaraco.envs (>=2.2)", "jaraco.path (>=3.2.0)", "jaraco.test (>=5.5)", "packaging (>=23.2)", "pip (>=19.1)", "pyproject-hooks (!=1.1)", "pytest (>=6,!=8.1.*)", "pytest-home (>=0.5)", "pytest-perf", "pytest-subprocess", "pytest-timeout", "pytest-xdist (>=3)", "tomli-w (>=1.0.0)", "virtualenv (>=13.0.0)", "wheel (>=0.44.0)"]
-type = ["importlib-metadata (>=7.0.2)", "jaraco.develop (>=7.21)", "mypy (==1.12.*)", "pytest-mypy"]
+test = ["build[virtualenv] (>=1.0.3)", "filelock (>=3.4.0)", "ini2toml[lite] (>=0.14)", "jaraco.develop (>=7.21)", "jaraco.envs (>=2.2)", "jaraco.path (>=3.2.0)", "jaraco.test (>=5.5)", "packaging (>=24.2)", "pip (>=19.1)", "pyproject-hooks (!=1.1)", "pytest (>=6,!=8.1.*)", "pytest-home (>=0.5)", "pytest-perf", "pytest-subprocess", "pytest-timeout", "pytest-xdist (>=3)", "tomli-w (>=1.0.0)", "virtualenv (>=13.0.0)", "wheel (>=0.44.0)"]
+type = ["importlib-metadata (>=7.0.2)", "jaraco.develop (>=7.21)", "mypy (>=1.12,<1.14)", "pytest-mypy"]
 
 [[package]]
 name = "six"
@@ -1282,13 +1282,13 @@ files = [
 
 [[package]]
 name = "wheel"
-version = "0.44.0"
+version = "0.45.0"
 description = "A built-package format for Python"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "wheel-0.44.0-py3-none-any.whl", hash = "sha256:2376a90c98cc337d18623527a97c31797bd02bad0033d41547043a1cbfbe448f"},
-    {file = "wheel-0.44.0.tar.gz", hash = "sha256:a29c3f2817e95ab89aa4660681ad547c0e9547f20e75b0562fe7723c9a2a9d49"},
+    {file = "wheel-0.45.0-py3-none-any.whl", hash = "sha256:52f0baa5e6522155090a09c6bd95718cc46956d1b51d537ea5454249edb671c7"},
+    {file = "wheel-0.45.0.tar.gz", hash = "sha256:a57353941a3183b3d5365346b567a260a0602a0f8a635926a7dede41b94c674a"},
 ]
 
 [package.extras]
@@ -1307,4 +1307,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.12.0"
-content-hash = "bf878ed594a8fa22aafaadd6876ed9d7b8d1be4597a90eaf76fd341fd1c2c716"
+content-hash = "49267cb9887da31236e5a82b9b1d8a4024b2c3cf7b3e75e74c143514900c21a4"
