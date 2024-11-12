@@ -34,16 +34,16 @@ optional = true
 
 [tool.poetry.group.dev.dependencies]
 # Linting and formatting
-ruff = "^0.7.2"
+ruff = "^0.7.3"
 # Type checking
 mypy = "^1.13.0"
 # Profiling
-scalene = "^1.5.46"
+scalene = "^1.5.47"
 # Testing
 pytest = "^8.3.3"
 # Python standard
-setuptools = "^75.3.0"
-wheel = "^0.44.0"
+setuptools = "^75.4.0"
+wheel = "^0.45.0"
 
 [tool.semantic_release]
 version_toml = ["pyproject.toml:tool.poetry.version"]
