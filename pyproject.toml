@@ -38,11 +38,11 @@ ruff = "^0.7.3"
 # Type checking
 mypy = "^1.13.0"
 # Profiling
-scalene = "^1.5.47"
+scalene = "^1.5.48"
 # Testing
 pytest = "^8.3.3"
 # Python standard
-setuptools = "^75.4.0"
+setuptools = "^75.5.0"
 wheel = "^0.45.0"
 
 [tool.semantic_release]
