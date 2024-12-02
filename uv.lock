@@ -195,7 +195,7 @@ wheels = [
 [[package]]
 name = "lootscraper"
 version = "1.14.3"
-source = { virtual = "." }
+source = { editable = "." }
 dependencies = [
     { name = "alembic" },
     { name = "feedgen" },
