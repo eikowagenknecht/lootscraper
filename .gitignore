@@ -7,10 +7,13 @@
 # Distributables
 /dist/
 
-# Python compilates and cache files
+# Python-generated files
 __pycache__/
-*.py[cod]
-*$py.class
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
 
 # Dev and tool data
 /.idea/

@@ -31,23 +31,17 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Install Poetry
-        uses: abatilo/actions-poetry@v3.0.1
-
-      - name: Configure poetry
-        run: poetry config virtualenvs.in-project true
-
-      - name: View poetry version
-        run: poetry --version
+      - name: Install uv
+        run: pip install uv
 
       - name: Install dependencies
-        run: poetry install --with dev
+        run: uv pip install ".[dev]"
 
       - name: Lint with ruff
-        run: poetry run ruff check .
+        run: uv run ruff check .
 
       - name: Check format with ruff
-        run: poetry run ruff format . --check
+        run: uv run ruff format . --check
 
       - name: Check types with mypy
-        run: poetry run mypy .
+        run: uv run mypy .
