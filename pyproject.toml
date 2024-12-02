@@ -1,8 +1,12 @@
+[build-system]
+requires = ["setuptools >= 75.0"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "lootscraper"
 version = "1.14.3"
 description = "RSS feeds and Telegram bot for free game and loot offers."
-requires-python = ">=3.12.0"
+requires-python = ">=3.12.7"
 readme = "README.md"
 authors = [{ name = "Eiko Wagenknecht", email = "git@eiko-wagenknecht.de" }]
 license = { text = "CC-BY-NC-SA-4.0" }
@@ -139,7 +143,7 @@ line-ending = "lf"
 preview = true
 
 [tool.mypy]
-python_version = "3.12"
+python_version = "3.12.7"
 # ignore imports from 3rd party libraries where no stubs are available
 ignore_missing_imports = true
 warn_unused_configs = true
