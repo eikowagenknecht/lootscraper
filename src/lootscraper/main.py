@@ -4,6 +4,7 @@ import logging
 import shutil
 import sys
 from contextlib import AsyncExitStack, suppress
+from importlib import resources
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -112,7 +113,10 @@ def create_config_file(config_file: Path) -> None:
     """Create a new config file from the example config file."""
     print(f"Config file {config_file} not found, creating a new one")  # noqa: T201
     config_file.parent.mkdir(exist_ok=True, parents=True)
-    shutil.copy(EXAMPLE_CONFIG_FILE, config_file)
+
+    # Get the default config file from the package
+    with resources.path("lootscraper.data", EXAMPLE_CONFIG_FILE) as default_config:
+        shutil.copy(default_config, config_file)
 
 
 def check_config_file() -> None:

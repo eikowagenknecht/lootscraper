@@ -1,69 +1,49 @@
-[build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
-
 [project]
 name = "lootscraper"
-version = "1.0.0"
+version = "1.14.3"
 description = "RSS feeds and Telegram bot for free game and loot offers."
-requires-python = ">= 3.12.0"
+requires-python = ">=3.12.0"
 readme = "README.md"
-authors = [{ name = "Eiko Wagenknecht", email = "web@eiko-wagenknecht.de" }]
+authors = [{ name = "Eiko Wagenknecht", email = "git@eiko-wagenknecht.de" }]
+license = { text = "CC-BY-NC-SA-4.0" }
+dependencies = [
+    "alembic==1.14.0",
+    "feedgen==1.0.0",
+    "humanize==4.11.0",
+    "httpx==0.28.0",
+    "python-telegram-bot[rate-limiter]==21.8",
+    "playwright==1.49.0",
+    "SQLAlchemy==2.0.36",
+    "Unidecode==1.3.8",
+    "xvfbwrapper==0.2.9",
+    "jinja2==3.1.4",
+    "schedule==1.2.2",
+    "pytz==2024.2",
+]
+
+[project.scripts]
+lootscraper = "lootscraper.main:main"
+
+[dependency-groups]
+dev = [
+    "ruff==0.8.1",
+    "mypy==1.13.0",
+    "scalene==1.5.48",
+    "pytest==8.3.4",
+    "setuptools==75.6.0",
+    "wheel==0.45.1",
+]
 
 [project.urls]
 Homepage = "https://github.com/eikowagenknecht/lootscraper"
 Issues = "https://github.com/eikowagenknecht/lootscraper/issues"
 
-[tool.poetry]
-name = "lootscraper"
-version = "1.14.3"
-description = "RSS feeds and Telegram bot for free game and loot offers."
-authors = ["Eiko Wagenknecht <git@eiko-wagenknecht.de>"]
-readme = "README.md"
-license = "CC-BY-NC-SA-4.0"
-repository = "https://github.com/eikowagenknecht/lootscraper"
-include = ["config.default.toml"]
-
-[tool.poetry.scripts]
-lootscraper = 'lootscraper.main:main'
-
-[tool.poetry.urls]
-"Bug Tracker" = "https://github.com/eikowagenknecht/lootscraper/issues"
-
-[tool.poetry.dependencies]
-python = "3.12.0"
-alembic = "1.14.0"
-feedgen = "1.0.0"
-humanize = "4.11.0"
-httpx = "0.28.0"
-python-telegram-bot = { version = "21.8", extras = ["rate-limiter"] }
-playwright = "1.49.0"
-SQLAlchemy = "2.0.36"
-Unidecode = "1.3.8"
-xvfbwrapper = "0.2.9"
-jinja2 = "3.1.4"
-schedule = "1.2.2"
-pytz = "2024.2"
-
-[tool.poetry.group.dev]
-optional = true
-
-[tool.poetry.group.dev.dependencies]
-# Linting and formatting
-ruff = "0.8.1"
-# Type checking
-mypy = "1.13.0"
-# Profiling
-scalene = "1.5.48"
-# Testing
-pytest = "8.3.4"
-# Python standard
-setuptools = "75.6.0"
-wheel = "0.45.1"
+[tool.setuptools.package-data]
+lootscraper = ["data/config.default.toml"]
 
 [tool.semantic_release]
-version_toml = ["pyproject.toml:tool.poetry.version"]
-build_command = "pip install poetry && poetry build"
+version_toml = ["pyproject.toml:project.version"]
+build_command = "pip install uv && uv build"
 
 [tool.semantic_release.branches.main]
 match = "(main)"
