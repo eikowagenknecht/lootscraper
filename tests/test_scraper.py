@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import unittest
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from lootscraper.browser import get_browser_context
 from lootscraper.scraper.amazon_games import AmazonGamesScraper
@@ -40,7 +40,7 @@ class AmazonGamesTests(unittest.IsolatedAsyncioTestCase):
                 assert res.valid_to is not None
                 assert res.img_url is not None
                 assert res.img_url.startswith("https://")
-                assert res.valid_to > datetime.now(tz=timezone.utc)
+                assert res.valid_to > datetime.now(tz=UTC)
 
 
 class AmazonLootTests(unittest.IsolatedAsyncioTestCase):
@@ -58,7 +58,7 @@ class AmazonLootTests(unittest.IsolatedAsyncioTestCase):
                     assert res.url.startswith("https://gaming.amazon.com")
                 assert res.img_url is not None
                 assert res.img_url.startswith("https://")
-                assert res.valid_to > datetime.now(tz=timezone.utc)
+                assert res.valid_to > datetime.now(tz=UTC)
 
 
 class AppleGamesTest(unittest.IsolatedAsyncioTestCase):
@@ -123,7 +123,7 @@ class GogGamesTest(unittest.IsolatedAsyncioTestCase):
                 assert res.img_url.startswith("https://")
                 # Some offer types do not contain a date
                 if res.valid_to is not None:
-                    assert res.valid_to > datetime.now(tz=timezone.utc)
+                    assert res.valid_to > datetime.now(tz=UTC)
 
 
 class GoogleGamesTest(unittest.IsolatedAsyncioTestCase):
@@ -184,7 +184,7 @@ class SteamGamesTest(unittest.IsolatedAsyncioTestCase):
                 assert res.url.startswith("https://store.steampowered.com/")
                 assert res.img_url is not None
                 assert res.img_url.startswith("https://")
-                assert res.valid_to > datetime.now(tz=timezone.utc)
+                assert res.valid_to > datetime.now(tz=UTC)
 
 
 class SteamLootTest(unittest.IsolatedAsyncioTestCase):
@@ -200,7 +200,7 @@ class SteamLootTest(unittest.IsolatedAsyncioTestCase):
                 assert res.url.startswith("https://store.steampowered.com/")
                 assert res.img_url is not None
                 assert res.img_url.startswith("https://")
-                assert res.valid_to > datetime.now(tz=timezone.utc)
+                assert res.valid_to > datetime.now(tz=UTC)
 
 
 class UbisoftGamesTest(unittest.IsolatedAsyncioTestCase):

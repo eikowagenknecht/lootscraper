@@ -3,7 +3,7 @@ from __future__ import annotations
 import contextlib
 import logging
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import TYPE_CHECKING
 
 import schedule
@@ -132,7 +132,7 @@ class UbisoftGamesScraper(Scraper):
         if valid_to:
             with contextlib.suppress(ValueError):
                 utc_valid_to = datetime.strptime(valid_to, "%B %d, %Y at %I%p").replace(
-                    tzinfo=timezone.utc,
+                    tzinfo=UTC,
                 )
 
         # Fallback for weird date format "January 23 at 2023 at 3PM UTC", seen 2023-12
@@ -142,7 +142,7 @@ class UbisoftGamesScraper(Scraper):
                     valid_to,
                     "%B %d at %Y at %I%p",
                 ).replace(
-                    tzinfo=timezone.utc,
+                    tzinfo=UTC,
                 )
 
         return Offer(
@@ -151,7 +151,7 @@ class UbisoftGamesScraper(Scraper):
             type=UbisoftGamesScraper.get_type(),
             title=title,
             probable_game_name=title,
-            seen_last=datetime.now(timezone.utc),
+            seen_last=datetime.now(UTC),
             valid_to=utc_valid_to,
             rawtext=rawtext,
             url=raw_offer.url,

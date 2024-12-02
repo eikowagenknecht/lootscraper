@@ -1,6 +1,6 @@
 import difflib
 import re
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 RESULT_MATCH_THRESHOLD = 0.85
@@ -189,7 +189,7 @@ def calc_real_valid_to(
     forced_now: datetime | None = None,
 ) -> datetime | None:
     """Calculate the real end date of an offer."""
-    now = forced_now if forced_now is not None else datetime.now(tz=timezone.utc)
+    now = forced_now if forced_now is not None else datetime.now(tz=UTC)
 
     if valid_to is None:
         # The offer has no end date and hasn't been seen for more than a day.

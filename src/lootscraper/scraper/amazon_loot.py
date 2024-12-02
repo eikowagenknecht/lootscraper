@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from typing import TYPE_CHECKING
 
 from lootscraper.common import OfferType
@@ -108,20 +108,20 @@ class AmazonLootScraper(AmazonBaseScraper):
             try:
                 raw_date = raw_offer.valid_to.removeprefix("Ends ")
                 if raw_date.lower() == "today":
-                    parsed_date = datetime.now(tz=timezone.utc).replace(
+                    parsed_date = datetime.now(tz=UTC).replace(
                         hour=0,
                         minute=0,
                         second=0,
                     )
                 elif raw_date.lower() == "tomorrow":
-                    parsed_date = datetime.now(tz=timezone.utc).replace(
+                    parsed_date = datetime.now(tz=UTC).replace(
                         hour=0,
                         minute=0,
                         second=0,
                     ) + timedelta(days=1)
                 else:
                     parsed_date = datetime.strptime(raw_date, "%b %d, %Y").replace(
-                        tzinfo=timezone.utc,
+                        tzinfo=UTC,
                         hour=0,
                         minute=0,
                         second=0,
@@ -137,7 +137,7 @@ class AmazonLootScraper(AmazonBaseScraper):
             type=AmazonLootScraper.get_type(),
             title=title,
             probable_game_name=raw_offer.game_title,
-            seen_last=datetime.now(timezone.utc),
+            seen_last=datetime.now(UTC),
             valid_to=end_date,
             rawtext=rawtext,
             url=raw_offer.url,

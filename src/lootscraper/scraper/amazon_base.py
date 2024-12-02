@@ -4,7 +4,8 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 import schedule
-from playwright.async_api import Error, Locator, TimeoutError
+from playwright.async_api import Error, Locator
+from playwright.async_api import TimeoutError as PlaywrightTimeoutError
 
 from lootscraper.browser import get_new_page
 from lootscraper.common import OfferDuration, Source
@@ -76,7 +77,7 @@ class AmazonBaseScraper(Scraper):
 
         try:
             valid_to = await self.read_date_from_details_page(url)
-        except TimeoutError:
+        except PlaywrightTimeoutError:
             # Some offers just have no date. That's fine.
             valid_to = None
 

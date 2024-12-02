@@ -1,9 +1,8 @@
 import contextlib
+import tomllib
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
-
-import tomllib
 
 from lootscraper.common import OfferDuration, OfferType, Source
 

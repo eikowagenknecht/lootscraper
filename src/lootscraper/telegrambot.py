@@ -4,7 +4,7 @@ import asyncio
 import json
 import logging
 import traceback
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta, timezone
 from http.client import RemoteDisconnected
 from typing import TYPE_CHECKING, Self
 
@@ -620,7 +620,7 @@ class TelegramBot:
             ).scalar()
 
             new_chat = TelegramChat(
-                registration_date=datetime.now(tz=timezone.utc),
+                registration_date=datetime.now(tz=UTC),
                 chat_type=update.effective_chat.type,  # type: ignore
                 chat_id=update.effective_chat.id,
                 user_id=update.effective_user.id if update.effective_user else None,
@@ -1045,7 +1045,7 @@ class TelegramBot:
         try:
             for subscription in subscriptions:
                 offers: Sequence[Offer] = self.database.read_active_offers(
-                    datetime.now(tz=timezone.utc),
+                    datetime.now(tz=UTC),
                     type_=subscription.type,
                     source=subscription.source,
                     duration=subscription.duration,
@@ -1427,9 +1427,9 @@ class TelegramBot:
                 )
 
             time_to_end = humanize.naturaldelta(
-                datetime.now(tz=timezone.utc) - offer.valid_to,
+                datetime.now(tz=UTC) - offer.valid_to,
             )
-            if datetime.now(tz=timezone.utc) > offer.valid_to:
+            if datetime.now(tz=UTC) > offer.valid_to:
                 content += f"Offer expired {markdown_escape(time_to_end)} ago"
             else:
                 content += f"Offer expires in {markdown_escape(time_to_end)}"
@@ -1733,7 +1733,7 @@ class TelegramBot:
 
         announcement = Announcement(
             channel=Channel.TELEGRAM,
-            date=datetime.now(tz=timezone.utc),
+            date=datetime.now(tz=UTC),
             text_markdown=announcement_full,
         )
 

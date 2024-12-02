@@ -1,7 +1,7 @@
 import asyncio
 import hashlib
 import logging
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 from playwright.async_api import BrowserContext
@@ -109,7 +109,7 @@ async def action_generate_feed(db: LootDatabase) -> None:
     duration: OfferDuration
 
     all_offers = db.read_all()
-    active_offers = db.read_active_offers(datetime.now(tz=timezone.utc))
+    active_offers = db.read_active_offers(datetime.now(tz=UTC))
 
     # Generate and upload feeds split by source
     for source, type_, duration in [
