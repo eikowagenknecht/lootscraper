@@ -1,13 +1,22 @@
-FROM python:3.12.7-bullseye
+# Use a Python image with uv pre-installed
+FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim
+
+# Install the project into `/app`
+WORKDIR /app
 
 # Set environment variables
 # - Tini version
 # - Linux: Skip interactive prompts
 # - xvfb: Set display port as an environment variable
-# - venv path
+# - uv: Enable bytecode compilation
+# - uv: Copy from the cache instead of linking since it's a mounted volume
+# - Place executables in the environment at the front of the path
 ENV TINI_VERSION=v0.19.0 \
     DEBIAN_FRONTEND=noninteractive \
-    DISPLAY=:99
+    DISPLAY=:99 \
+    UV_COMPILE_BYTECODE=1 \ 
+    UV_LINK_MODE=copy \
+    PATH="/app/.venv/bin:$PATH"
 
 # Install Tini
 ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini /tini
@@ -22,28 +31,28 @@ RUN apt-get update && \
     xvfb \
     && rm -rf /var/lib/apt/lists/*
 
-# Install uv and create virtual environment
-RUN pip install uv && \
-    uv venv
+# Install the project's dependencies using the lockfile and settings
+RUN --mount=type=cache,target=/root/.cache/uv \
+    --mount=type=bind,source=uv.lock,target=uv.lock \
+    --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
+    uv sync --frozen --no-install-project --no-dev
 
-# Create and switch into app directory
-RUN mkdir /app
-WORKDIR /app
+# Install Python dependencies
+RUN playwright install chromium && \
+    playwright install-deps
 
-# Install Python dependency file
+# Copy app files (has to be done before installing deps)
 COPY pyproject.toml \
+    uv.lock \
     alembic.ini \
     README.md \
     /app/
-
-# Copy app files (has to be done before installing deps)
 COPY /src/ /app/src/
 
-# Install Python dependencies
-RUN uv pip install . && \
-    uv run playwright install chromium && \
-    uv run playwright install-deps
-    
+# Install app separately from its dependencies allows optimal layer caching
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv sync --frozen --no-dev
+
 # Lootscraper: Run
 CMD [ "uv", "run", "lootscraper" ]
 
