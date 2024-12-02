@@ -32,16 +32,24 @@ jobs:
           python-version: "3.12"
 
       - name: Install uv
-        run: pip install uv
+        run: curl -LsSf https://astral.sh/uv/install.sh | sh
+
+      - name: Add uv to PATH
+        run: echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+
+      - name: Create and activate virtual environment
+        run: |
+          uv venv
+          echo "$GITHUB_WORKSPACE/.venv/bin" >> $GITHUB_PATH
 
       - name: Install dependencies
-        run: uv pip install ".[dev]"
+        run: uv sync
 
       - name: Lint with ruff
-        run: uv run ruff check .
+        run: ruff check .
 
       - name: Check format with ruff
-        run: uv run ruff format . --check
+        run: ruff format . --check
 
       - name: Check types with mypy
-        run: uv run mypy .
+        run: mypy .
