@@ -7,12 +7,12 @@ Most people will probably just use the feeds and bot I provide, so there is no n
 So if you actually want to run this yourself, you first need an installed Python 3.12+ environment. The commands below are for Windows. If you use Linux, you probably know the right substitutes.
 
 - Download repository
-- Install poetry (<https://python-poetry.org/>)
-- Create virtual environment (`python -m venv .venv`)
-- Activate virtual environment (`./.venv/Scripts/Activate`)
-- Install the required packages (`poetry install`)
+- Install uv (`pip install uv`)
+- Create virtual environment (`uv venv`)
+- Activate virtual environment (`./.venv/Scripts/activate`)
+- Install the required packages (`uv sync`) (or `uv sync --no-dev` for production)
 - Install playwright browser (`playwright install chrome`)
-- Run (`poetry run lootscraper`)
+- Run (`uv run lootscraper`)
 
 ### Settings
 
@@ -28,7 +28,7 @@ Start a chat with [Botfather](https://t.me/botfather), send him the `/create` co
 
 ## Setting up the development environment
 
-In addition to the above steps ("Run this locally"), I recommend installing the additional dev packages (`poetry install --with dev`) and the recommended VS Code extensions (Extensions > Filter > Recommended).
+In addition to the above steps ("Run this locally"), I recommend installing the recommended VS Code extensions (Extensions > Filter > Recommended).
 
 ## Build and run as Docker container
 
@@ -70,26 +70,18 @@ Some quick hints:
 - Write custom scripts:
 <https://stackoverflow.com/questions/24612395/how-do-i-execute-inserts-and-updates-in-an-alembic-upgrade-script>
 
-## Poetry
+## uv
 
-Install: `poetry install --with dev`
-Install and remove unused: `poetry install --with dev --sync`
-Build: `poetry build`
-Add package: `poetry add <package>`
-Add dev package: `poetry add <package> --group dev`
-Run: `poetry run <package>`
+- Synchronize local instal: `uv sync` (with dev deps) or `uv sync --no-dev` (without dev deps)
+- Build: `uv build`
+- Add package: `uv add <package>` or `uv add <package> --dev`
+- Run: `uv run <package>`
 
 ### Update dependencies
 
-Update poetry itself:
-
-- `(Invoke-WebRequest -Uri https://install.python-poetry.org -UseBasicParsing).Content | py - --uninstall`
-- `(Invoke-WebRequest -Uri https://install.python-poetry.org -UseBasicParsing).Content | py -`
-
-Install tool: `poetry self add poetry-plugin-up` (only once)
-Update all dependencies in `pyproject.toml`: `poetry up --latest --with dev`
-Install new dependencies locally: `poetry install --with dev --sync`
-Check if dependencies are up to date: `poetry show --outdated --all`
+- Update uv itself: `uv self update`
+- Update all dependencies in `pyproject.toml`: Use Dependabot, uv doesn't have this functionality yet (see [this GH issue](https://github.com/astral-sh/uv/issues/6794))
+- Show outdated deps: `uv pip list --outdated`
 
 ## Profiling
 
@@ -109,4 +101,4 @@ For profiling, run `scalene -m lootscraper`.
   - `chore`: Maintenance tasks, dependency updates and other non-user-facing changes
   - `ci`: Changes to the CI configuration files and scripts (GitHub Actions)
   - `revert`: Reverts a previous commit. In the body, it should say: `This reverts commit <hash>.`
-- Run ruff (`poetry run ruff check . --fix`) and ruff format (`poetry run ruff format .`) before committing.
+- Run ruff (`uv run ruff check . --fix`) and ruff format (`uv run ruff format .`) before committing.
