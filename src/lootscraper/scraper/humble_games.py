@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 import urllib.parse
 from dataclasses import dataclass
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from typing import TYPE_CHECKING
 
 import schedule
@@ -134,7 +134,7 @@ class HumbleGamesScraper(Scraper):
         }
 
         if raw_offer.valid_for_minutes is not None:
-            valid_to = datetime.now(tz=timezone.utc) + timedelta(
+            valid_to = datetime.now(tz=UTC) + timedelta(
                 minutes=raw_offer.valid_for_minutes,
             )
         else:
@@ -152,7 +152,7 @@ class HumbleGamesScraper(Scraper):
             category=category,
             title=raw_offer.title,
             probable_game_name=raw_offer.title,
-            seen_last=datetime.now(timezone.utc),
+            seen_last=datetime.now(UTC),
             rawtext=rawtext,
             url=raw_offer.url,
             img_url=raw_offer.img_url,

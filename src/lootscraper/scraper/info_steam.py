@@ -2,7 +2,7 @@ import contextlib
 import logging
 import urllib.parse
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 import httpx
@@ -178,7 +178,7 @@ async def add_data_from_steam_api(steam_info: SteamInfo) -> None:
     try:
         date_string = content["release_date"]["date"]
         timestamp = datetime.strptime(date_string, "%d %b, %Y").replace(
-            tzinfo=timezone.utc,
+            tzinfo=UTC,
         )
         steam_info.release_date = timestamp
     except (KeyError, ValueError):
@@ -439,7 +439,7 @@ async def add_data_from_steam_store_page(
                         release_date = datetime.strptime(
                             release_date_str,
                             "%d %b, %Y",
-                        ).replace(tzinfo=timezone.utc)
+                        ).replace(tzinfo=UTC)
                         steam_info.release_date = release_date
             except Error as e:
                 logger.debug(

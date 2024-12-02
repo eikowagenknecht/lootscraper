@@ -2,7 +2,7 @@
 import html
 import logging
 from collections.abc import Sequence
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 from jinja2 import Template
@@ -227,7 +227,7 @@ def generate_html(
             entry["source"] = html.escape(offer.source.value)
             entry["url"] = html.escape(offer.url)
 
-        if offer.valid_to and offer.valid_to < datetime.now(tz=timezone.utc):
+        if offer.valid_to and offer.valid_to < datetime.now(tz=UTC):
             entry["is_expired"] = True
         else:
             entry["is_expired"] = False

@@ -3,7 +3,7 @@ from __future__ import annotations
 import contextlib
 import logging
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 import httpx
@@ -184,8 +184,8 @@ async def add_data_from_api(igdb_info: IgdbInfo) -> None:
 
     try:
         unix_releasedate = game["first_release_date"]
-        timestamp = datetime.fromtimestamp(unix_releasedate, tz=timezone.utc)
-        igdb_info.release_date = timestamp.replace(tzinfo=timezone.utc)
+        timestamp = datetime.fromtimestamp(unix_releasedate, tz=UTC)
+        igdb_info.release_date = timestamp.replace(tzinfo=UTC)
     except KeyError:
         pass
 

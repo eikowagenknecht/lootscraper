@@ -6,7 +6,7 @@ import sys
 from contextlib import AsyncExitStack, suppress
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
-from typing import TYPE_CHECKING, Type
+from typing import TYPE_CHECKING
 
 import schedule
 from sqlalchemy.exc import OperationalError
@@ -221,7 +221,7 @@ async def run_scraper_loop(
     # tasks. Each scraper is scheduled by adding a task to the queue. The
     # worker function then dequeues the task and calls the appropriate
     # scraper.
-    task_queue: asyncio.Queue[Type[Scraper]] = asyncio.Queue()
+    task_queue: asyncio.Queue[type[Scraper]] = asyncio.Queue()
 
     # Schedule each scraper for one-time execution
     for scraper_class in get_all_scrapers():
@@ -260,7 +260,7 @@ async def run_scraper_loop(
 
 async def scrape_worker(
     db: LootDatabase,
-    task_queue: asyncio.Queue[Type[Scraper]],
+    task_queue: asyncio.Queue[type[Scraper]],
     telegram_queue: asyncio.Queue[int],
 ) -> None:
     run_no = 0

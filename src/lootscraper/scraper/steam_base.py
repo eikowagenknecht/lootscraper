@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 import urllib.parse
 from dataclasses import dataclass
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from typing import TYPE_CHECKING
 
 import schedule
@@ -136,7 +136,7 @@ class SteamBaseScraper(Scraper):
             "text": raw_offer.text,
         }
 
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         valid_to: datetime | None = None
         if raw_offer.text:
             maybe_date = raw_offer.text.removeprefix(
@@ -145,7 +145,7 @@ class SteamBaseScraper(Scraper):
             try:
                 valid_to = (
                     datetime.strptime(maybe_date, "%d %b @ %I:%M%p")
-                    .replace(tzinfo=timezone.utc)
+                    .replace(tzinfo=UTC)
                     .replace(year=now.year)
                 )
                 # Date has to be in the future, adjust the year accordingly

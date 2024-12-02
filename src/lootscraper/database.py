@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import logging
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Self
 
@@ -68,7 +68,7 @@ class AwareDateTime(sa.TypeDecorator):  # type: ignore
         dialect: sa.Dialect,  # noqa: ARG002
     ) -> datetime | None:
         if value is not None:
-            return value.replace(tzinfo=timezone.utc)
+            return value.replace(tzinfo=UTC)
 
         return None
 
@@ -449,8 +449,8 @@ class LootDatabase:
         # that have the same valid to date or are close to it. Also match
         # offers that previously had no valid to date.
         else:
-            earliest_date = valid_to.replace(tzinfo=timezone.utc) - timedelta(days=1)
-            latest_date = valid_to.replace(tzinfo=timezone.utc) + timedelta(days=1)
+            earliest_date = valid_to.replace(tzinfo=UTC) - timedelta(days=1)
+            latest_date = valid_to.replace(tzinfo=UTC) + timedelta(days=1)
             statement = statement.where(
                 sa.or_(
                     sa.and_(
@@ -501,7 +501,7 @@ class LootDatabase:
         return result
 
     def touch_db_offer(self, db_offer: Offer) -> None:
-        db_offer.seen_last = datetime.now(tz=timezone.utc)
+        db_offer.seen_last = datetime.now(tz=UTC)
         session: Session = self.Session()
         try:
             session.commit()

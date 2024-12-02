@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import logging
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import TYPE_CHECKING
 
 from lootscraper.common import OfferDuration
@@ -82,7 +82,7 @@ class GogGamesAlwaysFreeScraper(GogBaseScraper):
             type=GogGamesAlwaysFreeScraper.get_type(),
             title=raw_offer.title,
             probable_game_name=raw_offer.title,
-            seen_last=datetime.now(timezone.utc),
+            seen_last=datetime.now(UTC),
             rawtext=rawtext,
             url=raw_offer.url,
             img_url=raw_offer.img_url,

@@ -4,7 +4,7 @@ import logging
 import re
 from asyncio import sleep
 from dataclasses import dataclass
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -135,10 +135,7 @@ class Scraper:
         return Config.data_path() / Path(
             self.get_source().name.lower()
             + "_"
-            + datetime.now(tz=timezone.utc)
-            .isoformat()
-            .replace(".", "_")
-            .replace(":", "_")
+            + datetime.now(tz=UTC).isoformat().replace(".", "_").replace(":", "_")
             + "_"
             + suffix
             + ".png",
@@ -361,7 +358,7 @@ class Scraper:
         if valid_to is None:
             return False
 
-        return valid_to > datetime.now(tz=timezone.utc) + timedelta(
+        return valid_to > datetime.now(tz=UTC) + timedelta(
             days=100,
         )
 

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 import urllib.parse
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import TYPE_CHECKING
 
 import schedule
@@ -91,7 +91,7 @@ class AppleGamesScraper(Scraper):
             type=AppleGamesScraper.get_type(),
             title=raw_offer.title,
             probable_game_name=raw_offer.title,
-            seen_last=datetime.now(timezone.utc),
+            seen_last=datetime.now(UTC),
             rawtext=rawtext,
             url=raw_offer.url,
             img_url=raw_offer.img_url,

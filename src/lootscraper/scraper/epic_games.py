@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import TYPE_CHECKING
 
 import schedule
@@ -119,7 +119,7 @@ class EpicGamesScraper(Scraper):
                 utc_valid_to = datetime.strptime(
                     raw_offer.valid_to,
                     "%Y-%m-%dT%H:%M:%S.000Z",
-                ).replace(tzinfo=timezone.utc)
+                ).replace(tzinfo=UTC)
             except ValueError:
                 # TODO: Error handling, put main loop into Scraper and handle
                 # normalization here for each entry
@@ -131,7 +131,7 @@ class EpicGamesScraper(Scraper):
             type=EpicGamesScraper.get_type(),
             title=raw_offer.title,
             probable_game_name=raw_offer.title,
-            seen_last=datetime.now(timezone.utc),
+            seen_last=datetime.now(UTC),
             valid_to=utc_valid_to,
             rawtext=rawtext,
             url=raw_offer.url,

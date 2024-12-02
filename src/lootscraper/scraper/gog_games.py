@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from playwright.async_api import Error, Locator, Page
 
@@ -161,7 +161,7 @@ class GogGamesScraper(GogBaseScraper):
                 valid_to_unix = int(raw_offer.valid_to) / 1000
                 valid_to = datetime.fromtimestamp(
                     valid_to_unix,
-                    tz=timezone.utc,
+                    tz=UTC,
                 )
             except ValueError:
                 valid_to = None
@@ -174,7 +174,7 @@ class GogGamesScraper(GogBaseScraper):
             type=GogGamesScraper.get_type(),
             title=raw_offer.title,
             probable_game_name=raw_offer.title,
-            seen_last=datetime.now(timezone.utc),
+            seen_last=datetime.now(UTC),
             valid_to=valid_to,
             rawtext=rawtext,
             url=nearest_url,
