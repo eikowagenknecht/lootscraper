@@ -1,0 +1,57 @@
+{
+  "name": "lootscraper",
+  "version": "2.0.0",
+  "description": "RSS feeds and Telegram bot for free game and loot offers.",
+  "author": "Eiko Wagenknecht <git@eiko-wagenknecht.de>",
+  "license": "CC-BY-NC-SA-4.0",
+  "type": "module",
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=9.0.0"
+  },
+  "scripts": {
+    "dev": "vite-node src/main.ts",
+    "build": "tsc && vite build",
+    "start": "node dist/main.js",
+    "test": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "lint": "pnpm run lint:eslint && pnpm run lint:biome",
+    "lint:eslint": "eslint . --ext .ts,.tsx",
+    "lint:biome": "biome check .",
+    "format": "biome format . --write",
+    "type-check": "tsc --noEmit",
+    "check": "pnpm run lint && pnpm run type-check",
+    "prepare": "lefthook install"
+  },
+  "dependencies": {
+    "better-sqlite3": "^11.6.0",
+    "dayjs": "^1.11.13",
+    "feed": "^4.2.2",
+    "grammy": "^1.33.0",
+    "kysely": "^0.27.4",
+    "node-schedule": "^2.1.1",
+    "playwright": "^1.49.0",
+    "yaml": "^2.6.1",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^1.9.4",
+    "@commitlint/cli": "^19.6.0",
+    "@commitlint/config-conventional": "^19.6.0",
+    "@commitlint/types": "^19.5.0",
+    "@testing-library/jest-dom": "^6.6.3",
+    "@types/better-sqlite3": "^7.6.12",
+    "@types/node": "^22.10.1",
+    "@typescript-eslint/eslint-plugin": "^8.17.0",
+    "@typescript-eslint/parser": "^8.17.0",
+    "@vitest/coverage-v8": "^2.1.8",
+    "eslint": "^9.16.0",
+    "globals": "^15.13.0",
+    "lefthook": "^1.9.0",
+    "typescript": "^5.7.2",
+    "typescript-eslint": "^8.17.0",
+    "vite": "^6.0.3",
+    "vite-node": "^2.1.8",
+    "vitest": "^2.1.8"
+  }
+}
