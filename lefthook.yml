@@ -1,0 +1,18 @@
+# Refer for explanation to following link:
+# https://github.com/evilmartians/lefthook/blob/master/docs/usage.md
+
+commit-msg:
+  commands:
+    lint-commit-msg:
+      run: npx commitlint --edit
+pre-commit:
+  parallel: true
+  commands:
+    eslint-fix:
+      glob: "*.{js,ts,cjs,mjs,d.cts,d.mts,jsx,tsx}"
+      run: npx eslint "{staged_files}"
+    biome-check-and-fix:
+      glob: "*.{js,ts,cjs,mjs,d.cts,d.mts,jsx,tsx,json,jsonc}"
+      run: npx biome check --write --no-errors-on-unmatched --files-ignore-unknown=true "{staged_files}" && git update-index --again
+    typescript-check:
+      run: npx tsc --noEmit
