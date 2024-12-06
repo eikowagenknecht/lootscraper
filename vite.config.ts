@@ -1,5 +1,5 @@
-import { defineConfig } from "vite";
-import { resolve } from "path";
+import { resolve } from "node:path";
+import { defineConfig } from "vitest/config";
 
 export default defineConfig({
   resolve: {
@@ -12,6 +12,15 @@ export default defineConfig({
     outDir: "dist",
     rollupOptions: {
       input: "src/main.ts",
+    },
+  },
+  test: {
+    globals: true,
+    environment: "node",
+    coverage: {
+      provider: "v8",
+      reporter: ["text", "html"],
+      exclude: ["**/node_modules/**", "**/dist/**", "**/types/**"],
     },
   },
 });
