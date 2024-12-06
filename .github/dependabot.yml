@@ -1,0 +1,30 @@
+version: 2
+updates:
+  # Check for updates to the used NPM packages every weekday
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "daily"
+    target-branch: "main"
+    commit-message:
+      prefix: "chore"
+      include: "scope"
+    open-pull-requests-limit: 100
+    groups:
+      npm-minor-and-patch:
+        applies-to: version-updates
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+
+  # # Check for updates to GitHub Actions every weekday
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "daily"
+    target-branch: "main"
+    commit-message:
+      prefix: "ci"
+      include: "scope"
