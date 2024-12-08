@@ -1,6 +1,11 @@
-import type { ColumnType, Generated } from "kysely";
-
-// Enums from your existing types
+import type {
+  ColumnType,
+  Generated,
+  Insertable,
+  JSONColumnType,
+  Selectable,
+  Updateable,
+} from "kysely";
 import type { OfferDuration, OfferSource, OfferType } from "./config";
 
 export interface Database {
@@ -18,12 +23,20 @@ interface AlembicVersionTable {
   version_num: string;
 }
 
+export type AlembicVersion = Selectable<AlembicVersionTable>;
+export type NewAlembicVersion = Insertable<AlembicVersionTable>;
+export type AlembicVersionUpdate = Updateable<AlembicVersionTable>;
+
 interface AnnouncementsTable {
   id: Generated<number>;
-  channel: string;
-  date: ColumnType<Date, string, string>;
+  channel: "TELEGRAM";
+  date: ColumnType<Date, string | undefined, never>;
   text_markdown: string;
 }
+
+export type Announcement = Selectable<AnnouncementsTable>;
+export type NewAnnouncement = Insertable<AnnouncementsTable>;
+export type AnnouncementUpdate = Updateable<AnnouncementsTable>;
 
 interface GamesTable {
   id: Generated<number>;
@@ -31,10 +44,14 @@ interface GamesTable {
   steam_id: number | null;
 }
 
+export type Game = Selectable<GamesTable>;
+export type NewGame = Insertable<GamesTable>;
+export type GameUpdate = Updateable<GamesTable>;
+
 interface IgdbInfoTable {
   id: number;
-  url: string | null;
-  name: string | null;
+  url: string;
+  name: string;
   short_description: string | null;
   release_date: ColumnType<Date, string, string> | null;
   user_score: number | null;
@@ -42,6 +59,10 @@ interface IgdbInfoTable {
   meta_score: number | null;
   meta_ratings: number | null;
 }
+
+export type IgdbInfo = Selectable<IgdbInfoTable>;
+export type NewIgdbInfo = Insertable<IgdbInfoTable>;
+export type IgdbInfoUpdate = Updateable<IgdbInfoTable>;
 
 interface OffersTable {
   id: Generated<number>;
@@ -51,15 +72,23 @@ interface OffersTable {
   title: string;
   probable_game_name: string;
   seen_last: ColumnType<Date, string, string>;
-  rawtext: Record<string, unknown> | null;
+  rawtext: JSONColumnType<
+    Record<string, unknown>,
+    Record<string, unknown>,
+    Record<string, unknown>
+  > | null;
   url: string | null;
   game_id: number | null;
   category: string;
   img_url: string | null;
-  seen_first: ColumnType<Date, string, string> | null;
+  seen_first: ColumnType<Date, string, never> | null;
   valid_from: ColumnType<Date, string, string> | null;
   valid_to: ColumnType<Date, string, string> | null;
 }
+
+export type Offer = Selectable<OffersTable>;
+export type NewOffer = Insertable<OffersTable>;
+export type OfferUpdate = Updateable<OffersTable>;
 
 interface SteamInfoTable {
   id: number;
@@ -78,6 +107,10 @@ interface SteamInfoTable {
   recommended_price_eur: number | null;
 }
 
+export type SteamInfo = Selectable<SteamInfoTable>;
+export type NewSteamInfo = Insertable<SteamInfoTable>;
+export type SteamInfoUpdate = Updateable<SteamInfoTable>;
+
 interface TelegramChatsTable {
   id: Generated<number>;
   registration_date: ColumnType<Date, string, string>;
@@ -85,14 +118,26 @@ interface TelegramChatsTable {
   chat_id: number;
   user_id: number | null;
   thread_id: number | null;
-  chat_details: Record<string, unknown> | null;
-  user_details: Record<string, unknown> | null;
+  chat_details: JSONColumnType<
+    Record<string, unknown>,
+    Record<string, unknown>,
+    Record<string, unknown>
+  > | null;
+  user_details: JSONColumnType<
+    Record<string, unknown>,
+    Record<string, unknown>,
+    Record<string, unknown>
+  > | null;
   timezone_offset: number;
-  active: boolean;
+  active: number;
   inactive_reason: string | null;
   offers_received_count: number;
   last_announcement_id: number;
 }
+
+export type TelegramChat = Selectable<TelegramChatsTable>;
+export type NewTelegramChat = Insertable<TelegramChatsTable>;
+export type TelegramChatUpdate = Updateable<TelegramChatsTable>;
 
 interface TelegramSubscriptionsTable {
   id: Generated<number>;
@@ -102,3 +147,7 @@ interface TelegramSubscriptionsTable {
   duration: OfferDuration;
   last_offer_id: number;
 }
+
+export type TelegramSubscription = Selectable<TelegramSubscriptionsTable>;
+export type NewTelegramSubscription = Insertable<TelegramSubscriptionsTable>;
+export type TelegramSubscriptionUpdate = Updateable<TelegramSubscriptionsTable>;

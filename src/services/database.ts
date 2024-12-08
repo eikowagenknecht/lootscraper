@@ -5,7 +5,7 @@ import type { Config } from "@/types/config";
 import type { Database as DatabaseType } from "@/types/database";
 import { DatabaseError } from "@/types/errors";
 import { logger } from "@/utils/logger";
-import Database from "better-sqlite3";
+import SQLite from "better-sqlite3";
 import { Kysely, SqliteDialect } from "kysely";
 
 export class DatabaseService {
@@ -30,12 +30,12 @@ export class DatabaseService {
 
       this.db = new Kysely<DatabaseType>({
         dialect: new SqliteDialect({
-          database: new Database(dbPath),
+          database: new SQLite(dbPath),
         }),
       });
 
       // Run migrations
-      await migrateToLatest(this.db);
+      await migrateToLatest(this.db as Kysely<unknown>);
 
       logger.info(`Database initialized at ${dbPath}`);
     } catch (error) {
