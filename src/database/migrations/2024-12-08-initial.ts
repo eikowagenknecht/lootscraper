@@ -1,8 +1,7 @@
-import type { Database } from "@/types/database";
 import type { Kysely } from "kysely";
 
 export const initialMigration = {
-  async up(db: Kysely<Database>): Promise<void> {
+  async up(db: Kysely<unknown>): Promise<void> {
     // alembic_version table
     await db.schema
       .createTable("alembic_version")
@@ -12,7 +11,7 @@ export const initialMigration = {
     // igdb_info table - needs to be before games for references
     await db.schema
       .createTable("igdb_info")
-      .addColumn("id", "integer", (col) => col.primaryKey())
+      .addColumn("id", "integer", (col) => col.primaryKey().notNull())
       .addColumn("url", "varchar")
       .addColumn("name", "varchar")
       .addColumn("short_description", "varchar")
@@ -26,7 +25,7 @@ export const initialMigration = {
     // steam_info table - needs to be before games for references
     await db.schema
       .createTable("steam_info")
-      .addColumn("id", "integer", (col) => col.primaryKey())
+      .addColumn("id", "integer", (col) => col.primaryKey().notNull())
       .addColumn("url", "varchar", (col) => col.notNull())
       .addColumn("name", "varchar")
       .addColumn("short_description", "varchar")
@@ -45,7 +44,7 @@ export const initialMigration = {
     // games table
     await db.schema
       .createTable("games")
-      .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
+      .addColumn("id", "integer", (col) => col.primaryKey().notNull())
       .addColumn("igdb_id", "integer", (col) => col.references("igdb_info.id"))
       .addColumn("steam_id", "integer", (col) =>
         col.references("steam_info.id"),
@@ -55,7 +54,7 @@ export const initialMigration = {
     // announcements table
     await db.schema
       .createTable("announcements")
-      .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
+      .addColumn("id", "integer", (col) => col.primaryKey().notNull())
       .addColumn("channel", "varchar(8)", (col) => col.notNull())
       .addColumn("date", "datetime", (col) => col.notNull())
       .addColumn("text_markdown", "varchar", (col) => col.notNull())
@@ -64,7 +63,7 @@ export const initialMigration = {
     // offers table
     await db.schema
       .createTable("offers")
-      .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
+      .addColumn("id", "integer", (col) => col.primaryKey().notNull())
       .addColumn("source", "varchar(7)", (col) => col.notNull())
       .addColumn("type", "varchar(4)", (col) => col.notNull())
       .addColumn("title", "varchar", (col) => col.notNull())
@@ -84,7 +83,7 @@ export const initialMigration = {
     // telegram_chats table
     await db.schema
       .createTable("telegram_chats")
-      .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
+      .addColumn("id", "integer", (col) => col.primaryKey().notNull())
       .addColumn("registration_date", "datetime", (col) => col.notNull())
       .addColumn("chat_type", "varchar(10)", (col) => col.notNull())
       .addColumn("chat_id", "integer", (col) => col.notNull())
@@ -102,7 +101,7 @@ export const initialMigration = {
     // telegram_subscriptions table
     await db.schema
       .createTable("telegram_subscriptions")
-      .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
+      .addColumn("id", "integer", (col) => col.primaryKey().notNull())
       .addColumn("chat_id", "integer", (col) =>
         col.references("telegram_chats.id").notNull(),
       )
@@ -111,64 +110,9 @@ export const initialMigration = {
       .addColumn("last_offer_id", "integer", (col) => col.notNull())
       .addColumn("duration", "varchar(9)", (col) => col.notNull())
       .execute();
-
-    // Add indices
-    await db.schema
-      .createIndex("idx_games_igdb_id")
-      .on("games")
-      .column("igdb_id")
-      .execute();
-
-    await db.schema
-      .createIndex("idx_games_steam_id")
-      .on("games")
-      .column("steam_id")
-      .execute();
-
-    await db.schema
-      .createIndex("idx_offers_game_id")
-      .on("offers")
-      .column("game_id")
-      .execute();
-
-    await db.schema
-      .createIndex("idx_offers_source_type_duration")
-      .on("offers")
-      .columns(["source", "type", "duration"])
-      .execute();
-
-    await db.schema
-      .createIndex("idx_offers_seen_last")
-      .on("offers")
-      .column("seen_last")
-      .execute();
-
-    await db.schema
-      .createIndex("idx_offers_valid_to")
-      .on("offers")
-      .column("valid_to")
-      .execute();
-
-    await db.schema
-      .createIndex("idx_telegram_chats_chat_id")
-      .on("telegram_chats")
-      .column("chat_id")
-      .execute();
-
-    await db.schema
-      .createIndex("idx_telegram_subscriptions_chat_id")
-      .on("telegram_subscriptions")
-      .column("chat_id")
-      .execute();
-
-    await db.schema
-      .createIndex("idx_telegram_subscriptions_source_type_duration")
-      .on("telegram_subscriptions")
-      .columns(["source", "type", "duration"])
-      .execute();
   },
 
-  async down(db: Kysely<Database>): Promise<void> {
+  async down(db: Kysely<unknown>): Promise<void> {
     // Drop tables in reverse order of creation to handle foreign keys
     await db.schema.dropTable("telegram_subscriptions").execute();
     await db.schema.dropTable("telegram_chats").execute();
