@@ -16,15 +16,13 @@ export async function migrateToLatest(db: Kysely<unknown>): Promise<void> {
   logger.info("Migrating database to latest version");
 
   const hasExistingTables = await checkForExistingTables(db);
-  const hasMigrationTable = await db.introspection
-    .getTables()
-    .then((tables) =>
-      tables.some((table) => table.name === "kysely_migration"),
-    );
+  const hasMigrationTables = await checkForMigrationTables(db);
 
   // For existing databases from a pre-Kysely version, add the migration tables
   // and first migration manually to get them up to speed.
-  if (hasExistingTables && !hasMigrationTable) {
+  if (hasExistingTables && !hasMigrationTables) {
+    logger.info("Adding migration tables to existing database.");
+
     await db.schema
       .createTable("kysely_migration")
       .addColumn("name", "varchar(255)", (col) => col.primaryKey())
@@ -84,10 +82,17 @@ export async function migrateToLatest(db: Kysely<unknown>): Promise<void> {
 // Helper function to check if database has existing tables
 async function checkForExistingTables(db: Kysely<unknown>): Promise<boolean> {
   const tables = await db.introspection.getTables();
-  // Filter out Kysely's own tables
-  const userTables = tables.filter(
-    (table) =>
-      !["kysely_migration", "kysely_migration_lock"].includes(table.name),
+  return tables.length > 0;
+}
+
+async function checkForMigrationTables(db: Kysely<unknown>): Promise<boolean> {
+  const tables = await db.introspection.getTables({
+    withInternalKyselyTables: true,
+  });
+  // Only look at Kysely's own tables
+  logger.info(`Tables: ${tables.map((table) => table.name).join(", ")}`);
+  const systemTables = tables.filter((table) =>
+    table.name.startsWith("kysely"),
   );
-  return userTables.length > 0;
+  return systemTables.length > 0;
 }
