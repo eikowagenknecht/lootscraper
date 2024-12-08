@@ -9,95 +9,98 @@ importers:
   .:
     dependencies:
       better-sqlite3:
-        specifier: ^11.6.0
+        specifier: 11.6.0
         version: 11.6.0
-      dayjs:
-        specifier: ^1.11.13
-        version: 1.11.13
       feed:
-        specifier: ^4.2.2
+        specifier: 4.2.2
         version: 4.2.2
       grammy:
-        specifier: ^1.33.0
+        specifier: 1.33.0
         version: 1.33.0
       kysely:
-        specifier: ^0.27.4
+        specifier: 0.27.4
         version: 0.27.4
+      logform:
+        specifier: 2.7.0
+        version: 2.7.0
+      luxon:
+        specifier: 3.5.0
+        version: 3.5.0
       node-schedule:
-        specifier: ^2.1.1
+        specifier: 2.1.1
         version: 2.1.1
       playwright:
-        specifier: ^1.49.0
+        specifier: 1.49.0
         version: 1.49.0
       winston:
-        specifier: ^3.17.0
+        specifier: 3.17.0
         version: 3.17.0
       winston-daily-rotate-file:
-        specifier: ^5.0.0
+        specifier: 5.0.0
         version: 5.0.0(winston@3.17.0)
       yaml:
-        specifier: ^2.6.1
+        specifier: 2.6.1
         version: 2.6.1
       zod:
-        specifier: ^3.23.8
+        specifier: 3.23.8
         version: 3.23.8
     devDependencies:
       '@biomejs/biome':
-        specifier: ^1.9.4
+        specifier: 1.9.4
         version: 1.9.4
       '@commitlint/cli':
-        specifier: ^19.6.0
+        specifier: 19.6.0
         version: 19.6.0(@types/node@22.10.1)(typescript@5.7.2)
       '@commitlint/config-conventional':
-        specifier: ^19.6.0
+        specifier: 19.6.0
         version: 19.6.0
       '@commitlint/types':
-        specifier: ^19.5.0
+        specifier: 19.5.0
         version: 19.5.0
       '@testing-library/jest-dom':
-        specifier: ^6.6.3
+        specifier: 6.6.3
         version: 6.6.3
       '@types/better-sqlite3':
-        specifier: ^7.6.12
+        specifier: 7.6.12
         version: 7.6.12
       '@types/node':
-        specifier: ^22.10.1
+        specifier: 22.10.1
         version: 22.10.1
       '@typescript-eslint/eslint-plugin':
-        specifier: ^8.17.0
+        specifier: 8.17.0
         version: 8.17.0(@typescript-eslint/parser@8.17.0(eslint@9.16.0(jiti@1.21.6))(typescript@5.7.2))(eslint@9.16.0(jiti@1.21.6))(typescript@5.7.2)
       '@typescript-eslint/parser':
-        specifier: ^8.17.0
+        specifier: 8.17.0
         version: 8.17.0(eslint@9.16.0(jiti@1.21.6))(typescript@5.7.2)
       '@vitest/coverage-v8':
-        specifier: ^2.1.8
+        specifier: 2.1.8
         version: 2.1.8(vitest@2.1.8(@types/node@22.10.1))
       eslint:
-        specifier: ^9.16.0
+        specifier: 9.16.0
         version: 9.16.0(jiti@1.21.6)
       globals:
-        specifier: ^15.13.0
+        specifier: 15.13.0
         version: 15.13.0
       lefthook:
-        specifier: ^1.9.0
+        specifier: 1.9.0
         version: 1.9.0
       prettier:
-        specifier: ^3.4.2
+        specifier: 3.4.2
         version: 3.4.2
       typescript:
-        specifier: ^5.7.2
+        specifier: 5.7.2
         version: 5.7.2
       typescript-eslint:
-        specifier: ^8.17.0
+        specifier: 8.17.0
         version: 8.17.0(eslint@9.16.0(jiti@1.21.6))(typescript@5.7.2)
       vite:
-        specifier: ^6.0.3
+        specifier: 6.0.3
         version: 6.0.3(@types/node@22.10.1)(jiti@1.21.6)(yaml@2.6.1)
       vite-node:
-        specifier: ^2.1.8
+        specifier: 2.1.8
         version: 2.1.8(@types/node@22.10.1)
       vitest:
-        specifier: ^2.1.8
+        specifier: 2.1.8
         version: 2.1.8(@types/node@22.10.1)
 
 packages:
@@ -1052,9 +1055,6 @@ packages:
   dargs@8.1.0:
     resolution: {integrity: sha512-wAV9QHOsNbwnWdNW2FYvE1P56wtgSbM+3SZcdGiWQILwVjACCXDCI3Ai8QlCjMDB8YK5zySiXZYBiwGmNY3lnw==}
     engines: {node: '>=12'}
-
-  dayjs@1.11.13:
-    resolution: {integrity: sha512-oaMBel6gjolK862uaPQOVTA7q3TZhuSvuMQAAglQDOWYO9A91IrAOUJEyKVlqJlHE0vq5p5UXxzdPfMH/x6xNg==}
 
   debug@4.4.0:
     resolution: {integrity: sha512-6WTZ/IxCY/T6BALoZHaE4ctp9xm+Z5kY/pzYaCHRFeyVhojxlrm+46y68HA6hr0TcwEssoxNiDEUJQjfPZ/RYA==}
@@ -2999,8 +2999,6 @@ snapshots:
   css.escape@1.5.1: {}
 
   dargs@8.1.0: {}
-
-  dayjs@1.11.13: {}
 
   debug@4.4.0:
     dependencies:
