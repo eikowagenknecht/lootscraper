@@ -8,7 +8,7 @@ async function main(): Promise<void> {
     // Load config first
     config.loadConfig();
 
-    // Initialize file logging
+    // Initialize file logging if in production
     initializeFileTransport();
 
     logger.info("Starting LootScraper...");
