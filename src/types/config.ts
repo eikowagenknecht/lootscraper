@@ -19,25 +19,33 @@ export const TelegramLogLevel = z.enum([
 ]);
 export type TelegramLogLevel = z.infer<typeof TelegramLogLevel>;
 
-export const OfferSourceSchema = z.enum([
-  "STEAM",
-  "EPIC",
-  "GOG",
-  "AMAZON_GAME",
-  "AMAZON_LOOT",
-  "HUMBLE",
-  "ITCH",
-  "UBISOFT",
-  "APPLE",
-  "GOOGLE",
-]);
-export type OfferSource = z.infer<typeof OfferSourceSchema>;
+export enum OfferSource {
+  STEAM = "STEAM",
+  EPIC = "EPIC",
+  GOG = "GOG",
+  AMAZON_GAME = "AMAZON_GAME",
+  AMAZON_LOOT = "AMAZON_LOOT",
+  HUMBLE = "HUMBLE",
+  ITCH = "ITCH",
+  UBISOFT = "UBISOFT",
+  APPLE = "APPLE",
+  GOOGLE = "GOOGLE",
+}
 
-export const OfferTypeSchema = z.enum(["GAME", "LOOT"]);
-export type OfferType = z.infer<typeof OfferTypeSchema>;
+export enum OfferType {
+  GAME = "GAME",
+  LOOT = "LOOT",
+}
 
-export const OfferDurationSchema = z.enum(["CLAIMABLE", "ALWAYS", "GAMEPASS"]);
-export type OfferDuration = z.infer<typeof OfferDurationSchema>;
+export enum OfferDuration {
+  CLAIMABLE = "CLAIMABLE",
+  ALWAYS = "ALWAYS",
+  GAMEPASS = "GAMEPASS",
+}
+
+export const OfferSourceSchema = z.nativeEnum(OfferSource);
+export const OfferTypeSchema = z.nativeEnum(OfferType);
+export const OfferDurationSchema = z.nativeEnum(OfferDuration);
 
 // Config Schema
 export const ConfigSchema = z.object({
