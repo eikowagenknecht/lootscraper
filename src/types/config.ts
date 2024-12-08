@@ -1,0 +1,91 @@
+import { z } from "zod";
+
+// Enums
+export const LogLevel = z.enum([
+  "DEBUG",
+  "INFO",
+  "WARNING",
+  "ERROR",
+  "CRITICAL",
+]);
+export type LogLevel = z.infer<typeof LogLevel>;
+
+export const TelegramLogLevel = z.enum([
+  "DISABLED",
+  "ERROR",
+  "WARNING",
+  "INFO",
+  "DEBUG",
+]);
+export type TelegramLogLevel = z.infer<typeof TelegramLogLevel>;
+
+export const OfferSourceSchema = z.enum([
+  "STEAM",
+  "EPIC",
+  "GOG",
+  "AMAZON_GAME",
+  "AMAZON_LOOT",
+  "HUMBLE",
+  "ITCH",
+  "UBISOFT",
+  "APPLE",
+  "GOOGLE",
+]);
+export type OfferSource = z.infer<typeof OfferSourceSchema>;
+
+export const OfferTypeSchema = z.enum(["GAME", "LOOT"]);
+export type OfferType = z.infer<typeof OfferTypeSchema>;
+
+export const OfferDurationSchema = z.enum(["CLAIMABLE", "ALWAYS", "GAMEPASS"]);
+export type OfferDuration = z.infer<typeof OfferDurationSchema>;
+
+// Config Schema
+export const ConfigSchema = z.object({
+  common: z.object({
+    databaseFile: z.string().default("loot.db"),
+    feedFilePrefix: z.string().default("lootscraper"),
+    logFile: z.string().default("lootscraper.log"),
+    logLevel: LogLevel.default("INFO"),
+  }),
+  expert: z.object({
+    dbEcho: z.boolean().default(false),
+    webTimeoutSeconds: z.number().default(5),
+  }),
+  scraper: z.object({
+    offerSources: z.array(OfferSourceSchema).default([]),
+    offerTypes: z.array(OfferTypeSchema).default([]),
+    offerDurations: z.array(OfferDurationSchema).default([]),
+    infoSources: z.array(z.enum(["STEAM", "IGDB"])).default([]),
+  }),
+  actions: z.object({
+    scrapeInfo: z.boolean().default(true),
+    generateFeed: z.boolean().default(false),
+    uploadToFtp: z.boolean().default(false),
+    telegramBot: z.boolean().default(false),
+  }),
+  telegram: z.object({
+    logLevel: TelegramLogLevel.default("ERROR"),
+    accessToken: z.string().default(""),
+    developerChatId: z.number().default(0),
+    adminUserId: z.number().default(0),
+  }),
+  igdb: z.object({
+    clientId: z.string().default(""),
+    clientSecret: z.string().default(""),
+  }),
+  ftp: z.object({
+    host: z.string().default(""),
+    user: z.string().default(""),
+    password: z.string().default(""),
+  }),
+  feed: z.object({
+    authorName: z.string().default("John Doe"),
+    authorEmail: z.string().default("mail@example.com"),
+    authorWeb: z.string().default("https://example.com"),
+    urlPrefix: z.string().default("https://feed.example.com/"),
+    urlAlternate: z.string().default("https://example.com/loot"),
+    idPrefix: z.string().default("https://example.com/loot/"),
+  }),
+});
+
+export type Config = z.infer<typeof ConfigSchema>;

@@ -1,0 +1,51 @@
+common:
+  databaseFile: loot.db
+  feedFilePrefix: lootscraper
+  logFile: lootscraper.log
+  logLevel: INFO
+
+expert:
+  dbEcho: false
+  webTimeoutSeconds: 5
+
+scraper:
+  offerSources:
+    - STEAM
+    - EPIC
+    - GOG
+  offerTypes:
+    - GAME
+  offerDurations:
+    - CLAIMABLE
+  infoSources:
+    - STEAM
+    - IGDB
+
+actions:
+  scrapeInfo: true
+  generateFeed: false
+  uploadToFtp: false
+  telegramBot: false
+
+telegram:
+  logLevel: ERROR
+  accessToken: ""
+  developerChatId: 0
+  adminUserId: 0
+
+igdb:
+  clientId: ""
+  clientSecret: ""
+
+ftp:
+  host: ""
+  user: ""
+  password: ""
+
+feed:
+  authorName: John Doe
+  authorEmail: mail@example.com
+  authorWeb: https://example.com
+  urlPrefix: https://feed.example.com/
+  urlAlternate: https://example.com/loot
+  idPrefix: https://example.com/loot/
