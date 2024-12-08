@@ -48,6 +48,7 @@
     "@commitlint/types": "19.5.0",
     "@testing-library/jest-dom": "6.6.3",
     "@types/better-sqlite3": "7.6.12",
+    "@types/luxon": "3.4.2",
     "@types/node": "22.10.1",
     "@typescript-eslint/eslint-plugin": "8.17.0",
     "@typescript-eslint/parser": "8.17.0",
