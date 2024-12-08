@@ -1,5 +1,6 @@
 import { existsSync } from "node:fs";
 import { resolve } from "node:path";
+import { migrateToLatest } from "@/database/migrations";
 import type { Config } from "@/types/config";
 import type { Database as DatabaseType } from "@/types/database";
 import { DatabaseError } from "@/types/errors";
@@ -23,7 +24,7 @@ export class DatabaseService {
     return DatabaseService.instance;
   }
 
-  public initialize(config: Config): void {
+  public async initialize(config: Config): Promise<void> {
     try {
       const dbPath = this.getDbPath(config);
 
@@ -32,6 +33,9 @@ export class DatabaseService {
           database: new Database(dbPath),
         }),
       });
+
+      // Run migrations
+      await migrateToLatest(this.db);
 
       logger.info(`Database initialized at ${dbPath}`);
     } catch (error) {
