@@ -118,7 +118,7 @@ export class EpicGamesScraper extends BaseScraper {
       probable_game_name: rawOffer.title,
       seen_last: new Date().toISOString(),
       valid_to: validTo?.toISOString() ?? null,
-      rawtext,
+      rawtext: JSON.stringify(rawtext),
       url: rawOffer.url ?? null,
       img_url: rawOffer.imgUrl ?? null,
       category: "", // Will be set by categorization

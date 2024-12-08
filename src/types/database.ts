@@ -2,7 +2,6 @@ import type {
   ColumnType,
   Generated,
   Insertable,
-  JSONColumnType,
   Selectable,
   Updateable,
 } from "kysely";
@@ -72,11 +71,7 @@ interface OffersTable {
   title: string;
   probable_game_name: string;
   seen_last: ColumnType<Date, string, string>;
-  rawtext: JSONColumnType<
-    Record<string, unknown>,
-    Record<string, unknown>,
-    Record<string, unknown>
-  > | null;
+  rawtext: ColumnType<Record<string, unknown>, string | undefined, string>;
   url: string | null;
   game_id: number | null;
   category: string;
@@ -118,16 +113,8 @@ interface TelegramChatsTable {
   chat_id: number;
   user_id: number | null;
   thread_id: number | null;
-  chat_details: JSONColumnType<
-    Record<string, unknown>,
-    Record<string, unknown>,
-    Record<string, unknown>
-  > | null;
-  user_details: JSONColumnType<
-    Record<string, unknown>,
-    Record<string, unknown>,
-    Record<string, unknown>
-  > | null;
+  chat_details: ColumnType<Record<string, unknown>, string | undefined, string>;
+  user_details: ColumnType<Record<string, unknown>, string | undefined, string>;
   timezone_offset: number;
   active: number;
   inactive_reason: string | null;
