@@ -3,8 +3,9 @@ import { join } from "node:path";
 import { config } from "@/services/config";
 import { DatabaseService } from "@/services/database";
 import { DatabaseOperations } from "@/services/database/operations";
-// import { OfferDuration, OfferSource, OfferType } from "@/types/config";
-import { afterEach, beforeEach, describe, expect, it } from "vitest"; // expect,
+import { OfferDuration, OfferSource, OfferType } from "@/types/config";
+import type { NewOffer } from "@/types/database";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { insertTestData } from "./testData";
 
 describe("Database Operations", () => {
@@ -59,75 +60,113 @@ describe("Database Operations", () => {
     });
   });
 
-  // describe("Offer Operations", () => {
-  //   it("should find offer by title", async () => {
-  //     const offer = await operations.findOfferByTitle(
-  //       OfferSource.STEAM,
-  //       OfferType.GAME,
-  //       OfferDuration.CLAIMABLE,
-  //       "Test Game",
-  //       new Date(Date.now() + 24 * 60 * 60 * 1000),
-  //     );
+  describe("Offer Operations", () => {
+    it("should create new offer", async () => {
+      const newOffer: NewOffer = {
+        source: OfferSource.EPIC,
+        type: OfferType.GAME,
+        duration: OfferDuration.CLAIMABLE,
+        title: "New Game",
+        probable_game_name: "New Game",
+        seen_last: new Date().toISOString(),
+        rawtext: JSON.stringify({ title: "New Game" }),
+        url: "https://example.com/new",
+        img_url: "https://example.com/new.jpg",
+        category: "VALID",
+      };
 
-  //     expect(offer).toBeDefined();
-  //     expect(offer?.title).toBe("Test Game");
-  //   });
+      const offerId = await operations.createOrUpdateOffer(newOffer);
+      expect(offerId).toBe(4); // Since we had 3 offers in test data
 
-  //   it("should get active offers", async () => {
-  //     const offers = await operations.getActiveOffers({
-  //       source: OfferSource.STEAM,
-  //       type: OfferType.GAME,
-  //     });
+      const createdOffer = await operations.getOfferByTitle("New Game");
+      expect(createdOffer).toBeDefined();
+      expect(createdOffer?.title).toBe("New Game");
+    });
 
-  //     expect(offers).toHaveLength(1);
-  //     expect(offers[0].title).toBe("Test Game");
-  //   });
-  // });
+    it("should update seen_last for existing offer", async () => {
+      const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000);
 
-  // describe("Game Operations", () => {
-  //   it("should find existing game", async () => {
-  //     const game = await operations.findOrCreateGame(1, 1);
-  //     expect(game.id).toBe(1);
-  //   });
+      const existingOffer: NewOffer = {
+        source: OfferSource.EPIC,
+        type: OfferType.GAME,
+        duration: OfferDuration.CLAIMABLE,
+        title: "Existing Game 1",
+        probable_game_name: "Existing Game 1",
+        seen_last: yesterday.toISOString(),
+        rawtext: JSON.stringify({ title: "Existing Game 1" }),
+        url: "https://example.com/game1",
+        img_url: "https://example.com/game1.jpg",
+        category: "VALID",
+      };
 
-  //   it("should create new game", async () => {
-  //     const game = await operations.findOrCreateGame(2, 2);
-  //     expect(game.id).toBe(2);
-  //   });
-  // });
+      const offerId = await operations.createOrUpdateOffer(existingOffer);
+      expect(offerId).toBe(1); // Should be the same ID as the existing offer
 
-  // describe("Telegram Operations", () => {
-  //   it("should find telegram chat", async () => {
-  //     const chat = await operations.findTelegramChat(123456);
-  //     expect(chat).toBeDefined();
-  //     expect(chat?.active).toBe(1);
-  //   });
+      const updatedOffer = await operations.getOfferByTitle("Existing Game 1");
+      expect(updatedOffer).toBeDefined();
+      if (!updatedOffer) {
+        return;
+      }
+      expect(new Date(updatedOffer.seen_last).getTime()).toBeGreaterThan(
+        new Date(existingOffer.seen_last).getTime(),
+      );
+    });
 
-  //   it("should update telegram chat activity", async () => {
-  //     await operations.updateTelegramChatActivity(123456, false, "test_reason");
-  //     const chat = await operations.findTelegramChat(123456);
-  //     expect(chat?.active).toBe(0);
-  //     expect(chat?.inactive_reason).toBe("test_reason");
-  //   });
+    it("should handle duplicate offer with different source", async () => {
+      const duplicateOffer: NewOffer = {
+        source: OfferSource.GOG, // Different source
+        type: OfferType.GAME,
+        duration: OfferDuration.CLAIMABLE,
+        title: "Existing Game 1",
+        probable_game_name: "Existing Game 1",
+        seen_last: new Date().toISOString(),
+        rawtext: JSON.stringify({ title: "Existing Game 1" }),
+        url: "https://example.com/game1",
+        img_url: "https://example.com/game1.jpg",
+        category: "VALID",
+      };
 
-  //   it("should toggle telegram subscription", async () => {
-  //     // Test subscribe
-  //     const subscribed = await operations.toggleTelegramSubscription(
-  //       1,
-  //       OfferSource.EPIC,
-  //       OfferType.GAME,
-  //       OfferDuration.CLAIMABLE,
-  //     );
-  //     expect(subscribed).toBe(true);
+      const offerId = await operations.createOrUpdateOffer(duplicateOffer);
+      expect(offerId).toBe(4); // Should be a new offer
 
-  //     // Test unsubscribe
-  //     const unsubscribed = await operations.toggleTelegramSubscription(
-  //       1,
-  //       OfferSource.STEAM,
-  //       OfferType.GAME,
-  //       OfferDuration.CLAIMABLE,
-  //     );
-  //     expect(unsubscribed).toBe(false);
-  //   });
-  // });
+      // Should find both offers
+      const offers = await dbService
+        .get()
+        .selectFrom("offers")
+        .where("title", "=", "Existing Game 1")
+        .selectAll()
+        .execute();
+
+      expect(offers).toHaveLength(2);
+      expect(offers.map((o) => o.source)).toContain(OfferSource.EPIC);
+      expect(offers.map((o) => o.source)).toContain(OfferSource.GOG);
+    });
+
+    it("should get offer by title", async () => {
+      const offer = await operations.getOfferByTitle("Existing Game 1");
+      expect(offer).toBeDefined();
+      expect(offer?.id).toBe(1);
+      expect(offer?.source).toBe(OfferSource.EPIC);
+    });
+
+    it("should update offer", async () => {
+      const updateData = {
+        url: "https://example.com/updated",
+        img_url: "https://example.com/updated.jpg",
+      };
+
+      await operations.updateOffer(1, updateData);
+
+      const updatedOffer = await operations.getOfferByTitle("Existing Game 1");
+      expect(updatedOffer).toBeDefined();
+      expect(updatedOffer?.url).toBe("https://example.com/updated");
+      expect(updatedOffer?.img_url).toBe("https://example.com/updated.jpg");
+    });
+
+    it("should handle non-existent offer updates", async () => {
+      await expect(
+        operations.updateOffer(999, { url: "https://example.com/nonexistent" }),
+      ).rejects.toThrow();
+    });
+  });
 });

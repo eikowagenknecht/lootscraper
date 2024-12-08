@@ -1,7 +1,11 @@
-// import type { OfferDuration, OfferSource, OfferType } from "@/types/config";
-import type { Database, NewAnnouncement } from "@/types/database";
+import type {
+  Database,
+  NewAnnouncement,
+  NewOffer,
+  Offer,
+  OfferUpdate,
+} from "@/types/database";
 import { DatabaseError } from "@/types/errors";
-// import { type Kysely, sql } from "kysely";
 import type { Kysely } from "kysely";
 
 export class DatabaseOperations {
@@ -39,273 +43,97 @@ export class DatabaseOperations {
     }
   }
 
-  // // Steam info operations
-  // async upsertSteamInfo(
-  //   steamInfo: Omit<Database["steam_info"], "id"> & { id: number },
-  // ) {
-  //   try {
-  //     await this.db
-  //       .insertInto("steam_info")
-  //       .values({
-  //         ...steamInfo,
-  //         release_date: steamInfo.release_date
-  //           ? sql`datetime(${steamInfo.release_date})`
-  //           : null,
-  //       })
-  //       .onConflict((oc) =>
-  //         oc.column("id").doUpdateSet({
-  //           ...steamInfo,
-  //           release_date: steamInfo.release_date
-  //             ? sql`datetime(${steamInfo.release_date})`
-  //             : null,
-  //         }),
-  //       )
-  //       .execute();
-  //   } catch (error) {
-  //     throw new DatabaseError(
-  //       `Failed to upsert Steam info: ${error instanceof Error ? error.message : String(error)}`,
-  //     );
-  //   }
-  // }
+  // Offer operations
+  async createOffer(offer: NewOffer) {
+    try {
+      return await this.db
+        .insertInto("offers")
+        .values(offer)
+        .executeTakeFirstOrThrow();
+    } catch (error) {
+      throw new DatabaseError(
+        `Failed to create offer: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  }
 
-  // // IGDB info operations
-  // async upsertIgdbInfo(
-  //   igdbInfo: Omit<Database["igdb_info"], "id"> & { id: number },
-  // ) {
-  //   try {
-  //     await this.db
-  //       .insertInto("igdb_info")
-  //       .values({
-  //         ...igdbInfo,
-  //         release_date: igdbInfo.release_date
-  //           ? sql`datetime(${igdbInfo.release_date})`
-  //           : null,
-  //       })
-  //       .onConflict((oc) =>
-  //         oc.column("id").doUpdateSet({
-  //           ...igdbInfo,
-  //           release_date: igdbInfo.release_date
-  //             ? sql`datetime(${igdbInfo.release_date})`
-  //             : null,
-  //         }),
-  //       )
-  //       .execute();
-  //   } catch (error) {
-  //     throw new DatabaseError(
-  //       `Failed to upsert IGDB info: ${error instanceof Error ? error.message : String(error)}`,
-  //     );
-  //   }
-  // }
+  async getOfferByTitle(title: string): Promise<Offer | undefined> {
+    try {
+      return await this.db
+        .selectFrom("offers")
+        .where("title", "=", title)
+        .selectAll()
+        .executeTakeFirst();
+    } catch (error) {
+      throw new DatabaseError(
+        `Failed to get offer by title: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  }
 
-  // // Game operations
-  // async findOrCreateGame(game: NewGame) {
-  //   if (!game.steam_id && !game.igdb_id) {
-  //     throw new DatabaseError("Game must have either Steam ID or IGDB ID");
-  //   }
+  async updateOffer(id: number, offer: OfferUpdate) {
+    try {
+      const result = await this.db
+        .updateTable("offers")
+        .set(offer)
+        .where("id", "=", id)
+        .executeTakeFirst();
 
-  //   try {
-  //     // Check if game exists
-  //     const existingGame = await this.db
-  //       .selectFrom("games")
-  //       .selectAll()
-  //       .where((eb) =>
-  //         eb.or([
-  //           game.steam_id
-  //             ? eb("steam_id", "=", game.steam_id)
-  //             : eb("steam_id", "is", null),
-  //           game.igdb_id
-  //             ? eb("igdb_id", "=", game.igdb_id)
-  //             : eb("igdb_id", "is", null),
-  //         ]),
-  //       )
-  //       .executeTakeFirst();
+      if (!result.numUpdatedRows) {
+        throw new DatabaseError(`No offer found with ID ${id.toFixed(0)}`);
+      }
 
-  //     if (existingGame) {
-  //       return existingGame;
-  //     }
+      return result;
+    } catch (error) {
+      throw new DatabaseError(
+        `Failed to update offer: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  }
 
-  //     // Create new game
-  //     const newGame = await this.db
-  //       .insertInto("games")
-  //       .values({
-  //         steam_id: game.steam_id ?? null,
-  //         igdb_id: game.igdb_id ?? null,
-  //       })
-  //       .executeTakeFirstOrThrow();
+  async createOrUpdateOffer(offer: NewOffer): Promise<number> {
+    try {
+      // Find existing offer by unique combination
+      const existingOffer = await this.db
+        .selectFrom("offers")
+        .select(["id"])
+        .where("title", "=", offer.title)
+        .where("source", "=", offer.source)
+        .where("type", "=", offer.type)
+        .where("duration", "=", offer.duration)
+        .where("category", "=", offer.category)
+        .executeTakeFirst();
 
-  //     return newGame;
-  //   } catch (error) {
-  //     throw new DatabaseError(
-  //       `Failed to find or create game: ${error instanceof Error ? error.message : String(error)}`,
-  //     );
-  //   }
-  // }
+      if (existingOffer) {
+        // Update seen last date
+        const result = await this.db
+          .updateTable("offers")
+          .set({
+            seen_last: new Date().toISOString(),
+          })
+          .where("id", "=", existingOffer.id)
+          .executeTakeFirst();
 
-  // // Offer operations
-  // async findOfferByTitle(
-  //   source: OfferSource,
-  //   type: OfferType,
-  //   duration: OfferDuration,
-  //   title: string,
-  //   validTo: Date | null,
-  // ) {
-  //   try {
-  //     const query = this.db
-  //       .selectFrom("offers")
-  //       .selectAll()
-  //       .where("source", "=", source)
-  //       .where("type", "=", type)
-  //       .where("duration", "=", duration)
-  //       .where("title", "=", title);
+        if (!result.numUpdatedRows) {
+          throw new DatabaseError("Failed to update existing offer");
+        }
 
-  //     if (validTo) {
-  //       const dayInMs = 24 * 60 * 60 * 1000;
-  //       const earliest = new Date(validTo.getTime() - dayInMs);
-  //       const latest = new Date(validTo.getTime() + dayInMs);
+        return existingOffer.id;
+      }
 
-  //       query.where("valid_to", ">=", earliest).where("valid_to", "<=", latest);
-  //     }
+      const result = await this.createOffer(offer);
 
-  //     return await query.executeTakeFirst();
-  //   } catch (error) {
-  //     throw new DatabaseError(
-  //       `Failed to find offer: ${error instanceof Error ? error.message : String(error)}`,
-  //     );
-  //   }
-  // }
+      const insertId = result.insertId;
 
-  // async getActiveOffers(options: {
-  //   type?: OfferType;
-  //   source?: OfferSource;
-  //   duration?: OfferDuration;
-  //   lastOfferId?: number;
-  //   now?: Date;
-  // }) {
-  //   const { type, source, duration, lastOfferId, now = new Date() } = options;
+      if (typeof insertId !== "bigint") {
+        throw new DatabaseError("Failed to get inserted offer ID");
+      }
 
-  //   try {
-  //     let query = this.db
-  //       .selectFrom("offers")
-  //       .selectAll()
-  //       .where((eb) =>
-  //         eb.or([eb("valid_from", "is", null), eb("valid_from", "<=", now)]),
-  //       )
-  //       .where((eb) =>
-  //         eb.or([
-  //           eb("valid_to", "is", null),
-  //           eb("valid_to", ">=", now),
-  //           eb.and([
-  //             eb("valid_to", "is", null),
-  //             eb(
-  //               "seen_last",
-  //               ">=",
-  //               new Date(now.getTime() - 24 * 60 * 60 * 1000),
-  //             ),
-  //           ]),
-  //         ]),
-  //       );
-
-  //     if (type) {
-  //       query = query.where("type", "=", type);
-  //     }
-  //     if (source) {
-  //       query = query.where("source", "=", source);
-  //     }
-  //     if (duration) {
-  //       query = query.where("duration", "=", duration);
-  //     }
-  //     if (lastOfferId) {
-  //       query = query.where("id", ">", lastOfferId);
-  //     }
-
-  //     return await query.execute();
-  //   } catch (error) {
-  //     throw new DatabaseError(
-  //       `Failed to get active offers: ${error instanceof Error ? error.message : String(error)}`,
-  //     );
-  //   }
-  // }
-
-  // // Telegram operations
-  // async findTelegramChat(chatId: number, threadId?: number | null) {
-  //   try {
-  //     return await this.db
-  //       .selectFrom("telegram_chats")
-  //       .selectAll()
-  //       .where("chat_id", "=", chatId)
-  //       .where("thread_id", threadId ? "=" : "is", threadId ?? null)
-  //       .executeTakeFirst();
-  //   } catch (error) {
-  //     throw new DatabaseError(
-  //       `Failed to find telegram chat: ${error instanceof Error ? error.message : String(error)}`,
-  //     );
-  //   }
-  // }
-
-  // async updateTelegramChatActivity(
-  //   chatId: number,
-  //   active: boolean,
-  //   reason?: string,
-  // ) {
-  //   try {
-  //     await this.db
-  //       .updateTable("telegram_chats")
-  //       .set({
-  //         active: active ? 1 : 0,
-  //         inactive_reason: reason ?? null,
-  //       })
-  //       .where("chat_id", "=", chatId)
-  //       .execute();
-  //   } catch (error) {
-  //     throw new DatabaseError(
-  //       `Failed to update telegram chat activity: ${error instanceof Error ? error.message : String(error)}`,
-  //     );
-  //   }
-  // }
-
-  // // Telegram subscription operations
-  // async toggleTelegramSubscription(
-  //   chatId: number,
-  //   source: OfferSource,
-  //   type: OfferType,
-  //   duration: OfferDuration,
-  // ) {
-  //   try {
-  //     // Check if subscription exists
-  //     const existingSub = await this.db
-  //       .selectFrom("telegram_subscriptions")
-  //       .selectAll()
-  //       .where("chat_id", "=", chatId)
-  //       .where("source", "=", source)
-  //       .where("type", "=", type)
-  //       .where("duration", "=", duration)
-  //       .executeTakeFirst();
-
-  //     if (existingSub) {
-  //       // Delete subscription
-  //       await this.db
-  //         .deleteFrom("telegram_subscriptions")
-  //         .where("id", "=", existingSub.id)
-  //         .execute();
-  //       return false; // Indicates unsubscribed
-  //     }
-
-  //     // Create subscription
-  //     await this.db
-  //       .insertInto("telegram_subscriptions")
-  //       .values({
-  //         chat_id: chatId,
-  //         source,
-  //         type,
-  //         duration,
-  //         last_offer_id: 0,
-  //       })
-  //       .execute();
-  //     return true; // Indicates subscribed
-  //   } catch (error) {
-  //     throw new DatabaseError(
-  //       `Failed to toggle subscription: ${error instanceof Error ? error.message : String(error)}`,
-  //     );
-  //   }
-  // }
+      return Number(insertId);
+    } catch (error) {
+      throw new DatabaseError(
+        `Failed to create or update offer: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  }
 }
