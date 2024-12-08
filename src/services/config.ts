@@ -1,5 +1,5 @@
-import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
+import { copyFileSync, mkdirSync, readFileSync } from "node:fs";
+import { dirname, resolve } from "node:path";
 import { type Config, ConfigSchema } from "@/types/config";
 import { parse } from "yaml";
 
@@ -36,6 +36,12 @@ export class ConfigService {
   public loadConfig(configPath?: string): void {
     try {
       const path = configPath ?? this.getDefaultConfigPath();
+
+      // Check if config exists, if not copy the default one
+      if (!this.fileExists(path)) {
+        this.createDefaultConfig(path);
+      }
+
       const configFile = readFileSync(path, "utf8");
       const parsedConfig: unknown = parse(configFile);
 
@@ -53,6 +59,25 @@ export class ConfigService {
         throw new ConfigError(`Failed to load config: ${error.message}`);
       }
       throw error;
+    }
+  }
+
+  private createDefaultConfig(targetPath: string): void {
+    const defaultConfigPath = resolve(
+      __dirname,
+      "../../config/config.default.yaml",
+    );
+
+    // Ensure the target directory exists
+    mkdirSync(dirname(targetPath), { recursive: true });
+
+    try {
+      copyFileSync(defaultConfigPath, targetPath);
+      console.log(`Created new config file at ${targetPath}`);
+    } catch (error) {
+      throw new ConfigError(
+        `Failed to create default config: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
   }
 

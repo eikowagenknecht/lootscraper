@@ -1,11 +1,10 @@
-import { mkdirSync, unlinkSync, writeFileSync } from "node:fs";
-import { tmpdir } from "node:os";
+import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ConfigError, config } from "@/services/config";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 describe("ConfigService", () => {
-  const tempDir = join(tmpdir(), "lootscraper-tests");
+  const tempDir = join(process.cwd(), "data");
   const tempConfigPath = join(tempDir, "config.yaml");
 
   beforeEach(() => {
@@ -13,14 +12,18 @@ describe("ConfigService", () => {
   });
 
   afterEach(() => {
-    try {
-      unlinkSync(tempConfigPath);
-    } catch {
-      // Ignore if file doesn't exist
-    }
+    rmSync(tempDir, { recursive: true, force: true });
   });
 
-  it("should load a valid config file", () => {
+  it("should create default config if none exists", () => {
+    config.loadConfig(tempConfigPath);
+
+    const configContent = readFileSync(tempConfigPath, "utf8");
+    expect(configContent).toContain("common:");
+    expect(configContent).toContain("scraper:");
+  });
+
+  it("should load existing valid config file", () => {
     const validConfig = `
 common:
   databaseFile: test.db

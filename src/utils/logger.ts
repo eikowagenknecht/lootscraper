@@ -42,7 +42,7 @@ function createLoggerInstance() {
     // TODO: Split into error and rest, see https://github.com/winstonjs/winston example
     logger.add(
       new DailyRotateFile({
-        filename: resolve(process.cwd(), "data", logFile),
+        filename: resolve(process.cwd(), "data", "log", logFile),
         datePattern: "YYYY-MM-DD",
         zippedArchive: true,
         maxSize: "20m",
