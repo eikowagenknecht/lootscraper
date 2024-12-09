@@ -31,6 +31,7 @@
     "better-sqlite3": "11.6.0",
     "feed": "4.2.2",
     "grammy": "1.33.0",
+    "handlebars": "4.7.8",
     "kysely": "0.27.4",
     "logform": "2.7.0",
     "luxon": "3.5.0",
