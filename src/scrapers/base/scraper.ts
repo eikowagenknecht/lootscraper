@@ -28,13 +28,13 @@ export interface RawOffer {
 }
 
 // Handler for processing offers
-export interface OfferHandler<T extends RawOffer = RawOffer> {
+export interface OfferHandler<T extends RawOffer> {
   locator: Locator;
   readOffer: (element: Locator) => Promise<T | null>;
   normalizeOffer: (rawOffer: T) => NewOffer;
 }
 
-export abstract class BaseScraper {
+export abstract class BaseScraper<T extends RawOffer = RawOffer> {
   protected logger = logger;
 
   constructor(
@@ -49,7 +49,7 @@ export abstract class BaseScraper {
   abstract getDuration(): OfferDuration;
   abstract getOffersUrl(): string;
   abstract getPageReadySelector(): string;
-  abstract getOfferHandlers(page: Page): OfferHandler[];
+  abstract getOfferHandlers(page: Page): OfferHandler<T>[];
 
   // Optional methods that can be overridden
   protected offersExpected(): boolean {
