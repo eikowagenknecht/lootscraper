@@ -1,0 +1,100 @@
+import { OfferDuration, OfferSource, OfferType } from "@/types/config";
+import type { NewOffer } from "@/types/database";
+import type { Locator, Page } from "playwright";
+import { BaseScraper, type OfferHandler, type RawOffer } from "../base/scraper";
+
+const BASE_URL = "https://appagg.com";
+const OFFER_URL = `${BASE_URL}/sale/android-games/free/?hl=en`;
+
+export class GoogleGamesScraper extends BaseScraper {
+  getSource(): OfferSource {
+    return OfferSource.GOOGLE;
+  }
+
+  getType(): OfferType {
+    return OfferType.GAME;
+  }
+
+  getDuration(): OfferDuration {
+    return OfferDuration.CLAIMABLE;
+  }
+
+  protected override offersExpected(): boolean {
+    return true;
+  }
+
+  getOffersUrl(): string {
+    return OFFER_URL;
+  }
+
+  getPageReadySelector(): string {
+    return "div.short_info";
+  }
+
+  protected override async pageLoadedHook(page: Page): Promise<void> {
+    await this.scrollPageToBottom(page);
+  }
+
+  getOfferHandlers(page: Page): OfferHandler<RawOffer>[] {
+    return [
+      {
+        locator: page.locator("div.short_info"),
+        readOffer: this.readRawOffer.bind(this),
+        normalizeOffer: this.normalizeOffer.bind(this),
+      },
+    ];
+  }
+
+  private async readRawOffer(element: Locator): Promise<RawOffer | null> {
+    try {
+      // Scroll into view for images to load
+      await element.scrollIntoViewIfNeeded();
+
+      const title = await element.locator("li.si_tit a").textContent();
+      if (!title) throw new Error("Couldn't find title");
+
+      let url = await element.locator("li.si_tit a").getAttribute("href");
+      if (!url) throw new Error(`Couldn't find url for ${title}`);
+      if (!url.startsWith("http")) {
+        url = BASE_URL + url;
+      }
+
+      const style = await element.locator("span.pic_div").getAttribute("style");
+      if (!style) throw new Error(`Couldn't find image for ${title}`);
+
+      // Extract URL from background-image style
+      const imgUrl = style
+        .replace('background-image: url("', "")
+        .replace('");', "");
+
+      return {
+        title,
+        url,
+        imgUrl,
+      };
+    } catch (error) {
+      this.logger.error(
+        `Failed to read raw offer: ${error instanceof Error ? error.message : String(error)}`,
+      );
+      return null;
+    }
+  }
+
+  private normalizeOffer(rawOffer: RawOffer): NewOffer {
+    return {
+      source: this.getSource(),
+      duration: this.getDuration(),
+      type: this.getType(),
+      title: rawOffer.title,
+      probable_game_name: rawOffer.title,
+      seen_last: new Date().toISOString(),
+      valid_to: null,
+      rawtext: JSON.stringify({
+        title: rawOffer.title,
+      }),
+      url: rawOffer.url ?? null,
+      img_url: rawOffer.imgUrl ?? null,
+      category: "", // Will be set by categorization
+    };
+  }
+}

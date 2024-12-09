@@ -15,6 +15,7 @@ import { errors } from "playwright";
 // Categories for offer classification
 export enum Category {
   VALID = "VALID",
+  CHEAP = "CHEAP",
   DEMO = "DEMO",
   PRERELEASE = "PRERELEASE",
 }
