@@ -1,11 +1,22 @@
-import { EpicGamesScraper } from "@/scrapers";
+import {
+  // AmazonGamesScraper,
+  // AmazonLootScraper,
+  // AppleGamesScraper,
+  // EpicGamesScraper,
+  // GoogleGamesScraper,
+  // HumbleGamesScraper,
+  // SteamGamesScraper,
+  // SteamLootScraper,
+  // GogGamesScraper,
+  // GogGamesAlwaysFreeScraper
+  UbisoftGamesScraper,
+} from "@/scrapers";
 import { browser } from "@/services/browser";
 import { config } from "@/services/config";
 import { database } from "@/services/database";
 import { DatabaseOperations } from "@/services/database/operations";
 import { handleError } from "@/utils/errorHandler";
 import { initializeFileTransport, logger } from "@/utils/logger";
-import { AmazonGamesScraper } from "./scrapers/implementations/amazon/games";
 
 async function main(): Promise<void> {
   try {
@@ -25,31 +36,17 @@ async function main(): Promise<void> {
     const dbOps = new DatabaseOperations(database.get());
 
     // Test Epic Games scraper
-    const epicScraper = new EpicGamesScraper(
+    const scraper = new UbisoftGamesScraper(
       browser.getContext(),
       config.get(),
       dbOps,
     );
 
-    logger.info("Starting Epic Games scraper test...");
-    const offers = await epicScraper.scrape();
+    logger.info("Starting scraper test...");
+    const offers = await scraper.scrape();
 
     // Store offers in database
     for (const offer of offers) {
-      await dbOps.createOrUpdateOffer(offer);
-    }
-
-    // Test Amazon scraper
-    const amazonScraper = new AmazonGamesScraper(
-      browser.getContext(),
-      config.get(),
-      dbOps,
-    );
-
-    const amazonOffers = await amazonScraper.scrape();
-
-    // Store Amazon offers in database
-    for (const offer of amazonOffers) {
       await dbOps.createOrUpdateOffer(offer);
     }
 
