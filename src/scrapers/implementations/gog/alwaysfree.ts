@@ -70,6 +70,7 @@ export class GogGamesAlwaysFreeScraper extends GogBaseScraper {
       title: rawOffer.title,
       probable_game_name: rawOffer.title,
       seen_last: new Date().toISOString(),
+      seen_first: new Date().toISOString(),
       valid_to: null,
       rawtext: JSON.stringify({
         title: rawOffer.title,

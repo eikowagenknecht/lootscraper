@@ -40,7 +40,7 @@ export enum OfferType {
 export enum OfferDuration {
   CLAIMABLE = "CLAIMABLE",
   ALWAYS = "ALWAYS",
-  GAMEPASS = "GAMEPASS",
+  TEMPORARY = "TEMPORARY",
 }
 
 export const OfferSourceSchema = z.nativeEnum(OfferSource);

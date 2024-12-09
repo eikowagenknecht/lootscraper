@@ -4,12 +4,14 @@ import { type Kysely, type Migration, Migrator } from "kysely";
 import { initialMigration } from "./migrations/2024-12-08-initial";
 import { dropAlembicMigration } from "./migrations/2024-12-09-drop-alembic";
 import { indicesMigration } from "./migrations/2024-12-10-indices";
+import { nullabilityMigration } from "./migrations/2024-12-10-nullability";
 
 // Define the migrations type
 const migrations: Record<string, Migration> = {
   "2024-12-08-initial": initialMigration,
   "2024-12-09-drop-alembic": dropAlembicMigration,
   "2024-12-10-indices": indicesMigration,
+  "2024-12-10-nullability": nullabilityMigration,
 };
 
 export async function migrateToLatest(db: Kysely<unknown>): Promise<void> {
