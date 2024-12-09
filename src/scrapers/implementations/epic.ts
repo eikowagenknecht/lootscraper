@@ -11,7 +11,7 @@ interface EpicRawOffer extends RawOffer {
   validTo: string; // ISO date string
 }
 
-export class EpicGamesScraper extends BaseScraper {
+export class EpicGamesScraper extends BaseScraper<EpicRawOffer> {
   getSource(): OfferSource {
     return OfferSource.EPIC;
   }
@@ -41,7 +41,7 @@ export class EpicGamesScraper extends BaseScraper {
     await this.scrollPageToBottom(page);
   }
 
-  getOfferHandlers(page: Page): OfferHandler[] {
+  getOfferHandlers(page: Page): OfferHandler<EpicRawOffer>[] {
     return [
       {
         locator: page.locator('//span[text()="Free Now"]//ancestor::a'),

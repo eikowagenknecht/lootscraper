@@ -5,6 +5,7 @@ import { database } from "@/services/database";
 import { DatabaseOperations } from "@/services/database/operations";
 import { handleError } from "@/utils/errorHandler";
 import { initializeFileTransport, logger } from "@/utils/logger";
+import { AmazonGamesScraper } from "./scrapers/implementations/amazon/games";
 
 async function main(): Promise<void> {
   try {
@@ -35,6 +36,20 @@ async function main(): Promise<void> {
 
     // Store offers in database
     for (const offer of offers) {
+      await dbOps.createOrUpdateOffer(offer);
+    }
+
+    // Test Amazon scraper
+    const amazonScraper = new AmazonGamesScraper(
+      browser.getContext(),
+      config.get(),
+      dbOps,
+    );
+
+    const amazonOffers = await amazonScraper.scrape();
+
+    // Store Amazon offers in database
+    for (const offer of amazonOffers) {
       await dbOps.createOrUpdateOffer(offer);
     }
 

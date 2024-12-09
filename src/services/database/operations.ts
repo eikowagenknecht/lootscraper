@@ -44,7 +44,7 @@ export class DatabaseOperations {
   }
 
   // Offer operations
-  async createOffer(offer: NewOffer) {
+  private async createOffer(offer: NewOffer) {
     try {
       return await this.db
         .insertInto("offers")
