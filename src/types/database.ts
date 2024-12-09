@@ -76,7 +76,7 @@ interface OffersTable {
   game_id: number | null;
   category: string;
   img_url: string | null;
-  seen_first: ColumnType<Date, string, never> | null;
+  seen_first: ColumnType<Date, string, never>;
   valid_from: ColumnType<Date, string, string> | null;
   valid_to: ColumnType<Date, string, string> | null;
 }

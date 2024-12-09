@@ -59,6 +59,7 @@ export class AmazonGamesScraper extends AmazonBaseScraper {
       title: rawOffer.title,
       probable_game_name: rawOffer.title,
       seen_last: new Date().toISOString(),
+      seen_first: new Date().toISOString(),
       valid_to: validTo?.toISOString() ?? null,
       rawtext: JSON.stringify(rawtext),
       url: rawOffer.url ?? null,

@@ -1,0 +1,181 @@
+import { writeFile } from "node:fs/promises";
+import { resolve } from "node:path";
+import type { Config } from "@/types/config";
+import { OfferDuration, type OfferSource, OfferType } from "@/types/config";
+import type { Offer } from "@/types/database";
+import { FeedError } from "@/types/errors";
+import { Feed } from "feed";
+import type { Feed as FeedType } from "feed";
+import { DateTime } from "luxon";
+
+interface FeedGeneratorOptions {
+  source?: OfferSource;
+  type?: OfferType;
+  duration?: OfferDuration;
+}
+
+export class FeedGenerator {
+  private readonly feedGenerator: FeedType;
+
+  constructor(
+    private readonly config: Config,
+    private readonly options: FeedGeneratorOptions = {},
+  ) {
+    this.feedGenerator = new Feed({
+      id: this.getFeedId(),
+      title: this.getFeedTitle(),
+      updated: new Date(),
+      generator: "LootScraper",
+      language: "en",
+      copyright: "TODO",
+      feed: `${config.feed.urlPrefix}${this.getFilename()}`,
+      feedLinks: {
+        atom: `${config.feed.urlPrefix}${this.getFilename()}`,
+      },
+      link: config.feed.urlAlternate,
+      author: {
+        name: config.feed.authorName,
+        email: config.feed.authorEmail,
+        link: config.feed.authorWeb,
+      },
+    });
+  }
+
+  public async generateFeed(offers: Offer[]): Promise<void> {
+    if (offers.length === 0) return;
+
+    for (const offer of offers) {
+      // Skip entries without dates or future entries
+      if (offer.valid_from && offer.valid_from > offer.seen_last) continue;
+
+      // Determine update date
+      const updated =
+        offer.valid_from && offer.valid_from > offer.seen_first
+          ? new Date(offer.valid_from)
+          : new Date(offer.seen_first);
+
+      this.feedGenerator.addItem({
+        id: `${this.config.feed.idPrefix}${offer.id.toFixed(0)}`,
+        title: this.getEntryTitle(offer),
+        link: offer.url ?? this.config.feed.urlAlternate,
+        date: updated,
+        published: offer.seen_first,
+        content: this.generateContent(offer),
+        author: [
+          {
+            name: this.config.feed.authorName,
+            email: this.config.feed.authorEmail,
+            link: this.config.feed.authorWeb,
+          },
+        ],
+      });
+    }
+
+    try {
+      const outputPath = resolve(process.cwd(), "data", this.getFilename());
+      await writeFile(outputPath, this.feedGenerator.atom1());
+    } catch (error) {
+      throw new FeedError(
+        `Failed to write feed: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  }
+
+  private getEntryTitle(offer: Offer): string {
+    const parts: string[] = [offer.source];
+    parts.push(
+      `(${offer.type}${offer.duration !== OfferDuration.CLAIMABLE ? `, ${offer.duration}` : ""})`,
+    );
+    parts.push(offer.title);
+    return parts.join(" ");
+  }
+
+  private getFilename(): string {
+    const parts: string[] = [this.config.common.feedFilePrefix];
+
+    if (this.options.source) parts.push(this.options.source);
+    if (this.options.type) parts.push(this.options.type);
+    if (this.options.duration) parts.push(this.options.duration);
+
+    return `${parts.join("_")}.xml`;
+  }
+
+  private getFeedId(): string {
+    const filename = this.getFilename();
+    const parts = filename.split("_", 2);
+    return parts.length === 1 ? "" : parts[1].replace(".xml", "");
+  }
+
+  private getFeedTitle(): string {
+    if (!this.options.source && !this.options.type && !this.options.duration) {
+      return "Free Games and Loot";
+    }
+
+    const parts = ["Free"];
+
+    if (this.options.source) {
+      parts.push(this.options.source);
+    }
+
+    if (this.options.type === OfferType.GAME) {
+      parts.push("Games");
+    } else if (this.options.type === OfferType.LOOT) {
+      parts.push("Loot");
+    }
+
+    if (
+      this.options.duration === OfferDuration.TEMPORARY ||
+      this.options.duration === OfferDuration.ALWAYS
+    ) {
+      parts.push(`(${this.options.duration})`);
+    }
+
+    return parts.join(" ");
+  }
+
+  private generateContent(offer: Offer): string {
+    let content = "";
+
+    // Add image
+    if (offer.img_url) {
+      content += `<img src="${this.escapeHtml(offer.img_url)}" />`;
+    }
+
+    // Add dates
+    content += "<ul>";
+    const validFrom = offer.valid_from
+      ? offer.valid_from.toISOString()
+      : offer.seen_first.toISOString();
+
+    content += `<li><b>Offer valid from:</b> ${validFrom}</li>`;
+
+    if (offer.valid_to) {
+      const validTo = offer.valid_to.toISOString();
+      content += `<li><b>Offer valid to:</b> ${validTo}</li>`;
+    }
+    content += "</ul>";
+
+    // Add claim link
+    if (offer.url) {
+      content += `<p>Claim it now for free on <a href="${this.escapeHtml(offer.url)}">${this.escapeHtml(offer.source)}</a>.</p>`;
+    }
+
+    // Add footer
+    content += `<p><small>Source: ${this.escapeHtml(offer.source)}, Seen first: ${DateTime.fromISO(
+      offer.seen_first.toISOString(),
+    ).toFormat(
+      "yyyy-MM-dd HH:mm:ss",
+    )}, Generated by <a href="https://github.com/eikowagenknecht/lootscraper">LootScraper</a></small></p>`;
+
+    return content;
+  }
+
+  private escapeHtml(unsafe: string): string {
+    return unsafe
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  }
+}

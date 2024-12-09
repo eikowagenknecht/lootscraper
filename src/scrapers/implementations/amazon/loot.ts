@@ -76,6 +76,7 @@ export class AmazonLootScraper extends AmazonBaseScraper<AmazonLootRawOffer> {
       title,
       probable_game_name: rawOffer.gameTitle,
       seen_last: new Date().toISOString(),
+      seen_first: new Date().toISOString(),
       valid_to: validTo?.toISOString() ?? null,
       rawtext: JSON.stringify(rawtext),
       url: rawOffer.url ?? null,
