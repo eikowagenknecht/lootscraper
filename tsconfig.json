@@ -26,6 +26,6 @@
     "noImplicitOverride": true,
     "skipLibCheck": true
   },
-  "include": ["src/**/*", "tests/**/*"],
+  "include": ["src/**/*", "tests/**/*", "utils/**/*", "tools/**/*"],
   "exclude": ["node_modules", "dist"]
 }
