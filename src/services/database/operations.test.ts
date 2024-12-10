@@ -10,6 +10,7 @@ import { insertTestData } from "../../../tests/database/testData";
 
 describe("Database Operations", () => {
   const testDbPath = join(process.cwd(), "data", "test.db");
+
   let operations: DatabaseOperations;
   let dbService: DatabaseService;
 
