@@ -3,7 +3,7 @@ common:
   databaseFile: loot.db
   feedFilePrefix: lootscraper
   logFile: lootscraper.log
-  # One of: DEBUG, INFO, WARNING, ERROR, CRITICAL
+  # One of: ERROR, WARN, INFO, HTTP, VERBOSE, DEBUG, SILLY
   logLevel: INFO
 
 expert:
