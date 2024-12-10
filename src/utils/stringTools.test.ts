@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { getMatchScore } from "./stringMatcher";
+import { getMatchScore } from "./stringTools";
 
 describe("getMatchScore", () => {
   interface TestCase {

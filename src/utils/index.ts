@@ -1,6 +1,6 @@
 export { cleanNulls } from "./objectCleaner";
 export { calculateRealValidTo } from "./dateCalculator";
-export { getMatchScore } from "./stringMatcher";
+export { getMatchScore, normalizeString } from "./stringTools";
 export {
   cleanGameTitle,
   cleanLootTitle,
