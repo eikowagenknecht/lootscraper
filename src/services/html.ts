@@ -1,11 +1,11 @@
 import { writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
-import type { DatabaseOperations } from "@/services/database/operations";
 import type { Config } from "@/types/config";
 import { OfferDuration, type OfferSource, OfferType } from "@/types/config";
 import type { Offer } from "@/types/database";
 import Handlebars from "handlebars";
 import { DateTime } from "luxon";
+import { getGameWithInfo } from "./database/gameRepository";
 
 const TEMPLATE = `
 <!DOCTYPE html>
@@ -129,7 +129,6 @@ export class HtmlGenerator {
 
   constructor(
     private readonly config: Config,
-    private readonly dbOps: DatabaseOperations,
     private readonly options: {
       source?: OfferSource;
       type?: OfferType;
@@ -155,7 +154,7 @@ export class HtmlGenerator {
         )
         .map(async (offer) => {
           const gameInfo = offer.game_id
-            ? await this.dbOps.getGameWithInfo(offer.game_id)
+            ? await getGameWithInfo(offer.game_id)
             : null;
 
           return {

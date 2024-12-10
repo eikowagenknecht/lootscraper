@@ -1,6 +1,5 @@
 import { writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
-import type { DatabaseOperations } from "@/services/database/operations";
 import type { Config } from "@/types/config";
 import { OfferDuration, type OfferSource, OfferType } from "@/types/config";
 import type { Game, IgdbInfo, Offer, SteamInfo } from "@/types/database";
@@ -8,6 +7,7 @@ import { FeedError } from "@/types/errors";
 import { Feed } from "feed";
 import type { Feed as FeedType } from "feed";
 import { DateTime } from "luxon";
+import { getGameWithInfo } from "./database/gameRepository";
 
 interface FeedGeneratorOptions {
   source?: OfferSource;
@@ -20,7 +20,6 @@ export class FeedGenerator {
 
   constructor(
     private readonly config: Config,
-    private readonly dbOps: DatabaseOperations,
     private readonly options: FeedGeneratorOptions = {},
   ) {
     this.feedGenerator = new Feed({
@@ -61,7 +60,7 @@ export class FeedGenerator {
         igdbInfo: IgdbInfo | null;
       } | null = null;
       if (offer.game_id) {
-        gameInfo = await this.dbOps.getGameWithInfo(offer.game_id);
+        gameInfo = await getGameWithInfo(offer.game_id);
       }
 
       this.feedGenerator.addItem({
