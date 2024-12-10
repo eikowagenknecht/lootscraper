@@ -24,9 +24,15 @@ export class DatabaseService {
     return DatabaseService.instance;
   }
 
-  public async initialize(config: Config): Promise<void> {
+  public async initialize(config: Config, memoryDb?: boolean): Promise<void> {
     try {
-      const dbPath = this.getDbPath(config);
+      let dbPath: string;
+
+      if (memoryDb) {
+        dbPath = ":memory:";
+      } else {
+        dbPath = this.getDbPath(config);
+      }
 
       this.db = new Kysely<DatabaseType>({
         dialect: new SqliteDialect({
