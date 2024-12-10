@@ -1,7 +1,7 @@
 import { config } from "@/services/config";
 import { DatabaseService } from "@/services/database";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { insertTestData } from "../../../tests/database/testData";
+import { afterEach, beforeEach, describe, expect, test } from "vitest";
+import { insertTestData } from "../../../tests/testData";
 import { createIgdbInfo } from "./igdbInfoRepository";
 
 describe("Announcement Repository", () => {
@@ -19,7 +19,7 @@ describe("Announcement Repository", () => {
   });
 
   describe("IGDB Info Operations", () => {
-    it("should create igdb info", async () => {
+    test("should create igdb info", async () => {
       const igdbInfo = await createIgdbInfo({
         name: "Test Game",
         url: "https://igdb.com/games/test",

@@ -2,8 +2,8 @@ import { config } from "@/services/config";
 import { DatabaseService } from "@/services/database";
 import { OfferDuration, OfferSource, OfferType } from "@/types/config";
 import type { NewOffer } from "@/types/database";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { insertTestData } from "../../../tests/database/testData";
+import { afterEach, beforeEach, describe, expect, test } from "vitest";
+import { insertTestData } from "../../../tests/testData";
 import {
   createOrUpdateOffer,
   getOfferByTitle,
@@ -25,7 +25,7 @@ describe("Announcement Repository", () => {
   });
 
   describe("Offer Operations", () => {
-    it("should create new offer", async () => {
+    test("should create new offer", async () => {
       const newOffer: NewOffer = {
         source: OfferSource.EPIC,
         type: OfferType.GAME,
@@ -48,7 +48,7 @@ describe("Announcement Repository", () => {
       expect(createdOffer?.title).toBe("New Game");
     });
 
-    it("should update seen_last for existing offer", async () => {
+    test("should update seen_last for existing offer", async () => {
       const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000);
 
       const existingOffer: NewOffer = {
@@ -78,7 +78,7 @@ describe("Announcement Repository", () => {
       );
     });
 
-    it("should handle duplicate offer with different source", async () => {
+    test("should handle duplicate offer with different source", async () => {
       const duplicateOffer: NewOffer = {
         source: OfferSource.GOG, // Different source
         type: OfferType.GAME,
@@ -109,14 +109,14 @@ describe("Announcement Repository", () => {
       expect(offers.map((o) => o.source)).toContain(OfferSource.GOG);
     });
 
-    it("should get offer by title", async () => {
+    test("should get offer by title", async () => {
       const offer = await getOfferByTitle("Existing Game 1");
       expect(offer).toBeDefined();
       expect(offer?.id).toBe(1);
       expect(offer?.source).toBe(OfferSource.EPIC);
     });
 
-    it("should update offer", async () => {
+    test("should update offer", async () => {
       const updateData = {
         url: "https://example.com/updated",
         img_url: "https://example.com/updated.jpg",
@@ -130,7 +130,7 @@ describe("Announcement Repository", () => {
       expect(updatedOffer?.img_url).toBe("https://example.com/updated.jpg");
     });
 
-    it("should handle non-existent offer updates", async () => {
+    test("should handle non-existent offer updates", async () => {
       await expect(
         updateOffer(999, { url: "https://example.com/nonexistent" }),
       ).rejects.toThrow();

@@ -1,7 +1,7 @@
-import { describe, expect, it } from "vitest";
+import { describe, test } from "vitest";
 import { getMatchScore } from "./stringTools";
 
-describe("getMatchScore", () => {
+describe.concurrent("getMatchScore", () => {
   interface TestCase {
     search: string;
     result: string;
@@ -98,7 +98,7 @@ describe("getMatchScore", () => {
     description,
     approximateMatch,
   } of testCases) {
-    it(`should handle ${description}`, () => {
+    test(`should handle ${description}`, ({ expect }) => {
       const score = getMatchScore(search, result);
 
       if (approximateMatch) {
@@ -109,7 +109,7 @@ describe("getMatchScore", () => {
     });
   }
 
-  it("should handle special characters", () => {
+  test("should handle special characters", ({ expect }) => {
     const search = "hello@world!";
     const result = "hello#world?";
     const score = getMatchScore(search, result);
@@ -117,7 +117,9 @@ describe("getMatchScore", () => {
     expect(score).toBe(1.0);
   });
 
-  it("should ensure Fall Guys comparison scores below threshold", () => {
+  test("should ensure Fall Guys comparison scores below threshold", ({
+    expect,
+  }) => {
     const search = "Fall Guys";
     const result = "Fall Guy";
     const score = getMatchScore(search, result);

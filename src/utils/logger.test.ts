@@ -2,7 +2,7 @@ import { mkdirSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { logger } from "@/utils/logger";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, test } from "vitest";
 
 describe("logger", () => {
   const tempDir = join(tmpdir(), "lootscraper-tests");
@@ -15,7 +15,7 @@ describe("logger", () => {
     rmSync(tempDir, { recursive: true, force: true });
   });
 
-  it("should log messages without throwing", () => {
+  test("should log messages without throwing", () => {
     expect(() => {
       logger.info("Test info message");
       logger.error("Test error message");
@@ -24,7 +24,7 @@ describe("logger", () => {
     }).not.toThrow();
   });
 
-  it("should log errors with metadata", () => {
+  test("should log errors with metadata", () => {
     const error = new Error("Test error");
     expect(() => {
       logger.error("Error occurred", { error });
