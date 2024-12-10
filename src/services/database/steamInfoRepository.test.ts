@@ -1,7 +1,7 @@
 import { config } from "@/services/config";
 import { DatabaseService } from "@/services/database";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { insertTestData } from "../../../tests/database/testData";
+import { afterEach, beforeEach, describe, expect, test } from "vitest";
+import { insertTestData } from "../../../tests/testData";
 import { createSteamInfo } from "./steamInfoRepository";
 
 describe("Announcement Repository", () => {
@@ -19,7 +19,7 @@ describe("Announcement Repository", () => {
   });
 
   describe("Steam Info Operations", () => {
-    it("should create steam info", async () => {
+    test("should create steam info", async () => {
       const steamInfoId = await createSteamInfo({
         name: "Test Game",
         url: "https://store.steampowered.com/app/123",

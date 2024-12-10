@@ -1,7 +1,7 @@
 import { config } from "@/services/config";
 import { DatabaseService } from "@/services/database";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { insertTestData } from "../../../tests/database/testData";
+import { afterEach, beforeEach, describe, expect, test } from "vitest";
+import { insertTestData } from "../../../tests/testData";
 import {
   createGame,
   findGameByIgdbName,
@@ -69,7 +69,7 @@ describe("Announcement Repository", () => {
       });
     });
 
-    it("should create game", async () => {
+    test("should create game", async () => {
       const newGameId = await createGame({
         steam_id: steamInfoId,
         igdb_id: igdbInfoId,
@@ -78,13 +78,13 @@ describe("Announcement Repository", () => {
       expect(newGameId).toBeGreaterThan(0);
     });
 
-    it("should find game by steam name", async () => {
+    test("should find game by steam name", async () => {
       const game = await findGameBySteamName("Test Game Steam");
       expect(game).not.toBeNull();
       expect(game?.steam_id).toBe(steamInfoId);
     });
 
-    it("should find game by igdb name", async () => {
+    test("should find game by igdb name", async () => {
       // First update the game with IGDB info
       await updateGameIgdbInfo(gameId, igdbInfoId);
 
@@ -93,7 +93,7 @@ describe("Announcement Repository", () => {
       expect(game?.igdb_id).toBe(igdbInfoId);
     });
 
-    it("should update game steam info", async () => {
+    test("should update game steam info", async () => {
       const newSteamInfoId = await createSteamInfo({
         name: "Updated Steam Game",
         url: "https://store.steampowered.com/app/456",
@@ -108,7 +108,7 @@ describe("Announcement Repository", () => {
       expect(updatedGame?.steam_id).toBe(newSteamInfoId);
     });
 
-    it("should update game igdb info", async () => {
+    test("should update game igdb info", async () => {
       const newIgdbInfoId = await createIgdbInfo({
         name: "Updated IGDB Game",
         url: "https://igdb.com/games/updated",
@@ -122,7 +122,7 @@ describe("Announcement Repository", () => {
       expect(updatedGame?.igdb_id).toBe(newIgdbInfoId);
     });
 
-    it("should get game with full info", async () => {
+    test("should get game with full info", async () => {
       // Update game with both Steam and IGDB info
       await updateGameIgdbInfo(gameId, igdbInfoId);
 
@@ -134,7 +134,7 @@ describe("Announcement Repository", () => {
       expect(gameWithInfo?.igdbInfo?.name).toBe("Test Game IGDB");
     });
 
-    it("should handle non-existent game", async () => {
+    test("should handle non-existent game", async () => {
       const gameWithInfo = await getGameWithInfo(999);
       expect(gameWithInfo).toBeNull();
     });

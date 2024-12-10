@@ -1,7 +1,7 @@
 import { config } from "@/services/config";
 import { DatabaseService } from "@/services/database";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { insertTestData } from "../../../tests/database/testData";
+import { afterEach, beforeEach, describe, expect, test } from "vitest";
+import { insertTestData } from "../../../tests/testData";
 import {
   createAnnouncement,
   getNewAnnouncements,
@@ -22,7 +22,7 @@ describe("Announcement Repository", () => {
   });
 
   describe("Announcement Operations", () => {
-    it("should create announcement", async () => {
+    test("should create announcement", async () => {
       const announcement = await createAnnouncement({
         channel: "TELEGRAM",
         date: new Date().toISOString(),
@@ -33,7 +33,7 @@ describe("Announcement Repository", () => {
       expect(announcement).toBe(5);
     });
 
-    it("should get new announcements", async () => {
+    test("should get new announcements", async () => {
       const announcements = await getNewAnnouncements(1);
       expect(announcements).toHaveLength(3);
       expect(announcements[0].id).toBe(2);
