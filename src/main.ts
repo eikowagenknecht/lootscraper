@@ -15,7 +15,11 @@ import { browser } from "@/services/browser";
 import { config } from "@/services/config";
 import { database } from "@/services/database";
 import { handleError } from "@/utils/errorHandler";
-import { initializeFileTransport, logger } from "@/utils/logger";
+import {
+  initializeFileTransport,
+  logger,
+  updateConsoleLevel,
+} from "@/utils/logger";
 import { createOrUpdateOffer } from "./services/database/offerRepository";
 
 async function main(): Promise<void> {
@@ -23,8 +27,10 @@ async function main(): Promise<void> {
     // Load config first
     config.loadConfig();
 
-    // Initialize file logging if in production
-    initializeFileTransport();
+    // Update logging settings from config
+    const configuredLevel = config.get().common.logLevel;
+    updateConsoleLevel(configuredLevel);
+    initializeFileTransport(configuredLevel, config.get().common.logFile);
 
     logger.info("Starting LootScraper...");
 
