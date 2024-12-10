@@ -1,4 +1,3 @@
-import type { DatabaseOperations } from "@/services/database/operations";
 import type { Config } from "@/types/config";
 import type {
   Game,
@@ -9,6 +8,14 @@ import type {
 } from "@/types/database";
 import { logger } from "@/utils/logger";
 import type { BrowserContext } from "playwright";
+import {
+  createGame,
+  findGameByIgdbName,
+  findGameBySteamName,
+  getGameById,
+} from "./database/gameRepository";
+import { createIgdbInfo } from "./database/igdbInfoRepository";
+import { createSteamInfo } from "./database/steamInfoRepository";
 import { IgdbClient } from "./gameinfo/igdb/igdb";
 import { SteamClient } from "./gameinfo/steam/steam";
 
@@ -18,7 +25,6 @@ export class GameInfoService {
 
   constructor(
     private readonly config: Config,
-    private readonly dbOps: DatabaseOperations,
     readonly browserContext: BrowserContext,
   ) {
     this.steamClient = new SteamClient(browserContext);
@@ -55,12 +61,12 @@ export class GameInfoService {
   }
   private async findExistingGame(gameName: string): Promise<Game | null> {
     if (this.config.scraper.infoSources.includes("IGDB")) {
-      const gameByIgdb = await this.dbOps.findGameByIgdbName(gameName);
+      const gameByIgdb = await findGameByIgdbName(gameName);
       if (gameByIgdb) return gameByIgdb;
     }
 
     if (this.config.scraper.infoSources.includes("STEAM")) {
-      const gameBySteam = await this.dbOps.findGameBySteamName(gameName);
+      const gameBySteam = await findGameBySteamName(gameName);
       if (gameBySteam) return gameBySteam;
     }
 
@@ -116,19 +122,19 @@ export class GameInfoService {
       igdb_id: igdbInfo?.id ?? null,
     };
 
-    const newGameId = await this.dbOps.createGame(game);
-    const savedGame = await this.dbOps.getGame(newGameId);
+    const newGameId = await createGame(game);
+    const savedGame = await getGameById(newGameId);
 
     if (savedGame === null) {
       throw new Error("Failed to save game info");
     }
 
     if (steamInfo) {
-      await this.dbOps.createSteamInfo(steamInfo);
+      await createSteamInfo(steamInfo);
     }
 
     if (igdbInfo) {
-      await this.dbOps.createIgdbInfo(igdbInfo);
+      await createIgdbInfo(igdbInfo);
     }
 
     return savedGame;

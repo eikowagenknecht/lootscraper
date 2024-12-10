@@ -1,4 +1,3 @@
-import type { DatabaseOperations } from "@/services/database/operations";
 import type { Config } from "@/types/config";
 import {
   OfferDuration,
@@ -41,7 +40,6 @@ export abstract class BaseScraper<T extends RawOffer = RawOffer> {
   constructor(
     protected readonly context: BrowserContext,
     protected readonly config: Config,
-    protected readonly dbOps: DatabaseOperations,
   ) {}
 
   // Abstract methods that must be implemented by concrete scrapers
