@@ -95,3 +95,17 @@ export function getMatchScore(search: string, result: string): number {
 
   return Math.max(score, 0);
 }
+
+/**
+ * Replace non-Latin characters with their closest representation and replace
+ * the quote sign (") because that would break the query.
+ *
+ * @param str
+ * @returns
+ */
+export function normalizeString(str: string): string {
+  // First normalize to decomposed form (NFD), which separates base characters from diacritics
+  // Then replace all combining diacritical marks (unicode category "M")
+  // Finally replace double quotes and trim the result
+  return str.normalize("NFD").replace(/\p{M}/gu, "").replace(/"/g, "").trim();
+}
