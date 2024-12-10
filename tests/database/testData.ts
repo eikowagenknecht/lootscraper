@@ -94,4 +94,43 @@ export async function insertTestData(db: Kysely<Database>) {
       },
     ])
     .execute();
+
+  // Insert steam_info
+  await db
+    .insertInto("steam_info")
+    .values([
+      {
+        id: 723,
+        name: "Existing Game 1",
+        url: "https://store.steampowered.com/app/1",
+        image_url: "https://cdn.steam.com/1.jpg",
+        release_date: now.toISOString(),
+      },
+    ])
+    .execute();
+
+  // Insert igdb_info
+  await db
+    .insertInto("igdb_info")
+    .values([
+      {
+        id: 589,
+        name: "Existing Game 1",
+        url: "https://igdb.com/games/1",
+        release_date: now.toISOString(),
+      },
+    ])
+    .execute();
+
+  // Insert games
+  await db
+    .insertInto("games")
+    .values([
+      {
+        id: 1,
+        steam_id: 723,
+        igdb_id: 589,
+      },
+    ])
+    .execute();
 }
