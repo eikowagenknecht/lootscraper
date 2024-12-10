@@ -18,7 +18,7 @@ function createLoggerInstance() {
   // Log to console in custom format.
   logger.add(
     new transports.Console({
-      level: "info",
+      level: "debug",
       format: format.combine(format.timestamp(), consoleFormat),
     }),
   );
