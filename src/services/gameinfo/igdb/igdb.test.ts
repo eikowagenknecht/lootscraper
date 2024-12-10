@@ -1,4 +1,5 @@
 import { config } from "@/services/config";
+import type { NewIgdbInfo } from "@/types/database";
 import { beforeEach, describe, expect, test } from "vitest";
 import { IgdbClient } from "./igdb";
 
@@ -20,73 +21,43 @@ describe("IgdbClient", () => {
     expect(result).toBe(7360);
   });
 
-  // test("searchGame handles special characters", async () => {
-  //   const mockSearchResponse = [
-  //     { id: 66, name: "Monkey Island 2 Special Edition: LeChuck's Revenge" },
-  //   ];
+  test("searchGame resolves Counter Strike correctly", async () => {
+    const result = await client.searchGame("Counter-Strike");
+    expect(result).toBe(241);
+  });
 
-  //   vi.mocked(fetch).mockResolvedValueOnce({
-  //     ok: true,
-  //     json: () => Promise.resolve(mockSearchResponse),
-  //   } as Response);
+  test("getDetails returns correct game info", async () => {
+    const details: NewIgdbInfo | null = await client.getDetails(241);
 
-  //   const result = await client.searchGame(
-  //     "Monkey Island 2 Special Edition: LeChuck's Revenge",
-  //   );
-  //   expect(result).toBe(66);
-  // });
+    expect(details?.id).toBe(241);
+    expect(details?.name).toBe("Counter-Strike");
+    expect(details?.short_description).toBe(
+      "Play the world's number 1 online action game. Engage in an incredibly realistic brand of terrorist warfare in this wildly popular team-based game. Ally with teammates to complete strategic missions. Take out enemy sites. Rescue hostages. Your role affects your team's success. Your team's success affects your role.",
+    );
+    expect(details?.meta_ratings).toBeGreaterThan(1);
+    expect(details?.meta_score).toBeGreaterThan(50);
+    expect(details?.url).toBe("https://www.igdb.com/games/counter-strike");
+    expect(details?.user_score).toBeGreaterThan(50);
+    expect(details?.user_ratings).toBeGreaterThan(600);
+    expect(details?.release_date).toBe(
+      new Date("2000-11-09T00:00:00.000Z").toISOString(),
+    );
+  });
 
-  // test("getDetails returns correct game info", async () => {
-  //   const mockDetailsResponse = [
-  //     {
-  //       id: 1942,
-  //       name: "Counter-Strike",
-  //       summary: "Counter-Strike is a tactical first-person shooter...",
-  //       url: "https://www.igdb.com/games/counter-strike",
-  //       first_release_date: 973728000, // 2000-11-09
-  //       rating: 85.5,
-  //       rating_count: 450,
-  //       aggregated_rating: 88.0,
-  //       aggregated_rating_count: 5,
-  //     },
-  //   ];
+  test("searchGame handles special characters", async () => {
+    const result = await client.searchGame(
+      "Monkey Island 2 Special Edition: LeChuck's Revenge",
+    );
+    expect(result).toBe(66);
+  });
 
-  //   vi.mocked(fetch).mockResolvedValueOnce({
-  //     ok: true,
-  //     json: () => Promise.resolve(mockDetailsResponse),
-  //   } as Response);
+  test("searchGame returns null for no matches", async () => {
+    const result = await client.searchGame("XXXXXXXXXXXXXXXXXXXXXXXXXXXX");
+    expect(result).toBeNull();
+  });
 
-  //   const details = await client.getDetails(1942);
-
-  //   expect(details).toEqual({
-  //     name: "Counter-Strike",
-  //     shortDescription: "Counter-Strike is a tactical first-person shooter...",
-  //     releaseDate: new Date("2000-11-09T00:00:00.000Z"),
-  //     url: "https://www.igdb.com/games/counter-strike",
-  //     userScore: 85.5,
-  //     userRatings: 450,
-  //     metaScore: 88.0,
-  //     metaRatings: 5,
-  //   });
-  // });
-
-  // test("searchGame returns null for no matches", async () => {
-  //   vi.mocked(fetch).mockResolvedValueOnce({
-  //     ok: true,
-  //     json: () => Promise.resolve([]),
-  //   } as Response);
-
-  //   const result = await client.searchGame("XXXXXXXXXXXXXXXXXXXXXXXXXXXX");
-  //   expect(result).toBeNull();
-  // });
-
-  // test("getDetails returns null for invalid game ID", async () => {
-  //   vi.mocked(fetch).mockResolvedValueOnce({
-  //     ok: true,
-  //     json: () => Promise.resolve([]),
-  //   } as Response);
-
-  //   const result = await client.getDetails(999999);
-  //   expect(result).toBeNull();
-  // });
+  test("getDetails returns null for invalid game ID", async () => {
+    const result = await client.getDetails(99999999);
+    expect(result).toBeNull();
+  });
 });

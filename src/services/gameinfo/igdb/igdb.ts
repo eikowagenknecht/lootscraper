@@ -1,22 +1,22 @@
 import type { NewIgdbInfo } from "@/types/database";
+import { getMatchScore, normalizeString } from "@/utils";
 import { logger } from "@/utils/logger";
-import { getMatchScore } from "@/utils/stringMatcher";
 
 interface IgdbAuth {
   accessToken: string;
   expiresAt: number;
 }
 
-interface IgdbGame {
-  id: number;
-  name: string;
-  url: string;
-  summary?: string;
-  first_release_date?: number;
-  rating?: number;
-  rating_count?: number;
-  aggregated_rating?: number;
-  aggregated_rating_count?: number;
+interface IgdbGameResult {
+  id: number; // IGDB ID
+  name: string; // Game title
+  url: string; // URL to the game on IGDB
+  summary?: string; // Short description
+  first_release_date?: number; // Release data as Unix timestamp (s)
+  rating?: number; // User score
+  rating_count?: number; // User ratings
+  aggregated_rating?: number; // Meta score
+  aggregated_rating_count?: number; // Meta ratings
 }
 
 interface IgdbSearchResult {
@@ -46,7 +46,7 @@ export class IgdbClient {
   public async searchGame(searchString: string): Promise<number | null> {
     await this.ensureAuth();
 
-    const query = `search "${this.normalizeString(searchString)}";
+    const query = `search "${normalizeString(searchString)}";
 fields name;
 where version_parent = null;
 limit 50;
@@ -95,12 +95,17 @@ limit 50;
       where id = ${gameId.toFixed(0)};
     `;
 
-    const [game] = await this.apiRequest<IgdbGame[]>("games", query);
+    const results = await this.apiRequest<IgdbGameResult[]>("games", query);
+
+    if (!results.length) return null;
+
+    // We're searching by ID, so we only get one result
+    const [game] = results;
 
     return {
       id: game.id,
-      url: game.url,
       name: game.name,
+      url: game.url,
       short_description: game.summary ?? null,
       release_date: game.first_release_date
         ? new Date(game.first_release_date * 1000).toISOString()
@@ -157,24 +162,13 @@ limit 50;
       body: query,
     });
 
+    logger.debug(
+      `IGDB API request to ${endpoint} returned status ${response.status.toFixed()} (ok: ${response.ok ? "yes" : "no"}).`,
+    );
     if (!response.ok) {
       throw new Error(`IGDB API error: ${response.statusText}`);
     }
 
     return response.json() as Promise<T>;
-  }
-
-  /**
-   * Replace non-Latin characters with their closest representation and replace
-   * the quote sign (") because that would break the query.
-   *
-   * @param str
-   * @returns
-   */
-  private normalizeString(str: string): string {
-    // First normalize to decomposed form (NFD), which separates base characters from diacritics
-    // Then replace all combining diacritical marks (unicode category "M")
-    // Finally replace double quotes and trim the result
-    return str.normalize("NFD").replace(/\p{M}/gu, "").replace(/"/g, "").trim();
   }
 }
