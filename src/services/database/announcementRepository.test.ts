@@ -4,24 +4,25 @@ import { config } from "@/services/config";
 import { DatabaseService } from "@/services/database";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { insertTestData } from "../../../tests/database/testData";
-import { AnnouncementRepository } from "./announcementRepository";
+import {
+  createAnnouncement,
+  getNewAnnouncements,
+} from "./announcementRepository";
 
 describe("Announcement Repository", () => {
-  const testDbPath = join(process.cwd(), "data", "test.db");
+  const testDbPath = join(process.cwd(), "data", "announcement_test.db");
 
-  let repo: AnnouncementRepository;
   let dbService: DatabaseService;
 
   beforeEach(async () => {
     // Load the configuration
     config.loadConfig();
     const testConfig = config.get();
-    testConfig.common.databaseFile = "test.db";
+    testConfig.common.databaseFile = "announcement_test.db";
 
     // Create a new database service
     dbService = DatabaseService.getInstance();
     await dbService.initialize(testConfig);
-    repo = new AnnouncementRepository(dbService.get());
 
     // Insert test data
     await insertTestData(dbService.get());
@@ -39,7 +40,7 @@ describe("Announcement Repository", () => {
 
   describe("Announcement Operations", () => {
     it("should create announcement", async () => {
-      const announcement = await repo.create({
+      const announcement = await createAnnouncement({
         channel: "TELEGRAM",
         date: new Date().toISOString(),
         text_markdown: "Test announcement",
@@ -50,7 +51,7 @@ describe("Announcement Repository", () => {
     });
 
     it("should get new announcements", async () => {
-      const announcements = await repo.getNewAnnouncements(1);
+      const announcements = await getNewAnnouncements(1);
       expect(announcements).toHaveLength(3);
       expect(announcements[0].id).toBe(2);
       expect(announcements[1].id).toBe(3);

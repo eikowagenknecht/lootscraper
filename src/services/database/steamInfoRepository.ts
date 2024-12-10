@@ -1,16 +1,15 @@
 import type { NewSteamInfo } from "@/types/database";
-import { BaseRepository } from "./baseRepository";
+import { getDb } from "../database";
+import { handleError, handleInsertResult } from "./common";
 
-export class SteamInfoRepository extends BaseRepository {
-  async create(info: NewSteamInfo): Promise<number> {
-    try {
-      const result = await this.db
-        .insertInto("steam_info")
-        .values(info)
-        .executeTakeFirstOrThrow();
-      return this.handleInsertResult(result);
-    } catch (error) {
-      this.handleError("create Steam info", error);
-    }
+export async function createSteamInfo(info: NewSteamInfo): Promise<number> {
+  try {
+    const result = await getDb()
+      .insertInto("steam_info")
+      .values(info)
+      .executeTakeFirstOrThrow();
+    return handleInsertResult(result);
+  } catch (error) {
+    handleError("create Steam info", error);
   }
 }

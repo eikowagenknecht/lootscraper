@@ -75,3 +75,7 @@ export class DatabaseService {
 
 // Export a singleton instance
 export const database = DatabaseService.getInstance();
+
+export function getDb(): Kysely<DatabaseType> {
+  return database.get();
+}

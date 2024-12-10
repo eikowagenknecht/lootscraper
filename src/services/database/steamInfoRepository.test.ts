@@ -4,24 +4,22 @@ import { config } from "@/services/config";
 import { DatabaseService } from "@/services/database";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { insertTestData } from "../../../tests/database/testData";
-import { SteamInfoRepository } from "./steamInfoRepository";
+import { createSteamInfo } from "./steamInfoRepository";
 
 describe("Announcement Repository", () => {
-  const testDbPath = join(process.cwd(), "data", "test.db");
+  const testDbPath = join(process.cwd(), "data", "steam_test.db");
 
-  let repo: SteamInfoRepository;
   let dbService: DatabaseService;
 
   beforeEach(async () => {
     // Load the configuration
     config.loadConfig();
     const testConfig = config.get();
-    testConfig.common.databaseFile = "test.db";
+    testConfig.common.databaseFile = "steam_test.db";
 
     // Create a new database service
     dbService = DatabaseService.getInstance();
     await dbService.initialize(testConfig);
-    repo = new SteamInfoRepository(dbService.get());
 
     // Insert test data
     await insertTestData(dbService.get());
@@ -39,7 +37,7 @@ describe("Announcement Repository", () => {
 
   describe("Steam Info Operations", () => {
     it("should create steam info", async () => {
-      const steamInfoId = await repo.create({
+      const steamInfoId = await createSteamInfo({
         name: "Test Game",
         url: "https://store.steampowered.com/app/123",
         image_url: "https://cdn.steam.com/image.jpg",
