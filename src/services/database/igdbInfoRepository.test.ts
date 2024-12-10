@@ -4,24 +4,22 @@ import { config } from "@/services/config";
 import { DatabaseService } from "@/services/database";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { insertTestData } from "../../../tests/database/testData";
-import { IgdbInfoRepository } from "./igdbInfoRepository";
+import { createIgdbInfo } from "./igdbInfoRepository";
 
 describe("Announcement Repository", () => {
-  const testDbPath = join(process.cwd(), "data", "test.db");
+  const testDbPath = join(process.cwd(), "data", "igdb_test.db");
 
-  let repo: IgdbInfoRepository;
   let dbService: DatabaseService;
 
   beforeEach(async () => {
     // Load the configuration
     config.loadConfig();
     const testConfig = config.get();
-    testConfig.common.databaseFile = "test.db";
+    testConfig.common.databaseFile = "igdb_test.db";
 
     // Create a new database service
     dbService = DatabaseService.getInstance();
     await dbService.initialize(testConfig);
-    repo = new IgdbInfoRepository(dbService.get());
 
     // Insert test data
     await insertTestData(dbService.get());
@@ -39,7 +37,7 @@ describe("Announcement Repository", () => {
 
   describe("IGDB Info Operations", () => {
     it("should create igdb info", async () => {
-      const igdbInfo = await repo.create({
+      const igdbInfo = await createIgdbInfo({
         name: "Test Game",
         url: "https://igdb.com/games/test",
         release_date: new Date().toISOString(),
