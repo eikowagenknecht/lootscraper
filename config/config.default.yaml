@@ -1,22 +1,36 @@
 common:
+  # Path is /data if it exists (Docker), otherwise the relative directory data
   databaseFile: loot.db
   feedFilePrefix: lootscraper
   logFile: lootscraper.log
+  # One of: DEBUG, INFO, WARNING, ERROR, CRITICAL
   logLevel: INFO
 
 expert:
+  # Output all database queries to the console
   dbEcho: false
+  # Timeout for web requests (in seconds). Increase if you have slow internet.
   webTimeoutSeconds: 5
 
 scraper:
   offerSources:
-    - STEAM
+    - AMAZON_GAME
+    - AMAZON_LOOT
+    - APPLE
     - EPIC
     - GOG
+    - GOOGLE
+    - HUMBLE
+    - ITCH
+    - STEAM
+    - UBISOFT
   offerTypes:
     - GAME
+    - LOOT
   offerDurations:
+    - ALWAYS
     - CLAIMABLE
+    - TEMPORARY
   infoSources:
     - STEAM
     - IGDB
@@ -28,19 +42,26 @@ actions:
   telegramBot: false
 
 telegram:
-  logLevel: ERROR
+  # Telegram bot token
   accessToken: ""
+  # Chat ID for the developer
   developerChatId: 0
+  # User ID for the admin
   adminUserId: 0
+  # One of: DEBUG, INFO, WARNING, ERROR, DISABLED
+  logLevel: ERROR
 
 igdb:
+  # Twitch API client ID
   clientId: ""
+  # Twitch API client secret
   clientSecret: ""
 
 ftp:
-  host: ""
-  user: ""
-  password: ""
+  # Settings for the TLS FTP connection
+  host: ftp.example.com
+  user: user
+  password: password
 
 feed:
   authorName: John Doe
