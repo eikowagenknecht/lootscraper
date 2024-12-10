@@ -4,7 +4,7 @@ import { ConfigError, config } from "@/services/config";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 describe("ConfigService", () => {
-  const tempDir = join(process.cwd(), "data");
+  const tempDir = join(process.cwd(), "data_test");
   const tempConfigPath = join(tempDir, "config.yaml");
 
   beforeEach(() => {
