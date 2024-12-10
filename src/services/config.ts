@@ -71,7 +71,7 @@ export class ConfigService {
   private createDefaultConfig(targetPath: string): void {
     const defaultConfigPath = resolve(
       __dirname,
-      "../../config/config.default.yaml",
+      "../../templates/config.default.yaml",
     );
 
     // Ensure the target directory exists
