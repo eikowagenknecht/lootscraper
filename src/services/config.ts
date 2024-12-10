@@ -1,6 +1,7 @@
 import { copyFileSync, mkdirSync, readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { type Config, ConfigSchema } from "@/types/config";
+import { logger } from "@/utils/logger";
 import { parse } from "yaml";
 
 export class ConfigError extends Error {
@@ -39,8 +40,13 @@ export class ConfigService {
 
       // Check if config exists, if not copy the default one
       if (!this.fileExists(path)) {
+        logger.info(
+          `Config file not found at ${path}, creating default config.`,
+        );
         this.createDefaultConfig(path);
       }
+
+      logger.info(`Loading config from ${path}`);
 
       const configFile = readFileSync(path, "utf8");
       const parsedConfig: unknown = parse(configFile);
