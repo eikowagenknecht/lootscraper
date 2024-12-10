@@ -1,5 +1,6 @@
 import type { NewIgdbInfo } from "@/types/database";
 import { logger } from "@/utils/logger";
+import { getMatchScore } from "@/utils/stringMatcher";
 
 interface IgdbAuth {
   accessToken: string;
@@ -26,6 +27,8 @@ interface IgdbSearchResult {
 export class IgdbClient {
   private static readonly API_URL = "https://api.igdb.com/v4";
   private static readonly AUTH_URL = "https://id.twitch.tv/oauth2/token";
+  private static readonly MINIMUM_ACCEPTABLE_SCORE = 0.75;
+
   private auth: IgdbAuth | null = null;
 
   constructor(
@@ -33,31 +36,55 @@ export class IgdbClient {
     private readonly clientSecret: string,
   ) {}
 
-  public async searchGame(gameName: string): Promise<number | null> {
+  /**
+   * Search IGDB via the APIv4 and return the best match in the results.
+   *
+   * The comparison is done with difflib, lower cased.
+   * @param searchString
+   * @returns
+   */
+  public async searchGame(searchString: string): Promise<number | null> {
     await this.ensureAuth();
 
-    const query = `
-      search "${this.escapeString(gameName)}";
-      fields name;
-      where version_parent = null;
-      limit 50;
-    `;
+    const query = `search "${this.normalizeString(searchString)}";
+fields name;
+where version_parent = null;
+limit 50;
+`;
+
+    logger.debug(`Searching for game: ${searchString} with query: ${query}`);
 
     const results = await this.apiRequest<IgdbSearchResult[]>("games", query);
+
     if (!results.length) return null;
 
     let bestMatch: { id: number; score: number; title: string } | null = null;
     for (const game of results) {
-      const score = this.getMatchScore(gameName, game.name);
-      if (score >= 0.75 && (!bestMatch || score > bestMatch.score)) {
+      const score = getMatchScore(searchString, game.name);
+      if (
+        score >= IgdbClient.MINIMUM_ACCEPTABLE_SCORE &&
+        (!bestMatch || score > bestMatch.score)
+      ) {
         bestMatch = { id: game.id, score, title: game.name };
         logger.debug(
           `Found match ${game.name} with score ${(score * 100).toFixed(0)}%`,
         );
+      } else {
+        logger.debug(
+          `Rejected match ${game.name} as it's score of ${(score * 100).toFixed(0)}% is too low.`,
+        );
       }
     }
 
-    return bestMatch?.id ?? null;
+    if (!bestMatch) {
+      logger.debug(`No match found for ${searchString}.`);
+      return null;
+    }
+
+    logger.debug(
+      `Best match for ${searchString} is ${bestMatch.title} with score ${(bestMatch.score * 100).toFixed(0)}%.`,
+    );
+    return bestMatch.id;
   }
 
   public async getDetails(gameId: number): Promise<NewIgdbInfo | null> {
@@ -137,31 +164,17 @@ export class IgdbClient {
     return response.json() as Promise<T>;
   }
 
-  private escapeString(str: string): string {
-    return (
-      str
-        .replace(/"/g, "")
-        .normalize("NFD")
-        // biome-ignore lint/suspicious/noMisleadingCharacterClass: TODO
-        .replace(/[\u0300-\u036f]|./g, "")
-    );
-  }
-
-  private getMatchScore(str1: string, str2: string): number {
-    const s1 = str1.toLowerCase().trim();
-    const s2 = str2.toLowerCase().trim();
-
-    if (s1 === s2) return 1;
-    if (s1.includes(s2) || s2.includes(s1)) return 0.9;
-
-    let matches = 0;
-    const words1 = new Set(s1.split(/\s+/));
-    const words2 = new Set(s2.split(/\s+/));
-
-    for (const word of words1) {
-      if (words2.has(word)) matches++;
-    }
-
-    return (matches * 2) / (words1.size + words2.size);
+  /**
+   * Replace non-Latin characters with their closest representation and replace
+   * the quote sign (") because that would break the query.
+   *
+   * @param str
+   * @returns
+   */
+  private normalizeString(str: string): string {
+    // First normalize to decomposed form (NFD), which separates base characters from diacritics
+    // Then replace all combining diacritical marks (unicode category "M")
+    // Finally replace double quotes and trim the result
+    return str.normalize("NFD").replace(/\p{M}/gu, "").replace(/"/g, "").trim();
   }
 }
