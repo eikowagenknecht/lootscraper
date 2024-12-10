@@ -9,8 +9,8 @@ import type {
 } from "@/types/database";
 import { logger } from "@/utils/logger";
 import type { BrowserContext } from "playwright";
-import { IgdbClient } from "./gameinfo/igdb";
-import { SteamClient } from "./gameinfo/steam";
+import { IgdbClient } from "./gameinfo/igdb/igdb";
+import { SteamClient } from "./gameinfo/steam/steam";
 
 export class GameInfoService {
   private readonly steamClient: SteamClient;
