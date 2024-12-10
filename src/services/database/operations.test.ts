@@ -6,7 +6,7 @@ import { DatabaseOperations } from "@/services/database/operations";
 import { OfferDuration, OfferSource, OfferType } from "@/types/config";
 import type { NewOffer } from "@/types/database";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { insertTestData } from "./testData";
+import { insertTestData } from "../../../tests/database/testData";
 
 describe("Database Operations", () => {
   const testDbPath = join(process.cwd(), "data", "test.db");
