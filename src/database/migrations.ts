@@ -1,17 +1,21 @@
 import { DatabaseError } from "@/types/errors";
 import { logger } from "@/utils/logger";
 import { type Kysely, type Migration, Migrator } from "kysely";
-import { initialMigration } from "./migrations/2024-12-08-initial";
-import { dropAlembicMigration } from "./migrations/2024-12-09-drop-alembic";
-import { indicesMigration } from "./migrations/2024-12-10-indices";
-import { nullabilityMigration } from "./migrations/2024-12-10-nullability";
+import { initialMigration } from "./migrations/001-initial";
+import { dropAlembicMigration } from "./migrations/002-alembic";
+import { indicesMigration } from "./migrations/003-indices";
+import { nullabilityMigration } from "./migrations/004-nullability";
+import { strictModeMigration } from "./migrations/005-strict";
+import { dateFormatMigration } from "./migrations/006-dateformat";
 
 // Define the migrations type
 const migrations: Record<string, Migration> = {
-  "2024-12-08-initial": initialMigration,
-  "2024-12-09-drop-alembic": dropAlembicMigration,
-  "2024-12-10-indices": indicesMigration,
-  "2024-12-10-nullability": nullabilityMigration,
+  "001-initial": initialMigration,
+  "002-drop-alembic": dropAlembicMigration,
+  "003-indices": indicesMigration,
+  "004-nullability": nullabilityMigration,
+  "005-strict": strictModeMigration,
+  "006-dates": dateFormatMigration,
 };
 
 export async function migrateToLatest(db: Kysely<unknown>): Promise<void> {
@@ -40,7 +44,7 @@ export async function migrateToLatest(db: Kysely<unknown>): Promise<void> {
     await db
       .insertInto("kysely_migration" as never)
       .values({
-        name: "2024-12-08-initial",
+        name: "001-initial",
         timestamp: new Date().toISOString(),
       })
       .execute();

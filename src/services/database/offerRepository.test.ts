@@ -6,6 +6,7 @@ import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import { insertTestData } from "../../../tests/testData";
 import {
   createOrUpdateOffer,
+  getActiveOffers,
   getOfferByTitle,
   updateOffer,
 } from "./offerRepository";
@@ -22,6 +23,50 @@ describe("Offer Repository", () => {
 
   afterEach(async () => {
     await dbService.destroy();
+  });
+
+  describe("Active Offers", () => {
+    test("should get all active offers", async () => {
+      const activeOffers = await getActiveOffers();
+      expect(activeOffers).toBeDefined();
+      expect(activeOffers).toHaveLength(3); // All test offers are active
+
+      // Verify all returned offers are actually active
+      const now = new Date();
+      for (const offer of activeOffers) {
+        if (offer.valid_to) {
+          expect(new Date(offer.valid_to).getTime()).toBeGreaterThan(
+            now.getTime(),
+          );
+        }
+      }
+    });
+
+    test("should not include expired offers", async () => {
+      // Add an expired offer
+      const expiredOffer: NewOffer = {
+        source: OfferSource.EPIC,
+        type: OfferType.GAME,
+        duration: OfferDuration.CLAIMABLE,
+        title: "Expired Game",
+        probable_game_name: "Expired Game",
+        seen_last: new Date().toISOString(),
+        seen_first: new Date().toISOString(),
+        valid_to: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(), // Yesterday
+        rawtext: JSON.stringify({ title: "Expired Game" }),
+        url: "https://example.com/expired",
+        img_url: "https://example.com/expired.jpg",
+        category: "VALID",
+      };
+
+      await createOrUpdateOffer(expiredOffer);
+
+      const activeOffers = await getActiveOffers();
+      const expiredOfferInList = activeOffers.find(
+        (o) => o.title === "Expired Game",
+      );
+      expect(expiredOfferInList).toBeUndefined();
+    });
   });
 
   describe("Offer Operations", () => {
