@@ -1,4 +1,4 @@
-import { OfferSource, OfferType } from "@/types/config";
+import { OfferType } from "@/types/config";
 import type { NewOffer } from "@/types/database";
 import type { Locator, Page } from "playwright";
 import type { OfferHandler } from "../../base/scraper";
@@ -9,10 +9,6 @@ interface AmazonLootRawOffer extends AmazonRawOffer {
 }
 
 export class AmazonLootScraper extends AmazonBaseScraper<AmazonLootRawOffer> {
-  override getSource(): OfferSource {
-    return OfferSource.AMAZON_LOOT;
-  }
-
   getType(): OfferType {
     return OfferType.LOOT;
   }

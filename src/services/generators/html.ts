@@ -3,12 +3,12 @@ import { resolve } from "node:path";
 import type { Config } from "@/types/config";
 import { OfferDuration, type OfferSource, OfferType } from "@/types/config";
 import type { Offer } from "@/types/database";
+import { cleanHtml, toCapitalCaseAll } from "@/utils/stringTools";
 import Handlebars from "handlebars";
 import { DateTime } from "luxon";
 import { getGameWithInfo } from "../database/gameRepository";
 
-const TEMPLATE = `
-<!DOCTYPE html>
+const TEMPLATE = `<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -21,14 +21,14 @@ const TEMPLATE = `
 
         {{#each entries}}
         <h2 class="flex justify-between items-center text-2xl mb-2 {{#if is_expired}}line-through{{/if}}">
-            <span class="font-bold">{{title}}</span>
-            <span class="text-sm">Valid from {{valid_from}}{{#if valid_to}} to {{valid_to}}{{/if}}</span>
+            <span class="font-bold">{{{title}}}</span>
+            <span class="text-sm">Valid from {{{valid_from}}}{{#if valid_to}} to {{{valid_to}}}{{/if}}</span>
         </h2>
 
         <div class="flex bg-white rounded-lg shadow-md p-6 mb-8">
             {{#if img_url}}
             <div>
-                <img src="{{img_url}}" alt="{{title}}" class="w-96">
+                <img src="{{{img_url}}}" alt="{{{title}}}" class="w-96">
             </div>
             {{/if}}
 
@@ -36,9 +36,9 @@ const TEMPLATE = `
                 {{#if has_game}}
                 <div class="bg-gray-200 p-4 rounded-lg text-sm">
                     <div class="flex justify-between mb-2">
-                        <h3 class="font-bold underline">{{game_name}}</h3>
+                        <h3 class="font-bold underline">{{{game_name}}}</h3>
                         {{#if release_date}}
-                        <span><strong>Release Date:</strong> {{release_date}}</span>
+                        <span><strong>Release Date:</strong> {{{release_date}}}</span>
                         {{/if}}
                     </div>
 
@@ -49,7 +49,7 @@ const TEMPLATE = `
                             {{else if (gt steam_percent 80)}}bg-green-500
                             {{else if (gt steam_percent 60)}}bg-yellow-500
                             {{else}}bg-red-600{{/if}}">
-                            <a href="{{steam_url}}">Steam: {{steam_percent}}% / {{steam_score}} ({{steam_recommendations}} recommendations)</a>
+                            <a href="{{{steam_url}}}">Steam: {{steam_percent}}% / {{steam_score}} ({{steam_recommendations}} recommendations)</a>
                         </span>
                         {{/if}}
 
@@ -59,7 +59,7 @@ const TEMPLATE = `
                             {{else if (gt igdb_meta_score 80)}}bg-green-500
                             {{else if (gt igdb_meta_score 60)}}bg-yellow-500
                             {{else}}bg-red-600{{/if}}">
-                            <a href="{{igdb_url}}">IGDB Meta: {{igdb_meta_score}}% ({{igdb_meta_ratings}} sources)</a>
+                            <a href="{{{igdb_url}}}">IGDB Meta: {{igdb_meta_score}}% ({{igdb_meta_ratings}} sources)</a>
                         </span>
                         {{/if}}
 
@@ -69,7 +69,7 @@ const TEMPLATE = `
                             {{else if (gt metacritic_score 80)}}bg-green-500
                             {{else if (gt metacritic_score 60)}}bg-yellow-500
                             {{else}}bg-red-600{{/if}}">
-                            {{#if metacritic_url}}<a href="{{metacritic_url}}">{{/if}}
+                            {{#if metacritic_url}}<a href="{{{metacritic_url}}}">{{/if}}
                             Metacritic: {{metacritic_score}}%
                             {{#if metacritic_url}}</a>{{/if}}
                         </span>
@@ -81,7 +81,7 @@ const TEMPLATE = `
                             {{else if (gt igdb_user_score 80)}}bg-green-500
                             {{else if (gt igdb_user_score 60)}}bg-yellow-500
                             {{else}}bg-red-600{{/if}}">
-                            <a href="{{igdb_url}}">IGDB User: {{igdb_user_score}}% ({{igdb_user_ratings}} sources)</a>
+                            <a href="{{{igdb_url}}}">IGDB User: {{igdb_user_score}}% ({{igdb_user_ratings}} sources)</a>
                         </span>
                         {{/if}}
                     </div>
@@ -90,7 +90,7 @@ const TEMPLATE = `
                     <div class="flex flex-wrap mb-2">
                         <div class="flex flex-wrap">
                             {{#each (split genres ", ")}}
-                            <span class="text-white bg-gray-500 rounded-full px-3 py-1 text-sm font-semibold m-1">#{{this}}</span>
+                            <span class="text-white bg-gray-500 rounded-full px-3 py-1 text-sm font-semibold m-1">#{{{this}}}</span>
                             {{/each}}
                         </div>
                     </div>
@@ -104,8 +104,8 @@ const TEMPLATE = `
 
                 <div class="flex justify-between items-center mt-4">
                     {{#if url}}
-                    <a href="{{url}}" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-                        Claim on {{source}}
+                    <a href="{{{url}}}" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                        Claim on {{{source}}}
                     </a>
                     {{/if}}
 
@@ -124,16 +124,19 @@ const TEMPLATE = `
 
 const DEFAULT_FEED_TITLE = "Free Games and Loot";
 
+interface HtmlGeneratorOptions {
+  source?: OfferSource;
+  type?: OfferType;
+  duration?: OfferDuration;
+  all?: boolean;
+}
+
 export class HtmlGenerator {
   private readonly template: HandlebarsTemplateDelegate;
 
   constructor(
     private readonly config: Config,
-    private readonly options: {
-      source?: OfferSource;
-      type?: OfferType;
-      duration?: OfferDuration;
-    } = {},
+    private readonly options: HtmlGeneratorOptions = {},
   ) {
     this.registerHelpers();
     this.template = Handlebars.compile(TEMPLATE);
@@ -173,7 +176,7 @@ export class HtmlGenerator {
                   "yyyy-MM-dd",
                 )
               : undefined,
-            source: offer.source,
+            source: toCapitalCaseAll(offer.source),
             url: offer.url,
             is_expired: offer.valid_to && new Date(offer.valid_to) < new Date(),
             has_game: !!gameInfo,
@@ -214,18 +217,46 @@ export class HtmlGenerator {
         author_email: this.config.feed.authorEmail,
         author_web: this.config.feed.authorWeb,
       },
-      entries: entries.sort((a, b) => b.valid_from.localeCompare(a.valid_from)),
+      entries: entries.sort((a, b) => {
+        // First compare by valid_from
+        const validFromComparison = b.valid_from.localeCompare(a.valid_from);
+
+        if (validFromComparison !== 0) {
+          return validFromComparison;
+        }
+
+        // If valid_from is the same, compare by valid_to (if it exists)
+        if (a.valid_to && b.valid_to) {
+          const validToComparison = b.valid_to.localeCompare(a.valid_to);
+
+          if (validToComparison !== 0) {
+            return validToComparison;
+          }
+        }
+
+        // If valid_to is also the same, compare by title
+        return b.title.localeCompare(a.title);
+        // TODO: Reverse order, this is only to test with the old version
+      }),
     });
 
+    const cleanedHtml = cleanHtml(html);
+
     const outputPath = resolve(process.cwd(), "data", this.getFilename());
-    await writeFile(outputPath, html);
+    await writeFile(outputPath, cleanedHtml);
   }
 
   private getFilename(): string {
     const parts = [this.config.common.feedFilePrefix];
-    if (this.options.source) parts.push(this.options.source);
-    if (this.options.type) parts.push(this.options.type);
-    if (this.options.duration) parts.push(this.options.duration);
+    if (this.options.source) parts.push(this.options.source.toLowerCase());
+    if (this.options.type) parts.push(this.options.type.toLowerCase());
+    if (this.options.duration !== OfferDuration.CLAIMABLE) {
+      if (this.options.duration)
+        parts.push(this.options.duration.toLowerCase());
+    }
+    if (this.options.all) {
+      parts.push("all");
+    }
     return `${parts.join("_")}.html`;
   }
 
@@ -238,7 +269,7 @@ export class HtmlGenerator {
     const parts: string[] = ["Free"];
 
     if (this.options.source) {
-      parts.push(this.options.source);
+      parts.push(toCapitalCaseAll(this.options.source));
     }
 
     if (this.options.type) {

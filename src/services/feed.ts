@@ -17,8 +17,6 @@ export class FeedService {
       return;
     }
 
-    logger.info("Generating feeds");
-
     // Generate source-specific feeds
     for (const source of this.config.scraper.offerSources) {
       for (const type of this.config.scraper.offerTypes) {
@@ -59,7 +57,7 @@ export class FeedService {
         offer.duration === duration,
     );
 
-    if (filteredActiveOffers.length === 0) return;
+    if (filteredAllOffers.length === 0) return;
 
     const includeFilter = { source, type, duration };
 
@@ -74,6 +72,7 @@ export class FeedService {
     // Generate full history HTML view
     const htmlHistoryGen = new HtmlGenerator(this.config, {
       ...includeFilter,
+      all: true,
     });
     await htmlHistoryGen.generateHtml(filteredAllOffers);
   }
@@ -91,7 +90,9 @@ export class FeedService {
     await htmlGen.generateHtml(activeOffers);
 
     // Generate full history HTML view
-    const htmlHistoryGen = new HtmlGenerator(this.config, {});
+    const htmlHistoryGen = new HtmlGenerator(this.config, {
+      all: true,
+    });
     await htmlHistoryGen.generateHtml(allOffers);
   }
 }

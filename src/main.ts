@@ -47,25 +47,27 @@ async function main(): Promise<void> {
     const feedService = new FeedService(config.get());
 
     // Get all offers
-    const activeOffers = await getActiveOffers();
+    const activeOffers = await getActiveOffers(new Date());
     const allOffers = await getAllOffers();
 
     // Generate feeds
+    logger.info("Generating feeds...");
     await feedService.generateFeeds(activeOffers, allOffers);
 
-    // Test Epic Games scraper
-    const scraper = new EpicGamesScraper(browser.getContext(), config.get());
+    if (config.get().scraper.offerSources.length > 0) {
+      // Test Epic Games scraper
+      const scraper = new EpicGamesScraper(browser.getContext(), config.get());
 
-    logger.info("Starting scraper test...");
-    const offers = await scraper.scrape();
+      logger.info("Starting scraper test...");
+      const offers = await scraper.scrape();
 
-    // Store offers in database
-    for (const offer of offers) {
-      await createOrUpdateOffer(offer);
+      // Store offers in database
+      for (const offer of offers) {
+        await createOrUpdateOffer(offer);
+      }
+
+      logger.info("Scraping completed successfully");
     }
-
-    logger.info("Scraping completed successfully");
-
     // Cleanup
     await browser.destroy();
     await database.destroy();

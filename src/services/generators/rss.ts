@@ -4,12 +4,14 @@ import type { Config } from "@/types/config";
 import { OfferDuration, type OfferSource, OfferType } from "@/types/config";
 import type { Game, IgdbInfo, Offer, SteamInfo } from "@/types/database";
 import { FeedError } from "@/types/errors";
+import { logger } from "@/utils/logger";
+import { toCapitalCaseAll } from "@/utils/stringTools";
 import { Feed } from "feed";
 import type { Feed as FeedType } from "feed";
 import { DateTime } from "luxon";
 import { getGameWithInfo } from "../database/gameRepository";
 
-interface FeedGeneratorOptions {
+interface RssGeneratorOptions {
   source?: OfferSource;
   type?: OfferType;
   duration?: OfferDuration;
@@ -20,14 +22,14 @@ export class RssGenerator {
 
   constructor(
     private readonly config: Config,
-    private readonly options: FeedGeneratorOptions = {},
+    private readonly options: RssGeneratorOptions = {},
   ) {
     this.feedGenerator = new Feed({
       id: this.getFeedId(),
       title: this.getFeedTitle(),
       updated: new Date(),
       generator: "LootScraper",
-      language: "en",
+      language: "en", // TODO: Used only in RSS 2.0, ssue opened but project seems dead
       copyright: "TODO",
       feed: `${config.feed.urlPrefix}${this.getFilename()}`,
       feedLinks: {
@@ -43,6 +45,7 @@ export class RssGenerator {
   }
 
   public async generateFeed(offers: Offer[]): Promise<void> {
+    logger.info(`Generating feed for ${offers.length.toFixed(0)} offers...`);
     if (offers.length === 0) return;
 
     for (const offer of offers) {
@@ -100,9 +103,12 @@ export class RssGenerator {
   private getFilename(): string {
     const parts: string[] = [this.config.common.feedFilePrefix];
 
-    if (this.options.source) parts.push(this.options.source);
-    if (this.options.type) parts.push(this.options.type);
-    if (this.options.duration) parts.push(this.options.duration);
+    if (this.options.source) parts.push(this.options.source.toLowerCase());
+    if (this.options.type) parts.push(this.options.type.toLowerCase());
+    if (this.options.duration !== OfferDuration.CLAIMABLE) {
+      if (this.options.duration)
+        parts.push(this.options.duration.toLowerCase());
+    }
 
     return `${parts.join("_")}.xml`;
   }
@@ -121,7 +127,7 @@ export class RssGenerator {
     const parts = ["Free"];
 
     if (this.options.source) {
-      parts.push(this.options.source);
+      parts.push(toCapitalCaseAll(this.options.source));
     }
 
     if (this.options.type === OfferType.GAME) {
