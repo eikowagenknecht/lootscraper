@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import { insertTestData } from "../../../tests/testData";
 import { createIgdbInfo } from "./igdbInfoRepository";
 
-describe("Announcement Repository", () => {
+describe("IGDB Info Repository", () => {
   let dbService: DatabaseService;
 
   beforeEach(async () => {

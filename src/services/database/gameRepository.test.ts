@@ -14,7 +14,7 @@ import {
 import { createIgdbInfo } from "./igdbInfoRepository";
 import { createSteamInfo } from "./steamInfoRepository";
 
-describe("Announcement Repository", () => {
+describe("Game Repository", () => {
   let dbService: DatabaseService;
 
   beforeEach(async () => {

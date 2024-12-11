@@ -10,7 +10,7 @@ import {
   updateOffer,
 } from "./offerRepository";
 
-describe("Announcement Repository", () => {
+describe("Offer Repository", () => {
   let dbService: DatabaseService;
 
   beforeEach(async () => {
