@@ -33,7 +33,6 @@
   },
   "dependencies": {
     "better-sqlite3": "11.7.0",
-    "feed": "4.2.2",
     "grammy": "1.33.0",
     "handlebars": "4.7.8",
     "kysely": "0.27.5",
