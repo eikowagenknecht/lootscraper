@@ -11,7 +11,7 @@
   },
   "scripts": {
     "dev": "vite-node src/main.ts",
-    "build": "tsc && vite build",
+    "build": "vite build",
     "start": "node dist/main.js",
     "test": "vitest",
     "test:watch": "vitest watch",

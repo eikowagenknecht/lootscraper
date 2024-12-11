@@ -8,10 +8,14 @@ export default defineConfig(({ mode }) => ({
     },
   },
   build: {
-    target: "node20",
+    target: "node22",
     outDir: "dist",
+    ssr: true,
     rollupOptions: {
       input: "src/main.ts",
+      output: {
+        format: "esm",
+      },
     },
   },
   test: {
