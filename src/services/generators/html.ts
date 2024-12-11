@@ -5,7 +5,7 @@ import { OfferDuration, type OfferSource, OfferType } from "@/types/config";
 import type { Offer } from "@/types/database";
 import Handlebars from "handlebars";
 import { DateTime } from "luxon";
-import { getGameWithInfo } from "./database/gameRepository";
+import { getGameWithInfo } from "../database/gameRepository";
 
 const TEMPLATE = `
 <!DOCTYPE html>
@@ -190,11 +190,11 @@ export class HtmlGenerator {
             igdb_user_score: gameInfo?.igdbInfo?.user_score,
             igdb_user_ratings: gameInfo?.igdbInfo?.user_ratings,
             release_date: gameInfo?.igdbInfo?.release_date
-              ? DateTime.fromJSDate(gameInfo.igdbInfo.release_date).toFormat(
+              ? DateTime.fromISO(gameInfo.igdbInfo.release_date).toFormat(
                   "yyyy-MM-dd",
                 )
               : gameInfo?.steamInfo?.release_date
-                ? DateTime.fromJSDate(gameInfo.steamInfo.release_date).toFormat(
+                ? DateTime.fromISO(gameInfo.steamInfo.release_date).toFormat(
                     "yyyy-MM-dd",
                   )
                 : undefined,

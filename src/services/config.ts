@@ -79,7 +79,7 @@ export class ConfigService {
 
     try {
       copyFileSync(defaultConfigPath, targetPath);
-      console.log(`Created new config file at ${targetPath}`);
+      logger.info(`Created new config file at ${targetPath}`);
     } catch (error) {
       throw new ConfigError(
         `Failed to create default config: ${error instanceof Error ? error.message : String(error)}`,

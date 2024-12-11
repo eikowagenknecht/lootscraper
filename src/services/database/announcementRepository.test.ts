@@ -28,8 +28,6 @@ describe("Announcement Repository", () => {
         date: new Date().toISOString(),
         text_markdown: "Test announcement",
       });
-
-      console.log(announcement);
       expect(announcement).toBe(5);
     });
 

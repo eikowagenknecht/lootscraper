@@ -29,7 +29,7 @@ export type AlembicVersionUpdate = Updateable<AlembicVersionTable>;
 interface AnnouncementsTable {
   id: Generated<number>;
   channel: "TELEGRAM";
-  date: ColumnType<Date, string | undefined, never>;
+  date: ColumnType<string, string | undefined, never>;
   text_markdown: string;
 }
 
@@ -52,7 +52,7 @@ interface IgdbInfoTable {
   url: string;
   name: string;
   short_description: string | null;
-  release_date: ColumnType<Date, string, string> | null;
+  release_date: string | null;
   user_score: number | null;
   user_ratings: number | null;
   meta_score: number | null;
@@ -70,15 +70,15 @@ interface OffersTable {
   duration: OfferDuration;
   title: string;
   probable_game_name: string;
-  seen_last: ColumnType<Date, string, string>;
+  seen_last: string;
   rawtext: ColumnType<Record<string, unknown>, string | undefined, string>;
   url: string | null;
   game_id: number | null;
   category: string;
   img_url: string | null;
-  seen_first: ColumnType<Date, string, never>;
-  valid_from: ColumnType<Date, string, string> | null;
-  valid_to: ColumnType<Date, string, string> | null;
+  seen_first: ColumnType<string, string, never>;
+  valid_from: string | null;
+  valid_to: string | null;
 }
 
 export type Offer = Selectable<OffersTable>;
@@ -90,7 +90,7 @@ interface SteamInfoTable {
   url: string;
   name: string | null;
   short_description: string | null;
-  release_date: ColumnType<Date, string, string> | null;
+  release_date: string | null;
   genres: string | null;
   publishers: string | null;
   image_url: string | null;
@@ -108,7 +108,7 @@ export type SteamInfoUpdate = Updateable<SteamInfoTable>;
 
 interface TelegramChatsTable {
   id: Generated<number>;
-  registration_date: ColumnType<Date, string, string>;
+  registration_date: string;
   chat_type: string;
   chat_id: number;
   user_id: number | null;

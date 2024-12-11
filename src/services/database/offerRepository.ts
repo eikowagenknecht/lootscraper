@@ -28,6 +28,36 @@ export async function getOfferByTitle(
   }
 }
 
+export async function getActiveOffers(): Promise<Offer[]> {
+  try {
+    const now = new Date();
+    return await getDb()
+      .selectFrom("offers")
+      .where((eb) =>
+        eb.or([
+          eb("valid_to", ">=", now.toISOString()),
+          eb("valid_to", "is", null),
+        ]),
+      )
+      .selectAll()
+      .execute();
+  } catch (error) {
+    handleError("get active offers", error);
+  }
+}
+
+export async function getAllOffers(): Promise<Offer[]> {
+  try {
+    return await getDb()
+      .selectFrom("offers")
+      .selectAll()
+      .orderBy("seen_first", "desc")
+      .execute();
+  } catch (error) {
+    handleError("get all offers", error);
+  }
+}
+
 export async function updateOffer(id: number, offer: OfferUpdate) {
   try {
     const result = await getDb()

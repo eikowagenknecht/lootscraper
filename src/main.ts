@@ -20,7 +20,12 @@ import {
   logger,
   updateConsoleLevel,
 } from "@/utils/logger";
-import { createOrUpdateOffer } from "./services/database/offerRepository";
+import {
+  createOrUpdateOffer,
+  getActiveOffers,
+  getAllOffers,
+} from "./services/database/offerRepository";
+import { FeedService } from "./services/feed";
 
 async function main(): Promise<void> {
   try {
@@ -37,6 +42,16 @@ async function main(): Promise<void> {
     // Initialize services
     await database.initialize(config.get());
     await browser.initialize(config.get());
+
+    // Initialize feed service
+    const feedService = new FeedService(config.get());
+
+    // Get all offers
+    const activeOffers = await getActiveOffers();
+    const allOffers = await getAllOffers();
+
+    // Generate feeds
+    await feedService.generateFeeds(activeOffers, allOffers);
 
     // Test Epic Games scraper
     const scraper = new EpicGamesScraper(browser.getContext(), config.get());
