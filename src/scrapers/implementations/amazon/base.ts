@@ -15,7 +15,7 @@ export abstract class AmazonBaseScraper<
   T extends AmazonRawOffer = AmazonRawOffer,
 > extends BaseScraper<T> {
   getSource(): OfferSource {
-    return OfferSource.AMAZON_GAME;
+    return OfferSource.AMAZON;
   }
 
   getDuration(): OfferDuration {

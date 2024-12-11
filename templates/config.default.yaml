@@ -13,11 +13,9 @@ expert:
   webTimeoutSeconds: 5
 
 scraper:
-  # TODO: Either have just a list of scrapers (AMAZON_GAME, ...) or a list of sources (AMAZON, APPLE, ...) and types (GAME, LOOT),
   # But not mixed like this
   offerSources:
-    - AMAZON_GAME
-    - AMAZON_LOOT
+    - AMAZON
     - APPLE
     - EPIC
     - GOG

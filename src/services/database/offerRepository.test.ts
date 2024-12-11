@@ -27,7 +27,7 @@ describe("Offer Repository", () => {
 
   describe("Active Offers", () => {
     test("should get all active offers", async () => {
-      const activeOffers = await getActiveOffers();
+      const activeOffers = await getActiveOffers(new Date());
       expect(activeOffers).toBeDefined();
       expect(activeOffers).toHaveLength(3); // All test offers are active
 
@@ -61,7 +61,7 @@ describe("Offer Repository", () => {
 
       await createOrUpdateOffer(expiredOffer);
 
-      const activeOffers = await getActiveOffers();
+      const activeOffers = await getActiveOffers(new Date());
       const expiredOfferInList = activeOffers.find(
         (o) => o.title === "Expired Game",
       );

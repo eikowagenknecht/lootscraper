@@ -1,6 +1,17 @@
+import type { OfferDuration, OfferSource, OfferType } from "@/types/config";
 import type { NewOffer, Offer, OfferUpdate } from "@/types/database";
+import { calculateRealValidTo } from "@/utils";
+import { logger } from "@/utils/logger";
+import { DateTime } from "luxon";
 import { getDb } from "../database";
 import { handleError, handleInsertResult, handleUpdateResult } from "./common";
+
+interface OfferFilters {
+  type?: OfferType;
+  source?: OfferSource;
+  duration?: OfferDuration;
+  lastOfferId?: number;
+}
 
 async function createOffer(offer: NewOffer): Promise<number> {
   try {
@@ -28,21 +39,76 @@ export async function getOfferByTitle(
   }
 }
 
-export async function getActiveOffers(): Promise<Offer[]> {
+export async function getActiveOffers(
+  time: Date,
+  filters?: OfferFilters,
+): Promise<Offer[]> {
   try {
-    const now = new Date();
-    return await getDb()
+    const yesterday = new Date(time.getTime() - 24 * 60 * 60 * 1000);
+
+    logger.debug(`Getting active offers for ${time.toISOString()}`);
+
+    let query = getDb()
       .selectFrom("offers")
       .where((eb) =>
-        eb.or([
-          eb("valid_to", ">=", now.toISOString()),
-          eb("valid_to", "is", null),
+        eb.and([
+          // Initial validity check
+          eb.or([
+            // Definitely active offers
+            eb("valid_from", "<=", time.toISOString()),
+            // Unknown valid_from
+            eb("valid_from", "is", null),
+          ]),
+          eb.or([
+            // Definitely still active
+            eb("valid_to", ">=", time.toISOString()),
+            // Unknown end date
+            eb("valid_to", "is", null),
+            // Seen in last 24 hours
+            eb.and([
+              eb("seen_last", "is not", null),
+              eb("seen_last", ">=", yesterday.toISOString()),
+            ]),
+          ]),
         ]),
-      )
-      .selectAll()
-      .execute();
+      );
+
+    // Apply additional filters
+    if (filters?.type !== undefined) {
+      query = query.where("type", "=", filters.type);
+    }
+    if (filters?.source !== undefined) {
+      query = query.where("source", "=", filters.source);
+    }
+    if (filters?.duration !== undefined) {
+      query = query.where("duration", "=", filters.duration);
+    }
+    if (filters?.lastOfferId !== undefined) {
+      query = query.where("id", ">", filters.lastOfferId);
+    }
+
+    const offers = await query.selectAll().execute();
+
+    logger.debug(
+      `Got ${offers.length.toFixed(0)} active offers: ${offers.map((o) => o.id).join(", ")}`,
+    );
+
+    // Post-query filtering for real_valid_to
+    const filteredOffers = offers.filter((offer) => {
+      const realValidTo = calculateRealValidTo(
+        DateTime.fromISO(offer.seen_last).toJSDate(),
+        offer.valid_to ? DateTime.fromISO(offer.valid_to).toJSDate() : null,
+      );
+      return realValidTo === null || new Date(realValidTo) > time;
+    });
+
+    logger.debug(
+      `Filtered active offers: ${filteredOffers.map((o) => o.id).join(", ")}`,
+    );
+    return filteredOffers;
   } catch (error) {
     handleError("get active offers", error);
+    throw new Error("Failed to get active offers");
   }
 }
 
