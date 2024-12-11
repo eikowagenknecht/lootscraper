@@ -4,10 +4,9 @@ import type { Config } from "@/types/config";
 import { OfferDuration, type OfferSource, OfferType } from "@/types/config";
 import type { Game, IgdbInfo, Offer, SteamInfo } from "@/types/database";
 import { FeedError } from "@/types/errors";
+import { AtomFeed } from "@/utils/atom";
 import { logger } from "@/utils/logger";
 import { toCapitalCaseAll } from "@/utils/stringTools";
-import { Feed } from "feed";
-import type { Feed as FeedType } from "feed";
 import { DateTime } from "luxon";
 import { getGameWithInfo } from "../database/gameRepository";
 
@@ -18,29 +17,39 @@ interface RssGeneratorOptions {
 }
 
 export class RssGenerator {
-  private readonly feedGenerator: FeedType;
+  private readonly feedGenerator: AtomFeed;
 
   constructor(
     private readonly config: Config,
     private readonly options: RssGeneratorOptions = {},
   ) {
-    this.feedGenerator = new Feed({
-      id: this.getFeedId(),
+    this.feedGenerator = new AtomFeed({
+      id: this.config.feed.idPrefix + this.getFeedId(),
       title: this.getFeedTitle(),
       updated: new Date(),
-      generator: "LootScraper",
-      language: "en", // TODO: Used only in RSS 2.0, ssue opened but project seems dead
-      copyright: "TODO",
-      feed: `${config.feed.urlPrefix}${this.getFilename()}`,
-      feedLinks: {
-        atom: `${config.feed.urlPrefix}${this.getFilename()}`,
+      generator: {
+        content: "LootScraper",
+        // TODO: Put in config and add version.
+        uri: "https://github.com/eikowagenknecht/lootscraper",
       },
-      link: config.feed.urlAlternate,
-      author: {
-        name: config.feed.authorName,
-        email: config.feed.authorEmail,
-        link: config.feed.authorWeb,
-      },
+      language: "en",
+      link: [
+        {
+          href: config.feed.urlAlternate,
+          rel: "alternate",
+        },
+        {
+          href: `${config.feed.urlPrefix}${this.getFilename()}`,
+          rel: "self",
+        },
+      ],
+      author: [
+        {
+          name: config.feed.authorName,
+          email: config.feed.authorEmail,
+          uri: config.feed.authorWeb,
+        },
+      ],
     });
   }
 
@@ -66,18 +75,21 @@ export class RssGenerator {
         gameInfo = await getGameWithInfo(offer.game_id);
       }
 
-      this.feedGenerator.addItem({
+      this.feedGenerator.addEntry({
         id: `${this.config.feed.idPrefix}${offer.id.toFixed(0)}`,
         title: this.getEntryTitle(offer),
-        link: offer.url ?? this.config.feed.urlAlternate,
-        date: updated,
+        ...(offer.url && { link: [{ href: offer.url }] }),
+        updated: updated,
         published: DateTime.fromISO(offer.seen_first).toJSDate(),
-        content: this.generateContent(offer, gameInfo),
+        content: {
+          type: "xhtml",
+          content: this.generateContent(offer, gameInfo),
+        },
         author: [
           {
             name: this.config.feed.authorName,
             email: this.config.feed.authorEmail,
-            link: this.config.feed.authorWeb,
+            uri: this.config.feed.authorWeb,
           },
         ],
         category: gameInfo?.steamInfo?.genres
@@ -92,7 +104,7 @@ export class RssGenerator {
 
     try {
       const outputPath = resolve(process.cwd(), "data", this.getFilename());
-      await writeFile(outputPath, this.feedGenerator.atom1());
+      await writeFile(outputPath, this.feedGenerator.toXML());
     } catch (error) {
       throw new FeedError(
         `Failed to write feed: ${error instanceof Error ? error.message : String(error)}`,
@@ -116,7 +128,8 @@ export class RssGenerator {
   private getFeedId(): string {
     const filename = this.getFilename();
     const parts = filename.split("_", 2);
-    return parts.length === 1 ? "" : parts[1].replace(".xml", "");
+    const feedId = parts.length === 1 ? "" : parts[1].replace(".xml", "");
+    return feedId;
   }
 
   private getFeedTitle(): string {
@@ -147,11 +160,11 @@ export class RssGenerator {
   }
 
   private getEntryTitle(offer: Offer): string {
-    const additionalInfo: (OfferType | OfferDuration)[] = [offer.type];
+    const additionalInfo: string[] = [toCapitalCaseAll(offer.type)];
     if (offer.duration !== OfferDuration.CLAIMABLE) {
-      additionalInfo.push(offer.duration);
+      additionalInfo.push(toCapitalCaseAll(offer.duration));
     }
-    return `${offer.source} (${additionalInfo.join(", ")}) - ${offer.title}`;
+    return `${toCapitalCaseAll(offer.source)} (${additionalInfo.join(", ")}) - ${offer.title}`;
   }
 
   private generateContent(
