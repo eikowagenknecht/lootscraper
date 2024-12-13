@@ -2,12 +2,13 @@
 import { OfferDuration, OfferSource, OfferType } from "@/types/config";
 import type { Database } from "@/types/database";
 import type { Kysely } from "kysely";
+import { DateTime } from "luxon";
 
 export async function insertTestData(db: Kysely<Database>) {
-  const twoDaysAgo = new Date(Date.now() - 48 * 60 * 60 * 1000);
-  const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000);
-  const now = new Date();
-  const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000);
+  const twoDaysAgo = DateTime.now().minus({ days: 2 });
+  const yesterday = DateTime.now().minus({ days: 1 });
+  const now = DateTime.now();
+  const tomorrow = DateTime.now().plus({ days: 1 });
 
   // Insert announcements
   await db
@@ -16,25 +17,25 @@ export async function insertTestData(db: Kysely<Database>) {
       {
         id: 1,
         channel: "TELEGRAM",
-        date: twoDaysAgo.toISOString(),
+        date: twoDaysAgo.toISO(),
         text_markdown: "Test announcement 1 (from yesterday)",
       },
       {
         id: 2,
         channel: "TELEGRAM",
-        date: yesterday.toISOString(),
+        date: yesterday.toISO(),
         text_markdown: "Test announcement 1 (from yesterday)",
       },
       {
         id: 3,
         channel: "TELEGRAM",
-        date: now.toISOString(),
+        date: now.toISO(),
         text_markdown: "Test announcement 1 (from now)",
       },
       {
         id: 4,
         channel: "TELEGRAM",
-        date: tomorrow.toISOString(),
+        date: tomorrow.toISO(),
         text_markdown: "Test announcement 1 (from yesterday)",
       },
     ])
@@ -51,10 +52,10 @@ export async function insertTestData(db: Kysely<Database>) {
         duration: OfferDuration.CLAIMABLE,
         title: "Existing Game 1",
         probable_game_name: "Existing Game 1",
-        seen_first: yesterday.toISOString(),
-        seen_last: yesterday.toISOString(),
-        valid_from: yesterday.toISOString(),
-        valid_to: tomorrow.toISOString(),
+        seen_first: yesterday.toISO(),
+        seen_last: now.toISO(),
+        valid_from: yesterday.toISO(),
+        valid_to: tomorrow.toISO(),
         rawtext: JSON.stringify({ title: "Existing Game 1" }),
         url: "https://example.com/game1",
         img_url: "https://example.com/game1.jpg",
@@ -67,10 +68,10 @@ export async function insertTestData(db: Kysely<Database>) {
         duration: OfferDuration.CLAIMABLE,
         title: "Existing Game 2",
         probable_game_name: "Existing Game 2",
-        seen_first: twoDaysAgo.toISOString(),
-        seen_last: yesterday.toISOString(),
-        valid_from: twoDaysAgo.toISOString(),
-        valid_to: tomorrow.toISOString(),
+        seen_first: twoDaysAgo.toISO(),
+        seen_last: now.toISO(),
+        valid_from: twoDaysAgo.toISO(),
+        valid_to: tomorrow.toISO(),
         rawtext: JSON.stringify({ title: "Existing Game 2" }),
         url: "https://example.com/game2",
         img_url: "https://example.com/game2.jpg",
@@ -83,10 +84,10 @@ export async function insertTestData(db: Kysely<Database>) {
         duration: OfferDuration.CLAIMABLE,
         title: "Demo Game",
         probable_game_name: "Demo Game",
-        seen_first: yesterday.toISOString(),
-        seen_last: yesterday.toISOString(),
-        valid_from: yesterday.toISOString(),
-        valid_to: tomorrow.toISOString(),
+        seen_first: yesterday.toISO(),
+        seen_last: now.toISO(),
+        valid_from: yesterday.toISO(),
+        valid_to: tomorrow.toISO(),
         rawtext: JSON.stringify({ title: "Demo Title" }),
         url: "https://example.com/demo",
         img_url: "https://example.com/demo.jpg",
@@ -104,7 +105,7 @@ export async function insertTestData(db: Kysely<Database>) {
         name: "Existing Game 1",
         url: "https://store.steampowered.com/app/1",
         image_url: "https://cdn.steam.com/1.jpg",
-        release_date: now.toISOString(),
+        release_date: now.toISO(),
       },
     ])
     .execute();
@@ -117,7 +118,7 @@ export async function insertTestData(db: Kysely<Database>) {
         id: 589,
         name: "Existing Game 1",
         url: "https://igdb.com/games/1",
-        release_date: now.toISOString(),
+        release_date: now.toISO(),
       },
     ])
     .execute();

@@ -2,6 +2,7 @@ import { config } from "@/services/config";
 import { DatabaseService } from "@/services/database";
 import { OfferDuration, OfferSource, OfferType } from "@/types/config";
 import type { NewOffer } from "@/types/database";
+import { DateTime } from "luxon";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import { insertTestData } from "../../../tests/testData";
 import {
@@ -52,7 +53,7 @@ describe("Offer Repository", () => {
         probable_game_name: "Expired Game",
         seen_last: new Date().toISOString(),
         seen_first: new Date().toISOString(),
-        valid_to: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(), // Yesterday
+        valid_to: DateTime.now().minus({ days: 2 }).toISO(),
         rawtext: JSON.stringify({ title: "Expired Game" }),
         url: "https://example.com/expired",
         img_url: "https://example.com/expired.jpg",
