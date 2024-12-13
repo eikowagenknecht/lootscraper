@@ -44,6 +44,11 @@ async function main(): Promise<void> {
     // Set time zone
     LuxonSettings.defaultZone = "utc";
 
+    // // Set a fixed start time for all tests
+    // const referenceDate = 1733055717000; // 2024-12-01T12:21:57.000Z
+    // const offset = DateTime.now().toMillis() - referenceDate;
+    // LuxonSettings.now = () => Date.now() - offset; // 2024-12-01T12:21:57.000Z
+
     // Initialize services
     await database.initialize(config.get());
     await browser.initialize(config.get());
