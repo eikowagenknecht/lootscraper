@@ -43,7 +43,7 @@
     "winston": "3.17.0",
     "winston-daily-rotate-file": "5.0.0",
     "yaml": "2.6.1",
-    "zod": "3.24.0"
+    "zod": "3.24.1"
   },
   "devDependencies": {
     "@biomejs/biome": "1.9.4",
@@ -53,13 +53,13 @@
     "@testing-library/jest-dom": "6.6.3",
     "@types/better-sqlite3": "7.6.12",
     "@types/luxon": "3.4.2",
-    "@types/node": "22.10.1",
+    "@types/node": "22.10.2",
     "@typescript-eslint/eslint-plugin": "8.18.0",
     "@typescript-eslint/parser": "8.18.0",
     "@vitest/coverage-v8": "2.1.8",
     "eslint": "9.16.0",
     "globals": "15.13.0",
-    "lefthook": "1.9.0",
+    "lefthook": "1.9.2",
     "prettier": "3.4.2",
     "typescript": "5.7.2",
     "typescript-eslint": "8.18.0",
