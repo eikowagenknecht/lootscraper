@@ -8,4 +8,4 @@ LuxonSettings.throwOnInvalid = true;
 // Set a fixed start time for all tests
 const referenceDate = 1733055717000; // 2024-12-01T12:21:57.000Z
 const offset = DateTime.now().toMillis() - referenceDate;
-LuxonSettings.now = () => DateTime.now().toMillis() - offset; // 2024-12-01T12:21:57.000Z
+LuxonSettings.now = () => Date.now() - offset; // 2024-12-01T12:21:57.000Z
