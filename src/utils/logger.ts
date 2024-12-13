@@ -1,5 +1,6 @@
 import { resolve } from "node:path";
 import type { Format, TransformableInfo } from "logform";
+import { DateTime } from "luxon";
 import { createLogger, format, transports } from "winston";
 import DailyRotateFile from "winston-daily-rotate-file";
 
@@ -43,7 +44,7 @@ function getLogLevel(source: string): string {
 
 function createConsoleFormat() {
   return format.printf((info: TransformableInfo) => {
-    const timestamp = (info.timestamp as string) || new Date().toISOString();
+    const timestamp = (info.timestamp as string) || DateTime.now().toISO();
     const message = info.message as string;
     const level = info.level;
     return `${timestamp} [${level}] ${message}`;

@@ -1,6 +1,7 @@
 import type { NewIgdbInfo } from "@/types/database";
 import { getMatchScore, normalizeString } from "@/utils";
 import { logger } from "@/utils/logger";
+import { DateTime } from "luxon";
 
 interface IgdbAuth {
   accessToken: string;
@@ -108,7 +109,7 @@ limit 50;
       url: game.url,
       short_description: game.summary ?? null,
       release_date: game.first_release_date
-        ? new Date(game.first_release_date * 1000).toISOString()
+        ? DateTime.fromSeconds(game.first_release_date).toISO()
         : null,
       user_score: game.rating ? Math.round(game.rating) : null,
       user_ratings: game.rating_count ?? null,
@@ -120,8 +121,11 @@ limit 50;
   }
 
   private async ensureAuth(): Promise<void> {
-    if (this.auth && Date.now() < this.auth.expiresAt - 60000) {
-      return;
+    if (this.auth) {
+      const expiresSoon =
+        DateTime.now() <
+        DateTime.fromMillis(this.auth.expiresAt).minus({ minutes: 1 });
+      if (expiresSoon) return;
     }
 
     const params = new URLSearchParams({
@@ -146,7 +150,7 @@ limit 50;
 
     this.auth = {
       accessToken: access_token,
-      expiresAt: Date.now() + expires_in * 1000,
+      expiresAt: DateTime.now().plus({ seconds: expires_in }).toMillis(),
     };
   }
 

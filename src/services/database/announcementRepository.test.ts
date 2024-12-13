@@ -1,5 +1,6 @@
 import { config } from "@/services/config";
 import { DatabaseService } from "@/services/database";
+import { DateTime } from "luxon";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import { insertTestData } from "../../../tests/testData";
 import {
@@ -25,7 +26,7 @@ describe("Announcement Repository", () => {
     test("should create announcement", async () => {
       const announcement = await createAnnouncement({
         channel: "TELEGRAM",
-        date: new Date().toISOString(),
+        date: DateTime.now().toISO(),
         text_markdown: "Test announcement",
       });
       expect(announcement).toBe(5);

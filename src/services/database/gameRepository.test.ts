@@ -1,5 +1,6 @@
 import { config } from "@/services/config";
 import { DatabaseService } from "@/services/database";
+import { DateTime } from "luxon";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import { insertTestData } from "../../../tests/testData";
 import {
@@ -39,7 +40,7 @@ describe("Game Repository", () => {
         name: "Test Game Steam",
         url: "https://store.steampowered.com/app/123",
         image_url: "https://cdn.steam.com/image.jpg",
-        release_date: new Date().toISOString(),
+        release_date: DateTime.now().toISO(),
         recommendations: null,
         percent: null,
         score: null,
@@ -54,7 +55,7 @@ describe("Game Repository", () => {
       igdbInfoId = await createIgdbInfo({
         name: "Test Game IGDB",
         url: "https://igdb.com/games/test",
-        release_date: new Date().toISOString(),
+        release_date: DateTime.now().toISO(),
         meta_score: null,
         meta_ratings: null,
         user_score: null,
@@ -98,7 +99,7 @@ describe("Game Repository", () => {
         name: "Updated Steam Game",
         url: "https://store.steampowered.com/app/456",
         image_url: "https://cdn.steam.com/updated.jpg",
-        release_date: new Date().toISOString(),
+        release_date: DateTime.now().toISO(),
         id: 333,
       });
 
@@ -112,7 +113,7 @@ describe("Game Repository", () => {
       const newIgdbInfoId = await createIgdbInfo({
         name: "Updated IGDB Game",
         url: "https://igdb.com/games/updated",
-        release_date: new Date().toISOString(),
+        release_date: DateTime.now().toISO(),
         id: 444,
       });
 

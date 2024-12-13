@@ -103,7 +103,10 @@ export async function getActiveOffers(
         offer.valid_to ? DateTime.fromISO(offer.valid_to).toJSDate() : null,
         time,
       );
-      return realValidTo === null || new Date(realValidTo) > time;
+      return (
+        realValidTo === null ||
+        DateTime.fromJSDate(realValidTo) > DateTime.fromJSDate(time)
+      );
     });
 
     logger.debug(
@@ -160,7 +163,7 @@ export async function createOrUpdateOffer(offer: NewOffer): Promise<number> {
       const result = await getDb()
         .updateTable("offers")
         .set({
-          seen_last: new Date().toISOString(),
+          seen_last: DateTime.now().toISO(),
         })
         .where("id", "=", existingOffer.id)
         .executeTakeFirst();

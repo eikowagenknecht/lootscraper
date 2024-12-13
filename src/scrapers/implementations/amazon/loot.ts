@@ -1,5 +1,6 @@
 import { OfferType } from "@/types/config";
 import type { NewOffer } from "@/types/database";
+import { DateTime } from "luxon";
 import type { Locator, Page } from "playwright";
 import type { OfferHandler } from "../../base/scraper";
 import { AmazonBaseScraper, type AmazonRawOffer } from "./base";
@@ -71,8 +72,8 @@ export class AmazonLootScraper extends AmazonBaseScraper<AmazonLootRawOffer> {
       type: this.getType(),
       title,
       probable_game_name: rawOffer.gameTitle,
-      seen_last: new Date().toISOString(),
-      seen_first: new Date().toISOString(),
+      seen_last: DateTime.now().toISO(),
+      seen_first: DateTime.now().toISO(),
       valid_to: validTo?.toISOString() ?? null,
       rawtext: JSON.stringify(rawtext),
       url: rawOffer.url ?? null,

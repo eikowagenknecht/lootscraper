@@ -28,16 +28,15 @@ describe("Offer Repository", () => {
 
   describe("Active Offers", () => {
     test("should get all active offers", async () => {
-      const activeOffers = await getActiveOffers(new Date());
+      const activeOffers = await getActiveOffers(DateTime.now().toJSDate());
       expect(activeOffers).toBeDefined();
       expect(activeOffers).toHaveLength(3); // All test offers are active
 
       // Verify all returned offers are actually active
-      const now = new Date();
       for (const offer of activeOffers) {
         if (offer.valid_to) {
-          expect(new Date(offer.valid_to).getTime()).toBeGreaterThan(
-            now.getTime(),
+          expect(DateTime.fromISO(offer.valid_to).toMillis()).toBeGreaterThan(
+            DateTime.now().toMillis(),
           );
         }
       }
@@ -51,8 +50,8 @@ describe("Offer Repository", () => {
         duration: OfferDuration.CLAIMABLE,
         title: "Expired Game",
         probable_game_name: "Expired Game",
-        seen_last: new Date().toISOString(),
-        seen_first: new Date().toISOString(),
+        seen_last: DateTime.now().toISO(),
+        seen_first: DateTime.now().toISO(),
         valid_to: DateTime.now().minus({ days: 2 }).toISO(),
         rawtext: JSON.stringify({ title: "Expired Game" }),
         url: "https://example.com/expired",
@@ -62,7 +61,7 @@ describe("Offer Repository", () => {
 
       await createOrUpdateOffer(expiredOffer);
 
-      const activeOffers = await getActiveOffers(new Date());
+      const activeOffers = await getActiveOffers(DateTime.now().toJSDate());
       const expiredOfferInList = activeOffers.find(
         (o) => o.title === "Expired Game",
       );
@@ -78,8 +77,8 @@ describe("Offer Repository", () => {
         duration: OfferDuration.CLAIMABLE,
         title: "New Game",
         probable_game_name: "New Game",
-        seen_last: new Date().toISOString(),
-        seen_first: new Date().toISOString(),
+        seen_last: DateTime.now().toISO(),
+        seen_first: DateTime.now().toISO(),
         rawtext: JSON.stringify({ title: "New Game" }),
         url: "https://example.com/new",
         img_url: "https://example.com/new.jpg",
@@ -95,7 +94,7 @@ describe("Offer Repository", () => {
     });
 
     test("should update seen_last for existing offer", async () => {
-      const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000);
+      const yesterday = DateTime.now().minus({ days: 1 });
 
       const existingOffer: NewOffer = {
         source: OfferSource.EPIC,
@@ -103,8 +102,8 @@ describe("Offer Repository", () => {
         duration: OfferDuration.CLAIMABLE,
         title: "Existing Game 1",
         probable_game_name: "Existing Game 1",
-        seen_last: yesterday.toISOString(),
-        seen_first: yesterday.toISOString(),
+        seen_last: yesterday.toISO(),
+        seen_first: yesterday.toISO(),
         rawtext: JSON.stringify({ title: "Existing Game 1" }),
         url: "https://example.com/game1",
         img_url: "https://example.com/game1.jpg",
@@ -119,9 +118,9 @@ describe("Offer Repository", () => {
       if (!updatedOffer) {
         return;
       }
-      expect(new Date(updatedOffer.seen_last).getTime()).toBeGreaterThan(
-        new Date(existingOffer.seen_last).getTime(),
-      );
+      expect(
+        DateTime.fromISO(updatedOffer.seen_last).toMillis(),
+      ).toBeGreaterThan(DateTime.fromISO(existingOffer.seen_last).toMillis());
     });
 
     test("should handle duplicate offer with different source", async () => {
@@ -131,8 +130,8 @@ describe("Offer Repository", () => {
         duration: OfferDuration.CLAIMABLE,
         title: "Existing Game 1",
         probable_game_name: "Existing Game 1",
-        seen_last: new Date().toISOString(),
-        seen_first: new Date().toISOString(),
+        seen_last: DateTime.now().toISO(),
+        seen_first: DateTime.now().toISO(),
         rawtext: JSON.stringify({ title: "Existing Game 1" }),
         url: "https://example.com/game1",
         img_url: "https://example.com/game1.jpg",

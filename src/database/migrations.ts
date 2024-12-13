@@ -1,6 +1,7 @@
 import { DatabaseError } from "@/types/errors";
 import { logger } from "@/utils/logger";
 import { type Kysely, type Migration, Migrator } from "kysely";
+import { DateTime } from "luxon";
 import { initialMigration } from "./migrations/001-initial";
 import { dropAlembicMigration } from "./migrations/002-alembic";
 import { indicesMigration } from "./migrations/003-indices";
@@ -45,7 +46,7 @@ export async function migrateToLatest(db: Kysely<unknown>): Promise<void> {
       .insertInto("kysely_migration" as never)
       .values({
         name: "001-initial",
-        timestamp: new Date().toISOString(),
+        timestamp: DateTime.now().toISO(),
       })
       .execute();
   }
