@@ -1,5 +1,6 @@
 import { OfferDuration } from "@/types/config";
 import type { NewOffer } from "@/types/database";
+import { DateTime } from "luxon";
 import type { Locator, Page } from "playwright";
 import { GogBaseScraper, type GogRawOffer } from "./base";
 
@@ -69,8 +70,8 @@ export class GogGamesAlwaysFreeScraper extends GogBaseScraper {
       type: this.getType(),
       title: rawOffer.title,
       probable_game_name: rawOffer.title,
-      seen_last: new Date().toISOString(),
-      seen_first: new Date().toISOString(),
+      seen_last: DateTime.now().toISO(),
+      seen_first: DateTime.now().toISO(),
       valid_to: null,
       rawtext: JSON.stringify({
         title: rawOffer.title,

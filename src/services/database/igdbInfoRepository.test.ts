@@ -1,5 +1,6 @@
 import { config } from "@/services/config";
 import { DatabaseService } from "@/services/database";
+import { DateTime } from "luxon";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import { insertTestData } from "../../../tests/testData";
 import { createIgdbInfo } from "./igdbInfoRepository";
@@ -23,7 +24,7 @@ describe("IGDB Info Repository", () => {
       const igdbInfo = await createIgdbInfo({
         name: "Test Game",
         url: "https://igdb.com/games/test",
-        release_date: new Date().toISOString(),
+        release_date: DateTime.now().toISO(),
         meta_score: 88,
         meta_ratings: 45,
         user_score: 92,

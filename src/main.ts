@@ -20,6 +20,8 @@ import {
   logger,
   updateConsoleLevel,
 } from "@/utils/logger";
+import { Settings as LuxonSettings } from "luxon";
+import { DateTime } from "luxon";
 import {
   createOrUpdateOffer,
   getActiveOffers,
@@ -39,6 +41,9 @@ async function main(): Promise<void> {
 
     logger.info("Starting LootScraper...");
 
+    // Set time zone
+    LuxonSettings.defaultZone = "utc";
+
     // Initialize services
     await database.initialize(config.get());
     await browser.initialize(config.get());
@@ -47,7 +52,7 @@ async function main(): Promise<void> {
     const feedService = new FeedService(config.get());
 
     // Get all offers
-    const activeOffers = await getActiveOffers(new Date());
+    const activeOffers = await getActiveOffers(DateTime.now().toJSDate());
     const allOffers = await getAllOffers();
 
     // Generate feeds

@@ -186,7 +186,7 @@ export abstract class BaseScraper<T extends RawOffer = RawOffer> {
         categorized.category = Category.PRERELEASE;
       } else if (
         offer.valid_to &&
-        this.isFakeAlways(new Date(offer.valid_to))
+        this.isFakeAlways(DateTime.fromISO(offer.valid_to).toJSDate())
       ) {
         categorized.duration = OfferDuration.ALWAYS;
       }

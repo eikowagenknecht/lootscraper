@@ -21,6 +21,7 @@ export default defineConfig(({ mode }) => ({
   test: {
     globals: true,
     environment: "node",
+    setupFiles: ["./vitest-setup.ts"],
     include:
       mode === "contract"
         ? ["src/**/*.contract.test.{ts,tsx}"] // Only contract tests

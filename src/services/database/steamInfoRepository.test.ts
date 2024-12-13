@@ -1,5 +1,6 @@
 import { config } from "@/services/config";
 import { DatabaseService } from "@/services/database";
+import { DateTime } from "luxon";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import { insertTestData } from "../../../tests/testData";
 import { createSteamInfo } from "./steamInfoRepository";
@@ -24,7 +25,7 @@ describe("Steam Info Repository", () => {
         name: "Test Game",
         url: "https://store.steampowered.com/app/123",
         image_url: "https://cdn.steam.com/image.jpg",
-        release_date: new Date().toISOString(),
+        release_date: DateTime.now().toISO(),
         metacritic_score: 85,
         metacritic_url: "https://metacritic.com/game/test",
         recommendations: 1000,

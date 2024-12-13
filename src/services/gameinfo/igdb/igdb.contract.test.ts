@@ -1,5 +1,6 @@
 import { config } from "@/services/config";
 import type { NewIgdbInfo } from "@/types/database";
+import { DateTime } from "luxon";
 import { beforeEach, describe, expect, test } from "vitest";
 import { IgdbClient } from "./igdb";
 
@@ -40,7 +41,7 @@ describe("IgdbClient", () => {
     expect(details?.user_score).toBeGreaterThan(50);
     expect(details?.user_ratings).toBeGreaterThan(600);
     expect(details?.release_date).toBe(
-      new Date("2000-11-09T00:00:00.000Z").toISOString(),
+      DateTime.fromISO("2000-11-09T00:00:00.000Z").toISO(),
     );
   });
 

@@ -165,20 +165,16 @@ export class HtmlGenerator {
             title: offer.title,
             img_url: offer.img_url ?? gameInfo?.steamInfo?.image_url,
             valid_from: offer.valid_from
-              ? DateTime.fromJSDate(new Date(offer.valid_from)).toFormat(
-                  "yyyy-MM-dd",
-                )
-              : DateTime.fromJSDate(new Date(offer.seen_first)).toFormat(
-                  "yyyy-MM-dd",
-                ),
+              ? DateTime.fromISO(offer.valid_from).toFormat("yyyy-MM-dd")
+              : DateTime.fromISO(offer.seen_first).toFormat("yyyy-MM-dd"),
             valid_to: offer.valid_to
-              ? DateTime.fromJSDate(new Date(offer.valid_to)).toFormat(
-                  "yyyy-MM-dd",
-                )
+              ? DateTime.fromISO(offer.valid_to).toFormat("yyyy-MM-dd")
               : undefined,
             source: toCapitalCaseAll(offer.source),
             url: offer.url,
-            is_expired: offer.valid_to && new Date(offer.valid_to) < new Date(),
+            is_expired:
+              offer.valid_to &&
+              DateTime.fromISO(offer.valid_to) < DateTime.now(),
             has_game: !!gameInfo,
             game_name: gameInfo?.igdbInfo?.name ?? gameInfo?.steamInfo?.name,
             metacritic_score: gameInfo?.steamInfo?.metacritic_score,

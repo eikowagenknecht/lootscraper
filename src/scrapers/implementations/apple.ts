@@ -1,5 +1,6 @@
 import { OfferDuration, OfferSource, OfferType } from "@/types/config";
 import type { NewOffer } from "@/types/database";
+import { DateTime } from "luxon";
 import type { Locator, Page } from "playwright";
 import { BaseScraper, type OfferHandler, type RawOffer } from "../base/scraper";
 
@@ -81,8 +82,8 @@ export class AppleGamesScraper extends BaseScraper {
       type: this.getType(),
       title: rawOffer.title,
       probable_game_name: rawOffer.title,
-      seen_last: new Date().toISOString(),
-      seen_first: new Date().toISOString(),
+      seen_last: DateTime.now().toISO(),
+      seen_first: DateTime.now().toISO(),
       valid_to: null,
       rawtext: JSON.stringify(rawtext),
       url: rawOffer.url ?? null,
