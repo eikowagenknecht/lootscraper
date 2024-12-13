@@ -1,3 +1,7 @@
+import Handlebars from "handlebars";
+import { DateTime } from "luxon";
+import { cleanHtml } from "./stringTools";
+
 // Types for feed construction
 interface AtomPerson {
   /** Required. A human-readable name for the person. */
@@ -129,186 +133,187 @@ interface AtomFeedOptions {
   language?: string;
 }
 
-class AtomEntry {
-  private readonly id: string;
-  private readonly title: string;
-  private readonly updated: Date;
-  private readonly author?: AtomPerson[];
-  private readonly content?: AtomContent;
-  private readonly link?: AtomLink[];
-  private readonly summary?: AtomText;
-  private readonly category?: AtomCategory[];
-  private readonly contributor?: AtomPerson[];
-  private readonly published?: Date;
-  private readonly rights?: AtomText;
-  private readonly source?: AtomSource;
+// Helper functions
+function escapeXml(input: string): string {
+  return input
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
 
-  constructor(options: AtomEntryOptions) {
-    this.id = options.id;
-    this.title = options.title;
-    this.updated = options.updated;
-    if (options.author) this.author = options.author;
-    if (options.content) this.content = options.content;
-    if (options.link) this.link = options.link;
-    if (options.summary) this.summary = options.summary;
-    if (options.category) this.category = options.category;
-    if (options.contributor) this.contributor = options.contributor;
-    if (options.published) this.published = options.published;
-    if (options.rights) this.rights = options.rights;
-    if (options.source) this.source = options.source;
-  }
+function formatISODate(date: Date): string {
+  return DateTime.fromJSDate(date).toISO() ?? date.toISOString();
+}
 
-  private renderPerson(person: AtomPerson, indent: number): string[] {
-    const spacing = " ".repeat(indent);
-    const lines: string[] = [];
-    lines.push(`${spacing}<name>${person.name}</name>`);
-    if (person.email) lines.push(`${spacing}<email>${person.email}</email>`);
-    if (person.uri) lines.push(`${spacing}<uri>${person.uri}</uri>`);
-    return lines;
-  }
+// Register Handlebars helpers
+Handlebars.registerHelper("escapeXml", (uri: string) => {
+  return new Handlebars.SafeString(escapeXml(uri));
+});
 
-  private renderContent(
-    content: AtomContent,
-    elementName: string,
-    indent: number,
-  ): string {
-    const spacing = " ".repeat(indent);
+Handlebars.registerHelper("isoDate", formatISODate);
 
-    // Handle src-type content
+Handlebars.registerHelper("renderLinkAttributes", (link: AtomLink) => {
+  const attributes: string[] = [];
+  attributes.push(`href="${escapeXml(link.href)}"`);
+  if (link.rel) attributes.push(`rel="${link.rel}"`);
+  if (link.type) attributes.push(`type="${link.type}"`);
+  if (link.hreflang) attributes.push(`hreflang="${link.hreflang}"`);
+  if (link.title) attributes.push(`title="${link.title}"`);
+  if (link.length !== undefined)
+    attributes.push(`length="${link.length.toFixed(0)}"`);
+  return new Handlebars.SafeString(attributes.join(" "));
+});
+
+Handlebars.registerHelper(
+  "renderContent",
+  (content: AtomContent, elementName: string) => {
     if ("src" in content) {
-      const attrs = [`src="${content.src}"`];
+      const attrs = [`src="${escapeXml(content.src)}"`];
       if (content.type) attrs.push(`type="${content.type}"`);
-      return `${spacing}<${elementName} ${attrs.join(" ")}/>`;
+      return new Handlebars.SafeString(`<${elementName} ${attrs.join(" ")}/>`);
     }
 
-    // Handle text-type content
     const pre = '<div xmlns="http://www.w3.org/1999/xhtml">';
     const post = "</div>";
     const attrs = content.type ? ` type="${content.type}"` : "";
-    return `${spacing}<${elementName}${attrs}>${pre}${content.content}${post}</${elementName}>`;
-  }
+    return new Handlebars.SafeString(
+      `<${elementName}${attrs}>${pre}${content.content}${post}</${elementName}>`,
+    );
+  },
+);
 
-  private renderAtomText(
-    text: AtomText,
-    elementName: string,
-    indent: number,
-  ): string {
-    const spacing = " ".repeat(indent);
-    const attrs = text.type ? ` type="${text.type}"` : "";
-    return `${spacing}<${elementName}${attrs}>${text.content}</${elementName}>`;
+// Entry template
+const entryTemplate = Handlebars.compile(`
+<entry>
+  <id>{{id}}</id>
+  <title>{{{escapeXml title}}}</title>
+  <updated>{{isoDate updated}}</updated>
+
+  {{#each author}}
+  <author>
+    <name>{{name}}</name>
+    {{#if email}}<email>{{email}}</email>{{/if}}
+    {{#if uri}}<uri>{{escapeXml uri}}</uri>{{/if}}
+  </author>
+  {{/each}}
+
+  {{#if content}}
+    {{renderContent content "content"}}
+  {{/if}}
+
+  {{#each link}}
+  <link {{renderLinkAttributes this}}/>
+  {{/each}}
+
+  {{#if summary}}
+  <summary{{#if summary.type}} type="{{summary.type}}"{{/if}}>{{summary.content}}</summary>
+  {{/if}}
+
+  {{#each category}}
+  <category term="{{term}}"{{#if scheme}} scheme="{{escapeXml scheme}}"{{/if}}{{#if label}} label="{{label}}"{{/if}}/>
+  {{/each}}
+
+  {{#each contributor}}
+  <contributor>
+    <name>{{name}}</name>
+    {{#if email}}<email>{{email}}</email>{{/if}}
+    {{#if uri}}<uri>{{escapeXml uri}}</uri>{{/if}}
+  </contributor>
+  {{/each}}
+
+  {{#if published}}
+  <published>{{isoDate published}}</published>
+  {{/if}}
+
+  {{#if rights}}
+  <rights{{#if rights.type}} type="{{rights.type}}"{{/if}}>{{rights.content}}</rights>
+  {{/if}}
+
+  {{#if source}}
+  <source>
+    <id>{{source.id}}</id>
+    <title>{{source.title}}</title>
+    <updated>{{isoDate source.updated}}</updated>
+  </source>
+  {{/if}}
+</entry>
+`);
+
+// Feed template
+const feedTemplate = Handlebars.compile(`<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom"{{#if language}} xml:lang="{{language}}"{{/if}}>
+  <id>{{id}}</id>
+  <title>{{{escapeXml title}}}</title>
+  <updated>{{isoDate updated}}</updated>
+
+  {{#each author}}
+  <author>
+    <name>{{name}}</name>
+    {{#if email}}<email>{{email}}</email>{{/if}}
+    {{#if uri}}<uri>{{escapeXml uri}}</uri>{{/if}}
+  </author>
+  {{/each}}
+
+  {{#each link}}
+  <link {{renderLinkAttributes this}}/>
+  {{/each}}
+
+  {{#each category}}
+  <category term="{{term}}"{{#if scheme}} scheme="{{escapeXml scheme}}"{{/if}}{{#if label}} label="{{label}}"{{/if}}/>
+  {{/each}}
+
+  {{#each contributor}}
+  <contributor>
+    <name>{{name}}</name>
+    {{#if email}}<email>{{email}}</email>{{/if}}
+    {{#if uri}}<uri>{{escapeXml uri}}</uri>{{/if}}
+  </contributor>
+  {{/each}}
+
+  {{#if generator}}
+  <generator{{#if generator.uri}} uri="{{escapeXml generator.uri}}"{{/if}}{{#if generator.version}} version="{{generator.version}}"{{/if}}>{{generator.content}}</generator>
+  {{/if}}
+
+  {{#if icon}}
+  <icon>{{escapeXml icon}}</icon>
+  {{/if}}
+
+  {{#if logo}}
+  <logo>{{escapeXml logo}}</logo>
+  {{/if}}
+
+  {{#if rights}}
+  <rights{{#if rights.type}} type="{{rights.type}}"{{/if}}>{{rights.content}}</rights>
+  {{/if}}
+
+  {{#if subtitle}}
+  <subtitle{{#if subtitle.type}} type="{{subtitle.type}}"{{/if}}>{{subtitle.content}}</subtitle>
+  {{/if}}
+
+  {{#each entries}}
+  {{{this}}}
+  {{/each}}
+</feed>
+`);
+
+class AtomEntry {
+  private readonly options: AtomEntryOptions;
+
+  constructor(options: AtomEntryOptions) {
+    this.options = options;
   }
 
   toXML(): string {
-    const lines: string[] = ["<entry>"];
-
-    // Required elements
-    lines.push(`  <id>${this.id}</id>`);
-    lines.push(`  <title>${this.title}</title>`);
-    lines.push(`  <updated>${this.updated.toISOString()}</updated>`);
-
-    // Author elements
-    if (this.author?.length) {
-      for (const author of this.author) {
-        lines.push("  <author>");
-        for (const line of this.renderPerson(author, 4)) {
-          lines.push(line);
-        }
-        lines.push("  </author>");
-      }
-    }
-
-    // Content element
-    if (this.content) {
-      lines.push(this.renderContent(this.content, "content", 2));
-    }
-
-    // Link elements
-    if (this.link?.length) {
-      for (const link of this.link) {
-        lines.push(`  <link ${renderLinkAttributes(link)} />`);
-      }
-    }
-
-    // Summary element
-    if (this.summary) {
-      lines.push(this.renderAtomText(this.summary, "summary", 2));
-    }
-
-    // Category elements
-    if (this.category?.length) {
-      for (const cat of this.category) {
-        const attrs = [`term="${cat.term}"`];
-        if (cat.scheme) attrs.push(`scheme="${cat.scheme}"`);
-        if (cat.label) attrs.push(`label="${cat.label}"`);
-        lines.push(`  <category ${attrs.join(" ")}/>`);
-      }
-    }
-
-    // Contributor elements
-    if (this.contributor?.length) {
-      for (const contributor of this.contributor) {
-        lines.push("  <contributor>");
-        for (const line of this.renderPerson(contributor, 4)) {
-          lines.push(line);
-        }
-        lines.push("  </contributor>");
-      }
-    }
-
-    // Published date
-    if (this.published) {
-      lines.push(`  <published>${this.published.toISOString()}</published>`);
-    }
-
-    // Rights
-    if (this.rights) {
-      lines.push(this.renderAtomText(this.rights, "rights", 2));
-    }
-
-    // Source
-    if (this.source) {
-      lines.push("  <source>");
-      lines.push(`    <id>${this.source.id}</id>`);
-      lines.push(`    <title>${this.source.title}</title>`);
-      lines.push(`    <updated>${this.source.updated.toISOString()}</updated>`);
-      lines.push("  </source>");
-    }
-
-    lines.push("</entry>");
-    return lines.join("\n");
+    return entryTemplate(this.options);
   }
 }
 
 class AtomFeed {
-  private readonly id: string;
-  private readonly title: string;
-  private readonly updated: Date;
-  private readonly author?: AtomPerson[];
-  private readonly link?: AtomLink[];
-  private readonly category?: AtomCategory[];
-  private readonly contributor?: AtomPerson[];
-  private readonly generator?: AtomGenerator;
-  private readonly icon?: string;
-  private readonly logo?: string;
-  private readonly rights?: AtomText;
-  private readonly subtitle?: AtomText;
-  private readonly language?: string;
+  private readonly options: AtomFeedOptions;
   private readonly entries: AtomEntry[] = [];
 
   constructor(options: AtomFeedOptions) {
-    this.id = options.id;
-    this.title = options.title;
-    this.updated = options.updated;
-    if (options.author) this.author = options.author;
-    if (options.link) this.link = options.link;
-    if (options.category) this.category = options.category;
-    if (options.contributor) this.contributor = options.contributor;
-    if (options.generator) this.generator = options.generator;
-    if (options.icon) this.icon = options.icon;
-    if (options.logo) this.logo = options.logo;
-    if (options.rights) this.rights = options.rights;
-    if (options.subtitle) this.subtitle = options.subtitle;
-    if (options.language) this.language = options.language;
+    this.options = options;
   }
 
   addEntry(entry: AtomEntryOptions): void {
@@ -316,128 +321,13 @@ class AtomFeed {
   }
 
   toXML(): string {
-    const lines: string[] = [
-      '<?xml version="1.0" encoding="utf-8"?>',
-      `<feed xmlns="http://www.w3.org/2005/Atom"${this.language ? ` xml:lang="${this.language}"` : ""}>`,
-    ];
-
-    // Required elements
-    lines.push(`  <id>${this.id}</id>`);
-    lines.push(`  <title>${this.title}</title>`);
-    lines.push(`  <updated>${this.updated.toISOString()}</updated>`);
-
-    // Recommended elements
-    if (this.author?.length) {
-      for (const author of this.author) {
-        lines.push("  <author>");
-        lines.push(`    <name>${author.name}</name>`);
-        if (author.email) lines.push(`    <email>${author.email}</email>`);
-        if (author.uri) lines.push(`    <uri>${author.uri}</uri>`);
-        lines.push("  </author>");
-      }
-    }
-
-    // Optional elements - Links
-    if (this.link?.length) {
-      for (const link of this.link) {
-        lines.push(`  <link ${renderLinkAttributes(link)}/>`);
-      }
-    }
-
-    // Optional elements - Categories
-    if (this.category?.length) {
-      for (const cat of this.category) {
-        const attrs = [`term="${cat.term}"`];
-        if (cat.scheme) attrs.push(`scheme="${cat.scheme}"`);
-        if (cat.label) attrs.push(`label="${cat.label}"`);
-        lines.push(`  <category ${attrs.join(" ")}/>`);
-      }
-    }
-
-    // Optional elements - Contributors
-    if (this.contributor?.length) {
-      for (const contributor of this.contributor) {
-        lines.push("  <contributor>");
-        lines.push(`    <name>${contributor.name}</name>`);
-        if (contributor.email)
-          lines.push(`    <email>${contributor.email}</email>`);
-        if (contributor.uri) lines.push(`    <uri>${contributor.uri}</uri>`);
-        lines.push("  </contributor>");
-      }
-    }
-
-    // Optional elements - Generator
-    if (this.generator) {
-      const attrs: string[] = [];
-      if (this.generator.uri) attrs.push(`uri="${this.generator.uri}"`);
-      if (this.generator.version)
-        attrs.push(`version="${this.generator.version}"`);
-      const attrsStr = attrs.length ? ` ${attrs.join(" ")}` : "";
-      lines.push(
-        `  <generator${attrsStr}>${this.generator.content}</generator>`,
-      );
-    }
-
-    // Optional elements - Icon
-    if (this.icon) {
-      lines.push(`  <icon>${this.icon}</icon>`);
-    }
-
-    // Optional elements - Logo
-    if (this.logo) {
-      lines.push(`  <logo>${this.logo}</logo>`);
-    }
-
-    // Optional elements - Rights
-    if (this.rights) {
-      const attrs = this.rights.type ? ` type="${this.rights.type}"` : "";
-      lines.push(`  <rights${attrs}>${this.rights.content}</rights>`);
-    }
-
-    // Optional elements - Subtitle
-    if (this.subtitle) {
-      const attrs = this.subtitle.type ? ` type="${this.subtitle.type}"` : "";
-      lines.push(`  <subtitle${attrs}>${this.subtitle.content}</subtitle>`);
-    }
-
-    // Add entries
-    for (const entry of this.entries) {
-      lines.push(
-        entry
-          .toXML()
-          .split("\n")
-          .map((line) => `  ${line}`)
-          .join("\n"),
-      );
-    }
-
-    lines.push("</feed>");
-    return lines.join("\n");
+    return cleanHtml(
+      feedTemplate({
+        ...this.options,
+        entries: this.entries.map((entry) => entry.toXML()),
+      }),
+    );
   }
 }
 
-// Type-safe function to render link attributes
-function renderLinkAttributes(link: AtomLink): string {
-  const attributes: string[] = [];
-
-  // Required
-  attributes.push(`href="${encodeUriForXhtml(link.href)}"`);
-
-  // Optional
-  if (link.rel) attributes.push(`rel="${link.rel}"`);
-  if (link.type) attributes.push(`type="${link.type}"`);
-  if (link.hreflang) attributes.push(`hreflang="${link.hreflang}"`);
-  if (link.title) attributes.push(`title="${link.title}"`);
-  if (link.length !== undefined)
-    attributes.push(`length="${link.length.toFixed(0)}"`);
-
-  return attributes.join(" ");
-}
-
-function encodeUriForXhtml(uri: string): string {
-  return encodeURI(uri)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
-}
 export { AtomFeed, AtomEntry, type AtomFeedOptions, type AtomEntryOptions };
