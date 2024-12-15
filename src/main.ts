@@ -22,6 +22,7 @@ import {
 } from "@/utils/logger";
 import { Settings as LuxonSettings } from "luxon";
 import { DateTime } from "luxon";
+import { telegramBotService } from "./bot/service";
 import {
   createOrUpdateOffer,
   getActiveOffers,
@@ -52,6 +53,21 @@ async function main(): Promise<void> {
     // Initialize services
     await database.initialize(config.get());
     await browser.initialize(config.get());
+    await telegramBotService.initialize(config); // TODO: Unify interface
+
+    // Handle shutdown
+    // TODO: Check typing etc.
+    process.on("SIGINT", (() => {
+      void (async () => {
+        logger.info("Shutting down...");
+        await telegramBotService.stop();
+        await database.destroy();
+        process.exit(0);
+      })();
+    }) as NodeJS.SignalsListener);
+
+    // Start bot
+    await telegramBotService.start();
 
     // Initialize feed service
     const feedService = new FeedService(config.get());

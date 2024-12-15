@@ -19,7 +19,7 @@
     "test:contract": "vitest run --mode contract",
     "test:contract:watch": "vitest watch --mode contract",
     "test:all": "pnpm test && pnpm test:contract",
-    "lint": "tsc --noEmit && eslint --fix ./src && prettier --write ./src && biome check --write ./src",
+    "lint": "tsc --noEmit && eslint --fix ./src && prettier --write ./src && biome check --fix --unsafe ./src ./tools",
     "lint:eslint": "eslint --fix ./src",
     "lint:biome": "biome check --write ./src",
     "lint:prettier": "prettier --write ./src",
@@ -29,7 +29,9 @@
     "prepare": "lefthook install",
     "clean:npm": "pnpm exec rm -rf node_modules",
     "sync:npm": "pnpm i --frozen-lockfile",
-    "upgrade:npm": "pnpm exec rm pnpm-lock.yaml && pnpm up --latest && pnpm i"
+    "upgrade:npm": "pnpm exec rm pnpm-lock.yaml && pnpm up --latest && pnpm i",
+    "code:dump": "vite-node tools/codeDump.ts",
+    "code:list": "vite-node tools/codeList.ts"
   },
   "dependencies": {
     "better-sqlite3": "11.7.0",
