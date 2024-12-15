@@ -1,4 +1,8 @@
-import type { OfferDuration, OfferSource, OfferType } from "@/types/config";
+import {
+  OfferDuration,
+  type OfferSource,
+  type OfferType,
+} from "@/types/config";
 import type { NewOffer, Offer, OfferUpdate } from "@/types/database";
 import { calculateRealValidTo } from "@/utils";
 import { logger } from "@/utils/logger";
@@ -174,5 +178,51 @@ export async function createOrUpdateOffer(offer: NewOffer): Promise<number> {
     return await createOffer(offer);
   } catch (error) {
     handleError("create or update offer", error);
+  }
+}
+
+export async function getNewOffers(
+  now: Date,
+  type: OfferType,
+  source: OfferSource,
+  duration: OfferDuration,
+  lastOfferId: number,
+): Promise<Offer[]> {
+  try {
+    const query = getDb()
+      .selectFrom("offers")
+      .selectAll()
+      .where("id", ">", lastOfferId)
+      .where("type", "=", type)
+      .where("source", "=", source)
+      .where("duration", "=", duration);
+
+    // For non-ALWAYS offers, check if they're still valid
+    if (duration !== OfferDuration.ALWAYS) {
+      query.where((eb) =>
+        eb.or([
+          eb("valid_to", "is", null),
+          eb("valid_to", ">", DateTime.fromJSDate(now).toISO()),
+        ]),
+      );
+    }
+
+    return await query.orderBy("id", "asc").execute();
+  } catch (error) {
+    handleError("get new offers", error);
+    return [];
+  }
+}
+
+export async function getOffer(id: number): Promise<Offer | undefined> {
+  try {
+    return await getDb()
+      .selectFrom("offers")
+      .selectAll()
+      .where("id", "=", id)
+      .executeTakeFirst();
+  } catch (error) {
+    handleError("get offer", error);
+    return undefined;
   }
 }

@@ -113,8 +113,8 @@ interface TelegramChatsTable {
   chat_id: number;
   user_id: number | null;
   thread_id: number | null;
-  chat_details: ColumnType<Record<string, unknown>, string | undefined, string>;
-  user_details: ColumnType<Record<string, unknown>, string | undefined, string>;
+  chat_details: ColumnType<Record<string, unknown>, string | null, string>;
+  user_details: ColumnType<Record<string, unknown>, string | null, string>;
   timezone_offset: number;
   active: number;
   inactive_reason: string | null;
