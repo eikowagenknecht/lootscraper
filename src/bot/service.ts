@@ -1,5 +1,5 @@
 import { AnnouncementService } from "@/services/announcement";
-import type { ConfigService } from "@/services/config";
+import type { Config } from "@/types/config";
 import { logger } from "@/utils/logger";
 import { TelegramBot } from "./index";
 import type { BotConfig } from "./types/config";
@@ -21,12 +21,12 @@ export class TelegramBotService {
     return TelegramBotService.instance;
   }
 
-  public async initialize(config: ConfigService): Promise<void> {
+  public async initialize(config: Config): Promise<void> {
     const botConfig: BotConfig = {
-      accessToken: config.get().telegram.accessToken,
-      developerChatId: config.get().telegram.developerChatId,
-      adminUserId: config.get().telegram.adminUserId,
-      logLevel: config.get().telegram.logLevel,
+      accessToken: config.telegram.accessToken,
+      developerChatId: config.telegram.developerChatId,
+      adminUserId: config.telegram.adminUserId,
+      logLevel: config.telegram.logLevel,
     };
 
     this.bot = new TelegramBot(botConfig);

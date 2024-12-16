@@ -12,7 +12,7 @@ import {
   // UbisoftGamesScraper,
 } from "@/scrapers";
 import { browser } from "@/services/browser";
-import { config } from "@/services/config";
+import { config as configService } from "@/services/config";
 import { database } from "@/services/database";
 import { handleError } from "@/utils/errorHandler";
 import {
@@ -30,15 +30,23 @@ import {
 } from "./services/database/offerRepository";
 import { FeedService } from "./services/feed";
 
+async function shutdown() {
+  logger.info("Shutting down...");
+  await telegramBotService.stop();
+  await browser.destroy();
+  await database.destroy();
+}
+
 async function main(): Promise<void> {
   try {
     // Load config first
-    config.loadConfig();
+    configService.loadConfig();
+    const config = configService.get();
 
     // Update logging settings from config
-    const configuredLevel = config.get().common.logLevel;
+    const configuredLevel = config.common.logLevel;
     updateConsoleLevel(configuredLevel);
-    initializeFileTransport(configuredLevel, config.get().common.logFile);
+    initializeFileTransport(configuredLevel, config.common.logFile);
 
     logger.info("Starting LootScraper...");
 
@@ -50,41 +58,43 @@ async function main(): Promise<void> {
     // const offset = DateTime.now().toMillis() - referenceDate;
     // LuxonSettings.now = () => Date.now() - offset; // 2024-12-01T12:21:57.000Z
 
-    // Initialize services
-    await database.initialize(config.get());
-    await browser.initialize(config.get());
-    await telegramBotService.initialize(config); // TODO: Unify interface
-
-    // Handle shutdown
-    // TODO: Check typing etc.
+    // Safe shutdown handling
+    // TODO: Check typing etc. and add "SIGTERM" handling
     process.on("SIGINT", (() => {
       void (async () => {
-        logger.info("Shutting down...");
-        await telegramBotService.stop();
-        await database.destroy();
+        await shutdown();
         process.exit(0);
       })();
     }) as NodeJS.SignalsListener);
 
-    // Start bot
-    await telegramBotService.start();
+    logger.info("Initializing database service...");
+    await database.initialize(config);
 
-    // Initialize feed service
-    const feedService = new FeedService(config.get());
+    if (config.actions.telegramBot) {
+      logger.info("Running Telegram bot...");
+      await telegramBotService.initialize(config);
+      await telegramBotService.start();
+    }
 
-    // Get all offers
-    const activeOffers = await getActiveOffers(DateTime.now().toJSDate());
-    const allOffers = await getAllOffers();
+    if (config.actions.generateFeed) {
+      logger.info("Generating feeds...");
+      const feedService = new FeedService(config);
+      const activeOffers = await getActiveOffers(DateTime.now().toJSDate());
+      const allOffers = await getAllOffers();
+      await feedService.generateFeeds(activeOffers, allOffers);
+    }
 
-    // Generate feeds
-    logger.info("Generating feeds...");
-    await feedService.generateFeeds(activeOffers, allOffers);
+    if (config.actions.scrapeOffers && config.scraper.offerSources.length > 0) {
+      logger.info("Scraping offers...");
+      await browser.initialize(config);
 
-    if (config.get().scraper.offerSources.length > 0) {
+      // TODO: Implement scraper selection
       // Test Epic Games scraper
-      const scraper = new EpicGamesScraper(browser.getContext(), config.get());
+      const scraper = new EpicGamesScraper(
+        browser.getContext(),
+        configService.get(),
+      );
 
-      logger.info("Starting scraper test...");
       const offers = await scraper.scrape();
 
       // Store offers in database
@@ -94,11 +104,15 @@ async function main(): Promise<void> {
 
       logger.info("Scraping completed successfully");
     }
-    // Cleanup
-    await browser.destroy();
-    await database.destroy();
+
+    await shutdown();
   } catch (error) {
     handleError(error);
+    try {
+      await shutdown();
+    } catch {
+      // Ignore errors during error triggered shutdown.
+    }
     process.exit(1);
   }
 }
