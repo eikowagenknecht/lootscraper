@@ -8,11 +8,14 @@ importers:
 
   .:
     dependencies:
+      '@grammyjs/commands':
+        specifier: 1.0.3
+        version: 1.0.3(grammy@1.33.0)
       better-sqlite3:
         specifier: 11.7.0
         version: 11.7.0
       cross-env:
-        specifier: ^7.0.3
+        specifier: 7.0.3
         version: 7.0.3
       grammy:
         specifier: 1.33.0
@@ -586,6 +589,11 @@ packages:
   '@eslint/plugin-kit@0.2.4':
     resolution: {integrity: sha512-zSkKow6H5Kdm0ZUQUB2kV5JIXqoG0+uH5YADhaEHswm664N9Db8dXSi0nMJpacpMf+MyyglF1vnZohpEg5yUtg==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
+
+  '@grammyjs/commands@1.0.3':
+    resolution: {integrity: sha512-fchAAkpiXxOduMLrdLdc9ehv5FzyJrqyvYCqyUcTjJBID3Umf+Pk86H5XIh/riRJo5yWQSlXttNFA85YPDY1SA==}
+    peerDependencies:
+      grammy: ^1.17.1
 
   '@grammyjs/types@3.17.0':
     resolution: {integrity: sha512-e8AR3xQwRAFX248E7Qw/7mIu1OzvoXloJzOBJVtuPKzzL7tGkn5trZAdZUBgGViVQg5ZwVS/x9N2nRrcyH/DfA==}
@@ -2522,6 +2530,10 @@ snapshots:
   '@eslint/plugin-kit@0.2.4':
     dependencies:
       levn: 0.4.1
+
+  '@grammyjs/commands@1.0.3(grammy@1.33.0)':
+    dependencies:
+      grammy: 1.33.0
 
   '@grammyjs/types@3.17.0': {}
 
