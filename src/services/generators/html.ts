@@ -161,7 +161,7 @@ export class HtmlGenerator {
             : null;
 
           return {
-            id: `${this.config.feed.idPrefix}${offer.id.toFixed(0)}`,
+            id: `${this.config.feed.idPrefix}${offer.id.toFixed()}`,
             title: offer.title,
             img_url: offer.img_url ?? gameInfo?.steamInfo?.image_url,
             valid_from: offer.valid_from

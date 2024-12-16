@@ -37,7 +37,7 @@ But I'd be happy to see you register any time with the /start command!`);
     let subscriptionsTextMd: string;
     if (subscriptions.length > 0) {
       subscriptionsTextMd =
-        escapeText(`- You have ${subscriptions.length.toFixed(0)} subscriptions. Here are the categories you are subscribed to:
+        escapeText(`- You have ${subscriptions.length.toFixed()} subscriptions. Here are the categories you are subscribed to:
 `);
 
       for (const subscription of subscriptions) {

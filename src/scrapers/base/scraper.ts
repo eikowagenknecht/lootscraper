@@ -75,7 +75,7 @@ export abstract class BaseScraper<T extends RawOffer = RawOffer> {
       const titles = filteredOffers.map((o) => o.title).join(", ");
       if (filteredOffers.length > 0) {
         this.logger.info(
-          `Found ${filteredOffers.length.toFixed(0)} offers: ${titles}`,
+          `Found ${filteredOffers.length.toFixed()} offers: ${titles}`,
         );
       } else if (this.offersExpected()) {
         this.logger.error(
@@ -240,7 +240,7 @@ export abstract class BaseScraper<T extends RawOffer = RawOffer> {
 
     while (scrollCount < 100) {
       await page.evaluate(
-        `document.getElementById("${elementId}").scrollTo(0, ${(position + scrollAmount).toFixed(0)})`,
+        `document.getElementById("${elementId}").scrollTo(0, ${(position + scrollAmount).toFixed()})`,
       );
       const newPosition: number = await page.evaluate(
         `document.getElementById("${elementId}").scrollTop`,

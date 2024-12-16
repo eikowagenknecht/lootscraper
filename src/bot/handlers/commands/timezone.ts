@@ -34,7 +34,7 @@ export class TimezoneCommand extends CommandHandler {
 
       keyboard.push([
         {
-          text: `UTC${sign}${hour.toFixed(0)}:00`,
+          text: `UTC${sign}${hour.toFixed()}:00`,
           callback_data: JSON.stringify(data),
         },
       ]);

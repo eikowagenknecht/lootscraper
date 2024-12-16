@@ -160,7 +160,7 @@ Handlebars.registerHelper("renderLinkAttributes", (link: AtomLink) => {
   if (link.hreflang) attributes.push(`hreflang="${link.hreflang}"`);
   if (link.title) attributes.push(`title="${link.title}"`);
   if (link.length !== undefined)
-    attributes.push(`length="${link.length.toFixed(0)}"`);
+    attributes.push(`length="${link.length.toFixed()}"`);
   return new Handlebars.SafeString(attributes.join(" "));
 });
 

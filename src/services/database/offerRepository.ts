@@ -97,7 +97,7 @@ export async function getActiveOffers(
     const offers = await query.selectAll().execute();
 
     logger.debug(
-      `Got ${offers.length.toFixed(0)} active offers: ${offers.map((o) => o.id).join(", ")}`,
+      `Got ${offers.length.toFixed()} active offers: ${offers.map((o) => o.id).join(", ")}`,
     );
 
     // Post-query filtering for real_valid_to

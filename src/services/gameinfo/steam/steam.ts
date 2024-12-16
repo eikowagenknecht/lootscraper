@@ -73,7 +73,7 @@ export class SteamClient {
         ) {
           bestMatch = { appId: Number.parseInt(appId, 10), score, title };
           logger.debug(
-            `Found match ${title} with score ${(score * 100).toFixed(0)}%`,
+            `Found match ${title} with score ${(score * 100).toFixed()}%`,
           );
         }
       }
@@ -152,7 +152,7 @@ export class SteamClient {
   }> {
     const page = await this.context.newPage();
     try {
-      await page.goto(`${SteamClient.STORE_URL}/app/${appId.toFixed(0)}`, {
+      await page.goto(`${SteamClient.STORE_URL}/app/${appId.toFixed()}`, {
         timeout: 30000,
       });
       await page.waitForSelector(".game_page_background");
@@ -231,7 +231,7 @@ export class SteamClient {
 
     const steamInfo: NewSteamInfo = {
       id: appId,
-      url: `${SteamClient.STORE_URL}/app/${appId.toFixed(0)}`,
+      url: `${SteamClient.STORE_URL}/app/${appId.toFixed()}`,
       name: data.name,
       short_description: data.short_description ?? null,
       release_date: data.release_date?.date

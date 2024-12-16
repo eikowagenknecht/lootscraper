@@ -14,7 +14,7 @@ export async function handleTimezoneCallback(
 
   await updateTelegramChatTimezone(ctx.chat.id, data.offset);
 
-  const message = `Timezone offset set to ${data.offset.toFixed(0)} hours from UTC.\n\nThank you for choosing your timezone.\nIf you live in a place with daylight saving time, please remember to do this again at the appropriate time of year.`;
+  const message = `Timezone offset set to ${data.offset.toFixed()} hours from UTC.\n\nThank you for choosing your timezone.\nIf you live in a place with daylight saving time, please remember to do this again at the appropriate time of year.`;
 
   await ctx.editMessageText(message);
   await ctx.answerCallbackQuery();

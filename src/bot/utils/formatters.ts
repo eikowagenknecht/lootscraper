@@ -20,7 +20,7 @@ export function formatOfferMessage(
   content += bold(
     `${offer.title} - ${offer.source} (${offer.type}${offer.duration !== OfferDuration.CLAIMABLE ? `, ${offer.duration}` : ""})`,
   );
-  content += escapeText(` [${offer.id.toFixed(0)}`);
+  content += escapeText(` [${offer.id.toFixed()}`);
 
   // Image
   if (offer.img_url) {
