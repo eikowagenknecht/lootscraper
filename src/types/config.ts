@@ -65,7 +65,8 @@ export const ConfigSchema = z.object({
     infoSources: z.array(z.enum(["STEAM", "IGDB"])).default([]),
   }),
   actions: z.object({
-    scrapeInfo: z.boolean().default(true),
+    scrapeOffers: z.boolean().default(false),
+    scrapeInfo: z.boolean().default(false),
     generateFeed: z.boolean().default(false),
     uploadToFtp: z.boolean().default(false),
     telegramBot: z.boolean().default(false),
