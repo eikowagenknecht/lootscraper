@@ -8,7 +8,7 @@ import {
 } from "@/services/database/telegramSubscriptionRepository";
 import type { OfferDuration, OfferSource, OfferType } from "@/types/config";
 import { logger } from "@/utils/logger";
-import { ManageCommand } from "../commands/manage";
+import { buildManageKeyboard } from "../commands/manage";
 
 export async function handleToggleCallback(
   ctx: Filter<Context, "callback_query:data">,
@@ -47,8 +47,7 @@ export async function handleToggleCallback(
   }
 
   // Update the keyboard
-  const manageCommand = new ManageCommand();
   await ctx.editMessageReplyMarkup({
-    reply_markup: await manageCommand.buildManageKeyboard(ctx.chat.id),
+    reply_markup: await buildManageKeyboard(ctx.chat.id),
   });
 }

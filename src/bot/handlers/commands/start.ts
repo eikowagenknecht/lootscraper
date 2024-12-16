@@ -4,22 +4,19 @@ import { createTelegramSubscription } from "@/services/database/telegramSubscrip
 import { OfferDuration, OfferSource, OfferType } from "@/types/config";
 import type { CommandContext } from "grammy";
 import { DateTime } from "luxon";
+import { getCallerName, getDbChat, logCall, userCanControlBot } from ".";
 import type { BotContext } from "../../types/middleware";
-import { CommandHandler } from "./base";
 
-export class StartCommand extends CommandHandler {
-  constructor() {
-    super("start");
+export async function handleStartCommand(
+  ctx: CommandContext<BotContext>,
+): Promise<void> {
+  logCall(ctx);
+
+  if (!(await userCanControlBot(ctx))) {
+    return;
   }
 
-  async handle(ctx: CommandContext<BotContext>): Promise<void> {
-    this.logCall(ctx);
-
-    if (!(await this.userCanControlBot(ctx))) {
-      return;
-    }
-
-    const welcomeTextMd = `\
+  const welcomeTextMd = `\
 ${escapeText("I am part of the ")}\
 ${link("https://github.com/eikowagenknecht/lootscraper", "LootScraper")}\
 ${escapeText(` project. \
@@ -46,57 +43,52 @@ ${escapeText(`I need to store some user data (e.g. your Telegram chat ID and you
 You can leave any time by typing /leave. \
 This will immediately delete all data about you. \
 Also, I will be sad to see you go.`)}`;
-    const dbChat = await this.getDbChat(ctx);
+  const dbChat = await getDbChat(ctx);
 
-    if (dbChat) {
-      const messageMd = `\
-${escapeText(`Welcome back, ${this.getCallerName(ctx)} 👋. \
+  if (dbChat) {
+    const messageMd = `\
+${escapeText(`Welcome back, ${getCallerName(ctx)} 👋. \
 You are already registered ❤. \
 In case you forgot, this was my initial message to you:`)}
 
 ${welcomeTextMd}
 `;
 
-      await ctx.reply(messageMd, { parse_mode: "MarkdownV2" });
-      return;
-    }
+    await ctx.reply(messageMd, { parse_mode: "MarkdownV2" });
+    return;
+  }
 
-    // Register new chat
-    const chatId = await createTelegramChat({
-      registration_date: DateTime.now().toISO(),
-      chat_type: ctx.chat.type,
-      chat_id: ctx.chat.id,
-      user_id: ctx.from?.id ?? null,
-      thread_id: ctx.message?.message_thread_id ?? null,
-      chat_details: JSON.stringify(ctx.chat),
-      user_details: ctx.from ? JSON.stringify(ctx.from) : null,
-      timezone_offset: 0,
-      active: 1,
-      inactive_reason: null,
-      offers_received_count: 0,
-      last_announcement_id: 0,
+  // Register new chat
+  const chatId = await createTelegramChat({
+    registration_date: DateTime.now().toISO(),
+    chat_type: ctx.chat.type,
+    chat_id: ctx.chat.id,
+    user_id: ctx.from?.id ?? null,
+    thread_id: ctx.message?.message_thread_id ?? null,
+    chat_details: JSON.stringify(ctx.chat),
+    user_details: ctx.from ? JSON.stringify(ctx.from) : null,
+    timezone_offset: 0,
+    active: 1,
+    inactive_reason: null,
+    offers_received_count: 0,
+    last_announcement_id: 0,
+  });
+
+  // Add default subscriptions
+  for (const source of [OfferSource.STEAM, OfferSource.EPIC, OfferSource.GOG]) {
+    await createTelegramSubscription({
+      chat_id: chatId,
+      source,
+      type: OfferType.GAME,
+      duration: OfferDuration.CLAIMABLE,
+      last_offer_id: 0,
     });
+  }
 
-    // Add default subscriptions
-    for (const source of [
-      OfferSource.STEAM,
-      OfferSource.EPIC,
-      OfferSource.GOG,
-    ]) {
-      await createTelegramSubscription({
-        chat_id: chatId,
-        source,
-        type: OfferType.GAME,
-        duration: OfferDuration.CLAIMABLE,
-        last_offer_id: 0,
-      });
-    }
-
-    const messageMd = `\
-${escapeText(`Hi ${this.getCallerName(ctx)} 👋, welcome to the LootScraper Telegram Bot and thank you for registering!`)}
+  const messageMd = `\
+${escapeText(`Hi ${getCallerName(ctx)} 👋, welcome to the LootScraper Telegram Bot and thank you for registering!`)}
   
 ${welcomeTextMd}`;
 
-    await ctx.reply(messageMd, { parse_mode: "MarkdownV2" });
-  }
+  await ctx.reply(messageMd, { parse_mode: "MarkdownV2" });
 }
