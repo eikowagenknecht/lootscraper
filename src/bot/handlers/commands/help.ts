@@ -1,21 +1,17 @@
 import { bold, escapeText } from "@/bot/utils/markdown";
 import type { CommandContext } from "grammy";
+import { logCall, userCanControlBot } from ".";
 import type { BotContext } from "../../types/middleware";
-import { CommandHandler } from "./base";
+export async function handleHelpCommand(
+  ctx: CommandContext<BotContext>,
+): Promise<void> {
+  logCall(ctx);
 
-export class HelpCommand extends CommandHandler {
-  constructor() {
-    super("help");
+  if (!(await userCanControlBot(ctx))) {
+    return;
   }
 
-  async handle(ctx: CommandContext<BotContext>): Promise<void> {
-    this.logCall(ctx);
-
-    if (!(await this.userCanControlBot(ctx))) {
-      return;
-    }
-
-    const helpText = `${bold("Available commands")}\n${escapeText(`\
+  const helpText = `${bold("Available commands")}\n${escapeText(`\
 /start - Start the bot (you already did that)
 /help - Show this help message
 /status - Show information about your subscriptions
@@ -23,6 +19,5 @@ export class HelpCommand extends CommandHandler {
 /timezone - Choose a timezone that will be used to display the start and end dates
 /leave - Leave this bot and delete stored user data`)}`;
 
-    await ctx.reply(helpText, { parse_mode: "MarkdownV2" });
-  }
+  await ctx.reply(helpText, { parse_mode: "MarkdownV2" });
 }
