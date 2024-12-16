@@ -1,4 +1,4 @@
-import { bold } from "@/bot/utils/markdown";
+import { bold, escapeText, link } from "@/bot/utils/markdown";
 import { createTelegramChat } from "@/services/database/telegramChatRepository";
 import { createTelegramSubscription } from "@/services/database/telegramSubscriptionRepository";
 import { OfferDuration, OfferSource, OfferType } from "@/types/config";
@@ -19,13 +19,45 @@ export class StartCommand extends CommandHandler {
       return;
     }
 
-    const welcomeText = this.getWelcomeText();
+    const welcomeTextMd = `\
+${escapeText("I am part of the ")}\
+${link("https://github.com/eikowagenknecht/lootscraper", "LootScraper")}\
+${escapeText(` project. \
+If you have any problems or feature request, please use the `)}\
+${link("https://github.com/eikowagenknecht/lootscraper/issues", "GitHub issues")}\
+${escapeText(` to report them. \
+And if you like it, please consider `)}\
+${link("https://github.com/eikowagenknecht/lootscraper/stargazers", "starring it ⭐")} \
+${escapeText(". Thanks a lot!")};
+
+${bold(escapeText("How it works"))}
+${escapeText(`For a quick start, I have just subscribed you to free offers from Steam, Epic and GOG. \
+There are more sources available. To configure what kind of offers you want to see, you can use the /manage command. \
+I will then send you a message every time a new offer is added. \
+To see the commands you can use to talk to me, type /help.`)}
+
+${bold(escapeText("Send me offers, now!"))}
+${escapeText(`I haven't sent you any offers yet to give you some time to read this message. \
+To see what's currently on offer, you can use the /refresh command now. \
+It's not necessary to do this however, I'll send you offers automatically whenever a new one comes in.`)}
+
+${bold(escapeText("About privacy"))}
+${escapeText(`I need to store some user data (e.g. your Telegram chat ID and your subscriptions) in order to work. \
+You can leave any time by typing /leave. \
+This will immediately delete all data about you. \
+Also, I will be sad to see you go.`)}`;
     const dbChat = await this.getDbChat(ctx);
 
     if (dbChat) {
-      const message = `Welcome back, ${this.getCallerName(ctx)} 👋\\. You are already registered ❤\\. In case you forgot, this was my initial message to you:\n\n${welcomeText}`;
+      const messageMd = `\
+${escapeText(`Welcome back, ${this.getCallerName(ctx)} 👋. \
+You are already registered ❤. \
+In case you forgot, this was my initial message to you:`)}
 
-      await ctx.reply(message, { parse_mode: "MarkdownV2" });
+${welcomeTextMd}
+`;
+
+      await ctx.reply(messageMd, { parse_mode: "MarkdownV2" });
       return;
     }
 
@@ -60,14 +92,11 @@ export class StartCommand extends CommandHandler {
       });
     }
 
-    const message =
-      `Hi ${this.getCallerName(ctx)} 👋, ` +
-      `welcome to the LootScraper Telegram Bot and thank you for registering\\!\n\n${welcomeText}`;
+    const messageMd = `\
+${escapeText(`Hi ${this.getCallerName(ctx)} 👋, welcome to the LootScraper Telegram Bot and thank you for registering!`)}
+  
+${welcomeTextMd}`;
 
-    await ctx.reply(message, { parse_mode: "MarkdownV2" });
-  }
-
-  private getWelcomeText(): string {
-    return `I am part of the [LootScraper](https://github\\.com/eikowagenknecht/lootscraper) project\\. If you have any problems or feature request, please use the [GitHub issues](https://github\\.com/eikowagenknecht/lootscraper/issues) to report them\\. And if you like it, please consider [starring it ⭐](https://github\\.com/eikowagenknecht/lootscraper/stargazers)\\. Thanks a lot\\!\n\n${bold("How it works")}\nFor a quick start, I have just subscribed you to free offers from Steam, Epic and GOG\\. There are more sources available\\. To configure what kind of offers you want to see, you can use the /manage command\\. I will then send you a message every time a new offer is added\\. To see the commands you can use to talk to me, type /help\\.\n\n${bold("Send me offers, now\\!")}\nI haven't sent you any offers yet to give you some time to read this message\\. To see what's currently on offer, you can use the /refresh command now\\. It's not necessary to do this however, I'll send you offers automatically whenever a new one comes in\\.\n\n${bold("About privacy")}\nI need to store some user data \\(e\\.g\\. your Telegram chat ID and your subscriptions\\) in order to work\\. You can leave any time by typing /leave\\. This will immediately delete all data about you\\. Also, I will be sad to see you go\\.`;
+    await ctx.reply(messageMd, { parse_mode: "MarkdownV2" });
   }
 }

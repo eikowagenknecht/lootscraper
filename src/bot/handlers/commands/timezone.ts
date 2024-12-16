@@ -16,7 +16,7 @@ export class TimezoneCommand extends CommandHandler {
       return;
     }
 
-    await ctx.reply("Choose one of these available timezones:", {
+    await ctx.reply("Choose one of the available timezones", {
       reply_markup: this.buildTimezoneKeyboard(),
     });
   }

@@ -5,7 +5,6 @@ import { incrementTelegramChatOffersReceived } from "@/services/database/telegra
 import { getTelegramSubscriptions } from "@/services/database/telegramSubscriptionRepository";
 import type { Offer } from "@/types/database";
 import { logger } from "@/utils/logger";
-// src/bot/handlers/commands/refresh.ts
 import type { CommandContext } from "grammy";
 import { DateTime } from "luxon";
 import type { BotContext } from "../../types/middleware";

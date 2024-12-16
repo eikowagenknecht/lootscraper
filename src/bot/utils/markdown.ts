@@ -1,17 +1,50 @@
-export function escapeMarkdown(text: string): string {
-  // Characters that need escaping in Telegram's MarkdownV2:
-  // '_', '*', '[', ']', '(', ')', '~', '`', '>', '#', '+', '-', '=', '|', '{', '}', '.', '!'
-  return text.replace(/[_*[\]()~`>#+=|{}.!-]/g, "\\$&");
+/**
+ * Escapes characters for Telegram's MarkdownV2.
+ *
+ * Escaped characters: '_', '*', '[', ']', '(', ')', '~', '`', '>', '#', '+', '-', '=', '|', '{', '}', '.', '!', '\'
+ *
+ * See https://core.telegram.org/bots/api#markdownv2-style
+ * @param text
+ * @returns
+ */
+export function escapeText(text: string): string {
+  return text.replace(/[_*[\]()~`>#+-=|{}.!\\]/g, "\\$&");
+}
+
+/**
+ * Escape pre and code blocks for Telegram's MarkdownV2.
+ *
+ * Escaped characters: '`', '\'
+ *
+ * See https://core.telegram.org/bots/api#markdownv2-style
+ * @param text
+ * @returns
+ */
+export function escapeCode(text: string): string {
+  return text.replace(/[`\\]/g, "\\$&");
+}
+
+/**
+ * Escape urls for Telegram's MarkdownV2.
+ *
+ * Escaped characters: ')', '\'
+ *
+ * See https://core.telegram.org/bots/api#markdownv2-style
+ * @param url
+ * @returns
+ */
+export function escapeUrl(url: string): string {
+  return url.replace(/[)\\]/g, "\\$&");
 }
 
 export function bold(text: string): string {
-  return `*${escapeMarkdown(text)}*`;
+  return `*${text}*`;
 }
 
-export function url(url: string, text: string): string {
-  return `[${escapeMarkdown(text)}](${escapeMarkdown(url)})`;
+export function link(url: string, text: string): string {
+  return `[${escapeText(text)}](${escapeUrl(url)})`;
 }
 
 export function formatJsonForMarkdown(json: unknown): string {
-  return `\`\`\`json\n${escapeMarkdown(JSON.stringify(json, null, 2))}\n\`\`\``;
+  return `\`\`\`json\n${escapeCode(JSON.stringify(json, null, 2))}\n\`\`\``;
 }
