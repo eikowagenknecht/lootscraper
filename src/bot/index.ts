@@ -1,5 +1,6 @@
 import { handleError } from "@/utils/errorHandler";
 import { logger } from "@/utils/logger";
+import { CommandGroup, commandNotFound, commands } from "@grammyjs/commands";
 import { Bot, type BotError, GrammyError, HttpError } from "grammy";
 import { handleCallback } from "./handlers/callbacks/router";
 import {
@@ -31,30 +32,73 @@ export class TelegramBot {
     }
 
     try {
-      // Register regular commands
-      this.bot.command("start", handleStartCommand);
-      this.bot.command("help", handleHelpCommand);
-      this.bot.command("manage", handleManageCommand);
-      this.bot.command("status", handleStatusCommand);
-      this.bot.command("timezone", handleTimezoneCommand);
-      this.bot.command("refresh", handleRefreshCommand);
-      this.bot.command("leave", handleLeaveCommand);
-      await this.bot.api.setMyCommands([
-        { command: "start", description: "Register and start the bot" },
-        { command: "help", description: "Show available commands" },
-        { command: "manage", description: "Manage your subscriptions" },
-        { command: "status", description: "Show your status" },
-        { command: "timezone", description: "Set your timezone" },
-        { command: "refresh", description: "Check for new offers" },
-        { command: "leave", description: "Unregister and delete your data" },
-      ]);
+      this.bot.use(commands());
 
-      // Register admin commands
-      this.bot.command("announce", handleAnnounceCommand);
-      this.bot.command("debug", handleDebugCommand);
-      this.bot.command("error", handleErrorCommand);
+      const userCommands = new CommandGroup<BotContext>();
+      userCommands.command(
+        "start",
+        "Register and start the bot",
+        handleStartCommand,
+      );
+      userCommands.command(
+        "help",
+        "Show available commands",
+        handleHelpCommand,
+      );
+      userCommands.command(
+        "manage",
+        "Manage your subscriptions",
+        handleManageCommand,
+      );
+      userCommands.command("status", "Show your status", handleStatusCommand);
+      userCommands.command(
+        "timezone",
+        "Set your timezone",
+        handleTimezoneCommand,
+      );
+      userCommands.command(
+        "refresh",
+        "Check for new offers",
+        handleRefreshCommand,
+      );
+      userCommands.command(
+        "leave",
+        "Unregister and delete your data",
+        handleLeaveCommand,
+      );
+      const adminCommands = new CommandGroup<BotContext>();
+      adminCommands.command(
+        "announce",
+        "Send an announcement",
+        handleAnnounceCommand,
+      );
+      adminCommands.command("debug", "Show chat IDs", handleDebugCommand);
+      adminCommands.command("error", "Generate an error", handleErrorCommand);
 
-      // TODO: Handle unknown commands with the "command" plugin: https://grammy.dev/plugins/commands
+      this.bot.use(userCommands);
+      this.bot.use(adminCommands);
+      await userCommands.setCommands(this.bot);
+
+      this.bot
+        // Check if there is a command
+        .filter(commandNotFound(userCommands))
+        // If so, that means it wasn't handled by any of our commands.
+        .use(async (ctx) => {
+          if (ctx.message?.text) {
+            logger.debug("Command not found:", ctx.message.text);
+          } else {
+            logger.debug("Command not found:", ctx.update);
+          }
+          if (ctx.commandSuggestion) {
+            // We found a potential match
+            await ctx.reply(
+              `Hmm... I don't know that command. Did you mean ${ctx.commandSuggestion}?`,
+            );
+          } else {
+            // Nothing seems to come close to what the user typed
+            await ctx.reply("Oops... I don't know that command :/");
+          }
+        });
 
       // Callback queries
       this.bot.on("callback_query:data", handleCallback);

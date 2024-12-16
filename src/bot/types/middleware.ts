@@ -1,3 +1,4 @@
+import type { CommandsFlavor } from "@grammyjs/commands";
 import type { Context } from "grammy";
 
 interface BotInfo {
@@ -5,4 +6,4 @@ interface BotInfo {
   isDeveloper: boolean;
 }
 
-export type BotContext = Context & BotInfo;
+export type BotContext = Context & BotInfo & CommandsFlavor;
