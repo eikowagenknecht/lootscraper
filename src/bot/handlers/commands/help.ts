@@ -1,3 +1,4 @@
+import { bold, escapeText } from "@/bot/utils/markdown";
 import type { CommandContext } from "grammy";
 import type { BotContext } from "../../types/middleware";
 import { CommandHandler } from "./base";
@@ -14,14 +15,13 @@ export class HelpCommand extends CommandHandler {
       return;
     }
 
-    const helpText =
-      "*Available commands*\n" +
-      "/start - Start the bot \\(you already did that\\)\n" +
-      "/help - Show this help message\n" +
-      "/status - Show information about your subscriptions\n" +
-      "/manage - Manage your subscriptions\n" +
-      "/timezone - Choose a timezone that will be used to display the start and end dates\n" +
-      "/leave - Leave this bot and delete stored user data";
+    const helpText = `${bold("Available commands")}\n${escapeText(`\
+/start - Start the bot (you already did that)
+/help - Show this help message
+/status - Show information about your subscriptions
+/manage - Manage your subscriptions
+/timezone - Choose a timezone that will be used to display the start and end dates
+/leave - Leave this bot and delete stored user data`)}`;
 
     await ctx.reply(helpText, { parse_mode: "MarkdownV2" });
   }

@@ -1,6 +1,6 @@
-import { escapeMarkdown } from "@/bot/utils/markdown";
+import { escapeText } from "@/bot/utils/markdown";
 import { getTelegramSubscriptions } from "@/services/database/telegramSubscriptionRepository";
-// src/bot/handlers/commands/status.ts
+import { toCapitalCaseAll } from "@/utils/stringTools";
 import type { CommandContext } from "grammy";
 import { DateTime } from "luxon";
 import { DATE_FORMATS } from "../../types/formatters";
@@ -21,9 +21,12 @@ export class StatusCommand extends CommandHandler {
 
     const dbChat = await this.getDbChat(ctx);
     if (!dbChat) {
-      const message = `Hi ${this.getCallerName(ctx)}, you are currently not registered\\. So there is no data stored about you\\. But I'd be happy to see you register any time with the /start command\\!`;
+      const messageMd = escapeText(`\
+Hi ${this.getCallerName(ctx)}, you are currently not registered. \
+So there is no data stored about you. \
+But I'd be happy to see you register any time with the /start command!`);
 
-      await ctx.reply(message, { parse_mode: "MarkdownV2" });
+      await ctx.reply(messageMd, { parse_mode: "MarkdownV2" });
       return;
     }
 
@@ -31,36 +34,60 @@ export class StatusCommand extends CommandHandler {
     const subscriptions = await getTelegramSubscriptions(dbChat.id);
 
     // Build subscriptions text
-    let subscriptionsText: string;
+    let subscriptionsTextMd: string;
     if (subscriptions.length > 0) {
-      subscriptionsText = `\\- You have ${subscriptions.length.toFixed(0)} subscriptions\\. Here are the categories you are subscribed to:\\n`;
+      subscriptionsTextMd =
+        escapeText(`- You have ${subscriptions.length.toFixed(0)} subscriptions. Here are the categories you are subscribed to:
+`);
 
       for (const subscription of subscriptions) {
-        subscriptionsText += escapeMarkdown(
-          `  * ${subscription.source} / ${subscription.type} / ` +
-            `${subscription.duration}\n`,
+        subscriptionsTextMd += escapeText(
+          `  - ${toCapitalCaseAll(subscription.source)} / ${toCapitalCaseAll(subscription.type)} / ${toCapitalCaseAll(subscription.duration)}
+`,
         );
       }
-      subscriptionsText +=
-        "You can unsubscribe from them any time with /manage\\.";
+      subscriptionsTextMd += escapeText(
+        "You can unsubscribe from them any time with /manage.\n",
+      );
     } else {
-      subscriptionsText =
-        "\\- You are currently not subscribed to any categories\\. " +
-        "You can change that with the /manage command if you wish\\.";
+      subscriptionsTextMd = escapeText(
+        "- You are currently not subscribed to any categories. You can change that with the /manage command if you wish.\n",
+      );
     }
 
     // Build timezone text
     const timezoneText = dbChat.timezone_offset
-      ? `\\- Your timezone is set to ${escapeMarkdown(dbChat.timezone_offset.toString())} hours\\. You can change that with the /timezone command if you wish\\.`
-      : "\\- Your timezone is not set, so UTC is used\\. " +
-        "You can change that with the /timezone command if you wish\\.";
+      ? escapeText(
+          `- Your timezone is set to ${dbChat.timezone_offset.toString()} hours. \
+You can change that with the /timezone command if you wish.`,
+        )
+      : escapeText(
+          "- Your timezone is not set, so UTC is used. You can change that with the /timezone command if you wish.",
+        );
 
     const registrationDate = DateTime.fromISO(
       dbChat.registration_date,
     ).toFormat(DATE_FORMATS.READABLE_WITH_HOUR);
 
-    const message = `Hi ${this.getCallerName(ctx)}, you are currently registered\\. But I'm not storing much user data, so this is all I know about you: \n\n\\- You registered on ${escapeMarkdown(registrationDate)} with the /start command\\.\n\\- Your Telegram chat id is ${escapeMarkdown(dbChat.chat_id.toString())}\\. Neat, huh? I use it to send you notifications\\.\n${subscriptionsText}\n\\- You received ${escapeMarkdown(dbChat.offers_received_count.toString())} offers so far\\.\n${timezoneText}`;
+    const message =
+      escapeText(
+        `Hi ${this.getCallerName(ctx)}, you are currently registered. \
+But I'm not storing much user data, so this is all I know about you:
 
+`,
+      ) +
+      escapeText(`- You registered on ${registrationDate} with the /start command.
+`) +
+      escapeText(
+        `- Your Telegram chat id is ${dbChat.chat_id.toString()}. Neat, huh? I use it to send you notifications.
+`,
+      ) +
+      subscriptionsTextMd +
+      escapeText(
+        `- You received ${dbChat.offers_received_count.toString()} offers so far.
+`,
+      ) +
+      timezoneText;
     await ctx.reply(message, { parse_mode: "MarkdownV2" });
   }
 }
