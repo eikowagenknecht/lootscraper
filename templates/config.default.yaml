@@ -12,6 +12,13 @@ expert:
   # Timeout for web requests (in seconds). Increase if you have slow internet.
   webTimeoutSeconds: 5
 
+actions:
+  scrapeOffers: false
+  scrapeInfo: true
+  generateFeed: false
+  uploadToFtp: false
+  telegramBot: false
+
 scraper:
   # But not mixed like this
   offerSources:
@@ -35,11 +42,25 @@ scraper:
     - STEAM
     - IGDB
 
-actions:
-  scrapeInfo: true
-  generateFeed: false
-  uploadToFtp: false
-  telegramBot: false
+igdb:
+  # Twitch API client ID
+  clientId: ""
+  # Twitch API client secret
+  clientSecret: ""
+
+feed:
+  authorName: John Doe
+  authorEmail: mail@example.com
+  authorWeb: https://example.com
+  urlPrefix: https://feed.example.com/
+  urlAlternate: https://example.com/loot
+  idPrefix: https://example.com/loot/
+
+ftp:
+  # Settings for the TLS FTP connection
+  host: ftp.example.com
+  user: user
+  password: password
 
 telegram:
   # Telegram bot token
@@ -50,23 +71,3 @@ telegram:
   adminUserId: 0
   # One of: DEBUG, INFO, WARNING, ERROR, DISABLED
   logLevel: ERROR
-
-igdb:
-  # Twitch API client ID
-  clientId: ""
-  # Twitch API client secret
-  clientSecret: ""
-
-ftp:
-  # Settings for the TLS FTP connection
-  host: ftp.example.com
-  user: user
-  password: password
-
-feed:
-  authorName: John Doe
-  authorEmail: mail@example.com
-  authorWeb: https://example.com
-  urlPrefix: https://feed.example.com/
-  urlAlternate: https://example.com/loot
-  idPrefix: https://example.com/loot/
