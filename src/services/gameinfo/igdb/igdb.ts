@@ -68,11 +68,11 @@ limit 50;
       ) {
         bestMatch = { id: game.id, score, title: game.name };
         logger.debug(
-          `Found match ${game.name} with score ${(score * 100).toFixed(0)}%`,
+          `Found match ${game.name} with score ${(score * 100).toFixed()}%`,
         );
       } else {
         logger.debug(
-          `Rejected match ${game.name} as it's score of ${(score * 100).toFixed(0)}% is too low.`,
+          `Rejected match ${game.name} as it's score of ${(score * 100).toFixed()}% is too low.`,
         );
       }
     }
@@ -83,7 +83,7 @@ limit 50;
     }
 
     logger.debug(
-      `Best match for ${searchString} is ${bestMatch.title} with score ${(bestMatch.score * 100).toFixed(0)}%.`,
+      `Best match for ${searchString} is ${bestMatch.title} with score ${(bestMatch.score * 100).toFixed()}%.`,
     );
     return bestMatch.id;
   }
@@ -93,7 +93,7 @@ limit 50;
 
     const query = `
       fields *;
-      where id = ${gameId.toFixed(0)};
+      where id = ${gameId.toFixed()};
     `;
 
     const results = await this.apiRequest<IgdbGameResult[]>("games", query);

@@ -32,7 +32,7 @@ export abstract class CommandHandler {
     if (ctx.chat.type === "group" || ctx.chat.type === "supergroup") {
       if (!ctx.from) {
         logger.warning(
-          `Cannot control bot: Unknown user in group with id ${ctx.chat.id.toFixed(0)}`,
+          `Cannot control bot: Unknown user in group with id ${ctx.chat.id.toFixed()}`,
         );
         return false;
       }

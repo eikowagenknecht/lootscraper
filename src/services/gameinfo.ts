@@ -82,7 +82,7 @@ export class GameInfoService {
 
       const details = await this.steamClient.getDetails(appId);
       if (!details.name) {
-        logger.warn(`Steam API returned no name for ${appId.toFixed(0)}`);
+        logger.warn(`Steam API returned no name for ${appId.toFixed()}`);
         return null;
       }
 

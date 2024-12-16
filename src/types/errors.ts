@@ -51,7 +51,7 @@ export class BotError extends LootScraperError {
     public readonly chatId?: number,
   ) {
     super(
-      `Bot error: ${message}${chatId ? ` for chat ${chatId.toFixed(0)}` : ""}`,
+      `Bot error: ${message}${chatId ? ` for chat ${chatId.toFixed()}` : ""}`,
     );
   }
 }

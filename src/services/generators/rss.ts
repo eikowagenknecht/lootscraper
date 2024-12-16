@@ -54,7 +54,7 @@ export class RssGenerator {
   }
 
   public async generateFeed(offers: Offer[]): Promise<void> {
-    logger.info(`Generating feed for ${offers.length.toFixed(0)} offers...`);
+    logger.info(`Generating feed for ${offers.length.toFixed()} offers...`);
     if (offers.length === 0) return;
 
     for (const offer of offers) {
@@ -76,7 +76,7 @@ export class RssGenerator {
       }
 
       this.feedGenerator.addEntry({
-        id: `${this.config.feed.idPrefix}${offer.id.toFixed(0)}`,
+        id: `${this.config.feed.idPrefix}${offer.id.toFixed()}`,
         title: this.getEntryTitle(offer),
         ...(offer.url && { link: [{ href: offer.url }] }),
         updated: updated,
@@ -239,7 +239,7 @@ export class RssGenerator {
     // Ratings
     const ratings: string[] = [];
     if (gameInfo.steamInfo?.metacritic_score) {
-      let text = `Metacritic ${gameInfo.steamInfo.metacritic_score.toFixed(0)}%`;
+      let text = `Metacritic ${gameInfo.steamInfo.metacritic_score.toFixed()}%`;
       if (gameInfo.steamInfo.metacritic_url) {
         text = `<a href="${this.escapeHtml(gameInfo.steamInfo.metacritic_url)}">${text}</a>`;
       }
@@ -251,7 +251,7 @@ export class RssGenerator {
       gameInfo.steamInfo.score &&
       gameInfo.steamInfo.recommendations
     ) {
-      let text = `Steam ${gameInfo.steamInfo.percent.toFixed(0)}% (${gameInfo.steamInfo.score.toFixed(0)}/10, ${gameInfo.steamInfo.recommendations.toFixed(
+      let text = `Steam ${gameInfo.steamInfo.percent.toFixed()}% (${gameInfo.steamInfo.score.toFixed()}/10, ${gameInfo.steamInfo.recommendations.toFixed(
         0,
       )} recommendations)`;
       text = `<a href="${this.escapeHtml(gameInfo.steamInfo.url)}">${text}</a>`;
@@ -259,7 +259,7 @@ export class RssGenerator {
     }
 
     if (gameInfo.igdbInfo?.meta_ratings && gameInfo.igdbInfo.meta_score) {
-      let text = `IGDB Meta ${gameInfo.igdbInfo.meta_score.toFixed(0)}% (${gameInfo.igdbInfo.meta_ratings.toFixed(
+      let text = `IGDB Meta ${gameInfo.igdbInfo.meta_score.toFixed()}% (${gameInfo.igdbInfo.meta_ratings.toFixed(
         0,
       )} sources)`;
       if (gameInfo.igdbInfo.url) {
@@ -269,7 +269,7 @@ export class RssGenerator {
     }
 
     if (gameInfo.igdbInfo?.user_ratings && gameInfo.igdbInfo.user_score) {
-      let text = `IGDB User ${gameInfo.igdbInfo.user_score.toFixed(0)}% (${gameInfo.igdbInfo.user_ratings.toFixed(
+      let text = `IGDB User ${gameInfo.igdbInfo.user_score.toFixed()}% (${gameInfo.igdbInfo.user_ratings.toFixed(
         0,
       )} sources)`;
       if (gameInfo.igdbInfo.url) {
