@@ -2,7 +2,7 @@ import { OfferDuration } from "@/types/config";
 import type { Offer } from "@/types/database";
 // src/bot/utils/formatters.ts
 import { DateTime } from "luxon";
-import { url, bold, escapeMarkdown } from "./markdown";
+import { bold, escapeText, link } from "./markdown";
 
 export interface FormatOfferMessageOptions {
   tzOffset?: number | null;
@@ -20,17 +20,17 @@ export function formatOfferMessage(
   content += bold(
     `${offer.title} - ${offer.source} (${offer.type}${offer.duration !== OfferDuration.CLAIMABLE ? `, ${offer.duration}` : ""})`,
   );
-  content += escapeMarkdown(` [${offer.id.toFixed(0)}`);
+  content += escapeText(` [${offer.id.toFixed(0)}`);
 
   // Image
   if (offer.img_url) {
-    content += url(offer.img_url, "*");
+    content += link(offer.img_url, "*");
   }
-  content += escapeMarkdown("]");
+  content += escapeText("]");
 
   // Claim URL
   if (offer.url) {
-    content += escapeMarkdown(" - ") + url(offer.url, "[Claim here]");
+    content += escapeText(" - ") + link(offer.url, "[Claim here]");
   }
 
   content += "\n\n";
@@ -49,15 +49,15 @@ export function formatOfferMessage(
     const diffHuman = diff.toHuman({ maximumFractionDigits: 0 });
 
     if (now > validTo) {
-      content += `Offer expired ${escapeMarkdown(diffHuman)} ago`;
+      content += `Offer expired ${escapeText(diffHuman)} ago`;
     } else {
-      content += `Offer expires in ${escapeMarkdown(diffHuman)}`;
+      content += `Offer expires in ${escapeText(diffHuman)}`;
     }
-    content += escapeMarkdown(` (${validToFormatted}).`);
+    content += escapeText(` (${validToFormatted}).`);
   } else if (offer.duration === OfferDuration.ALWAYS) {
-    content += escapeMarkdown("Offer will stay free, no need to hurry.");
+    content += escapeText("Offer will stay free, no need to hurry.");
   } else {
-    content += escapeMarkdown("Offer has no known end date.");
+    content += escapeText("Offer has no known end date.");
   }
 
   if (!includeDetails) {
@@ -66,10 +66,10 @@ export function formatOfferMessage(
 
   // Add offer details
   if (offer.category) {
-    content += `\n*Category:* ${escapeMarkdown(offer.category)}`;
+    content += `\n*Category:* ${escapeText(offer.category)}`;
   }
 
-  content += `\n*Raw Info:* ${escapeMarkdown(JSON.stringify(offer.rawtext, null, 2))}`;
+  content += `\n*Raw Info:* ${escapeText(JSON.stringify(offer.rawtext, null, 2))}`;
 
   return content;
 }
