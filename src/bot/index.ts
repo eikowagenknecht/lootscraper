@@ -1,6 +1,6 @@
 import { handleError } from "@/utils/errorHandler";
 import { logger } from "@/utils/logger";
-import { Bot, type Context } from "grammy";
+import { Bot, type BotError, GrammyError, HttpError } from "grammy";
 import { handleCallback } from "./handlers/callbacks/router";
 import {
   AnnounceCommand,
@@ -18,11 +18,11 @@ import type { BotConfig } from "./types/config";
 import type { BotContext } from "./types/middleware";
 
 export class TelegramBot {
-  private bot: Bot;
+  private bot: Bot<BotContext>;
   private initialized = false;
 
   constructor(private readonly config: BotConfig) {
-    this.bot = new Bot<Context>(config.accessToken);
+    this.bot = new Bot<BotContext>(config.accessToken);
   }
 
   public async initialize(): Promise<void> {
@@ -34,7 +34,6 @@ export class TelegramBot {
       // Register command handlers
       this.registerCommands();
 
-      // Handle the /start command.
       // Register callback handler
       this.bot.on("callback_query:data", (ctx) => handleCallback(ctx));
 
@@ -121,23 +120,28 @@ export class TelegramBot {
       this.bot.command(command.commandName, (ctx) => command.handle(ctx));
     }
 
-    // Handle unknown commands
-    // TODO: Fix this implementation
-    // this.bot.on(Filter.command(), this.handleUnknownCommand.bind(this));
+    // TODO: Handle unknown commands with the "command" plugin: https://grammy.dev/plugins/commands
   }
 
-  // private async handleUnknownCommand(ctx: BotContext): Promise<void> {
-  //   await ctx.reply(
-  //     "Sorry, I didn't understand that command. Type /help to see all available commands.",
-  //   );
-  // }
+  private async handleError(error: BotError): Promise<void> {
+    logger.debug(
+      `Error while handling update ${error.ctx.update.update_id.toFixed()}:`,
+      JSON.stringify(error.ctx, null, 2),
+    );
 
-  private async handleError(error: Error): Promise<void> {
+    if (error instanceof GrammyError) {
+      logger.error("Error in request:", error.description);
+    } else if (error instanceof HttpError) {
+      logger.error("Could not connect to Telegram:", error);
+    } else {
+      logger.error("Unknown error:", error);
+    }
+
     handleError(error);
 
     if (this.config.developerChatId) {
       try {
-        const errorMessage = `\`\`\`\nError in Telegram bot: ${error.message}\nStack: ${error.stack ?? "No stack trace available"}\n\`\`\``;
+        const errorMessage = `\`\`\`\nError in Telegram bot: ${error.message}\n\nStack: ${error.stack ?? "No stack trace available"}\n\`\`\``;
 
         await this.bot.api.sendMessage(
           this.config.developerChatId,
