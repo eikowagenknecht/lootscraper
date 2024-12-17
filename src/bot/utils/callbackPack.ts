@@ -9,14 +9,27 @@ interface EnumValue {
 }
 
 /**
+ * Special marker used to represent boolean true in the packed string
+ * @internal
+ */
+const SPECIAL_TRUE = "true";
+
+/**
+ * Special marker used to represent boolean false in the packed string
+ * @internal
+ */
+const SPECIAL_FALSE = "false";
+
+/**
  * Represents all valid field values that can be serialized
  * - string: Regular strings (will be escaped if containing special characters)
  * - EnumValue: Enum values or objects with string valueOf()
  * - number: Both integers and floating point numbers
+ * - boolean: true/false values
  * - null: Represented as "null" in the packed string
  * - undefined: Represented as "undef" in the packed string
  */
-type ValidFieldValue = string | EnumValue | number | null | undefined;
+type ValidFieldValue = string | EnumValue | number | boolean | null | undefined;
 
 /**
  * Special marker used to represent null values in the packed string
@@ -40,6 +53,7 @@ function isValidFieldValue(value: unknown): value is ValidFieldValue {
   if (value === null || value === undefined) return true;
   if (typeof value === "number") return true;
   if (typeof value === "string") return true;
+  if (typeof value === "boolean") return true;
   if (typeof value !== "object") return false;
   return (
     "valueOf" in value &&
@@ -60,7 +74,12 @@ const escapeValue = (value: string): string => {
   // Escape colons after backslashes are escaped
   escaped = escaped.replace(/:/g, "\\:");
   // Escape special values when they appear as exact matches
-  if (escaped === SPECIAL_NULL || escaped === SPECIAL_UNDEFINED) {
+  if (
+    escaped === SPECIAL_NULL ||
+    escaped === SPECIAL_UNDEFINED ||
+    escaped === SPECIAL_TRUE ||
+    escaped === SPECIAL_FALSE
+  ) {
     escaped = `\\${escaped}`;
   }
   return escaped;
@@ -74,14 +93,24 @@ const escapeValue = (value: string): string => {
  */
 const unescapeValue = (value: string): string => {
   // Handle special values first
-  if (value === SPECIAL_NULL || value === SPECIAL_UNDEFINED) {
+  if (
+    value === SPECIAL_NULL ||
+    value === SPECIAL_UNDEFINED ||
+    value === SPECIAL_TRUE ||
+    value === SPECIAL_FALSE
+  ) {
     return value;
   }
 
   // Handle escaped special values
   if (value.startsWith("\\") && value.length > 1) {
     const unescaped = value.slice(1);
-    if (unescaped === SPECIAL_NULL || unescaped === SPECIAL_UNDEFINED) {
+    if (
+      unescaped === SPECIAL_NULL ||
+      unescaped === SPECIAL_UNDEFINED ||
+      unescaped === SPECIAL_TRUE ||
+      unescaped === SPECIAL_FALSE
+    ) {
       return unescaped;
     }
   }
@@ -116,6 +145,7 @@ const unescapeValue = (value: string): string => {
 function serializeValue(value: ValidFieldValue): string {
   if (value === null) return SPECIAL_NULL;
   if (value === undefined) return SPECIAL_UNDEFINED;
+  if (typeof value === "boolean") return value ? SPECIAL_TRUE : SPECIAL_FALSE;
   if (typeof value === "number") {
     if (Number.isNaN(value)) {
       throw new Error("Number value must not be NaN");
@@ -144,16 +174,18 @@ function serializeValue(value: ValidFieldValue): string {
  *   userId: z.number(),
  *   status: z.enum(["active", "inactive"]),
  *   email: z.string().nullable(),
+ *   isVerified: z.boolean(),
  * });
  *
  * const data = {
  *   userId: 123,
  *   status: "active",
  *   email: null,
+ *   isVerified: true,
  * };
  *
  * const packed = packData(data, schema);
- * // Result: "123:active:null"
+ * // Result: "123:active:null:true"
  * ```
  */
 export function packData<T extends z.ZodObject<z.ZodRawShape>>(
@@ -170,7 +202,7 @@ export function packData<T extends z.ZodObject<z.ZodRawShape>>(
       const value = data[field];
       if (!isValidFieldValue(value)) {
         throw new Error(
-          `Value for field ${String(field)} must be a string, number, null, undefined, or string enum`,
+          `Value for field ${String(field)} must be a string, number, boolean, null, undefined, or string enum`,
         );
       }
       return serializeValue(value);
@@ -193,11 +225,12 @@ export function packData<T extends z.ZodObject<z.ZodRawShape>>(
  *   userId: z.number(),
  *   status: z.enum(["active", "inactive"]),
  *   email: z.string().nullable(),
+ *   isVerified: z.boolean(),
  * });
  *
- * const packed = "123:active:null";
+ * const packed = "123:active:null:true";
  * const unpacked = unpackData(packed, schema);
- * // Result: { userId: 123, status: "active", email: null }
+ * // Result: { userId: 123, status: "active", email: null, isVerified: true }
  * ```
  */
 export function unpackData<T extends z.ZodObject<z.ZodRawShape>>(
@@ -254,6 +287,15 @@ export function unpackData<T extends z.ZodObject<z.ZodRawShape>>(
           );
         }
         return [field, num];
+      }
+
+      // Check if the field schema expects a boolean
+      if (innerSchema instanceof z.ZodBoolean) {
+        if (unescaped === SPECIAL_TRUE) return [field, true];
+        if (unescaped === SPECIAL_FALSE) return [field, false];
+        throw new Error(
+          `Invalid boolean value for field ${String(field)}: ${unescaped}`,
+        );
       }
 
       return [field, unescaped];

@@ -117,6 +117,26 @@ describe("Callback Pack", () => {
       expect(unpacked).toEqual(data);
     });
 
+    it("should escape the word 'true' when it appears as a string", () => {
+      const data = { value: "true" };
+      const packed = packData(data, EscapeSchema);
+
+      expect(packed).toBe("\\true");
+
+      const unpacked = unpackData(packed, EscapeSchema);
+      expect(unpacked).toEqual(data);
+    });
+
+    it("should escape the word 'false' when it appears as a string", () => {
+      const data = { value: "false" };
+      const packed = packData(data, EscapeSchema);
+
+      expect(packed).toBe("\\false");
+
+      const unpacked = unpackData(packed, EscapeSchema);
+      expect(unpacked).toEqual(data);
+    });
+
     it("should escape the word 'undef' when it appears as a string", () => {
       const data = { value: "undef" };
       const packed = packData(data, EscapeSchema);
@@ -162,6 +182,72 @@ describe("Callback Pack", () => {
 
         expect(unpacked).toEqual(data);
       }
+    });
+  });
+
+  describe("Boolean Support", () => {
+    const BooleanSchema = z.object({
+      flag: z.boolean(),
+      nullableFlag: z.boolean().nullable(),
+      optionalFlag: z.boolean().optional(),
+      str: z.string(),
+    });
+
+    it("should handle basic boolean values", () => {
+      const data = {
+        flag: true,
+        nullableFlag: false,
+        optionalFlag: true,
+        str: "test",
+      };
+
+      const packed = packData(data, BooleanSchema);
+      const unpacked = unpackData(packed, BooleanSchema);
+
+      expect(unpacked).toEqual(data);
+      expect(typeof unpacked.flag).toBe("boolean");
+      expect(typeof unpacked.nullableFlag).toBe("boolean");
+      expect(typeof unpacked.optionalFlag).toBe("boolean");
+    });
+
+    it("should handle nullable and optional boolean values", () => {
+      const data = {
+        flag: false,
+        nullableFlag: null,
+        optionalFlag: undefined,
+        str: "test",
+      };
+
+      const packed = packData(data, BooleanSchema);
+      const unpacked = unpackData(packed, BooleanSchema);
+
+      expect(unpacked).toEqual(data);
+    });
+
+    it("should escape the words 'true' and 'false' when they appear as strings", () => {
+      const StringSchema = z.object({
+        value: z.string(),
+      });
+
+      const testCases = [
+        { value: "true" },
+        { value: "false" },
+        { value: "some:true:text" },
+        { value: "some:false:text" },
+      ];
+
+      for (const data of testCases) {
+        const packed = packData(data, StringSchema);
+        const unpacked = unpackData(packed, StringSchema);
+        expect(unpacked).toEqual(data);
+      }
+    });
+
+    it("should throw on invalid boolean values", () => {
+      const packed = "invalid:null:undef:test";
+      expect(() => unpackData(packed, BooleanSchema)).toThrow(
+        /Invalid boolean/,
+      );
     });
   });
 
