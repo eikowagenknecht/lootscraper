@@ -31,7 +31,8 @@
     "sync:npm": "pnpm i --frozen-lockfile",
     "upgrade:npm": "pnpm exec rm pnpm-lock.yaml && pnpm up --latest && pnpm i",
     "code:dump": "vite-node tools/codeDump.ts",
-    "code:list": "vite-node tools/codeList.ts"
+    "code:list": "vite-node tools/codeList.ts",
+    "knip": "knip"
   },
   "dependencies": {
     "@grammyjs/commands": "1.0.3",
@@ -64,6 +65,7 @@
     "eslint": "9.16.0",
     "globals": "15.13.0",
     "lefthook": "1.9.2",
+    "knip": "5.41.0",
     "prettier": "3.4.2",
     "typescript": "5.7.2",
     "typescript-eslint": "8.18.0",
