@@ -18,6 +18,11 @@ function initializeCore() {
   updateConsoleLevel(configuredLevel);
   initializeFileTransport(configuredLevel, cfg.common.logFile);
 
+  // Log debug information
+  if (process.env.DEBUG) {
+    logger.info(`DEBUG env is set to ${process.env.DEBUG}`);
+  }
+
   // Set timezone for consistent date handling
   LuxonSettings.defaultZone = "utc";
 
