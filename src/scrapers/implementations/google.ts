@@ -2,12 +2,24 @@ import { OfferDuration, OfferSource, OfferType } from "@/types/config";
 import type { NewOffer } from "@/types/database";
 import { DateTime } from "luxon";
 import type { Locator, Page } from "playwright";
-import { BaseScraper, type OfferHandler, type RawOffer } from "../base/scraper";
+import {
+  BaseScraper,
+  type CronConfig,
+  type OfferHandler,
+  type RawOffer,
+} from "../base/scraper";
 
 const BASE_URL = "https://appagg.com";
 const OFFER_URL = `${BASE_URL}/sale/android-games/free/?hl=en`;
 
 export class GoogleGamesScraper extends BaseScraper {
+  override getSchedule(): CronConfig[] {
+    // Run once a day only to avoid being blocked
+    return [
+      { schedule: "0 5 12 * * *" }, // 12:05 UTC Daily
+    ];
+  }
+
   getSource(): OfferSource {
     return OfferSource.GOOGLE;
   }

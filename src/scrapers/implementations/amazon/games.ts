@@ -2,10 +2,16 @@ import { OfferType } from "@/types/config";
 import type { NewOffer } from "@/types/database";
 import { DateTime } from "luxon";
 import type { Locator, Page } from "playwright";
-import type { OfferHandler } from "../../base/scraper";
+import type { CronConfig, OfferHandler } from "../../base/scraper";
 import { AmazonBaseScraper, type AmazonRawOffer } from "./base";
 
 export class AmazonGamesScraper extends AmazonBaseScraper {
+  override getSchedule(): CronConfig[] {
+    return [
+      { schedule: "0 40 * * * *" }, // Every hour
+    ];
+  }
+
   getType(): OfferType {
     return OfferType.GAME;
   }

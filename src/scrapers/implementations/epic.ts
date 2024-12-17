@@ -2,7 +2,12 @@ import { OfferDuration, OfferSource, OfferType } from "@/types/config";
 import type { NewOffer } from "@/types/database";
 import { DateTime } from "luxon";
 import type { Locator, Page } from "playwright";
-import { BaseScraper, type OfferHandler, type RawOffer } from "../base/scraper";
+import {
+  BaseScraper,
+  type CronConfig,
+  type OfferHandler,
+  type RawOffer,
+} from "../base/scraper";
 
 const BASE_URL = "https://store.epicgames.com";
 const OFFER_URL = `${BASE_URL}/en-US/`;
@@ -12,6 +17,16 @@ interface EpicRawOffer extends RawOffer {
 }
 
 export class EpicGamesScraper extends BaseScraper<EpicRawOffer> {
+  override getSchedule(): CronConfig[] {
+    // Epic Games updates their free games every Thursday at 11:00 US/Eastern
+    // Check soon after release and a backup check later in the day. Also
+    // daily, because in the christmas period they sometimes release games more often.
+    return [
+      { schedule: "0 5 11 * * *", timezone: "US/Eastern" }, // 17:05 UTC Daily (check soon after release)
+      { schedule: "0 5 13 * * *", timezone: "US/Eastern" }, // 19:05 UTC Daily (backup check)
+    ];
+  }
+
   getSource(): OfferSource {
     return OfferSource.EPIC;
   }

@@ -2,7 +2,12 @@ import { OfferDuration, OfferSource, OfferType } from "@/types/config";
 import type { NewOffer } from "@/types/database";
 import { DateTime } from "luxon";
 import type { Locator, Page } from "playwright";
-import { BaseScraper, type OfferHandler, type RawOffer } from "../base/scraper";
+import {
+  BaseScraper,
+  type CronConfig,
+  type OfferHandler,
+  type RawOffer,
+} from "../base/scraper";
 import { Category } from "../base/scraper";
 
 const BASE_URL = "https://humblebundle.com";
@@ -18,6 +23,12 @@ interface HumbleRawOffer extends RawOffer {
 }
 
 export class HumbleGamesScraper extends BaseScraper<HumbleRawOffer> {
+  override getSchedule(): CronConfig[] {
+    return [
+      { schedule: "0 10 */3 * * *" }, // Every 3 hours
+    ];
+  }
+
   getSource(): OfferSource {
     return OfferSource.HUMBLE;
   }

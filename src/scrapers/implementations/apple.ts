@@ -2,7 +2,12 @@ import { OfferDuration, OfferSource, OfferType } from "@/types/config";
 import type { NewOffer } from "@/types/database";
 import { DateTime } from "luxon";
 import type { Locator, Page } from "playwright";
-import { BaseScraper, type OfferHandler, type RawOffer } from "../base/scraper";
+import {
+  BaseScraper,
+  type CronConfig,
+  type OfferHandler,
+  type RawOffer,
+} from "../base/scraper";
 
 const ROOT_URL = "https://appsliced.co/apps/iphone";
 const SEARCH_PARAMS = new URLSearchParams({
@@ -13,6 +18,13 @@ const SEARCH_PARAMS = new URLSearchParams({
 });
 
 export class AppleGamesScraper extends BaseScraper {
+  override getSchedule(): CronConfig[] {
+    // Run once a day only to avoid being blocked
+    return [
+      { schedule: "0 0 12 * * *" }, // 12:05 UTC Daily
+    ];
+  }
+
   getSource(): OfferSource {
     return OfferSource.APPLE;
   }
