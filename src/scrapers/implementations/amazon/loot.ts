@@ -2,7 +2,7 @@ import { OfferType } from "@/types/config";
 import type { NewOffer } from "@/types/database";
 import { DateTime } from "luxon";
 import type { Locator, Page } from "playwright";
-import type { OfferHandler } from "../../base/scraper";
+import type { CronConfig, OfferHandler } from "../../base/scraper";
 import { AmazonBaseScraper, type AmazonRawOffer } from "./base";
 
 interface AmazonLootRawOffer extends AmazonRawOffer {
@@ -10,6 +10,12 @@ interface AmazonLootRawOffer extends AmazonRawOffer {
 }
 
 export class AmazonLootScraper extends AmazonBaseScraper<AmazonLootRawOffer> {
+  override getSchedule(): CronConfig[] {
+    return [
+      { schedule: "0 45 * * * *" }, // Every hour
+    ];
+  }
+
   getType(): OfferType {
     return OfferType.LOOT;
   }

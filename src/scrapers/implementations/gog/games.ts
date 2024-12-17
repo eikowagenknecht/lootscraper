@@ -1,3 +1,4 @@
+import type { CronConfig } from "@/scrapers/base/scraper";
 import { OfferDuration } from "@/types/config";
 import type { NewOffer } from "@/types/database";
 import { DateTime } from "luxon";
@@ -8,6 +9,12 @@ const BASE_URL = "https://www.gog.com";
 const OFFER_URL = `${BASE_URL}/#giveaway`;
 
 export class GogGamesScraper extends GogBaseScraper {
+  override getSchedule(): CronConfig[] {
+    return [
+      { schedule: "0 30 * * * *" }, // Every hour
+    ];
+  }
+
   getDuration(): OfferDuration {
     return OfferDuration.CLAIMABLE;
   }

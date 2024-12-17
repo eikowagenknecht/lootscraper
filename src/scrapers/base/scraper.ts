@@ -11,6 +11,11 @@ import { DateTime } from "luxon";
 import type { BrowserContext, Locator, Page } from "playwright";
 import { errors } from "playwright";
 
+export interface CronConfig {
+  schedule: string;
+  timezone?: string;
+}
+
 // Categories for offer classification
 export enum Category {
   VALID = "VALID",
@@ -53,6 +58,14 @@ export abstract class BaseScraper<T extends RawOffer = RawOffer> {
   // Optional methods that can be overridden
   protected offersExpected(): boolean {
     return false;
+  }
+
+  /**
+   * Get scraper's schedule as cron expressions in UTC
+   * Override this to define when the scraper should run
+   */
+  getSchedule(): CronConfig[] {
+    return [{ schedule: "0 * * * * *" }]; // Default: Every hour
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
