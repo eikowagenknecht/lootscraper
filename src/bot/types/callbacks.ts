@@ -1,30 +1,45 @@
-export interface ToggleSubscriptionCallbackData {
-  action: "toggle";
-  source: string;
-  type: string;
-  duration: string;
-}
+import { OfferDuration, OfferSource, OfferType } from "@/types/config";
+import { z } from "zod";
 
-export interface TimezoneCallbackData {
-  action: "settimezone";
-  offset: number;
-}
+export const toggleSubscriptionSchema = z.object({
+  action: z.literal("toggle"),
+  source: z.nativeEnum(OfferSource),
+  type: z.nativeEnum(OfferType),
+  duration: z.nativeEnum(OfferDuration),
+});
 
-export interface OfferCallbackData {
-  action: "details";
-  command: "show" | "hide";
-  offerId: number;
-}
+export type ToggleSubscriptionCallbackData = z.infer<
+  typeof toggleSubscriptionSchema
+>;
 
-export interface DismissCallbackData {
-  action: "dismiss";
-  offerId: number;
-}
+export const timezoneSchema = z.object({
+  action: z.literal("settimezone"),
+  offset: z.number(),
+});
 
-export interface CloseCallbackData {
-  action: "close";
-  menu: "manage" | "timezone";
-}
+export type TimezoneCallbackData = z.infer<typeof timezoneSchema>;
+
+export const offerSchema = z.object({
+  action: z.literal("details"),
+  command: z.enum(["show", "hide"]),
+  offerId: z.number(),
+});
+
+export type OfferCallbackData = z.infer<typeof offerSchema>;
+
+export const dismissSchema = z.object({
+  action: z.literal("dismiss"),
+  offerId: z.number(),
+});
+
+export type DismissCallbackData = z.infer<typeof dismissSchema>;
+
+export const closeSchema = z.object({
+  action: z.literal("close"),
+  menu: z.enum(["manage", "timezone"]),
+});
+
+export type CloseCallbackData = z.infer<typeof closeSchema>;
 
 export type CallbackData =
   | ToggleSubscriptionCallbackData

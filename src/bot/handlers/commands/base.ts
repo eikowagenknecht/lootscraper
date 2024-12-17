@@ -3,16 +3,21 @@ import { logger } from "@/utils/logger";
 import type { Context } from "grammy";
 
 export function logCall(ctx: Context): void {
-  logger.debug(
-    `Received command "/${ctx.message?.text ?? "???"}" from ${getCallerName(ctx)}.`,
-  );
+  const commandName = ctx.message?.text
+    ? `command "${ctx.message.text}"`
+    : "unknown command";
+
+  logger.debug(`Received "${commandName}" from ${getCallerName(ctx)}.`);
 }
 
 export function getCallerName(ctx: Context): string {
+  if (ctx.chat?.username) {
+    return `@${ctx.chat.username}`;
+  }
   if (ctx.chat?.title) {
     return ctx.chat.title;
   }
-  return ctx.from?.username ?? "unknown user";
+  return "unknown user";
 }
 
 export async function userCanControlBot(ctx: Context): Promise<boolean> {
