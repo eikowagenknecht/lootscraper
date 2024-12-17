@@ -4,7 +4,7 @@ import type { Offer } from "@/types/database";
 import { DateTime } from "luxon";
 import { bold, escapeText, link } from "./markdown";
 
-export interface FormatOfferMessageOptions {
+interface FormatOfferMessageOptions {
   tzOffset?: number | null;
   includeDetails?: boolean;
 }

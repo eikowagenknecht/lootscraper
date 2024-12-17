@@ -8,16 +8,14 @@ export const toggleSubscriptionSchema = z.object({
   duration: z.nativeEnum(OfferDuration),
 });
 
-export type ToggleSubscriptionCallbackData = z.infer<
-  typeof toggleSubscriptionSchema
->;
+type ToggleSubscriptionCallbackData = z.infer<typeof toggleSubscriptionSchema>;
 
 export const timezoneSchema = z.object({
   action: z.literal("settimezone"),
   offset: z.number(),
 });
 
-export type TimezoneCallbackData = z.infer<typeof timezoneSchema>;
+type TimezoneCallbackData = z.infer<typeof timezoneSchema>;
 
 export const offerSchema = z.object({
   action: z.literal("details"),
@@ -25,21 +23,21 @@ export const offerSchema = z.object({
   offerId: z.number(),
 });
 
-export type OfferCallbackData = z.infer<typeof offerSchema>;
+type OfferCallbackData = z.infer<typeof offerSchema>;
 
 export const dismissSchema = z.object({
   action: z.literal("dismiss"),
   offerId: z.number(),
 });
 
-export type DismissCallbackData = z.infer<typeof dismissSchema>;
+type DismissCallbackData = z.infer<typeof dismissSchema>;
 
 export const closeSchema = z.object({
   action: z.literal("close"),
   menu: z.enum(["manage", "timezone"]),
 });
 
-export type CloseCallbackData = z.infer<typeof closeSchema>;
+type CloseCallbackData = z.infer<typeof closeSchema>;
 
 export type CallbackData =
   | ToggleSubscriptionCallbackData

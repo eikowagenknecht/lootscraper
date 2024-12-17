@@ -33,7 +33,7 @@ export function escapeCode(text: string): string {
  * @param url
  * @returns
  */
-export function escapeUrl(url: string): string {
+function escapeUrl(url: string): string {
   return url.replace(/[)\\]/g, "\\$&");
 }
 

@@ -1,7 +1,8 @@
+import type { timezoneSchema } from "@/bot/types/callbacks";
 import type { CommandContext } from "grammy";
 import type { InlineKeyboardButton } from "grammy/types";
+import type { z } from "zod";
 import { logCall, userCanControlBot } from ".";
-import type { TimezoneCallbackData } from "../../types/callbacks";
 import type { BotContext } from "../../types/middleware";
 
 export async function handleTimezoneCommand(
@@ -24,7 +25,7 @@ function buildTimezoneKeyboard() {
   // Add timezone buttons (-12 to +14)
   for (let hour = -12; hour <= 14; hour++) {
     const sign = hour >= 0 ? "+" : "";
-    const data: TimezoneCallbackData = {
+    const data: z.infer<typeof timezoneSchema> = {
       action: "settimezone",
       offset: hour,
     };
