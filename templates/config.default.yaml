@@ -11,6 +11,8 @@ expert:
   dbEcho: false
   # Timeout for web requests (in seconds). Increase if you have slow internet.
   webTimeoutSeconds: 5
+  # Run the browser in headless mode
+  headless: true
 
 actions:
   scrapeOffers: false
