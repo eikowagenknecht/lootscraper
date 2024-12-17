@@ -57,6 +57,7 @@ export const ConfigSchema = z.object({
   expert: z.object({
     dbEcho: z.boolean().default(false),
     webTimeoutSeconds: z.number().default(5),
+    headless: z.boolean().default(true),
   }),
   scraper: z.object({
     offerSources: z.array(OfferSourceSchema).default([]),

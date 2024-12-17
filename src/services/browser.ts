@@ -24,7 +24,7 @@ export class BrowserService {
   public async initialize(config: Config): Promise<void> {
     try {
       this.browser = await chromium.launch({
-        headless: true,
+        headless: config.expert.headless,
       });
 
       this.context = await this.browser.newContext({
