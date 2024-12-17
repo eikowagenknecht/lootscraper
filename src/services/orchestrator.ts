@@ -72,7 +72,7 @@ export async function initializeServices(): Promise<void> {
     logger.info("Service initialization complete");
 
     // Start services and schedule jobs
-    await startServices();
+    startServices();
     registerShutdownHandlers();
   } catch (error) {
     await shutdownServices();
@@ -246,12 +246,13 @@ function getEnabledScrapers(
 /**
  * Start all active services and schedule scraper jobs
  */
-async function startServices(): Promise<void> {
+function startServices() {
   const cfg = config.get();
 
   // Start Telegram bot if enabled
   if (cfg.actions.telegramBot) {
-    await telegramBotService.start();
+    // Do not await bot start to prevent blocking
+    void telegramBotService.start();
   }
 
   // Initialize and schedule scrapers if enabled
@@ -268,82 +269,6 @@ async function startServices(): Promise<void> {
     runInitialScrapes(enabledScrapers);
   }
 }
-
-// /**
-//  * Start all active services and schedule scraper jobs
-//  */
-// async function startServices(): Promise<void> {
-//   const cfg = config.get();
-
-//   // Start Telegram bot if enabled
-//   if (cfg.actions.telegramBot) {
-//     await telegramBotService.start();
-//   }
-
-//   // Schedule scrapers if enabled
-//   if (cfg.actions.scrapeOffers) {
-//     const context = browser.getContext();
-
-//     // Initialize enabled scrapers
-//     for (const ScraperClass of SCRAPERS) {
-//       const scraper = new ScraperClass(context, cfg);
-
-//       // Only schedule if source and type are enabled in config
-//       if (
-//         !cfg.scraper.offerSources.includes(scraper.getSource()) ||
-//         !cfg.scraper.offerTypes.includes(scraper.getType())
-//       ) {
-//         continue;
-//       }
-
-//       // Schedule scraper based on its defined schedule
-//       for (const schedule of ScraperClass.getSchedule()) {
-//         const job = new Cron(
-//           schedule.schedule,
-//           { timezone: schedule.timezone ?? "UTC" },
-//           () => {
-//             void runScraper(async () => {
-//               try {
-//                 logger.info(
-//                   `Starting scheduled scrape for ${scraper.getSource()} ${scraper.getType()}...`,
-//                 );
-//                 const offers = await scraper.scrape();
-
-//                 // Store offers and track if we found any new ones
-//                 let newOffersFound = false;
-//                 for (const offer of offers) {
-//                   const result = await createOrUpdateOffer(offer);
-//                   // If result is a number, it's a new offer's ID
-//                   if (typeof result === "number") {
-//                     newOffersFound = true;
-//                   }
-//                 }
-
-//                 logger.info(
-//                   `Completed scraping ${offers.length.toFixed()} offers`,
-//                 );
-
-//                 // Only regenerate feeds if we found new offers
-//                 if (newOffersFound && cfg.actions.generateFeed) {
-//                   logger.info("New offers found, regenerating feeds...");
-//                   const feedService = new FeedService(cfg);
-//                   const activeOffers = await getActiveOffers(new Date());
-//                   const allOffers = await getAllOffers();
-//                   await feedService.generateFeeds(activeOffers, allOffers);
-//                 }
-//               } catch (error) {
-//                 logger.error(
-//                   `Failed to scrape ${scraper.getSource()} ${scraper.getType()}: ${error instanceof Error ? error.message : String(error)}`,
-//                 );
-//               }
-//             });
-//           },
-//         );
-//         state.scrapeJobs.push(job);
-//       }
-//     }
-//   }
-// }
 
 /**
  * Gracefully shut down all services
