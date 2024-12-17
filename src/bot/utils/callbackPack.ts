@@ -304,3 +304,9 @@ export function unpackData<T extends z.ZodObject<z.ZodRawShape>>(
 
   return schema.parse(data);
 }
+
+export function unpackFirstField(packed: string) {
+  const regex = /(?<!\\):/;
+  const values = packed.split(regex);
+  return values[0];
+}

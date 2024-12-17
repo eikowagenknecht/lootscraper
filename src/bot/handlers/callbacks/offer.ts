@@ -1,20 +1,22 @@
+import { unpackData } from "@/bot/utils/callbackPack";
 import { getOffer } from "@/services/database/offerRepository";
 import { getTelegramChatById } from "@/services/database/telegramChatRepository";
 import { logger } from "@/utils/logger";
-// src/bot/handlers/callbacks/offer.ts
 import type { Context, Filter } from "grammy";
-import type { OfferCallbackData } from "../../types/callbacks";
+import { offerSchema } from "../../types/callbacks";
 import { formatOfferMessage } from "../../utils/formatters";
 import { createOfferKeyboard } from "../../utils/keyboards";
 
 export async function handleOfferDetailsCallback(
   ctx: Filter<Context, "callback_query:data">,
-  data: OfferCallbackData,
+  data: string,
 ): Promise<void> {
   if (!ctx.chat?.id) {
     logger.error("No chat ID in offer details callback");
     return;
   }
+
+  const unpackedData = unpackData(data, offerSchema);
 
   const dbChat = await getTelegramChatById(ctx.chat.id);
   if (!dbChat) {
@@ -25,7 +27,7 @@ export async function handleOfferDetailsCallback(
     return;
   }
 
-  const offer = await getOffer(data.offerId);
+  const offer = await getOffer(unpackedData.offerId);
   if (!offer) {
     await ctx.answerCallbackQuery({
       text: "Error: Offer not found",
@@ -34,7 +36,7 @@ export async function handleOfferDetailsCallback(
     return;
   }
 
-  if (data.command === "show") {
+  if (unpackedData.command === "show") {
     await ctx.editMessageText(
       formatOfferMessage(offer, {
         tzOffset: dbChat.timezone_offset,

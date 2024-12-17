@@ -55,11 +55,10 @@ But I'd be happy to see you register any time with the /start command!`);
   // Build timezone text
   const timezoneText = dbChat.timezone_offset
     ? escapeText(
-        `- Your timezone is set to ${dbChat.timezone_offset.toString()} hours. \
-You can change that with the /timezone command if you wish.`,
+        `- Your timezone is set to UTC${dbChat.timezone_offset >= 0 ? "+" : "-"}${dbChat.timezone_offset.toFixed()}:00. You can change that with the /timezone command if you wish.\n`,
       )
     : escapeText(
-        "- Your timezone is not set, so UTC is used. You can change that with the /timezone command if you wish.",
+        "- Your timezone is not set, so UTC is used. You can change that with the /timezone command if you wish.\n",
       );
 
   const registrationDate = DateTime.fromISO(dbChat.registration_date).toFormat(
@@ -68,22 +67,14 @@ You can change that with the /timezone command if you wish.`,
 
   const message =
     escapeText(
-      `Hi ${getCallerName(ctx)}, you are currently registered. \
-But I'm not storing much user data, so this is all I know about you:
-
-`,
+      `Hi ${getCallerName(ctx)}, you are currently registered. But I'm not storing much user data, so this is all I know about you:\n\n`,
     ) +
-    escapeText(`- You registered on ${registrationDate} with the /start command.
-`) +
+    escapeText(`- You registered on ${registrationDate}.\n`) +
+    escapeText(`- Your Telegram chat id is ${dbChat.chat_id.toString()}.\n`) +
     escapeText(
-      `- Your Telegram chat id is ${dbChat.chat_id.toString()}. Neat, huh? I use it to send you notifications.
-`,
+      `- You received ${dbChat.offers_received_count.toString()} offers so far.\n`,
     ) +
-    subscriptionsTextMd +
-    escapeText(
-      `- You received ${dbChat.offers_received_count.toString()} offers so far.
-`,
-    ) +
-    timezoneText;
+    timezoneText +
+    subscriptionsTextMd;
   await ctx.reply(message, { parse_mode: "MarkdownV2" });
 }

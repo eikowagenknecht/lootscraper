@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, test } from "vitest";
 import { z } from "zod";
 import { packData, unpackData } from "./callbackPack";
 
@@ -11,7 +11,7 @@ describe("Callback Pack", () => {
       undefinedField: z.undefined(),
     });
 
-    it("should handle basic types correctly", () => {
+    test("should handle basic types correctly", () => {
       const data = {
         str: "hello",
         num: 123,
@@ -25,7 +25,7 @@ describe("Callback Pack", () => {
       expect(unpacked).toEqual(data);
     });
 
-    it("should handle various number formats", () => {
+    test("should handle various number formats", () => {
       const NumberSchema = z.object({
         integer: z.number(),
         decimal: z.number(),
@@ -53,7 +53,7 @@ describe("Callback Pack", () => {
       expect(typeof unpacked.zero).toBe("number");
     });
 
-    it("should handle floating point numbers", () => {
+    test("should handle floating point numbers", () => {
       const data = {
         str: "test",
         num: 123.456,
@@ -67,7 +67,7 @@ describe("Callback Pack", () => {
       expect(unpacked).toEqual(data);
     });
 
-    it("should handle negative numbers", () => {
+    test("should handle negative numbers", () => {
       const data = {
         str: "test",
         num: -123.456,
@@ -87,7 +87,7 @@ describe("Callback Pack", () => {
       value: z.string(),
     });
 
-    it("should escape colons in strings", () => {
+    test("should escape colons in strings", () => {
       const data = { value: "hello:world" };
       const packed = packData(data, EscapeSchema);
 
@@ -97,7 +97,7 @@ describe("Callback Pack", () => {
       expect(unpacked).toEqual(data);
     });
 
-    it("should escape backslashes", () => {
+    test("should escape backslashes", () => {
       const data = { value: "hello\\world" };
       const packed = packData(data, EscapeSchema);
 
@@ -107,7 +107,7 @@ describe("Callback Pack", () => {
       expect(unpacked).toEqual(data);
     });
 
-    it("should escape the word 'null' when it appears as a string", () => {
+    test("should escape the word 'null' when it appears as a string", () => {
       const data = { value: "null" };
       const packed = packData(data, EscapeSchema);
 
@@ -117,7 +117,7 @@ describe("Callback Pack", () => {
       expect(unpacked).toEqual(data);
     });
 
-    it("should escape the word 'true' when it appears as a string", () => {
+    test("should escape the word 'true' when it appears as a string", () => {
       const data = { value: "true" };
       const packed = packData(data, EscapeSchema);
 
@@ -127,7 +127,7 @@ describe("Callback Pack", () => {
       expect(unpacked).toEqual(data);
     });
 
-    it("should escape the word 'false' when it appears as a string", () => {
+    test("should escape the word 'false' when it appears as a string", () => {
       const data = { value: "false" };
       const packed = packData(data, EscapeSchema);
 
@@ -137,7 +137,7 @@ describe("Callback Pack", () => {
       expect(unpacked).toEqual(data);
     });
 
-    it("should escape the word 'undef' when it appears as a string", () => {
+    test("should escape the word 'undef' when it appears as a string", () => {
       const data = { value: "undef" };
       const packed = packData(data, EscapeSchema);
 
@@ -147,7 +147,7 @@ describe("Callback Pack", () => {
       expect(unpacked).toEqual(data);
     });
 
-    it("should handle multiple escapes in the same string", () => {
+    test("should handle multiple escapes in the same string", () => {
       const data = { value: "hello:world\\with:many:special\\chars" };
       const packed = packData(data, EscapeSchema);
       const unpacked = unpackData(packed, EscapeSchema);
@@ -166,7 +166,7 @@ describe("Callback Pack", () => {
       enumValue: z.nativeEnum(TestEnum),
     });
 
-    it("should handle enum values", () => {
+    test("should handle enum values", () => {
       const data = { enumValue: TestEnum.One };
       const packed = packData(data, EnumSchema);
       const unpacked = unpackData(packed, EnumSchema);
@@ -174,7 +174,7 @@ describe("Callback Pack", () => {
       expect(unpacked).toEqual(data);
     });
 
-    it("should handle all enum values", () => {
+    test("should handle all enum values", () => {
       for (const enumValue of Object.values(TestEnum)) {
         const data = { enumValue };
         const packed = packData(data, EnumSchema);
@@ -193,7 +193,7 @@ describe("Callback Pack", () => {
       str: z.string(),
     });
 
-    it("should handle basic boolean values", () => {
+    test("should handle basic boolean values", () => {
       const data = {
         flag: true,
         nullableFlag: false,
@@ -210,7 +210,7 @@ describe("Callback Pack", () => {
       expect(typeof unpacked.optionalFlag).toBe("boolean");
     });
 
-    it("should handle nullable and optional boolean values", () => {
+    test("should handle nullable and optional boolean values", () => {
       const data = {
         flag: false,
         nullableFlag: null,
@@ -224,7 +224,7 @@ describe("Callback Pack", () => {
       expect(unpacked).toEqual(data);
     });
 
-    it("should escape the words 'true' and 'false' when they appear as strings", () => {
+    test("should escape the words 'true' and 'false' when they appear as strings", () => {
       const StringSchema = z.object({
         value: z.string(),
       });
@@ -243,7 +243,7 @@ describe("Callback Pack", () => {
       }
     });
 
-    it("should throw on invalid boolean values", () => {
+    test("should throw on invalid boolean values", () => {
       const packed = "invalid:null:undef:test";
       expect(() => unpackData(packed, BooleanSchema)).toThrow(
         /Invalid boolean/,
@@ -258,7 +258,7 @@ describe("Callback Pack", () => {
       status: z.enum(["active", "inactive"]),
     });
 
-    it("should validate data during packing", () => {
+    test("should validate data during packing", () => {
       const invalidData = {
         id: -1,
         email: "not-an-email",
@@ -274,7 +274,7 @@ describe("Callback Pack", () => {
       ).toThrow();
     });
 
-    it("should validate data during unpacking", () => {
+    test("should validate data during unpacking", () => {
       // Create valid data first
       const validData = {
         id: 1,
@@ -292,7 +292,7 @@ describe("Callback Pack", () => {
       expect(() => unpackData(corruptedPacked, ValidationSchema)).toThrow();
     });
 
-    it("should allow valid data", () => {
+    test("should allow valid data", () => {
       const validData = {
         id: 1,
         email: "test@example.com",
@@ -312,7 +312,7 @@ describe("Callback Pack", () => {
       actualNumber: z.coerce.number(),
     });
 
-    it("should respect schema types without premature coercion", () => {
+    test("should respect schema types without premature coercion", () => {
       const data = {
         numberLike: "123", // Should stay a string
         actualNumber: 123, // Should be a number
@@ -334,7 +334,7 @@ describe("Callback Pack", () => {
         field2: z.string(),
       });
 
-      it("should handle empty strings", () => {
+      test("should handle empty strings", () => {
         const packed = ":";
         const unpacked = unpackData(packed, emptySchema);
         expect(unpacked).toEqual({
@@ -343,7 +343,7 @@ describe("Callback Pack", () => {
         });
       });
 
-      it("should preserve whitespace", () => {
+      test("should preserve whitespace", () => {
         const data = {
           field1: " ",
           field2: "  ",
@@ -355,7 +355,7 @@ describe("Callback Pack", () => {
         expect(unpacked).toEqual(data);
       });
 
-      it("should handle consecutive colons in input", () => {
+      test("should handle consecutive colons in input", () => {
         const data = {
           field1: ":",
           field2: "::",
@@ -376,7 +376,7 @@ describe("Callback Pack", () => {
         refinedNumber: z.number().min(0).max(100),
       });
 
-      it("should keep string numbers as strings when schema expects string", () => {
+      test("should keep string numbers as strings when schema expects string", () => {
         const data = {
           integer: 42,
           stringNumber: "123",
@@ -389,7 +389,7 @@ describe("Callback Pack", () => {
         expect(typeof unpacked.stringNumber).toBe("string");
       });
 
-      it("should validate refined numbers", () => {
+      test("should validate refined numbers", () => {
         const invalidData = {
           integer: 42,
           stringNumber: "123",
@@ -439,7 +439,7 @@ describe("Callback Pack", () => {
       ];
 
       for (const { input, expectedPacked } of testCases) {
-        it(`should correctly handle "${input}" through pack/unpack cycle`, () => {
+        test(`should correctly handle "${input}" through pack/unpack cycle`, () => {
           // Test packing
           const packed = packData({ value: input }, EscapeSchema);
           console.log("packed", packed);
@@ -463,7 +463,7 @@ describe("Callback Pack", () => {
         email: z.string().email(),
       });
 
-      it("should handle extended schemas", () => {
+      test("should handle extended schemas", () => {
         const data = {
           id: 1,
           name: "Test",
@@ -482,12 +482,12 @@ describe("Callback Pack", () => {
         str: z.string(),
       });
 
-      it("should throw descriptive error for invalid number fields", () => {
+      test("should throw descriptive error for invalid number fields", () => {
         const packed = "not-a-number:test";
         expect(() => unpackData(packed, ErrorSchema)).toThrow(/Invalid number/);
       });
 
-      it("should preserve original error messages from Zod", () => {
+      test("should preserve original error messages from Zod", () => {
         const ValidationSchema = z.object({
           email: z.string().email(),
           age: z.number().min(18),
@@ -510,7 +510,7 @@ describe("Callback Pack", () => {
         str: z.string(),
       });
 
-      it("should handle numeric edge cases", () => {
+      test("should handle numeric edge cases", () => {
         const testCases = [
           { num: Number.MAX_SAFE_INTEGER, str: "max" },
           { num: Number.MIN_SAFE_INTEGER, str: "min" },
@@ -525,7 +525,7 @@ describe("Callback Pack", () => {
         }
       });
 
-      it("should reject invalid numeric values", () => {
+      test("should reject invalid numeric values", () => {
         const invalidValues = ["NaN", "Infinity", "-Infinity"];
 
         for (const invalid of invalidValues) {
@@ -542,12 +542,12 @@ describe("Callback Pack", () => {
       field2: z.number(),
     });
 
-    it("should throw on incorrect number of fields", () => {
+    test("should throw on incorrect number of fields", () => {
       const packed = "value1:123:extra";
       expect(() => unpackData(packed, ErrorSchema)).toThrow();
     });
 
-    it("should throw on invalid field values", () => {
+    test("should throw on invalid field values", () => {
       const invalidData = {
         field1: "valid",
         field2: {} as number, // Type assertion to bypass TypeScript
@@ -556,7 +556,7 @@ describe("Callback Pack", () => {
       expect(() => packData(invalidData, ErrorSchema)).toThrow();
     });
 
-    it("should throw on missing fields", () => {
+    test("should throw on missing fields", () => {
       const packed = "value1";
       expect(() => unpackData(packed, ErrorSchema)).toThrow();
     });
@@ -570,7 +570,7 @@ describe("Callback Pack", () => {
       nullableOptional: z.string().nullable().optional(),
     });
 
-    it("should handle optional fields", () => {
+    test("should handle optional fields", () => {
       const data = {
         required: "value",
         optional: undefined,
@@ -584,7 +584,7 @@ describe("Callback Pack", () => {
       expect(unpacked).toEqual(data);
     });
 
-    it("should handle all combinations of optional and nullable", () => {
+    test("should handle all combinations of optional and nullable", () => {
       const testCases = [
         {
           required: "value",
@@ -620,7 +620,7 @@ describe("Callback Pack", () => {
       id: z.string(),
     });
 
-    it("should round-trip complex data correctly", () => {
+    test("should round-trip complex data correctly", () => {
       const testCases = [
         {
           name: "John:Doe:\\Test",

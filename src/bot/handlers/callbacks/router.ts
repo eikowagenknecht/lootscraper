@@ -1,6 +1,6 @@
+import { unpackFirstField } from "@/bot/utils/callbackPack";
 import { logger } from "@/utils/logger";
 import type { Context, Filter } from "grammy";
-import type { CallbackData } from "../../types/callbacks";
 import { handleCloseCallback } from "./close";
 import { handleDismissCallback, handleOfferDetailsCallback } from "./offer";
 import { handleTimezoneCallback } from "./timezone";
@@ -14,9 +14,12 @@ export async function handleCallback(
     return;
   }
 
-  let data: CallbackData;
+  let action: string;
+
+  const data = ctx.callbackQuery.data;
+
   try {
-    data = JSON.parse(ctx.callbackQuery.data) as CallbackData;
+    action = unpackFirstField(ctx.callbackQuery.data);
   } catch (error) {
     logger.error(
       `Invalid callback data: ${error instanceof Error ? error.message : String(error)}`,
@@ -25,7 +28,7 @@ export async function handleCallback(
   }
 
   try {
-    switch (data.action) {
+    switch (action) {
       case "toggle":
         await handleToggleCallback(ctx, data);
         break;
@@ -42,9 +45,7 @@ export async function handleCallback(
         await handleDismissCallback(ctx);
         break;
       default:
-        logger.error(
-          `Unknown callback action: ${(data as { action: string }).action}`,
-        );
+        logger.error(`Unknown callback action: ${action}}`);
         await ctx.answerCallbackQuery({
           text: "Unknown callback action",
           show_alert: true,

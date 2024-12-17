@@ -1,18 +1,21 @@
+import { unpackData } from "@/bot/utils/callbackPack";
 import { logger } from "@/utils/logger";
 import type { Context, Filter } from "grammy";
-import type { CloseCallbackData } from "../../types/callbacks";
+import { closeSchema } from "../../types/callbacks";
 
 export async function handleCloseCallback(
   ctx: Filter<Context, "callback_query:data">,
-  data: CloseCallbackData,
+  data: string,
 ): Promise<void> {
   if (!ctx.chat?.id) {
     logger.error("No chat ID in close callback");
     return;
   }
 
+  const unpackedData = unpackData(data, closeSchema);
+
   let message: string;
-  if (data.menu === "timezone") {
+  if (unpackedData.menu === "timezone") {
     message =
       "Thank you for choosing your timezone. " +
       "If you live in a place with daylight saving time, please remember to do this " +

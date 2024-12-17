@@ -1,9 +1,12 @@
+import { packData } from "@/bot/utils/callbackPack";
 import { hasTelegramSubscription } from "@/services/database/telegramSubscriptionRepository";
 import { OfferDuration, OfferSource, OfferType } from "@/types/config";
-import type { CommandContext } from "grammy";
-import type { InlineKeyboardButton } from "grammy/types";
+import { type CommandContext, InlineKeyboard } from "grammy";
 import { getDbChat, logCall, userCanControlBot } from ".";
-import type { ToggleSubscriptionCallbackData } from "../../types/callbacks";
+import {
+  type ToggleSubscriptionCallbackData,
+  toggleSubscriptionSchema,
+} from "../../types/callbacks";
 import type { BotContext } from "../../types/middleware";
 
 export async function handleManageCommand(
@@ -32,7 +35,7 @@ export async function handleManageCommand(
 }
 
 export async function buildManageKeyboard(chatId: number) {
-  const keyboard: InlineKeyboardButton[][] = [];
+  const inlineKeyboard = new InlineKeyboard();
 
   // Add subscription toggle buttons for each source/type/duration combination
   const combinations = getSourceTypeDurationCombinations();
@@ -53,27 +56,20 @@ export async function buildManageKeyboard(chatId: number) {
       duration,
     };
 
-    keyboard.push([
-      {
-        text: buttonText,
-        callback_data: JSON.stringify(callbackData),
-      },
-    ]);
+    const packedData = packData(callbackData, toggleSubscriptionSchema);
+
+    inlineKeyboard.row().text(buttonText, packedData);
   }
 
-  // Add close button
-  keyboard.push([
-    {
-      text: "Close",
-      callback_data: JSON.stringify({ action: "close", menu: "manage" }),
-    },
-  ]);
+  inlineKeyboard
+    .row()
+    .text("Close", JSON.stringify({ action: "close", menu: "manage" }));
 
-  return { inline_keyboard: keyboard };
+  return inlineKeyboard;
 }
 
 function getSourceTypeDurationCombinations() {
-  // TODO: Once we have the scrapers implemented, get this from the scrapers
+  // TODO: Find a way to get these from the scrapers
   // For now, return default combinations
   return [
     {
