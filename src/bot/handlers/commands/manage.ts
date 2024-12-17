@@ -2,11 +2,9 @@ import { packData } from "@/bot/utils/callbackPack";
 import { hasTelegramSubscription } from "@/services/database/telegramSubscriptionRepository";
 import { OfferDuration, OfferSource, OfferType } from "@/types/config";
 import { type CommandContext, InlineKeyboard } from "grammy";
+import type { z } from "zod";
 import { getDbChat, logCall, userCanControlBot } from ".";
-import {
-  type ToggleSubscriptionCallbackData,
-  toggleSubscriptionSchema,
-} from "../../types/callbacks";
+import { toggleSubscriptionSchema } from "../../types/callbacks";
 import type { BotContext } from "../../types/middleware";
 
 export async function handleManageCommand(
@@ -49,7 +47,7 @@ export async function buildManageKeyboard(chatId: number) {
     );
     const buttonText = getButtonText(source, type, duration, isSubscribed);
 
-    const callbackData: ToggleSubscriptionCallbackData = {
+    const callbackData: z.infer<typeof toggleSubscriptionSchema> = {
       action: "toggle",
       source,
       type,

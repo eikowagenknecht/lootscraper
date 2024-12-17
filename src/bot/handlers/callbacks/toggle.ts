@@ -1,8 +1,5 @@
 import type { Context, Filter } from "grammy";
-import {
-  type ToggleSubscriptionCallbackData,
-  toggleSubscriptionSchema,
-} from "../../types/callbacks";
+import { toggleSubscriptionSchema } from "../../types/callbacks";
 
 import { unpackData } from "@/bot/utils/callbackPack";
 import {
@@ -11,6 +8,7 @@ import {
   removeTelegramSubscription,
 } from "@/services/database/telegramSubscriptionRepository";
 import { logger } from "@/utils/logger";
+import type { z } from "zod";
 import { buildManageKeyboard } from "../commands/manage";
 
 export async function handleToggleCallback(
@@ -22,7 +20,7 @@ export async function handleToggleCallback(
     return;
   }
 
-  const unpackedData: ToggleSubscriptionCallbackData = unpackData(
+  const unpackedData: z.infer<typeof toggleSubscriptionSchema> = unpackData(
     data,
     toggleSubscriptionSchema,
   );

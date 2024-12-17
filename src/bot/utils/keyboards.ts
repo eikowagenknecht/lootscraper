@@ -1,4 +1,3 @@
-// src/bot/utils/keyboards.ts
 import type { Offer } from "@/types/database";
 import type { InlineKeyboardButton, InlineKeyboardMarkup } from "grammy/types";
 import { BUTTON_TEXT } from "../types/constants";

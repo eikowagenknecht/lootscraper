@@ -330,4 +330,4 @@ class AtomFeed {
   }
 }
 
-export { AtomFeed, AtomEntry, type AtomFeedOptions, type AtomEntryOptions };
+export { AtomFeed };
