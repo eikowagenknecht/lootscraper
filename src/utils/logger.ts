@@ -52,6 +52,7 @@ function createConsoleFormat() {
 }
 
 function createLoggerInstance() {
+  console.log("Initializing logger...");
   const logger = createLogger({});
 
   // Always add console transport with environment-aware configuration
