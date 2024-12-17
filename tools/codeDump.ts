@@ -199,6 +199,7 @@ const combiners = [
   new SourceCombiner({
     outputPath: "out/src_services.txt",
     inputFiles: [
+      "src/services/orchestrator.ts",
       "src/services/announcement.ts",
       "src/services/browser.ts",
       "src/services/config.test.ts",
