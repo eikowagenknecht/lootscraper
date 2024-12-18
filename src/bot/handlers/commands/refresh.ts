@@ -78,7 +78,7 @@ async function sendOffer(
       ctx.chat.type === "supergroup" ||
       ctx.chat.type === "channel";
 
-    const message = formatOfferMessage(offer, {
+    const message = await formatOfferMessage(offer, {
       tzOffset: timezoneOffset,
       includeDetails: isGroup,
     });
