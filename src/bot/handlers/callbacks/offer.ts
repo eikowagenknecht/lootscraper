@@ -81,9 +81,7 @@ export async function handleDismissCallback(
   } catch {
     // Message probably too old to delete (>48h)
     try {
-      await ctx.editMessageText(
-        "Dismissed (can't delete messages older than 48h).",
-      );
+      await ctx.editMessageText("Dismissed (can't delete old messages).");
       await ctx.answerCallbackQuery();
     } catch {
       // Message probably already edited (double click)
