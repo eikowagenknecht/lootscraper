@@ -16,7 +16,7 @@ export class GoogleGamesScraper extends BaseScraper {
   override getSchedule(): CronConfig[] {
     // Run once a day only to avoid being blocked
     return [
-      { schedule: "0 5 12 * * *" }, // 12:05 UTC Daily
+      { schedule: "0 0 12 * * *" }, // 12:00 UTC Daily
     ];
   }
 

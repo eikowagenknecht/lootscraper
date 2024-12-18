@@ -2,7 +2,11 @@ import { OfferDuration, OfferSource } from "@/types/config";
 import { BrowserError } from "@/types/errors";
 import { DateTime } from "luxon";
 import type { Locator, Page } from "playwright";
-import { BaseScraper, type RawOffer } from "../../base/scraper";
+import {
+  BaseScraper,
+  type CronConfig,
+  type RawOffer,
+} from "../../base/scraper";
 
 const BASE_URL = "https://gaming.amazon.com";
 const OFFER_URL = `${BASE_URL}/home`;
@@ -14,6 +18,12 @@ export interface AmazonRawOffer extends RawOffer {
 export abstract class AmazonBaseScraper<
   T extends AmazonRawOffer = AmazonRawOffer,
 > extends BaseScraper<T> {
+  override getSchedule(): CronConfig[] {
+    return [
+      { schedule: "0 0 * * * *" }, // Every hour
+    ];
+  }
+
   getSource(): OfferSource {
     return OfferSource.AMAZON;
   }

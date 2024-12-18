@@ -25,7 +25,7 @@ interface HumbleRawOffer extends RawOffer {
 export class HumbleGamesScraper extends BaseScraper<HumbleRawOffer> {
   override getSchedule(): CronConfig[] {
     return [
-      { schedule: "0 10 */3 * * *" }, // Every 3 hours
+      { schedule: "0 0 */3 * * *" }, // Every 3 hours
     ];
   }
 
