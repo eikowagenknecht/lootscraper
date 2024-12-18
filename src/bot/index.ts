@@ -94,10 +94,10 @@ export class TelegramBot {
             await ctx.reply(
               `Hmm... I don't know that command. Did you mean ${ctx.commandSuggestion}?`,
             );
-          } else {
-            // Nothing seems to come close to what the user typed
-            await ctx.reply("Oops... I don't know that command :/");
+            return;
           }
+          // Nothing seems to come close to what the user typed
+          await ctx.reply("Oops... I don't know that command :/");
         });
 
       // Callback queries
