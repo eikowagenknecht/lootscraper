@@ -1,10 +1,12 @@
+import type { BotContext } from "@/bot/types/middleware";
 import { unpackData } from "@/bot/utils/callbackPack";
 import { logger } from "@/utils/logger";
-import type { Context, Filter } from "grammy";
+import type { Filter } from "grammy";
 import { closeSchema } from "../../types/callbacks";
+import { refreshOffersForChat } from "../commands/refresh";
 
 export async function handleCloseCallback(
-  ctx: Filter<Context, "callback_query:data">,
+  ctx: Filter<BotContext, "callback_query:data">,
   data: string,
 ): Promise<void> {
   if (!ctx.chat?.id) {
@@ -20,13 +22,16 @@ export async function handleCloseCallback(
       "Thank you for choosing your timezone. " +
       "If you live in a place with daylight saving time, please remember to do this " +
       "again at the appropriate time of year.";
-  } else {
-    message =
-      "Thank you for managing your subscriptions. " +
-      "Forgot something? " +
-      "You can continue any time with /manage.";
+    await ctx.editMessageText(message);
+    await ctx.answerCallbackQuery();
+    return;
   }
 
+  // If the menu is not timezone, it must be manage
+  message =
+    "Thank you for managing your subscriptions. " +
+    "Forgot something? " +
+    "You can continue any time with /manage.";
   await ctx.editMessageText(message);
-  await ctx.answerCallbackQuery();
+  await refreshOffersForChat(ctx);
 }
