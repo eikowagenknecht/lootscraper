@@ -1,6 +1,11 @@
 import { packData } from "@/bot/utils/callbackPack";
+import { getEnabledScraperCombinations } from "@/scrapers";
 import { hasTelegramSubscription } from "@/services/database/telegramSubscriptionRepository";
-import { OfferDuration, OfferSource, OfferType } from "@/types/config";
+import {
+  OfferDuration,
+  type OfferSource,
+  type OfferType,
+} from "@/types/config";
 import { type CommandContext, InlineKeyboard } from "grammy";
 import type { z } from "zod";
 import { getDbChat, logCall, userCanControlBot } from ".";
@@ -36,7 +41,7 @@ export async function buildManageKeyboard(chatId: number) {
   const inlineKeyboard = new InlineKeyboard();
 
   // Add subscription toggle buttons for each source/type/duration combination
-  const combinations = getSourceTypeDurationCombinations();
+  const combinations = getEnabledScraperCombinations();
 
   for (const { source, type, duration } of combinations) {
     const isSubscribed = await hasTelegramSubscription(
@@ -64,29 +69,6 @@ export async function buildManageKeyboard(chatId: number) {
     .text("Close", JSON.stringify({ action: "close", menu: "manage" }));
 
   return inlineKeyboard;
-}
-
-function getSourceTypeDurationCombinations() {
-  // TODO: Find a way to get these from the scrapers
-  // For now, return default combinations
-  return [
-    {
-      source: OfferSource.STEAM,
-      type: OfferType.GAME,
-      duration: OfferDuration.CLAIMABLE,
-    },
-    {
-      source: OfferSource.EPIC,
-      type: OfferType.GAME,
-      duration: OfferDuration.CLAIMABLE,
-    },
-    {
-      source: OfferSource.GOG,
-      type: OfferType.GAME,
-      duration: OfferDuration.CLAIMABLE,
-    },
-    // Add more combinations as needed
-  ];
 }
 
 function getButtonText(
