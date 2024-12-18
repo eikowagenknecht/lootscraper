@@ -21,13 +21,13 @@ export async function getTelegramChatById(
   threadId?: number | null,
 ): Promise<TelegramChat | undefined> {
   try {
-    const query = getDb()
+    let query = getDb()
       .selectFrom("telegram_chats")
       .selectAll()
       .where("chat_id", "=", chatId);
 
     if (threadId !== undefined) {
-      query.where("thread_id", "=", threadId);
+      query = query.where("thread_id", "=", threadId);
     }
 
     return await query.executeTakeFirst();

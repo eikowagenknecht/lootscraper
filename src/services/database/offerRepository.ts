@@ -189,7 +189,7 @@ export async function getNewOffers(
   lastOfferId: number,
 ): Promise<Offer[]> {
   try {
-    const query = getDb()
+    let query = getDb()
       .selectFrom("offers")
       .selectAll()
       .where("id", ">", lastOfferId)
@@ -199,7 +199,10 @@ export async function getNewOffers(
 
     // For non-ALWAYS offers, check if they're still valid
     if (duration !== OfferDuration.ALWAYS) {
-      query.where((eb) =>
+      logger.debug(
+        `Filtering for offers that are still valid on ${DateTime.fromJSDate(now).toISO() ?? ""}`,
+      );
+      query = query.where((eb) =>
         eb.or([
           eb("valid_to", "is", null),
           eb("valid_to", ">", DateTime.fromJSDate(now).toISO()),
@@ -207,7 +210,9 @@ export async function getNewOffers(
       );
     }
 
-    return await query.orderBy("id", "asc").execute();
+    query = query.orderBy("id", "asc");
+
+    return await query.execute();
   } catch (error) {
     handleError("get new offers", error);
     return [];
