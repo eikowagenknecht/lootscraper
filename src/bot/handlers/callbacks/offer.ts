@@ -1,14 +1,15 @@
+import type { BotContext } from "@/bot/types/middleware";
 import { unpackData } from "@/bot/utils/callbackPack";
 import { getOffer } from "@/services/database/offerRepository";
 import { getTelegramChatById } from "@/services/database/telegramChatRepository";
 import { logger } from "@/utils/logger";
-import type { Context, Filter } from "grammy";
+import type { Filter } from "grammy";
 import { offerSchema } from "../../types/callbacks";
 import { formatOfferMessage } from "../../utils/formatters";
 import { createOfferKeyboard } from "../../utils/keyboards";
 
 export async function handleOfferDetailsCallback(
-  ctx: Filter<Context, "callback_query:data">,
+  ctx: Filter<BotContext, "callback_query:data">,
   data: string,
 ): Promise<void> {
   if (!ctx.chat?.id) {
@@ -72,7 +73,7 @@ export async function handleOfferDetailsCallback(
 }
 
 export async function handleDismissCallback(
-  ctx: Filter<Context, "callback_query:data">,
+  ctx: Filter<BotContext, "callback_query:data">,
 ): Promise<void> {
   try {
     // Try to delete the message first

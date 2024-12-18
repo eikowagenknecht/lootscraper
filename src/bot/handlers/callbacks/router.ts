@@ -1,13 +1,14 @@
+import type { BotContext } from "@/bot/types/middleware";
 import { unpackFirstField } from "@/bot/utils/callbackPack";
 import { logger } from "@/utils/logger";
-import type { Context, Filter } from "grammy";
+import type { Filter } from "grammy";
 import { handleCloseCallback } from "./close";
 import { handleDismissCallback, handleOfferDetailsCallback } from "./offer";
 import { handleTimezoneCallback } from "./timezone";
 import { handleToggleCallback } from "./toggle";
 
 export async function handleCallback(
-  ctx: Filter<Context, "callback_query:data">,
+  ctx: Filter<BotContext, "callback_query:data">,
 ): Promise<void> {
   if (!ctx.callbackQuery.data) {
     logger.error("No callback data");
