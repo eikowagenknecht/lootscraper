@@ -93,7 +93,7 @@ export class GoogleGamesScraper extends BaseScraper {
     }
   }
 
-  private normalizeOffer(rawOffer: RawOffer): NewOffer {
+  private normalizeOffer(rawOffer: RawOffer): Omit<NewOffer, "category"> {
     return {
       source: this.getSource(),
       duration: this.getDuration(),
@@ -108,7 +108,6 @@ export class GoogleGamesScraper extends BaseScraper {
       }),
       url: rawOffer.url ?? null,
       img_url: rawOffer.imgUrl ?? null,
-      category: "", // Will be set by categorization
     };
   }
 }

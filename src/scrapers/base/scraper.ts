@@ -36,7 +36,7 @@ export interface RawOffer {
 export interface OfferHandler<T extends RawOffer> {
   locator: Locator;
   readOffer: (element: Locator) => Promise<T | null>;
-  normalizeOffer: (rawOffer: T) => NewOffer;
+  normalizeOffer: (rawOffer: T) => Omit<NewOffer, "category">;
 }
 
 export abstract class BaseScraper<T extends RawOffer = RawOffer> {
@@ -107,8 +107,8 @@ export abstract class BaseScraper<T extends RawOffer = RawOffer> {
     }
   }
 
-  protected async readOffers(): Promise<NewOffer[]> {
-    const offers: NewOffer[] = [];
+  protected async readOffers(): Promise<Omit<NewOffer, "category">[]> {
+    const offers: Omit<NewOffer, "category">[] = [];
     let page: Page | null = null;
 
     try {
@@ -161,7 +161,9 @@ export abstract class BaseScraper<T extends RawOffer = RawOffer> {
   }
 
   // Utility methods for offer processing
-  protected cleanOffers(offers: NewOffer[]): NewOffer[] {
+  protected cleanOffers(
+    offers: Omit<NewOffer, "category">[],
+  ): Omit<NewOffer, "category">[] {
     return offers.map((offer) => {
       const cleaned = { ...offer };
 
@@ -177,7 +179,9 @@ export abstract class BaseScraper<T extends RawOffer = RawOffer> {
     });
   }
 
-  protected deduplicateOffers(offers: NewOffer[]): NewOffer[] {
+  protected deduplicateOffers(
+    offers: Omit<NewOffer, "category">[],
+  ): Omit<NewOffer, "category">[] {
     const titles = new Set<string>();
     return offers.filter((offer) => {
       if (titles.has(offer.title)) {
@@ -189,9 +193,9 @@ export abstract class BaseScraper<T extends RawOffer = RawOffer> {
     });
   }
 
-  protected categorizeOffers(offers: NewOffer[]): NewOffer[] {
+  protected categorizeOffers(offers: Omit<NewOffer, "category">[]): NewOffer[] {
     return offers.map((offer) => {
-      const categorized = { ...offer };
+      const categorized: NewOffer = { ...offer, category: Category.VALID };
 
       if (this.isDemo(offer.title)) {
         categorized.category = Category.DEMO;
@@ -210,7 +214,7 @@ export abstract class BaseScraper<T extends RawOffer = RawOffer> {
 
   protected filterForValidOffers(offers: NewOffer[]): NewOffer[] {
     return offers.filter(
-      (offer) => !offer.category || offer.category === "VALID",
+      (offer) => !offer.category || offer.category === Category.VALID.valueOf(),
     );
   }
 

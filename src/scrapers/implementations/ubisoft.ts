@@ -111,7 +111,9 @@ export class UbisoftGamesScraper extends BaseScraper<UbisoftRawOffer> {
     }
   }
 
-  private normalizeOffer(rawOffer: UbisoftRawOffer): NewOffer {
+  private normalizeOffer(
+    rawOffer: UbisoftRawOffer,
+  ): Omit<NewOffer, "category"> {
     const rawtext = {
       title: rawOffer.title,
       enddate: rawOffer.validTo,
@@ -164,7 +166,6 @@ export class UbisoftGamesScraper extends BaseScraper<UbisoftRawOffer> {
       rawtext: JSON.stringify(rawtext),
       url: rawOffer.url ?? null,
       img_url: rawOffer.imgUrl ?? null,
-      category: "", // Will be set by categorization
     };
   }
 }

@@ -54,7 +54,9 @@ export class AmazonLootScraper extends AmazonBaseScraper<AmazonLootRawOffer> {
     }
   }
 
-  private normalizeOffer(rawOffer: AmazonLootRawOffer): NewOffer {
+  private normalizeOffer(
+    rawOffer: AmazonLootRawOffer,
+  ): Omit<NewOffer, "category"> {
     const rawtext = {
       title: rawOffer.title,
       gametitle: rawOffer.gameTitle,
@@ -78,7 +80,6 @@ export class AmazonLootScraper extends AmazonBaseScraper<AmazonLootRawOffer> {
       rawtext: JSON.stringify(rawtext),
       url: rawOffer.url ?? null,
       img_url: rawOffer.imgUrl ?? null,
-      category: "", // Will be set by categorization
     };
   }
 }
