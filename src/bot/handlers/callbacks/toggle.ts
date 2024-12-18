@@ -9,6 +9,7 @@ import {
 } from "@/services/database/telegramSubscriptionRepository";
 import { logger } from "@/utils/logger";
 import type { z } from "zod";
+import { getDbChat } from "../commands";
 import { buildManageKeyboard } from "../commands/manage";
 
 export async function handleToggleCallback(
@@ -26,19 +27,29 @@ export async function handleToggleCallback(
   );
 
   const { source, type, duration } = unpackedData;
+
+  const dbChat = await getDbChat(ctx);
+
+  if (!dbChat) {
+    await ctx.answerCallbackQuery({
+      text: "You are not registered. Please register with /start command.",
+    });
+    return;
+  }
+
   const isSubscribed = await hasTelegramSubscription(
-    ctx.chat.id,
+    dbChat.id,
     source,
     type,
     duration,
   );
 
   if (isSubscribed) {
-    await removeTelegramSubscription(ctx.chat.id, source, type, duration);
+    await removeTelegramSubscription(dbChat.id, source, type, duration);
     await ctx.answerCallbackQuery({ text: "You are now unsubscribed." });
   } else {
     await createTelegramSubscription({
-      chat_id: ctx.chat.id,
+      chat_id: dbChat.id,
       source: source,
       type: type,
       duration: duration,
@@ -49,6 +60,6 @@ export async function handleToggleCallback(
 
   // Update the keyboard
   await ctx.editMessageReplyMarkup({
-    reply_markup: await buildManageKeyboard(ctx.chat.id),
+    reply_markup: await buildManageKeyboard(dbChat.id),
   });
 }
