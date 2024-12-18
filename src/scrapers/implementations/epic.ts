@@ -61,7 +61,7 @@ export class EpicGamesScraper extends BaseScraper<EpicRawOffer> {
       {
         locator: page.locator('//span[text()="Free Now"]//ancestor::a'),
         readOffer: this.readRawOffer.bind(this),
-        normalizeOffer: (offer: RawOffer): NewOffer => {
+        normalizeOffer: (offer: RawOffer): Omit<NewOffer, "category"> => {
           // Type guard to ensure offer is EpicRawOffer
           if (!offer.validTo) {
             throw new Error("Invalid Epic offer: missing validTo");
@@ -110,7 +110,7 @@ export class EpicGamesScraper extends BaseScraper<EpicRawOffer> {
     }
   }
 
-  private normalizeOffer(rawOffer: EpicRawOffer): NewOffer {
+  private normalizeOffer(rawOffer: EpicRawOffer): Omit<NewOffer, "category"> {
     const rawtext = {
       title: rawOffer.title,
       enddate: rawOffer.validTo,
@@ -137,7 +137,6 @@ export class EpicGamesScraper extends BaseScraper<EpicRawOffer> {
       rawtext: JSON.stringify(rawtext),
       url: rawOffer.url ?? null,
       img_url: rawOffer.imgUrl ?? null,
-      category: "", // Will be set by categorization
     };
   }
 }

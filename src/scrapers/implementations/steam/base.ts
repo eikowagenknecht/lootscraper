@@ -5,6 +5,7 @@ import { DateTime } from "luxon";
 import type { Locator, Page } from "playwright";
 import {
   BaseScraper,
+  type CronConfig,
   type OfferHandler,
   type RawOffer,
 } from "../../base/scraper";
@@ -19,6 +20,12 @@ interface SteamRawOffer extends RawOffer {
 }
 
 export abstract class SteamBaseScraper extends BaseScraper<SteamRawOffer> {
+  override getSchedule(): CronConfig[] {
+    return [
+      { schedule: "0 */30 * * * *" }, // Every 30 minutes
+    ];
+  }
+
   getSource(): OfferSource {
     return OfferSource.STEAM;
   }
@@ -130,7 +137,9 @@ export abstract class SteamBaseScraper extends BaseScraper<SteamRawOffer> {
     }
   }
 
-  protected normalizeOffer(rawOffer: SteamRawOffer): NewOffer {
+  protected normalizeOffer(
+    rawOffer: SteamRawOffer,
+  ): Omit<NewOffer, "category"> {
     const rawtext = {
       title: rawOffer.title,
       appid: rawOffer.appid,
@@ -183,7 +192,6 @@ export abstract class SteamBaseScraper extends BaseScraper<SteamRawOffer> {
       rawtext: JSON.stringify(rawtext),
       url: rawOffer.url ?? null,
       img_url: rawOffer.imgUrl ?? null,
-      category: "", // Will be set by categorization
     };
   }
 }

@@ -98,7 +98,7 @@ export class ItchGamesScraper extends BaseScraper {
     }
   }
 
-  private normalizeOffer(rawOffer: RawOffer): NewOffer {
+  private normalizeOffer(rawOffer: RawOffer): Omit<NewOffer, "category"> {
     const rawtext = {
       title: rawOffer.title,
     };
@@ -115,7 +115,6 @@ export class ItchGamesScraper extends BaseScraper {
       rawtext: JSON.stringify(rawtext),
       url: rawOffer.url ?? null,
       img_url: rawOffer.imgUrl ?? null,
-      category: "", // Will be set by categorization
     };
   }
 }

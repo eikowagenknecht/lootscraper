@@ -70,7 +70,7 @@ export class GogGamesAlwaysFreeScraper extends GogBaseScraper {
     }
   }
 
-  private normalizeOffer(rawOffer: GogRawOffer): NewOffer {
+  private normalizeOffer(rawOffer: GogRawOffer): Omit<NewOffer, "category"> {
     return {
       source: this.getSource(),
       duration: this.getDuration(),
@@ -85,7 +85,6 @@ export class GogGamesAlwaysFreeScraper extends GogBaseScraper {
       }),
       url: rawOffer.url ?? null,
       img_url: rawOffer.imgUrl ?? null,
-      category: "", // Will be set by categorization
     };
   }
 }

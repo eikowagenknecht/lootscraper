@@ -166,7 +166,7 @@ export class GogGamesScraper extends GogBaseScraper {
     }
   }
 
-  private normalizeOffer(rawOffer: GogRawOffer): NewOffer {
+  private normalizeOffer(rawOffer: GogRawOffer): Omit<NewOffer, "category"> {
     const rawtext: Record<string, unknown> = {
       title: rawOffer.title,
     };
@@ -200,7 +200,6 @@ export class GogGamesScraper extends GogBaseScraper {
       rawtext: JSON.stringify(rawtext),
       url: rawOffer.url ?? OFFER_URL,
       img_url: rawOffer.imgUrl ?? null,
-      category: "", // Will be set by categorization
     };
   }
 }
