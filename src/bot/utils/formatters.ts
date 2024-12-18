@@ -1,8 +1,9 @@
 import { OfferDuration } from "@/types/config";
 import type { Offer } from "@/types/database";
-// src/bot/utils/formatters.ts
 import { DateTime } from "luxon";
 import { bold, escapeText, link } from "./markdown";
+
+const TIMESTAMP_READABLE_WITH_HOUR = "yyyy-MM-dd - HH:mm";
 
 interface FormatOfferMessageOptions {
   tzOffset?: number | null;
@@ -18,7 +19,9 @@ export function formatOfferMessage(
 
   // Basic offer info
   content += bold(
-    `${offer.title} - ${offer.source} (${offer.type}${offer.duration !== OfferDuration.CLAIMABLE ? `, ${offer.duration}` : ""})`,
+    escapeText(
+      `${offer.title} - ${offer.source} (${offer.type}${offer.duration !== OfferDuration.CLAIMABLE ? `, ${offer.duration}` : ""})`,
+    ),
   );
   content += escapeText(` [${offer.id.toFixed()}`);
 
@@ -41,19 +44,22 @@ export function formatOfferMessage(
     const validToFormatted = tzOffset
       ? validTo
           .setZone(`UTC${tzOffset >= 0 ? "+" : ""}${tzOffset.toFixed()}`)
-          .toFormat("MMMM d, yyyy HH:mm z")
-      : validTo.toUTC().toFormat("MMMM d, yyyy HH:mm 'UTC'");
+          .toFormat(`${TIMESTAMP_READABLE_WITH_HOUR} z`)
+      : validTo.toUTC().toFormat(`${TIMESTAMP_READABLE_WITH_HOUR} UTC`);
 
-    const now = DateTime.now().setZone("UTC");
-    const diff = validTo.diff(now);
+    const now = DateTime.now();
+    const diff = validTo.diff(now, ["days", "hours"]);
     const diffHuman = diff.toHuman({ maximumFractionDigits: 0 });
 
     if (now > validTo) {
-      content += `Offer expired ${escapeText(diffHuman)} ago`;
+      content += escapeText(
+        `Offer expired ${diffHuman} ago (${validToFormatted}).`,
+      );
     } else {
-      content += `Offer expires in ${escapeText(diffHuman)}`;
+      content += escapeText(
+        `Offer expires in ${diffHuman} (${validToFormatted}).`,
+      );
     }
-    content += escapeText(` (${validToFormatted}).`);
   } else if (offer.duration === OfferDuration.ALWAYS) {
     content += escapeText("Offer will stay free, no need to hurry.");
   } else {
@@ -66,10 +72,10 @@ export function formatOfferMessage(
 
   // Add offer details
   if (offer.category) {
-    content += `\n*Category:* ${escapeText(offer.category)}`;
+    content += `\n${bold("Category:")}${escapeText(offer.category)}`;
   }
 
-  content += `\n*Raw Info:* ${escapeText(JSON.stringify(offer.rawtext, null, 2))}`;
+  content += `\n${bold("Raw Info:")}${escapeText(JSON.stringify(offer.rawtext, null, 2))}`;
 
   return content;
 }
