@@ -49,14 +49,20 @@ export async function userCanControlBot(ctx: Context): Promise<boolean> {
 }
 
 export async function getDbChat(ctx: Context) {
-  if (!ctx.chat || ctx.message === undefined) {
+  // Without a chat, we cannot look up the chat in the database
+  if (!ctx.chat) {
     return undefined;
   }
 
-  const threadId =
-    "message_thread_id" in ctx.message
-      ? ctx.message.message_thread_id
-      : undefined;
+  // If the message is a thread, look up the entry for this thread ID
+  if (ctx.message !== undefined) {
+    const threadId =
+      "message_thread_id" in ctx.message
+        ? ctx.message.message_thread_id
+        : undefined;
+    return await getTelegramChatById(ctx.chat.id, threadId);
+  }
 
-  return await getTelegramChatById(ctx.chat.id, threadId);
+  // Otherwise, look up the chat by its ID
+  return await getTelegramChatById(ctx.chat.id);
 }
