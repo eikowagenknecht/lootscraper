@@ -18,7 +18,9 @@ export async function handleRefreshCommand(
   if (!(await userCanControlBot(ctx))) {
     return;
   }
+}
 
+export async function refreshOffersForChat(ctx: BotContext): Promise<void> {
   const dbChat = await getDbChat(ctx);
   if (!dbChat) {
     await ctx.reply(
@@ -52,6 +54,7 @@ export async function handleRefreshCommand(
     // Send each offer
     for (const offer of offers) {
       await sendOffer(ctx, offer, dbChat.timezone_offset);
+      // TODO: Track the last sent offer
     }
 
     // Update last offer id and offer count
@@ -66,7 +69,7 @@ export async function handleRefreshCommand(
 }
 
 async function sendOffer(
-  ctx: CommandContext<BotContext>,
+  ctx: BotContext,
   offer: Offer,
   timezoneOffset: number | null,
 ): Promise<void> {
@@ -74,9 +77,9 @@ async function sendOffer(
     // For channels, groups and supergroups, always show details
     // Button presses would affect all users, so we avoid them
     const isGroup =
-      ctx.chat.type === "group" ||
-      ctx.chat.type === "supergroup" ||
-      ctx.chat.type === "channel";
+      ctx.chat?.type === "group" ||
+      ctx.chat?.type === "supergroup" ||
+      ctx.chat?.type === "channel";
 
     const message = await formatOfferMessage(offer, {
       tzOffset: timezoneOffset,

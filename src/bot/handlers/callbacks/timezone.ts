@@ -1,11 +1,12 @@
 import { timezoneSchema } from "@/bot/types/callbacks";
+import type { BotContext } from "@/bot/types/middleware";
 import { unpackData } from "@/bot/utils/callbackPack";
 import { updateTelegramChatTimezone } from "@/services/database/telegramChatRepository";
 import { logger } from "@/utils/logger";
-import type { Context, Filter } from "grammy";
+import type { Filter } from "grammy";
 
 export async function handleTimezoneCallback(
-  ctx: Filter<Context, "callback_query:data">,
+  ctx: Filter<BotContext, "callback_query:data">,
   data: string,
 ): Promise<void> {
   if (!ctx.chat?.id) {
