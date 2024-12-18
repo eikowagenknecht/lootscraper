@@ -61,7 +61,7 @@ export async function handleOfferDetailsCallback(
       {
         parse_mode: "MarkdownV2",
         reply_markup: createOfferKeyboard(offer, {
-          detailsShowButton: true,
+          detailsShowButton: offer.game_id !== null,
           detailsHideButton: false,
           dismissButton: true,
         }),

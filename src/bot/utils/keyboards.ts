@@ -1,6 +1,7 @@
 import type { Offer } from "@/types/database";
 import type { InlineKeyboardButton, InlineKeyboardMarkup } from "grammy/types";
-import { BUTTON_TEXT } from "../types/constants";
+import { dismissSchema, offerSchema } from "../types/callbacks";
+import { packData } from "./callbackPack";
 
 export interface CreateOfferKeyboardOptions {
   detailsShowButton?: boolean;
@@ -21,40 +22,49 @@ export function createOfferKeyboard(
 
   if (offer.url) {
     buttons.push({
-      text: BUTTON_TEXT.CLAIM,
+      text: "Claim",
       url: offer.url,
     });
   }
 
   if (detailsShowButton) {
     buttons.push({
-      text: BUTTON_TEXT.SHOW_DETAILS,
-      callback_data: JSON.stringify({
-        action: "details",
-        command: "show",
-        offerId: offer.id,
-      }),
+      text: "Details",
+      callback_data: packData(
+        {
+          action: "details",
+          command: "show",
+          offerId: offer.id,
+        },
+        offerSchema,
+      ),
     });
   }
 
   if (detailsHideButton) {
     buttons.push({
-      text: BUTTON_TEXT.HIDE_DETAILS,
-      callback_data: JSON.stringify({
-        action: "details",
-        command: "hide",
-        offerId: offer.id,
-      }),
+      text: "Summary",
+      callback_data: packData(
+        {
+          action: "details",
+          command: "hide",
+          offerId: offer.id,
+        },
+        offerSchema,
+      ),
     });
   }
 
   if (dismissButton) {
     buttons.push({
-      text: BUTTON_TEXT.DISMISS,
-      callback_data: JSON.stringify({
-        action: "dismiss",
-        offerId: offer.id,
-      }),
+      text: "Dismiss",
+      callback_data: packData(
+        {
+          action: "dismiss",
+          offerId: offer.id,
+        },
+        dismissSchema,
+      ),
     });
   }
 

@@ -89,7 +89,7 @@ async function sendOffer(
     const keyboard = isGroup
       ? createOfferKeyboard(offer)
       : createOfferKeyboard(offer, {
-          detailsShowButton: true,
+          detailsShowButton: offer.game_id !== null,
           detailsHideButton: false,
           dismissButton: true,
         });
