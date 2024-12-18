@@ -11,7 +11,7 @@ const OFFER_URL = `${BASE_URL}/partner/free_games`;
 export class GogGamesAlwaysFreeScraper extends GogBaseScraper {
   override getSchedule(): CronConfig[] {
     return [
-      { schedule: "0 35 18 * * *" }, // Once a day at 18:35 UTC
+      { schedule: "0 0 12 * * *" }, // Once a day at 12:00 UTC
     ];
   }
 

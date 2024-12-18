@@ -11,7 +11,7 @@ const OFFER_URL = `${BASE_URL}/#giveaway`;
 export class GogGamesScraper extends GogBaseScraper {
   override getSchedule(): CronConfig[] {
     return [
-      { schedule: "0 30 * * * *" }, // Every hour
+      { schedule: "0 0 * * * *" }, // Every hour
     ];
   }
 

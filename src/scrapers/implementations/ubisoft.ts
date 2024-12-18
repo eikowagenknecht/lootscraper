@@ -19,7 +19,7 @@ interface UbisoftRawOffer extends RawOffer {
 export class UbisoftGamesScraper extends BaseScraper<UbisoftRawOffer> {
   override getSchedule(): CronConfig[] {
     return [
-      { schedule: "0 15 */3 * * *" }, // Every 3 hours
+      { schedule: "0 0 */3 * * *" }, // Every 3 hours
     ];
   }
 
