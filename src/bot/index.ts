@@ -1,5 +1,6 @@
 import { handleError } from "@/utils/errorHandler";
 import { logger } from "@/utils/logger";
+import { autoRetry } from "@grammyjs/auto-retry";
 import { CommandGroup, commandNotFound, commands } from "@grammyjs/commands";
 import { Bot, type BotError, GrammyError, HttpError } from "grammy";
 import { handleCallback } from "./handlers/callbacks/router";
@@ -32,6 +33,8 @@ export class TelegramBot {
     }
 
     try {
+      // Automatically retry on rate limits
+      this.bot.api.config.use(autoRetry());
       this.bot.use(commands());
 
       const userCommands = new CommandGroup<BotContext>();

@@ -35,6 +35,7 @@
     "knip": "knip"
   },
   "dependencies": {
+    "@grammyjs/auto-retry": "2.0.2",
     "@grammyjs/commands": "1.0.3",
     "better-sqlite3": "11.7.0",
     "croner": "9.0.0",
