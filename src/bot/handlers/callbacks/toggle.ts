@@ -1,6 +1,4 @@
-import type { Context, Filter } from "grammy";
-import { toggleSubscriptionSchema } from "../../types/callbacks";
-
+import type { BotContext } from "@/bot/types/middleware";
 import { unpackData } from "@/bot/utils/callbackPack";
 import {
   createTelegramSubscription,
@@ -8,12 +6,14 @@ import {
   removeTelegramSubscription,
 } from "@/services/database/telegramSubscriptionRepository";
 import { logger } from "@/utils/logger";
+import type { Filter } from "grammy";
 import type { z } from "zod";
+import { toggleSubscriptionSchema } from "../../types/callbacks";
 import { getDbChat } from "../commands";
 import { buildManageKeyboard } from "../commands/manage";
 
 export async function handleToggleCallback(
-  ctx: Filter<Context, "callback_query:data">,
+  ctx: Filter<BotContext, "callback_query:data">,
   data: string,
 ): Promise<void> {
   if (!ctx.chat?.id) {
