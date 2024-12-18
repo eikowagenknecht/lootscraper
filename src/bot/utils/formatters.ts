@@ -51,17 +51,15 @@ export async function formatOfferMessage(
     const validTo = DateTime.fromISO(offer.valid_to);
     const validToFormatted = tzOffset
       ? validTo
-          .setZone(`UTC${tzOffset >= 0 ? "+" : "-"}${tzOffset.toFixed()}`)
+          .setZone(`UTC${tzOffset >= 0 ? "+" : ""}${tzOffset.toFixed()}`)
           .toFormat(
             `${TIMESTAMP_READABLE_WITH_HOUR} UTC${tzOffset >= 0 ? "+" : "-"}${tzOffset.toFixed()}`,
           )
       : validTo.toUTC().toFormat(`${TIMESTAMP_READABLE_WITH_HOUR} UTC`);
 
     const now = DateTime.now();
-    const diff = validTo.diff(now);
-    const diffHuman = diff
-      .shiftTo("years", "months", "days", "hours")
-      .toHuman();
+    const diff = validTo.diff(now, ["days", "hours"]);
+    const diffHuman = diff.toHuman({ maximumFractionDigits: 0 });
 
     if (now > validTo) {
       content += escapeText(

@@ -6,10 +6,11 @@ import {
   type OfferSource,
   type OfferType,
 } from "@/types/config";
+import { logger } from "@/utils/logger";
 import { type CommandContext, InlineKeyboard } from "grammy";
 import type { z } from "zod";
 import { getDbChat, logCall, userCanControlBot } from ".";
-import { toggleSubscriptionSchema } from "../../types/callbacks";
+import { closeSchema, toggleSubscriptionSchema } from "../../types/callbacks";
 import type { BotContext } from "../../types/middleware";
 
 export async function handleManageCommand(
@@ -40,7 +41,7 @@ export async function handleManageCommand(
 export async function buildManageKeyboard(chatId: number) {
   const inlineKeyboard = new InlineKeyboard();
 
-  console.debug(`Building manage keyboard for chat ${chatId.toFixed()}`);
+  logger.verbose(`Building manage keyboard for chat ${chatId.toFixed()}`);
 
   // Add subscription toggle buttons for each source/type/duration combination
   const combinations = getEnabledScraperCombinations();
@@ -68,7 +69,7 @@ export async function buildManageKeyboard(chatId: number) {
 
   inlineKeyboard
     .row()
-    .text("Close", JSON.stringify({ action: "close", menu: "manage" }));
+    .text("Close", packData({ action: "close", menu: "manage" }, closeSchema));
 
   return inlineKeyboard;
 }

@@ -1,4 +1,5 @@
-import type { timezoneSchema } from "@/bot/types/callbacks";
+import { closeSchema, timezoneSchema } from "@/bot/types/callbacks";
+import { packData } from "@/bot/utils/callbackPack";
 import type { CommandContext } from "grammy";
 import type { InlineKeyboardButton } from "grammy/types";
 import type { z } from "zod";
@@ -33,7 +34,7 @@ function buildTimezoneKeyboard() {
     keyboard.push([
       {
         text: `UTC${sign}${hour.toFixed()}:00`,
-        callback_data: JSON.stringify(data),
+        callback_data: packData(data, timezoneSchema),
       },
     ]);
   }
@@ -42,7 +43,10 @@ function buildTimezoneKeyboard() {
   keyboard.push([
     {
       text: "Close",
-      callback_data: JSON.stringify({ action: "close", menu: "timezone" }),
+      callback_data: packData(
+        { action: "close", menu: "timezone" },
+        closeSchema,
+      ),
     },
   ]);
 

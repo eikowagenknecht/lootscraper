@@ -55,7 +55,7 @@ But I'd be happy to see you register any time with the /start command!`);
   // Build timezone text
   const timezoneText = dbChat.timezone_offset
     ? escapeText(
-        `- Your timezone is set to UTC${dbChat.timezone_offset >= 0 ? "+" : "-"}${dbChat.timezone_offset.toFixed()}:00. You can change that with the /timezone command if you wish.\n`,
+        `- Your timezone is set to UTC${dbChat.timezone_offset >= 0 ? "+" : ""}${dbChat.timezone_offset.toFixed()}:00. You can change that with the /timezone command if you wish.\n`,
       )
     : escapeText(
         "- Your timezone is not set, so UTC is used. You can change that with the /timezone command if you wish.\n",
