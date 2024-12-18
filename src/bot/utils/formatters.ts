@@ -1,7 +1,7 @@
 import { getGameWithInfo } from "@/services/database/gameRepository";
 import { OfferDuration } from "@/types/config";
 import type { Offer } from "@/types/database";
-import { DateTime } from "luxon";
+import { DateTime, type Duration } from "luxon";
 import { bold, escapeText, italic, link } from "./markdown";
 
 const TIMESTAMP_READABLE_WITH_HOUR = "yyyy-MM-dd - HH:mm";
@@ -58,7 +58,15 @@ export async function formatOfferMessage(
       : validTo.toUTC().toFormat(`${TIMESTAMP_READABLE_WITH_HOUR} UTC`);
 
     const now = DateTime.now();
-    const diff = validTo.diff(now, ["days", "hours"]);
+    let diff: Duration;
+
+    if (now < validTo) {
+      // Active offer
+      diff = validTo.diff(now, ["days", "hours"]);
+    } else {
+      // Expired offer needs to show how long ago it expired
+      diff = now.diff(validTo, ["days", "hours"]);
+    }
     const diffHuman = diff.toHuman({ maximumFractionDigits: 0 });
 
     if (now > validTo) {
