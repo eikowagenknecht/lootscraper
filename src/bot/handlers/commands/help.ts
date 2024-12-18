@@ -11,7 +11,9 @@ export async function handleHelpCommand(
     return;
   }
 
-  const helpText = `${bold("Available commands")}\n${escapeText(`\
+  const helpText = `\
+${bold("Available commands")}
+${escapeText(`\
 /start - Start the bot (you already did that)
 /help - Show this help message
 /status - Show information about your subscriptions

@@ -38,7 +38,11 @@ function escapeUrl(url: string): string {
 }
 
 export function bold(text: string): string {
-  return `*${text}*`;
+  return `*${escapeText(text)}*`;
+}
+
+export function italic(text: string): string {
+  return `__${escapeText(text)}__`;
 }
 
 export function link(url: string, text: string): string {

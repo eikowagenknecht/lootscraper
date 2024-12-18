@@ -38,7 +38,7 @@ export async function handleOfferDetailsCallback(
 
   if (unpackedData.command === "show") {
     await ctx.editMessageText(
-      formatOfferMessage(offer, {
+      await formatOfferMessage(offer, {
         tzOffset: dbChat.timezone_offset,
         includeDetails: true,
       }),
@@ -53,7 +53,7 @@ export async function handleOfferDetailsCallback(
     );
   } else {
     await ctx.editMessageText(
-      formatOfferMessage(offer, {
+      await formatOfferMessage(offer, {
         tzOffset: dbChat.timezone_offset,
         includeDetails: false,
       }),

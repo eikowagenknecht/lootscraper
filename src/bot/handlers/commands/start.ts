@@ -27,18 +27,18 @@ And if you like it, please consider `)}\
 ${link("https://github.com/eikowagenknecht/lootscraper/stargazers", "starring it ⭐")} \
 ${escapeText(". Thanks a lot!")};
 
-${bold(escapeText("How it works"))}
+${bold("How it works")}
 ${escapeText(`For a quick start, I have just subscribed you to free offers from Steam, Epic and GOG. \
 There are more sources available. To configure what kind of offers you want to see, you can use the /manage command. \
 I will then send you a message every time a new offer is added. \
 To see the commands you can use to talk to me, type /help.`)}
 
-${bold(escapeText("Send me offers, now!"))}
+${bold("Send me offers, now!")}
 ${escapeText(`I haven't sent you any offers yet to give you some time to read this message. \
 To see what's currently on offer, you can use the /refresh command now. \
 It's not necessary to do this however, I'll send you offers automatically whenever a new one comes in.`)}
 
-${bold(escapeText("About privacy"))}
+${bold("About privacy")}
 ${escapeText(`I need to store some user data (e.g. your Telegram chat ID and your subscriptions) in order to work. \
 You can leave any time by typing /leave. \
 This will immediately delete all data about you. \
