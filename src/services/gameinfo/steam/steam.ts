@@ -1,4 +1,5 @@
 import type { NewSteamInfo } from "@/types/database";
+import { getMatchScore } from "@/utils";
 import { logger } from "@/utils/logger";
 import { DateTime } from "luxon";
 import { type BrowserContext, errors } from "playwright";
@@ -42,7 +43,7 @@ export class SteamClient {
   constructor(private readonly context: BrowserContext) {}
 
   public async findSteamId(searchString: string): Promise<number | null> {
-    logger.info(`Finding Steam ID for: ${searchString}`);
+    logger.debug(`Finding Steam ID for: ${searchString}`);
 
     const searchUrl = new URL("https://store.steampowered.com/search/");
     searchUrl.searchParams.set("term", searchString);
@@ -64,9 +65,13 @@ export class SteamClient {
         const title = await element.locator(".title").textContent();
         const appId = await element.getAttribute("data-ds-appid");
 
+        logger.verbose(
+          `Found title (Steam Id): ${String(title)} (${String(appId)})`,
+        );
+
         if (!title || !appId) continue;
 
-        const score = this.getMatchScore(searchString, title);
+        const score = getMatchScore(searchString, title);
         if (
           score >= SteamClient.RESULT_MATCH_THRESHOLD &&
           (!bestMatch || score > bestMatch.score)
@@ -98,24 +103,6 @@ export class SteamClient {
     ]);
 
     return this.mergeData(appId, apiData, pageData);
-  }
-
-  private getMatchScore(str1: string, str2: string): number {
-    const s1 = str1.toLowerCase().trim();
-    const s2 = str2.toLowerCase().trim();
-
-    if (s1 === s2) return 1;
-    if (s1.includes(s2) || s2.includes(s1)) return 0.9;
-
-    let matches = 0;
-    const words1 = new Set(s1.split(/\s+/));
-    const words2 = new Set(s2.split(/\s+/));
-
-    for (const word of words1) {
-      if (words2.has(word)) matches++;
-    }
-
-    return (matches * 2) / (words1.size + words2.size);
   }
 
   private async getApiData(appId: number): Promise<SteamApiResponse> {
@@ -235,9 +222,7 @@ export class SteamClient {
       name: data.name,
       short_description: data.short_description ?? null,
       release_date: data.release_date?.date
-        ? DateTime.fromFormat(data.release_date.date, "d MMM, y")
-            .toJSDate()
-            .toISOString()
+        ? DateTime.fromFormat(data.release_date.date, "d MMM, y").toISO()
         : null,
       genres: data.genres?.map((g) => g.description).join(", ") ?? null,
       publishers: data.publishers?.join(", ") ?? null,
