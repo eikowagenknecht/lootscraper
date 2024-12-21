@@ -322,7 +322,7 @@ function registerShutdownHandlers(): void {
   });
 
   process.on("unhandledRejection", (reason) => {
-    logger.error("Unhandled rejection:", reason);
+    logger.error("Unhandled Promise rejection:", reason);
     void shutdown("UNHANDLED_REJECTION");
   });
 }

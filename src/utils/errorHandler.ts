@@ -18,16 +18,3 @@ export function handleError(error: unknown): void {
 
   logger.error("Unknown error:", { error });
 }
-
-process.on("unhandledRejection", (reason) => {
-  logger.error("Unhandled Promise rejection:", { reason });
-});
-
-process.on("uncaughtException", (error) => {
-  logger.error("Uncaught exception:", {
-    name: error.name,
-    message: error.message,
-    stack: error.stack,
-  });
-  process.exit(1);
-});
