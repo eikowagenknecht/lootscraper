@@ -3,8 +3,8 @@ import type {
   Game,
   NewGame,
   NewIgdbInfo,
-  NewOffer,
   NewSteamInfo,
+  Offer,
 } from "@/types/database";
 import { logger } from "@/utils/logger";
 import type { BrowserContext } from "playwright";
@@ -12,9 +12,9 @@ import {
   createGame,
   findGameByIgdbName,
   findGameBySteamName,
-  getGameById,
 } from "./database/gameRepository";
 import { createIgdbInfo } from "./database/igdbInfoRepository";
+import { getOfferById, updateOffer } from "./database/offerRepository";
 import { createSteamInfo } from "./database/steamInfoRepository";
 import { IgdbClient } from "./gameinfo/igdb/igdb";
 import { SteamClient } from "./gameinfo/steam/steam";
@@ -34,31 +34,48 @@ export class GameInfoService {
         : null;
   }
 
-  public async enrichOffer(offer: NewOffer): Promise<void> {
-    if (!offer.probable_game_name) {
+  public async enrichOffer(offer: number | Offer): Promise<void> {
+    let innerOffer: Offer;
+    if (typeof offer === "number") {
+      const dbOffer = await getOfferById(offer);
+      if (!dbOffer) {
+        logger.warn(
+          `Offer with ID ${offer.toFixed()} not found, skipping enrichment`,
+        );
+        return;
+      }
+      innerOffer = dbOffer;
+    } else {
+      innerOffer = offer;
+    }
+
+    if (!innerOffer.probable_game_name) {
       logger.warn("Offer has no game name, skipping enrichment");
       return;
     }
 
-    const existingGame = await this.findExistingGame(offer.probable_game_name);
+    const existingGame = await this.findExistingGame(
+      innerOffer.probable_game_name,
+    );
     if (existingGame) {
-      offer.game_id = existingGame.id;
+      innerOffer.game_id = existingGame.id;
       return;
     }
 
     const [steamInfo, igdbInfo] = await Promise.all([
-      this.getSteamInfo(offer.probable_game_name),
-      this.getIgdbInfo(offer.probable_game_name),
+      this.getSteamInfo(innerOffer.probable_game_name),
+      this.getIgdbInfo(innerOffer.probable_game_name),
     ]);
 
     if (!steamInfo && !igdbInfo) {
-      logger.info(`No game info found for: ${offer.probable_game_name}`);
+      logger.info(`No game info found for: ${innerOffer.probable_game_name}`);
       return;
     }
 
     const newGame = await this.saveGameInfo(steamInfo, igdbInfo);
-    offer.game_id = newGame.id;
+    await updateOffer(innerOffer.id, { game_id: newGame });
   }
+
   private async findExistingGame(gameName: string): Promise<Game | null> {
     if (this.config.scraper.infoSources.includes("IGDB")) {
       const gameByIgdb = await findGameByIgdbName(gameName);
@@ -75,6 +92,7 @@ export class GameInfoService {
 
   private async getSteamInfo(gameName: string): Promise<NewSteamInfo | null> {
     if (!this.config.scraper.infoSources.includes("STEAM")) return null;
+    logger.debug(`Fetching Steam info for: ${gameName}`);
 
     try {
       const appId = await this.steamClient.findSteamId(gameName);
@@ -99,10 +117,12 @@ export class GameInfoService {
     if (!this.igdbClient || !this.config.scraper.infoSources.includes("IGDB")) {
       return null;
     }
+    logger.debug(`Fetching IGDB info for: ${gameName}`);
 
     try {
       const gameId = await this.igdbClient.searchGame(gameName);
       if (!gameId) return null;
+      logger.debug(`Found IDGB game ID ${gameId.toFixed()} for: ${gameName}`);
 
       return await this.igdbClient.getDetails(gameId);
     } catch (error) {
@@ -116,19 +136,13 @@ export class GameInfoService {
   private async saveGameInfo(
     steamInfo: NewSteamInfo | null,
     igdbInfo: NewIgdbInfo | null,
-  ): Promise<Game> {
+  ): Promise<number> {
     const game: NewGame = {
       steam_id: steamInfo?.id ?? null,
       igdb_id: igdbInfo?.id ?? null,
     };
 
-    const newGameId = await createGame(game);
-    const savedGame = await getGameById(newGameId);
-
-    if (savedGame === null) {
-      throw new Error("Failed to save game info");
-    }
-
+    // Create game info first as it's required for the game
     if (steamInfo) {
       await createSteamInfo(steamInfo);
     }
@@ -137,6 +151,6 @@ export class GameInfoService {
       await createIgdbInfo(igdbInfo);
     }
 
-    return savedGame;
+    return await createGame(game);
   }
 }
