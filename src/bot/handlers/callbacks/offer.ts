@@ -1,6 +1,6 @@
 import type { BotContext } from "@/bot/types/middleware";
 import { unpackData } from "@/bot/utils/callbackPack";
-import { getOffer } from "@/services/database/offerRepository";
+import { getOfferById } from "@/services/database/offerRepository";
 import { getTelegramChatById } from "@/services/database/telegramChatRepository";
 import { logger } from "@/utils/logger";
 import type { Filter } from "grammy";
@@ -28,7 +28,7 @@ export async function handleOfferDetailsCallback(
     return;
   }
 
-  const offer = await getOffer(unpackedData.offerId);
+  const offer = await getOfferById(unpackedData.offerId);
   if (!offer) {
     await ctx.answerCallbackQuery({
       text: "Error: Offer not found",
