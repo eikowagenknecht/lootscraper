@@ -85,8 +85,8 @@ describe("Offer Repository", () => {
         category: "VALID",
       };
 
-      const offerId = await createOrUpdateOffer(newOffer);
-      expect(offerId).toBe(4); // Since we had 3 offers in test data
+      const res = await createOrUpdateOffer(newOffer);
+      expect(res.id).toBe(4); // Since we had 3 offers in test data
 
       const createdOffer = await getOfferByTitle("New Game");
       expect(createdOffer).toBeDefined();
@@ -110,8 +110,8 @@ describe("Offer Repository", () => {
         category: "VALID",
       };
 
-      const offerId = await createOrUpdateOffer(existingOffer);
-      expect(offerId).toBe(1); // Should be the same ID as the existing offer
+      const res = await createOrUpdateOffer(existingOffer);
+      expect(res.id).toBe(1); // Should be the same ID as the existing offer
 
       const updatedOffer = await getOfferByTitle("Existing Game 1");
       expect(updatedOffer).toBeDefined();
@@ -138,8 +138,8 @@ describe("Offer Repository", () => {
         category: "VALID",
       };
 
-      const offerId = await createOrUpdateOffer(duplicateOffer);
-      expect(offerId).toBe(4); // Should be a new offer
+      const res = await createOrUpdateOffer(duplicateOffer);
+      expect(res.id).toBe(4); // Should be a new offer
 
       // Should find both offers
       const offers = await dbService
