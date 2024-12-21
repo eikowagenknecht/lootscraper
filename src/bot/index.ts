@@ -18,6 +18,7 @@ import { handleStatusCommand } from "./handlers/commands/status";
 import { handleTimezoneCommand } from "./handlers/commands/timezone";
 import type { BotConfig } from "./types/config";
 import type { BotContext } from "./types/middleware";
+import { bold, escapeText } from "./utils/markdown";
 
 export class TelegramBot {
   private bot: Bot<BotContext>;
@@ -169,8 +170,15 @@ export class TelegramBot {
 
     if (this.config.developerChatId) {
       try {
-        const errorMessage = `\`\`\`\nError in Telegram bot: ${error.message}\n\nStack: ${error.stack ?? "No stack trace available"}\n\`\`\``;
+        let errorMessage = escapeText(`⚠️ ${error.message}`);
+        if (error.stack) {
+          errorMessage += `
 
+${bold("Stack:")}
+\`\`\`
+${escapeText(error.stack)}
+\`\`\``;
+        }
         await this.bot.api.sendMessage(
           this.config.developerChatId,
           errorMessage,
