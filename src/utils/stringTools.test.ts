@@ -117,13 +117,19 @@ describe.concurrent("getMatchScore", () => {
     expect(score).toBe(1.0);
   });
 
-  test("should ensure Fall Guys comparison scores below threshold", ({
-    expect,
-  }) => {
+  test("should find Rainbow Six Siege similar to full title", ({ expect }) => {
+    const search = "Rainbow Six Siege";
+    const result = "Tom Clancy's Rainbow Six® Siege";
+
+    const score = getMatchScore(search, result);
+    expect(score).toBe(0.99);
+  });
+
+  test("should find Fall Guys not too similar to Fall Guy", ({ expect }) => {
     const search = "Fall Guys";
     const result = "Fall Guy";
-    const score = getMatchScore(search, result);
 
+    const score = getMatchScore(search, result);
     expect(score).toBeLessThan(0.99);
   });
 });
