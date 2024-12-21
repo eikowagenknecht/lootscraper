@@ -105,7 +105,7 @@ export class TypeScriptFinder {
 
   private shouldExclude(path: string, isDirectory: boolean): boolean {
     // Always exclude .git directory
-    if (path.includes("/.git/")) {
+    if (path.includes("/.git/") || path.includes("/tools/")) {
       return true;
     }
 
