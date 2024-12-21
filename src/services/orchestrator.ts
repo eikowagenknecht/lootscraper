@@ -26,6 +26,7 @@ import { logger } from "@/utils/logger";
 import { Cron } from "croner";
 import type { BrowserContext } from "playwright";
 import { FeedService } from "./feed";
+import { GameInfoService } from "./gameinfo";
 
 interface ServiceState {
   isRunning: boolean;
@@ -126,7 +127,7 @@ async function runScraper(task: () => Promise<void>): Promise<void> {
 }
 
 interface ScrapeResult {
-  newOffersFound: boolean;
+  newOfferIds: number[];
   offerCount: number;
 }
 
@@ -144,12 +145,12 @@ async function runSingleScrape(
   const offers = await scraper.scrape();
 
   // Store offers and track if we found any new ones
-  let newOffersFound = false;
-  for (const offer of offers) {
-    const result = await createOrUpdateOffer(offer);
-    // If result is a number, it's a new offer's ID
-    if (typeof result === "number") {
-      newOffersFound = true;
+  const newOfferIds: number[] = [];
+
+  for (const newOffer of offers) {
+    const offer = await createOrUpdateOffer(newOffer);
+    if (offer.action === "created") {
+      newOfferIds.push(offer.id);
     }
   }
 
@@ -158,9 +159,25 @@ async function runSingleScrape(
   );
 
   return {
-    newOffersFound,
+    newOfferIds,
     offerCount: offers.length,
   };
+}
+
+/**
+ * Update game information if new offers were found
+ */
+async function updateGameInfo(gameIds: number[]): Promise<void> {
+  const cfg = config.get();
+  if (!cfg.actions.scrapeInfo) {
+    return;
+  }
+
+  logger.info("New offers found, fetching game information ...");
+  const gameInfoService = new GameInfoService(cfg, browser.getContext());
+  for (const gameId of gameIds) {
+    await gameInfoService.enrichOffer(gameId);
+  }
 }
 
 /**
@@ -192,7 +209,8 @@ function scheduleScraper(scraper: BaseScraper): void {
         void runScraper(async () => {
           try {
             const result = await runSingleScrape(scraper);
-            if (result.newOffersFound) {
+            if (result.newOfferIds.length > 0) {
+              await updateGameInfo(result.newOfferIds);
               await updateFeeds();
             }
           } catch (error) {
@@ -217,7 +235,8 @@ function runInitialScrapes(scrapers: BaseScraper[]): void {
     void runScraper(async () => {
       try {
         const result = await runSingleScrape(scraper, "initial");
-        if (result.newOffersFound) {
+        if (result.newOfferIds.length > 0) {
+          await updateGameInfo(result.newOfferIds);
           await updateFeeds();
         }
       } catch (error) {
