@@ -149,7 +149,9 @@ export async function updateOffer(id: number, offer: OfferUpdate) {
   }
 }
 
-export async function createOrUpdateOffer(offer: NewOffer): Promise<number> {
+export async function createOrUpdateOffer(
+  offer: NewOffer,
+): Promise<{ action: "updated" | "created"; id: number }> {
   try {
     // Find existing offer by unique combination
     const existingOffer = await getDb()
@@ -172,10 +174,17 @@ export async function createOrUpdateOffer(offer: NewOffer): Promise<number> {
         .where("id", "=", existingOffer.id)
         .executeTakeFirst();
       handleUpdateResult(result);
-      return existingOffer.id;
+      return {
+        action: "updated",
+        id: existingOffer.id,
+      };
     }
 
-    return await createOffer(offer);
+    const id = await createOffer(offer);
+    return {
+      action: "created",
+      id,
+    };
   } catch (error) {
     handleError("create or update offer", error);
   }
@@ -219,7 +228,7 @@ export async function getNewOffers(
   }
 }
 
-export async function getOffer(id: number): Promise<Offer | undefined> {
+export async function getOfferById(id: number): Promise<Offer | undefined> {
   try {
     return await getDb()
       .selectFrom("offers")
