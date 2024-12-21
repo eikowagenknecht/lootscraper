@@ -53,7 +53,7 @@ where version_parent = null;
 limit 50;
 `;
 
-    logger.debug(`Searching for game: ${searchString} with query: ${query}`);
+    logger.verbose(`Searching for game: ${searchString} with query: ${query}`);
 
     const results = await this.apiRequest<IgdbSearchResult[]>("games", query);
 
@@ -166,7 +166,7 @@ limit 50;
       body: query,
     });
 
-    logger.debug(
+    logger.http(
       `IGDB API request to ${endpoint} returned status ${response.status.toFixed()} (ok: ${response.ok ? "yes" : "no"}).`,
     );
     if (!response.ok) {
