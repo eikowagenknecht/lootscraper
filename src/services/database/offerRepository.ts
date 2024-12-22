@@ -119,7 +119,6 @@ export async function getActiveOffers(
     return filteredOffers;
   } catch (error) {
     handleError("get active offers", error);
-    throw new Error("Failed to get active offers");
   }
 }
 
@@ -209,7 +208,7 @@ export async function getNewOffers(
     // For non-ALWAYS offers, check if they're still valid
     if (duration !== OfferDuration.ALWAYS) {
       logger.debug(
-        `Filtering for offers that are still valid on ${DateTime.fromJSDate(now).toISO() ?? ""}`,
+        `Filtering for offers that are still valid on ${DateTime.fromJSDate(now).toISO()}`,
       );
       query = query.where((eb) =>
         eb.or([
@@ -224,7 +223,6 @@ export async function getNewOffers(
     return await query.execute();
   } catch (error) {
     handleError("get new offers", error);
-    return [];
   }
 }
 
@@ -237,6 +235,5 @@ export async function getOfferById(id: number): Promise<Offer | undefined> {
       .executeTakeFirst();
   } catch (error) {
     handleError("get offer", error);
-    return undefined;
   }
 }
