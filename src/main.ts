@@ -26,6 +26,7 @@ function initializeCore() {
   // Set timezone for consistent date handling
   LuxonSettings.defaultZone = "utc";
   LuxonSettings.defaultLocale = "en-US";
+  LuxonSettings.throwOnInvalid = true;
 
   logger.info("Core services initialized");
 }

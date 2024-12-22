@@ -142,7 +142,7 @@ function escapeXml(input: string): string {
 }
 
 function formatISODate(date: Date): string {
-  return DateTime.fromJSDate(date).toISO() ?? date.toISOString();
+  return DateTime.fromJSDate(date).toISO();
 }
 
 // Register Handlebars helpers

@@ -1,3 +1,4 @@
+import { DateTime } from "luxon";
 import { describe, test } from "vitest";
 import { calculateRealValidTo } from "./dateCalculator";
 
@@ -56,5 +57,33 @@ describe.concurrent("Date Calculator", () => {
 
     const realValidTo = calculateRealValidTo(seenLast, validTo, now);
     expect(realValidTo).toStrictEqual(seenLast);
+  });
+
+  test("luxon should parse steam date", ({ expect }) => {
+    const parsedDate = DateTime.fromFormat("24 Dec @ 6:00pm", "d MMM @ h:mma", {
+      zone: "UTC",
+    });
+
+    expect(parsedDate.toISO()).toBe("2024-12-24T18:00:00.000Z");
+  });
+
+  test("luxon should parse steam date for next year", ({ expect }) => {
+    const parsedDate = DateTime.fromFormat(
+      "6 Jan, 2025 @ 6:00pm",
+      "d MMM, yyyy @ h:mma",
+      {
+        zone: "UTC",
+      },
+    );
+
+    expect(parsedDate.toISO()).toBe("2025-01-06T18:00:00.000Z");
+  });
+
+  test("luxon should shrow for wrong date", ({ expect }) => {
+    expect(() =>
+      DateTime.fromFormat("6 Jan, 202a5 @ 6:00pm", "d MMM, yyyy @ h:mma", {
+        zone: "UTC",
+      }),
+    ).toThrow();
   });
 });
