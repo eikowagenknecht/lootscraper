@@ -13,17 +13,20 @@ export const dateFormatMigration = {
     const toISO = (dateStr: unknown): string | null => {
       if (!dateStr) return null;
       if (typeof dateStr !== "string") throw new Error("Invalid date type.");
-      const dt = DateTime.fromSQL(dateStr, { zone: "utc" });
-      if (!dt.isValid) {
-        const tst = DateTime.fromISO(dateStr);
-        if (tst.isValid) {
+
+      try {
+        const dt = DateTime.fromSQL(dateStr, { zone: "utc" });
+        logger.debug("Converting date", dateStr, "to", dt.toISO());
+        return dt.toISO();
+      } catch {
+        try {
+          DateTime.fromISO(dateStr); // This will throw if it's not a valid ISO date
           logger.debug("Already ISO", dateStr);
           return dateStr;
+        } catch {
+          throw new Error(`Invalid date: ${dateStr}`);
         }
-        throw new Error(`Invalid date: ${dateStr}`);
       }
-      logger.debug("Converting date", dateStr, "to", dt.toISO());
-      return dt.toISO();
     };
 
     // Get all rows and update them using raw SQL
