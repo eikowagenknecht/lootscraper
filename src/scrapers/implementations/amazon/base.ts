@@ -1,5 +1,6 @@
 import { OfferDuration, OfferSource } from "@/types/config";
 import { BrowserError } from "@/types/errors";
+import { logger } from "@/utils/logger";
 import { DateTime } from "luxon";
 import type { Locator, Page } from "playwright";
 import {
@@ -75,7 +76,7 @@ export abstract class AmazonBaseScraper<
       validTo = await this.readDateFromDetailsPage(url);
     } catch (error) {
       // Some offers just have no date. That's fine.
-      this.logger.debug(
+      logger.debug(
         `No date found for ${title}: ${error instanceof Error ? error.message : String(error)}`,
       );
     }
@@ -128,7 +129,7 @@ export abstract class AmazonBaseScraper<
         zone: "UTC",
       }).toJSDate();
     } catch (error) {
-      this.logger.error(
+      logger.error(
         `Date parsing failed: ${error instanceof Error ? error.message : String(error)}`,
       );
       return null;

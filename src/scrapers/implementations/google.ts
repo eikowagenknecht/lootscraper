@@ -1,5 +1,6 @@
 import { OfferDuration, OfferSource, OfferType } from "@/types/config";
 import type { NewOffer } from "@/types/database";
+import { logger } from "@/utils/logger";
 import { DateTime } from "luxon";
 import type { Locator, Page } from "playwright";
 import {
@@ -86,7 +87,7 @@ export class GoogleGamesScraper extends BaseScraper {
         imgUrl,
       };
     } catch (error) {
-      this.logger.error(
+      logger.error(
         `Failed to read raw offer: ${error instanceof Error ? error.message : String(error)}`,
       );
       return null;

@@ -1,5 +1,6 @@
 import { OfferDuration, OfferSource, OfferType } from "@/types/config";
 import type { NewOffer } from "@/types/database";
+import { logger } from "@/utils/logger";
 import { DateTime } from "luxon";
 import type { Locator, Page } from "playwright";
 import {
@@ -104,7 +105,7 @@ export class UbisoftGamesScraper extends BaseScraper<UbisoftRawOffer> {
         imgUrl,
       };
     } catch (error) {
-      this.logger.error(
+      logger.error(
         `Failed to read raw offer: ${error instanceof Error ? error.message : String(error)}`,
       );
       return null;
@@ -138,7 +139,7 @@ export class UbisoftGamesScraper extends BaseScraper<UbisoftRawOffer> {
         zone: "UTC",
       }).toJSDate();
     } catch (error) {
-      this.logger.debug(
+      logger.debug(
         `Failed to parse date in standard format: ${error instanceof Error ? error.message : String(error)}`,
       );
 
@@ -148,7 +149,7 @@ export class UbisoftGamesScraper extends BaseScraper<UbisoftRawOffer> {
           zone: "UTC",
         }).toJSDate();
       } catch (error) {
-        this.logger.error(
+        logger.error(
           `Failed to parse date in alternate format: ${error instanceof Error ? error.message : String(error)}`,
         );
       }

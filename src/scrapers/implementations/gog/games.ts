@@ -1,6 +1,7 @@
 import type { CronConfig } from "@/scrapers/base/scraper";
 import { OfferDuration } from "@/types/config";
 import type { NewOffer } from "@/types/database";
+import { logger } from "@/utils/logger";
 import { DateTime } from "luxon";
 import type { Locator, Page } from "playwright";
 import { GogBaseScraper, type GogRawOffer } from "./base";
@@ -89,7 +90,7 @@ export class GogGamesScraper extends GogBaseScraper {
         ...(imgUrl ? { imgUrl } : undefined),
       };
     } catch (error) {
-      this.logger.error(
+      logger.error(
         `Failed to read raw offer v1: ${error instanceof Error ? error.message : String(error)}`,
       );
       return null;
@@ -103,7 +104,7 @@ export class GogGamesScraper extends GogBaseScraper {
       const priceText = await priceElement.textContent();
 
       if (!priceText?.toLowerCase().includes("free")) {
-        this.logger.debug("Element doesn't seem to be free");
+        logger.debug("Element doesn't seem to be free");
         return null;
       }
 
@@ -113,7 +114,7 @@ export class GogGamesScraper extends GogBaseScraper {
       const url = href.startsWith("http") ? href : BASE_URL + href;
       return await this.readOfferFromDetailsPage(url);
     } catch (error) {
-      this.logger.error(
+      logger.error(
         `Failed to read raw offer v2: ${error instanceof Error ? error.message : String(error)}`,
       );
       return null;
@@ -129,7 +130,7 @@ export class GogGamesScraper extends GogBaseScraper {
       const url = href.startsWith("http") ? href : BASE_URL + href;
       return await this.readOfferFromDetailsPage(url);
     } catch (error) {
-      this.logger.error(
+      logger.error(
         `Failed to read raw offer v3: ${error instanceof Error ? error.message : String(error)}`,
       );
       return null;
@@ -182,7 +183,7 @@ export class GogGamesScraper extends GogBaseScraper {
         const validToUnix = Number.parseInt(rawOffer.validTo) / 1000;
         validTo = DateTime.fromSeconds(validToUnix).toJSDate();
       } catch (error) {
-        this.logger.error(
+        logger.error(
           `Failed to parse date: ${error instanceof Error ? error.message : String(error)}`,
         );
       }

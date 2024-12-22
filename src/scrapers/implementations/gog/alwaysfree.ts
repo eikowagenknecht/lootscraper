@@ -1,6 +1,7 @@
 import type { CronConfig } from "@/scrapers/base/scraper";
 import { OfferDuration } from "@/types/config";
 import type { NewOffer } from "@/types/database";
+import { logger } from "@/utils/logger";
 import { DateTime } from "luxon";
 import type { Locator, Page } from "playwright";
 import { GogBaseScraper, type GogRawOffer } from "./base";
@@ -63,7 +64,7 @@ export class GogGamesAlwaysFreeScraper extends GogBaseScraper {
         imgUrl,
       };
     } catch (error) {
-      this.logger.error(
+      logger.error(
         `Failed to read raw offer: ${error instanceof Error ? error.message : String(error)}`,
       );
       return null;
