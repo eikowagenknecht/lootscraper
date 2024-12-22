@@ -1,11 +1,16 @@
 import { writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import type { Config } from "@/types/config";
-import { OfferDuration, type OfferSource, OfferType } from "@/types/config";
+import {
+  OfferDuration,
+  type OfferSource,
+  type OfferType,
+} from "@/types/config";
 import type { Game, IgdbInfo, Offer, SteamInfo } from "@/types/database";
 import { FeedError } from "@/types/errors";
 import { AtomFeed } from "@/utils/atom";
 import { logger } from "@/utils/logger";
+import { generateFeedTitle, generateFilename } from "@/utils/names";
 import { toCapitalCaseAll } from "@/utils/stringTools";
 import { DateTime } from "luxon";
 import { getGameWithInfo } from "../database/gameRepository";
@@ -113,16 +118,13 @@ export class RssGenerator {
   }
 
   private getFilename(): string {
-    const parts: string[] = [this.config.common.feedFilePrefix];
-
-    if (this.options.source) parts.push(this.options.source.toLowerCase());
-    if (this.options.type) parts.push(this.options.type.toLowerCase());
-    if (this.options.duration !== OfferDuration.CLAIMABLE) {
-      if (this.options.duration)
-        parts.push(this.options.duration.toLowerCase());
-    }
-
-    return `${parts.join("_")}.xml`;
+    return generateFilename({
+      prefix: this.config.common.feedFilePrefix,
+      extension: "xml",
+      ...(this.options.source ? { source: this.options.source } : {}),
+      ...(this.options.type ? { type: this.options.type } : {}),
+      ...(this.options.duration ? { duration: this.options.duration } : {}),
+    });
   }
 
   private getFeedId(): string {
@@ -133,30 +135,11 @@ export class RssGenerator {
   }
 
   private getFeedTitle(): string {
-    if (!this.options.source && !this.options.type && !this.options.duration) {
-      return "Free Games and Loot";
-    }
-
-    const parts = ["Free"];
-
-    if (this.options.source) {
-      parts.push(toCapitalCaseAll(this.options.source));
-    }
-
-    if (this.options.type === OfferType.GAME) {
-      parts.push("Games");
-    } else if (this.options.type === OfferType.LOOT) {
-      parts.push("Loot");
-    }
-
-    if (
-      this.options.duration === OfferDuration.TEMPORARY ||
-      this.options.duration === OfferDuration.ALWAYS
-    ) {
-      parts.push(`(${this.options.duration})`);
-    }
-
-    return parts.join(" ");
+    return generateFeedTitle({
+      ...(this.options.source && { source: this.options.source }),
+      ...(this.options.type && { type: this.options.type }),
+      ...(this.options.duration && { duration: this.options.duration }),
+    });
   }
 
   private getEntryTitle(offer: Offer): string {
