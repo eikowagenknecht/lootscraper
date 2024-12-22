@@ -40,8 +40,6 @@ export interface OfferHandler<T extends RawOffer> {
 }
 
 export abstract class BaseScraper<T extends RawOffer = RawOffer> {
-  protected logger = logger;
-
   constructor(
     protected readonly context: BrowserContext,
     protected readonly config: Config,
@@ -74,7 +72,7 @@ export abstract class BaseScraper<T extends RawOffer = RawOffer> {
   }
 
   public async scrape(): Promise<NewOffer[]> {
-    this.logger.info(
+    logger.info(
       `Analyzing ${this.getSource()} for offers: ${this.getType()} / ${this.getDuration()}`,
     );
 
@@ -87,15 +85,15 @@ export abstract class BaseScraper<T extends RawOffer = RawOffer> {
 
       const titles = filteredOffers.map((o) => o.title).join(", ");
       if (filteredOffers.length > 0) {
-        this.logger.info(
+        logger.info(
           `Found ${filteredOffers.length.toFixed()} offers: ${titles}`,
         );
       } else if (this.offersExpected()) {
-        this.logger.error(
+        logger.error(
           "Found no offers, even though there should be at least one.",
         );
       } else {
-        this.logger.info("No offers found.");
+        logger.info("No offers found.");
       }
 
       return filteredOffers;
@@ -147,7 +145,7 @@ export abstract class BaseScraper<T extends RawOffer = RawOffer> {
             const normalizedOffer = handler.normalizeOffer(rawOffer);
             offers.push(normalizedOffer);
           } catch (error) {
-            this.logger.error(
+            logger.error(
               `Failed to process offer: ${error instanceof Error ? error.message : String(error)}`,
             );
           }
@@ -185,7 +183,7 @@ export abstract class BaseScraper<T extends RawOffer = RawOffer> {
     const titles = new Set<string>();
     return offers.filter((offer) => {
       if (titles.has(offer.title)) {
-        this.logger.debug(`Duplicate offer: ${offer.title}`);
+        logger.debug(`Duplicate offer: ${offer.title}`);
         return false;
       }
       titles.add(offer.title);

@@ -1,5 +1,6 @@
 import { OfferDuration, OfferSource, OfferType } from "@/types/config";
 import type { NewOffer } from "@/types/database";
+import { logger } from "@/utils/logger";
 import { cleanCombinedTitle, cleanGameTitle } from "@/utils/titleCleaner";
 import { DateTime } from "luxon";
 import type { Locator, Page } from "playwright";
@@ -93,13 +94,11 @@ export abstract class SteamBaseScraper extends BaseScraper<SteamRawOffer> {
             .locator(".game_purchase_discount_quantity")
             .innerText();
           if (!text) {
-            this.logger.warn(
-              `Offer for ${title} seems to be broken, skipping it.`,
-            );
+            logger.warn(`Offer for ${title} seems to be broken, skipping it.`);
             return null;
           }
         } catch {
-          this.logger.warn(
+          logger.warn(
             `Offer for ${title} doesn't contain any free items, skipping it.`,
           );
           return null;
@@ -116,7 +115,7 @@ export abstract class SteamBaseScraper extends BaseScraper<SteamRawOffer> {
         await page?.close();
       }
     } catch (error) {
-      this.logger.error(
+      logger.error(
         `Failed to read raw offer: ${error instanceof Error ? error.message : String(error)}`,
       );
       return null;
@@ -133,7 +132,7 @@ export abstract class SteamBaseScraper extends BaseScraper<SteamRawOffer> {
         await page.waitForLoadState("networkidle");
       }
     } catch {
-      this.logger.debug("No age verification needed or failed to handle it");
+      logger.debug("No age verification needed or failed to handle it");
     }
   }
 
@@ -154,24 +153,34 @@ export abstract class SteamBaseScraper extends BaseScraper<SteamRawOffer> {
         .replace("Free to keep when you get it before ", "")
         .replace(". Some limitations apply. (?)", "");
 
+      let parsedDate: DateTime | null = null;
+
       try {
-        // Parse "DD MMM @ HH:mmAM/PM" format
-        let parsedDate = DateTime.fromFormat(dateText, "dd MMM @ h:mma", {
+        logger.debug(`Parsing date in format for this year: ${dateText}`);
+
+        // Parse Steams "D MMM @ HH:mmAM/PM" format
+        parsedDate = DateTime.fromFormat(dateText, "d MMM @ h:mma", {
           zone: "UTC",
         });
-
-        // Set the year
         parsedDate = parsedDate.set({ year: now.year });
-
-        // If the date is in the past, add a year
-        const yesterday = now.minus({ days: 1 });
-        if (parsedDate < yesterday) {
-          parsedDate = parsedDate.plus({ years: 1 });
-        }
-
-        validTo = parsedDate.toJSDate();
       } catch {
-        this.logger.warn(`Couldn't parse date ${dateText}`);
+        logger.debug(`Couldn't parse date, trying next format: ${dateText}`);
+      }
+
+      if (!parsedDate) {
+        try {
+          // Maybe it's next year, so parse Steams "D MMM, YYYY @ HH:mmAM/PM" format instead
+          parsedDate = DateTime.fromFormat(dateText, "d MMM, yyyy @ h:mma", {
+            zone: "UTC",
+          });
+        } catch {
+          logger.warn(`Couldn't parse date because it's invalid: ${dateText}`);
+        }
+      }
+
+      if (parsedDate) {
+        logger.debug(`Parsed date: ${parsedDate.toISO()}`);
+        validTo = parsedDate.toJSDate();
       }
     }
 
