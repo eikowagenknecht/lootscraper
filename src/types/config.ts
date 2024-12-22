@@ -2,11 +2,13 @@ import { z } from "zod";
 
 // Enums
 export const LogLevel = z.enum([
-  "DEBUG",
-  "INFO",
-  "WARNING",
   "ERROR",
-  "CRITICAL",
+  "WARN",
+  "INFO",
+  "HTTP",
+  "VERBOSE",
+  "DEBUG",
+  "SILLY",
 ]);
 export type LogLevel = z.infer<typeof LogLevel>;
 
