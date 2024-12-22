@@ -1,8 +1,9 @@
 import { writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import type { Config } from "@/types/config";
-import { OfferDuration, type OfferSource, OfferType } from "@/types/config";
+import type { OfferDuration, OfferSource, OfferType } from "@/types/config";
 import type { Offer } from "@/types/database";
+import { generateFeedTitle, generateFilename } from "@/utils/names";
 import { cleanHtml, toCapitalCaseAll } from "@/utils/stringTools";
 import Handlebars from "handlebars";
 import { DateTime } from "luxon";
@@ -122,8 +123,6 @@ const TEMPLATE = `<!DOCTYPE html>
 </body>
 </html>`;
 
-const DEFAULT_FEED_TITLE = "Free Games and Loot";
-
 interface HtmlGeneratorOptions {
   source?: OfferSource;
   type?: OfferType;
@@ -231,8 +230,7 @@ export class HtmlGenerator {
         }
 
         // If valid_to is also the same, compare by title
-        return b.title.localeCompare(a.title);
-        // TODO: Reverse order, this is only to test with the old version
+        return a.title.localeCompare(b.title);
       }),
     });
 
@@ -243,49 +241,20 @@ export class HtmlGenerator {
   }
 
   private getFilename(): string {
-    const parts = [this.config.common.feedFilePrefix];
-    if (this.options.source) parts.push(this.options.source.toLowerCase());
-    if (this.options.type) parts.push(this.options.type.toLowerCase());
-    if (this.options.duration !== OfferDuration.CLAIMABLE) {
-      if (this.options.duration)
-        parts.push(this.options.duration.toLowerCase());
-    }
-    if (this.options.all) {
-      parts.push("all");
-    }
-    return `${parts.join("_")}.html`;
+    return generateFilename({
+      prefix: this.config.common.feedFilePrefix,
+      extension: "html",
+      ...(this.options.source && { source: this.options.source }),
+      ...(this.options.type && { type: this.options.type }),
+      ...(this.options.duration && { duration: this.options.duration }),
+    });
   }
 
   private getFeedTitle(): string {
-    // Return default title if no options specified
-    if (!this.options.source && !this.options.type && !this.options.duration) {
-      return DEFAULT_FEED_TITLE;
-    }
-
-    const parts: string[] = ["Free"];
-
-    if (this.options.source) {
-      parts.push(toCapitalCaseAll(this.options.source));
-    }
-
-    if (this.options.type) {
-      if (this.options.type === OfferType.GAME) {
-        parts.push("Games");
-        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-      } else if (this.options.type === OfferType.LOOT) {
-        parts.push("Loot");
-      }
-    }
-
-    if (
-      this.options.duration &&
-      [OfferDuration.TEMPORARY, OfferDuration.ALWAYS].includes(
-        this.options.duration,
-      )
-    ) {
-      parts.push(`(${this.options.duration})`);
-    }
-
-    return parts.join(" ");
+    return generateFeedTitle({
+      ...(this.options.source && { source: this.options.source }),
+      ...(this.options.type && { type: this.options.type }),
+      ...(this.options.duration && { duration: this.options.duration }),
+    });
   }
 }
