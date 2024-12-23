@@ -35,7 +35,7 @@ export abstract class SteamBaseScraper extends BaseScraper<SteamRawOffer> {
     return OfferDuration.CLAIMABLE;
   }
 
-  abstract getSteamCategory(): number;
+  abstract getSteamCategory(): number; // Games or DLC
 
   getOffersUrl(): string {
     const params = new URLSearchParams({
@@ -87,13 +87,16 @@ export abstract class SteamBaseScraper extends BaseScraper<SteamRawOffer> {
           .getAttribute("src");
         if (!imgUrl) throw new Error(`Couldn't find image for ${title}`);
 
-        // Get the resolved text
         let text: string;
         try {
+          // Get the resolved text here because the text_content() contains
+          // special characters.
           text = await page
             .locator(".game_purchase_discount_quantity")
             .innerText();
           if (!text) {
+            // Sometimes this does not exist, when a game is not free any more
+            // or only some DLCs of the game are free.
             logger.warn(`Offer for ${title} seems to be broken, skipping it.`);
             return null;
           }

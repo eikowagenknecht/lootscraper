@@ -33,6 +33,7 @@ export abstract class GogBaseScraper<
       .replace(/ 1x$/, "");
 
     if (!sanitized.startsWith("https:")) {
+      // TODO: Check if this is still necessary
       sanitized = `https:${sanitized}`;
     }
 
