@@ -1,11 +1,8 @@
 import { packData } from "@/bot/utils/callbackPack";
 import { getEnabledScraperCombinations } from "@/scrapers";
+import type { ScraperCombination } from "@/scrapers/utils";
 import { hasTelegramSubscription } from "@/services/database/telegramSubscriptionRepository";
-import {
-  OfferDuration,
-  type OfferSource,
-  type OfferType,
-} from "@/types/config";
+import { OfferDuration } from "@/types/config";
 import { logger } from "@/utils/logger";
 import { type CommandContext, InlineKeyboard } from "grammy";
 import type { z } from "zod";
@@ -46,14 +43,15 @@ export async function buildManageKeyboard(chatId: number) {
   // Add subscription toggle buttons for each source/type/duration combination
   const combinations = getEnabledScraperCombinations();
 
-  for (const { source, type, duration } of combinations) {
+  for (const combination of combinations) {
+    const { source, type, duration } = combination;
     const isSubscribed = await hasTelegramSubscription(
       chatId,
       source,
       type,
       duration,
     );
-    const buttonText = getButtonText(source, type, duration, isSubscribed);
+    const buttonText = getButtonText(combination, isSubscribed);
 
     const callbackData: z.infer<typeof toggleSubscriptionSchema> = {
       action: "toggle",
@@ -75,12 +73,13 @@ export async function buildManageKeyboard(chatId: number) {
 }
 
 function getButtonText(
-  source: OfferSource,
-  type: OfferType,
-  duration: OfferDuration,
+  combination: ScraperCombination,
   isSubscribed: boolean,
 ): string {
   const prefix = isSubscribed ? "[x] " : "";
-  const suffix = duration !== OfferDuration.CLAIMABLE ? ` (${duration})` : "";
-  return `${prefix}${source} ${type}${suffix}`;
+  const suffix =
+    combination.duration !== OfferDuration.CLAIMABLE
+      ? ` (${combination.duration})`
+      : "";
+  return `${prefix}${combination.source} ${combination.type}${suffix}`;
 }

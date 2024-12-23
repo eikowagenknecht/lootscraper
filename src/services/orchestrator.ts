@@ -1,18 +1,8 @@
 import { telegramBotService } from "@/bot/service";
 import {
-  AmazonGamesScraper,
-  AmazonLootScraper,
-  AppleGamesScraper,
-  EpicGamesScraper,
-  GogGamesAlwaysFreeScraper,
-  GogGamesScraper,
-  GoogleGamesScraper,
-  HumbleGamesScraper,
-  SteamGamesScraper,
-  SteamLootScraper,
-  UbisoftGamesScraper,
-} from "@/scrapers";
-import type { BaseScraper } from "@/scrapers/base/scraper";
+  type ScraperInstance,
+  getEnabledScraperClasses,
+} from "@/scrapers/utils";
 import { browser } from "@/services/browser";
 import { config } from "@/services/config";
 import { database } from "@/services/database";
@@ -21,26 +11,62 @@ import {
   getActiveOffers,
   getAllOffers,
 } from "@/services/database/offerRepository";
-import type { Config } from "@/types/config";
 import { logger } from "@/utils/logger";
+import { getAllEnabledFeedFilenames } from "@/utils/names";
 import { Cron } from "croner";
-import type { BrowserContext } from "playwright";
 import { FeedService } from "./feed";
+import { uploadMultipleFiles } from "./ftp";
 import { GameInfoService } from "./gameinfo";
+
+interface ScrapeResult {
+  newOfferIds: number[];
+  offerCount: number;
+}
 
 interface ServiceState {
   isRunning: boolean;
   scrapeJobs: Cron[];
-  currentScrape: Promise<void> | null;
-  scrapeQueue: (() => Promise<void>)[];
+  currentTask: Promise<void> | null;
+  taskQueue: (() => Promise<void>)[];
 }
 
 const state: ServiceState = {
   isRunning: false,
   scrapeJobs: [],
-  currentScrape: null,
-  scrapeQueue: [],
+  currentTask: null,
+  taskQueue: [],
 };
+
+/**
+ * Run tasks ensuring only one runs at a time
+ */
+async function runTask(task: () => Promise<void>): Promise<void> {
+  if (state.currentTask) {
+    // If a task is running, queue this one
+    logger.debug("Adding task to queue.");
+    return new Promise((resolve) => {
+      state.taskQueue.push(async () => {
+        await task();
+        resolve();
+      });
+    });
+  }
+
+  try {
+    // Set current task and run it
+    state.currentTask = task();
+    await state.currentTask;
+  } finally {
+    state.currentTask = null;
+
+    // Process next in queue if any
+    const nextTask = state.taskQueue.shift();
+    if (nextTask) {
+      logger.debug("Processing next queued task.");
+      void runTask(nextTask);
+    }
+  }
+}
 
 /**
  * Initialize application services based on config
@@ -75,71 +101,43 @@ export async function initializeServices(): Promise<void> {
     // Start services and schedule jobs
     startServices();
     registerShutdownHandlers();
+
+    // Run initial tasks
+    await runInitialTasks();
   } catch (error) {
     await shutdownServices();
     throw error;
   }
 }
 
-const SCRAPERS = [
-  AppleGamesScraper,
-  AmazonGamesScraper,
-  AmazonLootScraper,
-  EpicGamesScraper,
-  GoogleGamesScraper,
-  HumbleGamesScraper,
-  SteamGamesScraper,
-  SteamLootScraper,
-  UbisoftGamesScraper,
-  GogGamesScraper,
-  GogGamesAlwaysFreeScraper,
-] as const;
-
-/**
- * Run scraper ensuring only one runs at a time
- */
-async function runScraper(task: () => Promise<void>): Promise<void> {
-  if (state.currentScrape) {
-    // If a scrape is running, queue this one
-    logger.debug("Adding scrape task to queue");
-    return new Promise((resolve) => {
-      state.scrapeQueue.push(async () => {
-        await task();
-        resolve();
-      });
-    });
-  }
-
-  try {
-    // Set current scrape and run it
-    state.currentScrape = task();
-    await state.currentScrape;
-  } finally {
-    state.currentScrape = null;
-
-    // Process next in queue if any
-    const nextTask = state.scrapeQueue.shift();
-    if (nextTask) {
-      logger.debug("Processing next queued scrape task");
-      void runScraper(nextTask);
-    }
-  }
+async function runInitialTasks(): Promise<void> {
+  await updateFeeds();
+  await uploadFeedsToServer();
+  queueInitialScrapes();
 }
 
-interface ScrapeResult {
-  newOfferIds: number[];
-  offerCount: number;
+function queueInitialScrapes(): void {
+  const cfg = config.get();
+  if (cfg.actions.scrapeOffers) {
+    // Run all enabled scrapers once on startup
+    const enabledScrapers = getEnabledScraperClasses();
+
+    const context = browser.getContext();
+    for (const scraper of enabledScrapers) {
+      const scraperInstance = new scraper(context, config.get());
+      queueScraper(scraperInstance);
+    }
+  }
 }
 
 /**
  * Run scraping for a single scraper and store results
  */
 async function runSingleScrape(
-  scraper: BaseScraper,
-  context = "scheduled",
+  scraper: ScraperInstance,
 ): Promise<ScrapeResult> {
   logger.info(
-    `Starting ${context} scrape for ${scraper.getSource()} ${scraper.getType()}...`,
+    `Starting scrape for ${scraper.getSource()} ${scraper.getType()}...`,
   );
 
   const offers = await scraper.scrape();
@@ -154,9 +152,7 @@ async function runSingleScrape(
     }
   }
 
-  logger.info(
-    `Completed ${context} scrape with ${offers.length.toFixed()} offers`,
-  );
+  logger.info(`Completed scrape with ${offers.length.toFixed()} offers`);
 
   return {
     newOfferIds,
@@ -196,70 +192,60 @@ async function updateFeeds(): Promise<void> {
   await feedService.generateFeeds(activeOffers, allOffers);
 }
 
+async function uploadFeedsToServer(): Promise<void> {
+  const cfg = config.get();
+  if (!cfg.actions.uploadToFtp || !cfg.actions.generateFeed) return;
+
+  try {
+    const feedFiles = getAllEnabledFeedFilenames();
+    const uploadResults = await uploadMultipleFiles(feedFiles);
+    for (const result of uploadResults) {
+      if (result.success) {
+        logger.info(`Uploaded ${result.fileName}.`);
+      } else {
+        logger.error(`Failed to upload ${result.fileName}: ${result.error}`);
+      }
+    }
+  } catch (error) {
+    logger.error(
+      `Failed to upload feeds: ${error instanceof Error ? error.message : String(error)}`,
+    );
+    throw error;
+  }
+}
+
+function queueScraper(scraper: ScraperInstance): void {
+  void runTask(async () => {
+    try {
+      const result = await runSingleScrape(scraper);
+      if (result.newOfferIds.length > 0) {
+        await updateGameInfo(result.newOfferIds);
+        await updateFeeds();
+        await uploadFeedsToServer();
+      }
+    } catch (error) {
+      logger.error(
+        `Failed to scrape ${scraper.getSource()} ${scraper.getType()}: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  });
+}
+
 /**
  * Schedule regular scraping for a scraper
  */
-function scheduleScraper(scraper: BaseScraper): void {
+function scheduleScraper(scraper: ScraperInstance): void {
   // Schedule scraper based on its defined schedule
   for (const schedule of scraper.getSchedule()) {
     const job = new Cron(
       schedule.schedule,
       { timezone: schedule.timezone ?? "UTC" },
       () => {
-        void runScraper(async () => {
-          try {
-            const result = await runSingleScrape(scraper);
-            if (result.newOfferIds.length > 0) {
-              await updateGameInfo(result.newOfferIds);
-              await updateFeeds();
-            }
-          } catch (error) {
-            logger.error(
-              `Failed to scrape ${scraper.getSource()} ${scraper.getType()}: ${error instanceof Error ? error.message : String(error)}`,
-            );
-          }
-        });
+        queueScraper(scraper);
       },
     );
     state.scrapeJobs.push(job);
   }
-}
-
-/**
- * Run initial scrape for all enabled scrapers
- */
-function runInitialScrapes(scrapers: BaseScraper[]): void {
-  logger.info("Running initial scrape for all enabled scrapers...");
-
-  for (const scraper of scrapers) {
-    void runScraper(async () => {
-      try {
-        const result = await runSingleScrape(scraper, "initial");
-        if (result.newOfferIds.length > 0) {
-          await updateGameInfo(result.newOfferIds);
-          await updateFeeds();
-        }
-      } catch (error) {
-        logger.error(
-          `Failed initial scrape for ${scraper.getSource()} ${scraper.getType()}: ${error instanceof Error ? error.message : String(error)}`,
-        );
-      }
-    });
-  }
-}
-
-/**
- * Get enabled scrapers based on config
- */
-function getEnabledScrapers(
-  context: BrowserContext,
-  cfg: Config,
-): BaseScraper[] {
-  return SCRAPERS.map((ScraperClass) => new ScraperClass(context, cfg)).filter(
-    (scraper) =>
-      cfg.scraper.offerSources.includes(scraper.getSource()) &&
-      cfg.scraper.offerTypes.includes(scraper.getType()),
-  ) as BaseScraper[];
 }
 
 /**
@@ -276,16 +262,14 @@ function startServices() {
 
   // Initialize and schedule scrapers if enabled
   if (cfg.actions.scrapeOffers) {
-    const context = browser.getContext();
-    const enabledScrapers = getEnabledScrapers(context, cfg);
+    const enabledScrapers = getEnabledScraperClasses();
 
     // Setup schedules for each scraper
+    const context = browser.getContext();
     for (const scraper of enabledScrapers) {
-      scheduleScraper(scraper);
+      const scraperInstance = new scraper(context, cfg);
+      scheduleScraper(scraperInstance);
     }
-
-    // Run initial scrapes
-    runInitialScrapes(enabledScrapers);
   }
 }
 
@@ -300,12 +284,12 @@ export async function shutdownServices(): Promise<void> {
     job.stop();
   }
   state.scrapeJobs = [];
-  state.scrapeQueue = [];
+  state.taskQueue = [];
 
   // Wait for current scrape to finish if any
-  if (state.currentScrape) {
+  if (state.currentTask) {
     try {
-      await state.currentScrape;
+      await state.currentTask;
     } catch (error) {
       logger.error("Error while waiting for current scrape to finish:", error);
     }

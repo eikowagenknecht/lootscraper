@@ -1,32 +1,24 @@
 import { writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
+import type { ScraperCombination } from "@/scrapers/utils";
 import type { Config } from "@/types/config";
-import {
-  OfferDuration,
-  type OfferSource,
-  type OfferType,
-} from "@/types/config";
+import { OfferDuration } from "@/types/config";
 import type { Game, IgdbInfo, Offer, SteamInfo } from "@/types/database";
 import { FeedError } from "@/types/errors";
 import { AtomFeed } from "@/utils/atom";
 import { logger } from "@/utils/logger";
 import { generateFeedTitle, generateFilename } from "@/utils/names";
+import { getDataPath } from "@/utils/path";
 import { toCapitalCaseAll } from "@/utils/stringTools";
 import { DateTime } from "luxon";
 import { getGameWithInfo } from "../database/gameRepository";
-
-interface RssGeneratorOptions {
-  source?: OfferSource;
-  type?: OfferType;
-  duration?: OfferDuration;
-}
 
 export class RssGenerator {
   private readonly feedGenerator: AtomFeed;
 
   constructor(
     private readonly config: Config,
-    private readonly options: RssGeneratorOptions = {},
+    private readonly combination?: ScraperCombination,
   ) {
     this.feedGenerator = new AtomFeed({
       id: this.config.feed.idPrefix + this.getFeedId(),
@@ -59,8 +51,7 @@ export class RssGenerator {
   }
 
   public async generateFeed(offers: Offer[]): Promise<void> {
-    logger.info(`Generating feed for ${offers.length.toFixed()} offers...`);
-    if (offers.length === 0) return;
+    logger.info(`Generating RSS feed for ${offers.length.toFixed()} offers...`);
 
     for (const offer of offers) {
       // Skip entries without dates or future entries
@@ -108,7 +99,7 @@ export class RssGenerator {
     }
 
     try {
-      const outputPath = resolve(process.cwd(), "data", this.getFilename());
+      const outputPath = resolve(getDataPath(), this.getFilename());
       await writeFile(outputPath, this.feedGenerator.toXML());
     } catch (error) {
       throw new FeedError(
@@ -121,9 +112,11 @@ export class RssGenerator {
     return generateFilename({
       prefix: this.config.common.feedFilePrefix,
       extension: "xml",
-      ...(this.options.source ? { source: this.options.source } : {}),
-      ...(this.options.type ? { type: this.options.type } : {}),
-      ...(this.options.duration ? { duration: this.options.duration } : {}),
+      ...(this.combination && {
+        source: this.combination.source,
+        type: this.combination.type,
+        duration: this.combination.duration,
+      }),
     });
   }
 
@@ -135,11 +128,7 @@ export class RssGenerator {
   }
 
   private getFeedTitle(): string {
-    return generateFeedTitle({
-      ...(this.options.source && { source: this.options.source }),
-      ...(this.options.type && { type: this.options.type }),
-      ...(this.options.duration && { duration: this.options.duration }),
-    });
+    return generateFeedTitle(this.combination);
   }
 
   private getEntryTitle(offer: Offer): string {

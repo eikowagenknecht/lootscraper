@@ -13,26 +13,32 @@ import {
   SteamLootScraper,
   UbisoftGamesScraper,
 } from "./implementations";
+import { ItchGamesScraper } from "./implementations/itch";
 
-interface ScraperCombination {
+export interface ScraperCombination {
   source: OfferSource;
   type: OfferType;
   duration: OfferDuration;
 }
 
 const allScrapers = [
-  EpicGamesScraper,
-  SteamGamesScraper,
-  SteamLootScraper,
-  GogGamesScraper,
-  GogGamesAlwaysFreeScraper,
   AmazonGamesScraper,
   AmazonLootScraper,
-  HumbleGamesScraper,
-  UbisoftGamesScraper,
-  GoogleGamesScraper,
   AppleGamesScraper,
+  EpicGamesScraper,
+  ItchGamesScraper,
+  GogGamesScraper,
+  GogGamesAlwaysFreeScraper,
+  GoogleGamesScraper,
+  HumbleGamesScraper,
+  SteamGamesScraper,
+  SteamLootScraper,
+  UbisoftGamesScraper,
 ];
+
+export type ScraperClass = typeof allScrapers;
+
+export type ScraperInstance = InstanceType<ScraperClass[number]>;
 
 // Get all unique combinations of source/type/duration from the available scrapers
 export function getEnabledScraperCombinations(): ScraperCombination[] {
@@ -41,25 +47,40 @@ export function getEnabledScraperCombinations(): ScraperCombination[] {
 
   // Get combinations from all scrapers
   for (const Scraper of allScrapers) {
-    const source = Scraper.prototype.getSource();
-    const type = Scraper.prototype.getType();
-    const duration = Scraper.prototype.getDuration();
+    const combination: ScraperCombination = {
+      source: Scraper.prototype.getSource(),
+      type: Scraper.prototype.getType(),
+      duration: Scraper.prototype.getDuration(),
+    };
 
     // Only include scrapers that are enabled in config
     if (
-      !cfg.scraper.offerSources.includes(source) ||
-      !cfg.scraper.offerTypes.includes(type) ||
-      !cfg.scraper.offerDurations.includes(duration)
+      !cfg.scraper.offerSources.includes(combination.source) ||
+      !cfg.scraper.offerTypes.includes(combination.type) ||
+      !cfg.scraper.offerDurations.includes(combination.duration)
     ) {
       continue;
     }
 
-    combinations.push({
-      source,
-      type,
-      duration,
-    });
+    combinations.push(combination);
   }
 
   return combinations;
+}
+
+export function getEnabledScraperClasses(): ScraperClass {
+  const cfg = config.get();
+  return allScrapers.filter((Scraper) => {
+    const combination: ScraperCombination = {
+      source: Scraper.prototype.getSource(),
+      type: Scraper.prototype.getType(),
+      duration: Scraper.prototype.getDuration(),
+    };
+
+    return (
+      cfg.scraper.offerSources.includes(combination.source) &&
+      cfg.scraper.offerTypes.includes(combination.type) &&
+      cfg.scraper.offerDurations.includes(combination.duration)
+    );
+  });
 }

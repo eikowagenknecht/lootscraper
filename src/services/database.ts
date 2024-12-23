@@ -1,10 +1,10 @@
-import { existsSync } from "node:fs";
 import { resolve } from "node:path";
 import { migrateToLatest } from "@/database/migrations";
 import type { Config } from "@/types/config";
 import type { Database as DatabaseType } from "@/types/database";
 import { DatabaseError } from "@/types/errors";
 import { logger } from "@/utils/logger";
+import { getDataPath } from "@/utils/path";
 import SQLite from "better-sqlite3";
 import { Kysely, SqliteDialect } from "kysely";
 
@@ -31,7 +31,7 @@ export class DatabaseService {
       if (memoryDb) {
         dbPath = ":memory:";
       } else {
-        dbPath = this.getDbPath(config);
+        dbPath = resolve(getDataPath(), config.common.databaseFile);
       }
 
       this.db = new Kysely<DatabaseType>({
@@ -65,17 +65,6 @@ export class DatabaseService {
       await this.db.destroy();
       this.db = null;
     }
-  }
-
-  private getDbPath(config: Config): string {
-    // Check for Docker environment
-    const dockerPath = "/data/";
-    if (existsSync(dockerPath)) {
-      return resolve(dockerPath, config.common.databaseFile);
-    }
-
-    // Fall back to local path
-    return resolve(process.cwd(), "data", config.common.databaseFile);
   }
 }
 

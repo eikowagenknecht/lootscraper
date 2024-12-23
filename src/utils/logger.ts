@@ -3,6 +3,7 @@ import type { Format, TransformableInfo } from "logform";
 import { DateTime } from "luxon";
 import { createLogger, format, transports } from "winston";
 import DailyRotateFile from "winston-daily-rotate-file";
+import { getDataPath } from "./path";
 
 interface LoggerConfig {
   console: {
@@ -80,9 +81,7 @@ function createLoggerInstance() {
 
     logger.add(
       new DailyRotateFile({
-        filename: logFile
-          ? resolve(process.cwd(), "data", "log", logFile)
-          : resolve(process.cwd(), "data", "log", fileConfig.filename),
+        filename: resolve(getDataPath(), "log", logFile ?? fileConfig.filename),
         datePattern: "YYYY-MM-DD",
         extension: ".log",
         zippedArchive: true,
