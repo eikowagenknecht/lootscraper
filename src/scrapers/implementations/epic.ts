@@ -117,9 +117,9 @@ export class EpicGamesScraper extends BaseScraper<EpicRawOffer> {
       enddate: rawOffer.validTo,
     };
 
-    let validTo: Date | null = null;
+    let validTo: DateTime | null = null;
     try {
-      validTo = DateTime.fromISO(rawOffer.validTo).toJSDate();
+      validTo = DateTime.fromISO(rawOffer.validTo);
     } catch (error) {
       logger.error(
         `Failed to parse date ${rawOffer.validTo}: ${error instanceof Error ? error.message : String(error)}`,
@@ -134,7 +134,7 @@ export class EpicGamesScraper extends BaseScraper<EpicRawOffer> {
       probable_game_name: rawOffer.title,
       seen_last: DateTime.now().toISO(),
       seen_first: DateTime.now().toISO(),
-      valid_to: validTo?.toISOString() ?? null,
+      valid_to: validTo?.toISO() ?? null,
       rawtext: JSON.stringify(rawtext),
       url: rawOffer.url ?? null,
       img_url: rawOffer.imgUrl ?? null,

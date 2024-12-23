@@ -176,12 +176,11 @@ export class GogGamesScraper extends GogBaseScraper {
       rawtext.enddate = rawOffer.validTo;
     }
 
-    let validTo: Date | null = null;
+    let validTo: DateTime | null = null;
     if (rawOffer.validTo) {
       try {
-        // Convert milliseconds timestamp to Date
-        const validToUnix = Number.parseInt(rawOffer.validTo) / 1000;
-        validTo = DateTime.fromSeconds(validToUnix).toJSDate();
+        const validToUnix = Number.parseInt(rawOffer.validTo);
+        validTo = DateTime.fromMillis(validToUnix);
       } catch (error) {
         logger.error(
           `Failed to parse date: ${error instanceof Error ? error.message : String(error)}`,
@@ -197,7 +196,7 @@ export class GogGamesScraper extends GogBaseScraper {
       probable_game_name: rawOffer.title,
       seen_last: DateTime.now().toISO(),
       seen_first: DateTime.now().toISO(),
-      ...(validTo ? { valid_to: validTo.toISOString() } : null),
+      ...(validTo ? { valid_to: validTo.toISO() } : null),
       rawtext: JSON.stringify(rawtext),
       url: rawOffer.url ?? OFFER_URL,
       img_url: rawOffer.imgUrl ?? null,
