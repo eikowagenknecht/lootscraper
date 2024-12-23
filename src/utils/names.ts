@@ -1,58 +1,141 @@
-import { OfferDuration, type OfferSource, OfferType } from "@/types/config";
+import {
+  type ScraperCombination,
+  getEnabledScraperCombinations,
+} from "@/scrapers/utils";
+import { config } from "@/services/config";
+import { OfferDuration, OfferType } from "@/types/config";
 import { toCapitalCaseAll } from "./stringTools";
 
 export interface FilenameOptions {
   prefix: string;
   extension: string;
-  source?: OfferSource;
-  type?: OfferType;
-  duration?: OfferDuration;
-  all?: boolean;
-}
-
-export interface FeedTitleOptions {
-  source?: OfferSource;
-  type?: OfferType;
-  duration?: OfferDuration;
+  combination?: ScraperCombination;
+  withHistory?: boolean;
 }
 
 export function generateFilename(options: FilenameOptions): string {
   const parts = [options.prefix];
-  if (options.source) parts.push(options.source.toLowerCase());
-  if (options.type) parts.push(options.type.toLowerCase());
-  if (options.duration !== OfferDuration.CLAIMABLE) {
-    if (options.duration) parts.push(options.duration.toLowerCase());
+  if (options.combination) {
+    parts.push(options.combination.source.toLowerCase());
+    parts.push(options.combination.type.toLowerCase());
+    if (options.combination.duration !== OfferDuration.CLAIMABLE) {
+      parts.push(options.combination.duration.toLowerCase());
+    }
   }
-  if (options.all) {
+  if (options.withHistory) {
     parts.push("all");
   }
   return `${parts.join("_")}.${options.extension}`;
 }
 
-export function generateFeedTitle(options: FeedTitleOptions) {
+export function generateFeedTitle(combinations?: ScraperCombination): string {
   // Return default title if no options specified
-  if (!options.source && !options.type && !options.duration) {
+  if (!combinations) {
     return "Free Games and Loot";
   }
 
   const parts: string[] = ["Free"];
 
-  if (options.source) {
-    parts.push(toCapitalCaseAll(options.source));
-  }
+  parts.push(toCapitalCaseAll(combinations.source));
 
-  if (options.type === OfferType.GAME) {
+  if (combinations.type === OfferType.GAME) {
     parts.push("Games");
-  } else if (options.type === OfferType.LOOT) {
+  } else {
     parts.push("Loot");
   }
 
   if (
-    options.duration === OfferDuration.TEMPORARY ||
-    options.duration === OfferDuration.ALWAYS
+    combinations.duration === OfferDuration.TEMPORARY ||
+    combinations.duration === OfferDuration.ALWAYS
   ) {
-    parts.push(`(${options.duration})`);
+    parts.push(`(${combinations.duration})`);
   }
 
   return parts.join(" ");
+}
+
+interface EnapledFeedFilenameOptions {
+  prefix: string;
+  extension: string;
+  enabledCombinations?: ScraperCombination[];
+  withHistory?: boolean;
+}
+export function getEnabledFeedFilenames(
+  options: EnapledFeedFilenameOptions,
+): string[] {
+  if (!options.enabledCombinations)
+    return [
+      generateFilename({
+        prefix: options.prefix,
+        extension: options.extension,
+        ...(options.withHistory && { withHistory: true }),
+      }),
+    ];
+  const res: string[] = [];
+  for (const combination of options.enabledCombinations) {
+    res.push(
+      generateFilename({
+        prefix: options.prefix,
+        extension: options.extension,
+        combination: combination,
+        ...(options.withHistory && { withHistory: true }),
+      }),
+    );
+  }
+  return res;
+}
+
+export function getAllEnabledFeedFilenames() {
+  const cfg = config.get();
+
+  const res: string[] = [];
+  // Main xml feed
+  res.push(
+    ...getEnabledFeedFilenames({
+      prefix: cfg.common.feedFilePrefix,
+      extension: "xml",
+    }),
+  );
+  // Main html feed
+  res.push(
+    ...getEnabledFeedFilenames({
+      prefix: cfg.common.feedFilePrefix,
+      extension: "html",
+    }),
+  );
+  // Main html feed - History
+  res.push(
+    ...getEnabledFeedFilenames({
+      prefix: cfg.common.feedFilePrefix,
+      extension: "html",
+      withHistory: true,
+    }),
+  );
+  // Source xml feeds
+  res.push(
+    ...getEnabledFeedFilenames({
+      prefix: cfg.common.feedFilePrefix,
+      extension: "xml",
+      enabledCombinations: getEnabledScraperCombinations(),
+    }),
+  );
+  // Source html feeds
+  res.push(
+    ...getEnabledFeedFilenames({
+      prefix: cfg.common.feedFilePrefix,
+      extension: "html",
+      enabledCombinations: getEnabledScraperCombinations(),
+    }),
+  );
+  // Source html feeds - History
+  res.push(
+    ...getEnabledFeedFilenames({
+      prefix: cfg.common.feedFilePrefix,
+      extension: "html",
+      enabledCombinations: getEnabledScraperCombinations(),
+      withHistory: true,
+    }),
+  );
+
+  return res;
 }

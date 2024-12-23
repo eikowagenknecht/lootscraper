@@ -1,5 +1,6 @@
+import { getEnabledScraperCombinations } from "@/scrapers";
+import type { ScraperCombination } from "@/scrapers/utils";
 import type { Config } from "@/types/config";
-import type { OfferDuration, OfferSource, OfferType } from "@/types/config";
 import type { Offer } from "@/types/database";
 import { logger } from "@/utils/logger";
 import { HtmlGenerator } from "./generators/html";
@@ -17,19 +18,11 @@ export class FeedService {
       return;
     }
 
-    // Generate source-specific feeds
-    for (const source of this.config.scraper.offerSources) {
-      for (const type of this.config.scraper.offerTypes) {
-        for (const duration of this.config.scraper.offerDurations) {
-          await this.generateSourceFeed(
-            source,
-            type,
-            duration,
-            activeOffers,
-            allOffers,
-          );
-        }
-      }
+    const enabledCombinations: ScraperCombination[] =
+      getEnabledScraperCombinations();
+
+    for (const combination of enabledCombinations) {
+      await this.generateSourceFeed(combination, activeOffers, allOffers);
     }
 
     // Generate main feed with all offers
@@ -37,41 +30,35 @@ export class FeedService {
   }
 
   private async generateSourceFeed(
-    source: OfferSource,
-    type: OfferType,
-    duration: OfferDuration,
+    combination: ScraperCombination,
     activeOffers: Offer[],
     allOffers: Offer[],
   ): Promise<void> {
     const filteredActiveOffers = activeOffers.filter(
       (offer) =>
-        offer.source === source &&
-        offer.type === type &&
-        offer.duration === duration,
+        offer.source === combination.source &&
+        offer.type === combination.type &&
+        offer.duration === combination.duration,
     );
 
     const filteredAllOffers = allOffers.filter(
       (offer) =>
-        offer.source === source &&
-        offer.type === type &&
-        offer.duration === duration,
+        offer.source === combination.source &&
+        offer.type === combination.type &&
+        offer.duration === combination.duration,
     );
 
-    if (filteredAllOffers.length === 0) return;
-
-    const includeFilter = { source, type, duration };
-
     // Generate Atom feed
-    const feedGen = new RssGenerator(this.config, includeFilter);
+    const feedGen = new RssGenerator(this.config, combination);
     await feedGen.generateFeed(filteredActiveOffers);
 
     // Generate HTML views
-    const htmlGen = new HtmlGenerator(this.config, includeFilter);
+    const htmlGen = new HtmlGenerator(this.config, { combination });
     await htmlGen.generateHtml(filteredActiveOffers);
 
     // Generate full history HTML view
     const htmlHistoryGen = new HtmlGenerator(this.config, {
-      ...includeFilter,
+      ...combination,
       all: true,
     });
     await htmlHistoryGen.generateHtml(filteredAllOffers);

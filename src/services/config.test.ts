@@ -5,13 +5,14 @@ import {
   rmSync,
   writeFileSync,
 } from "node:fs";
-import { join } from "node:path";
+import { resolve } from "node:path";
 import { ConfigError, config } from "@/services/config";
+import { getDataPath } from "@/utils/path";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
 
 describe("ConfigService", () => {
-  const tempDir = join(process.cwd(), "data", "test");
-  const tempConfigPath = join(tempDir, "config.yaml");
+  const tempDir = resolve(getDataPath(), "test");
+  const tempConfigPath = resolve(tempDir, "config.yaml");
 
   beforeEach(() => {
     if (existsSync(tempDir)) {

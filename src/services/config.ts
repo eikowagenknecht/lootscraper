@@ -2,6 +2,7 @@ import { copyFileSync, mkdirSync, readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { type Config, ConfigSchema } from "@/types/config";
 import { logger } from "@/utils/logger";
+import { getDataPath } from "@/utils/path";
 import { parse } from "yaml";
 
 export class ConfigError extends Error {
@@ -36,7 +37,7 @@ export class ConfigService {
 
   public loadConfig(configPath?: string): void {
     try {
-      const path = configPath ?? this.getDefaultConfigPath();
+      const path = configPath ?? resolve(getDataPath(), "config.yaml");
 
       // Check if config exists, if not copy the default one
       if (!this.fileExists(path)) {
@@ -85,17 +86,6 @@ export class ConfigService {
         `Failed to create default config: ${error instanceof Error ? error.message : String(error)}`,
       );
     }
-  }
-
-  private getDefaultConfigPath(): string {
-    // Check for Docker environment
-    const dockerPath = "/data/config.yaml";
-    if (this.fileExists(dockerPath)) {
-      return dockerPath;
-    }
-
-    // Fall back to local config
-    return resolve(process.cwd(), "data", "config.yaml");
   }
 
   private fileExists(path: string): boolean {

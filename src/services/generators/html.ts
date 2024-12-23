@@ -1,9 +1,11 @@
 import { writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
+import type { ScraperCombination } from "@/scrapers/utils";
 import type { Config } from "@/types/config";
-import type { OfferDuration, OfferSource, OfferType } from "@/types/config";
 import type { Offer } from "@/types/database";
+import { logger } from "@/utils/logger";
 import { generateFeedTitle, generateFilename } from "@/utils/names";
+import { getDataPath } from "@/utils/path";
 import { cleanHtml, toCapitalCaseAll } from "@/utils/stringTools";
 import Handlebars from "handlebars";
 import { DateTime } from "luxon";
@@ -124,9 +126,7 @@ const TEMPLATE = `<!DOCTYPE html>
 </html>`;
 
 interface HtmlGeneratorOptions {
-  source?: OfferSource;
-  type?: OfferType;
-  duration?: OfferDuration;
+  combination?: ScraperCombination;
   all?: boolean;
 }
 
@@ -149,6 +149,9 @@ export class HtmlGenerator {
   }
 
   public async generateHtml(offers: Offer[]): Promise<void> {
+    logger.info(
+      `Generating HTML feed for ${offers.length.toFixed()} offers...`,
+    );
     const entries = await Promise.all(
       offers
         .filter(
@@ -236,7 +239,7 @@ export class HtmlGenerator {
 
     const cleanedHtml = cleanHtml(html);
 
-    const outputPath = resolve(process.cwd(), "data", this.getFilename());
+    const outputPath = resolve(getDataPath(), this.getFilename());
     await writeFile(outputPath, cleanedHtml);
   }
 
@@ -244,17 +247,13 @@ export class HtmlGenerator {
     return generateFilename({
       prefix: this.config.common.feedFilePrefix,
       extension: "html",
-      ...(this.options.source && { source: this.options.source }),
-      ...(this.options.type && { type: this.options.type }),
-      ...(this.options.duration && { duration: this.options.duration }),
+      ...(this.options.combination && {
+        combination: this.options.combination,
+      }),
     });
   }
 
   private getFeedTitle(): string {
-    return generateFeedTitle({
-      ...(this.options.source && { source: this.options.source }),
-      ...(this.options.type && { type: this.options.type }),
-      ...(this.options.duration && { duration: this.options.duration }),
-    });
+    return generateFeedTitle(this.options.combination);
   }
 }

@@ -1,11 +1,11 @@
 import { mkdirSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { resolve } from "node:path";
 import { logger } from "@/utils/logger";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
 
 describe("logger", () => {
-  const tempDir = join(tmpdir(), "lootscraper-tests");
+  const tempDir = resolve(tmpdir(), "lootscraper-tests");
 
   beforeEach(() => {
     mkdirSync(tempDir, { recursive: true });
