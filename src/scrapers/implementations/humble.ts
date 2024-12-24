@@ -1,3 +1,4 @@
+import { OfferCategory } from "@/types";
 import { OfferDuration, OfferSource, OfferType } from "@/types/config";
 import type { NewOffer } from "@/types/database";
 import { logger } from "@/utils/logger";
@@ -9,7 +10,6 @@ import {
   type OfferHandler,
   type RawOffer,
 } from "../base/scraper";
-import { Category } from "../base/scraper";
 
 const BASE_URL = "https://humblebundle.com";
 const SEARCH_URL = `${BASE_URL}/store/search`;
@@ -153,8 +153,8 @@ export class HumbleGamesScraper extends BaseScraper<HumbleRawOffer> {
     // Categorize cheap games
     const category =
       rawOffer.originalPrice !== undefined && rawOffer.originalPrice < 1.0
-        ? Category.CHEAP
-        : Category.VALID;
+        ? OfferCategory.CHEAP
+        : OfferCategory.VALID;
 
     return {
       source: this.getSource(),

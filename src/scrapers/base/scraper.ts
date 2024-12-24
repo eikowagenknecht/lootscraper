@@ -1,3 +1,4 @@
+import { OfferCategory } from "@/types";
 import type { Config } from "@/types/config";
 import {
   OfferDuration,
@@ -14,14 +15,6 @@ import { errors } from "playwright";
 export interface CronConfig {
   schedule: string;
   timezone?: string;
-}
-
-// Categories for offer classification
-export enum Category {
-  VALID = "VALID",
-  CHEAP = "CHEAP",
-  DEMO = "DEMO",
-  PRERELEASE = "PRERELEASE",
 }
 
 // Base interface for raw offer data
@@ -193,12 +186,12 @@ export abstract class BaseScraper<T extends RawOffer = RawOffer> {
 
   protected categorizeOffers(offers: Omit<NewOffer, "category">[]): NewOffer[] {
     return offers.map((offer) => {
-      const categorized: NewOffer = { ...offer, category: Category.VALID };
+      const categorized: NewOffer = { ...offer, category: OfferCategory.VALID };
 
       if (this.isDemo(offer.title)) {
-        categorized.category = Category.DEMO;
+        categorized.category = OfferCategory.DEMO;
       } else if (this.isPrerelease(offer.title)) {
-        categorized.category = Category.PRERELEASE;
+        categorized.category = OfferCategory.PRERELEASE;
       } else if (
         offer.valid_to &&
         this.isFakeAlways(DateTime.fromISO(offer.valid_to).toJSDate())
@@ -212,7 +205,8 @@ export abstract class BaseScraper<T extends RawOffer = RawOffer> {
 
   protected filterForValidOffers(offers: NewOffer[]): NewOffer[] {
     return offers.filter(
-      (offer) => !offer.category || offer.category === Category.VALID.valueOf(),
+      (offer) =>
+        !offer.category || offer.category === OfferCategory.VALID.valueOf(),
     );
   }
 
