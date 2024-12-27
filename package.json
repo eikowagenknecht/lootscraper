@@ -66,11 +66,11 @@
     "eslint": "9.17.0",
     "globals": "15.14.0",
     "knip": "5.41.1",
-    "lefthook": "1.10.0",
+    "lefthook": "1.10.1",
     "prettier": "3.4.2",
     "typescript": "5.7.2",
-    "typescript-eslint": "8.18.1",
-    "vite": "6.0.5",
+    "typescript-eslint": "8.18.2",
+    "vite": "6.0.6",
     "vite-node": "2.1.8",
     "vitest": "2.1.8"
   }
