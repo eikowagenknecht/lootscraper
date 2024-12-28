@@ -3,8 +3,8 @@ import {
   getEnabledScraperCombinations,
 } from "@/scrapers/utils";
 import { config } from "@/services/config";
-import { OfferDuration, OfferType } from "@/types/basic";
-import { toCapitalCaseAll } from "./stringTools";
+import { translationService } from "@/services/translation";
+import { OfferDuration } from "@/types/basic";
 
 export interface FilenameOptions {
   prefix: string;
@@ -28,30 +28,17 @@ export function generateFilename(options: FilenameOptions): string {
   return `${parts.join("_")}.${options.extension}`;
 }
 
-export function generateFeedTitle(combinations?: ScraperCombination): string {
+export function generateFeedTitle(combination?: ScraperCombination): string {
   // Return default title if no options specified
-  if (!combinations) {
-    return "Free Games and Loot";
+  if (!combination) {
+    return translationService.getFeedTitle();
   }
 
-  const parts: string[] = ["Free"];
-
-  parts.push(toCapitalCaseAll(combinations.source));
-
-  if (combinations.type === OfferType.GAME) {
-    parts.push("Games");
-  } else {
-    parts.push("Loot");
-  }
-
-  if (
-    combinations.duration === OfferDuration.TEMPORARY ||
-    combinations.duration === OfferDuration.ALWAYS
-  ) {
-    parts.push(`(${combinations.duration})`);
-  }
-
-  return parts.join(" ");
+  return translationService.getFeedTitle(
+    combination.source,
+    combination.type,
+    combination.duration,
+  );
 }
 
 interface EnapledFeedFilenameOptions {

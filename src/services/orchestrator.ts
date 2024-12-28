@@ -17,6 +17,7 @@ import { Cron } from "croner";
 import { FeedService } from "./feed";
 import { uploadMultipleFiles } from "./ftp";
 import { GameInfoService } from "./gameinfo";
+import { translationService } from "./translation";
 
 interface ScrapeResult {
   newOfferIds: number[];
@@ -81,6 +82,9 @@ export async function initializeServices(): Promise<void> {
     const cfg = config.get();
 
     // Initialize core services
+    logger.info("Initializing translation service...");
+    await translationService.initialize();
+
     logger.info("Initializing database service...");
     await database.initialize(cfg);
 
