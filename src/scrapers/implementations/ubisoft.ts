@@ -1,4 +1,5 @@
-import { OfferDuration, OfferSource, OfferType } from "@/types/config";
+import { OfferDuration, OfferType } from "@/types/basic";
+import { OfferSource } from "@/types/basic";
 import type { NewOffer } from "@/types/database";
 import { logger } from "@/utils/logger";
 import { DateTime } from "luxon";
@@ -36,7 +37,7 @@ export class UbisoftGamesScraper extends BaseScraper<UbisoftRawOffer> {
     return OfferDuration.CLAIMABLE;
   }
 
-  protected override offersExpected(): boolean {
+  protected override shouldAlwaysHaveOffers(): boolean {
     return false;
   }
 

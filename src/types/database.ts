@@ -5,7 +5,8 @@ import type {
   Selectable,
   Updateable,
 } from "kysely";
-import type { OfferDuration, OfferSource, OfferType } from "./config";
+import type { OfferDuration, OfferType } from "./basic";
+import type { OfferSource } from "./basic";
 
 export interface Database {
   alembic_version: AlembicVersionTable;

@@ -1,4 +1,5 @@
-import { OfferDuration, OfferSource, OfferType } from "@/types/config";
+import { OfferDuration, OfferType } from "@/types/basic";
+import { OfferSource } from "@/types/basic";
 import { z } from "zod";
 
 export const toggleSubscriptionSchema = z.object({

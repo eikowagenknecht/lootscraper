@@ -1,5 +1,5 @@
 import { getGameWithInfo } from "@/services/database/gameRepository";
-import { OfferDuration } from "@/types/config";
+import { OfferDuration } from "@/types/basic";
 import type { Offer } from "@/types/database";
 import { DateTime, type Duration } from "luxon";
 import { bold, escapeText, italic, link } from "./markdown";

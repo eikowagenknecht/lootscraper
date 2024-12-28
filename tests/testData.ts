@@ -1,5 +1,6 @@
 // import { OfferDuration, OfferSource, OfferType } from "@/types/config";
-import { OfferDuration, OfferSource, OfferType } from "@/types/config";
+import { OfferDuration, OfferType } from "@/types/basic";
+import { OfferSource } from "@/types/basic";
 import type { Database } from "@/types/database";
 import type { Kysely } from "kysely";
 import { DateTime } from "luxon";

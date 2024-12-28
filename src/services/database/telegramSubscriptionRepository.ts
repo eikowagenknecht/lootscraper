@@ -1,4 +1,5 @@
-import type { OfferDuration, OfferSource, OfferType } from "@/types/config";
+import type { OfferDuration, OfferType } from "@/types/basic";
+import type { OfferSource } from "@/types/basic";
 import type {
   NewTelegramSubscription,
   TelegramSubscription,

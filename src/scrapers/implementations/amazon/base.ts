@@ -1,4 +1,5 @@
-import { OfferDuration, OfferSource } from "@/types/config";
+import { OfferDuration } from "@/types/basic";
+import { OfferSource } from "@/types/basic";
 import { BrowserError } from "@/types/errors";
 import { logger } from "@/utils/logger";
 import { DateTime } from "luxon";
@@ -33,7 +34,7 @@ export abstract class AmazonBaseScraper<
     return OfferDuration.CLAIMABLE;
   }
 
-  protected override offersExpected(): boolean {
+  protected override shouldAlwaysHaveOffers(): boolean {
     return true;
   }
 

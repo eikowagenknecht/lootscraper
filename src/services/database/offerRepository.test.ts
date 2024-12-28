@@ -1,6 +1,7 @@
 import { config } from "@/services/config";
 import { DatabaseService } from "@/services/database";
-import { OfferDuration, OfferSource, OfferType } from "@/types/config";
+import { OfferDuration, OfferType } from "@/types/basic";
+import { OfferSource } from "@/types/basic";
 import type { NewOffer } from "@/types/database";
 import { DateTime } from "luxon";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";

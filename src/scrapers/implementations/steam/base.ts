@@ -1,4 +1,5 @@
-import { OfferDuration, OfferSource, OfferType } from "@/types/config";
+import { OfferDuration, OfferType } from "@/types/basic";
+import { OfferSource } from "@/types/basic";
 import type { NewOffer } from "@/types/database";
 import { logger } from "@/utils/logger";
 import { cleanCombinedTitle, cleanGameTitle } from "@/utils/titleCleaner";

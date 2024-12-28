@@ -1,4 +1,4 @@
-import { OfferType } from "@/types/config";
+import { OfferType } from "@/types/basic";
 import type { NewOffer } from "@/types/database";
 import { logger } from "@/utils/logger";
 import { DateTime } from "luxon";
