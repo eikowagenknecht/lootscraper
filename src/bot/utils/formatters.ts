@@ -1,4 +1,5 @@
 import { getGameWithInfo } from "@/services/database/gameRepository";
+import { translationService } from "@/services/translation";
 import { OfferDuration } from "@/types/basic";
 import type { Offer } from "@/types/database";
 import { DateTime, type Duration } from "luxon";
@@ -24,10 +25,12 @@ export async function formatOfferMessage(
   // Basic offer info
   const additionalInfo =
     offer.duration !== OfferDuration.CLAIMABLE
-      ? `${offer.type}, ${offer.duration}`
-      : offer.type;
+      ? `${translationService.getTypeDisplay(offer.type)}, ${translationService.getDurationDisplay(offer.duration)}`
+      : translationService.getTypeDisplay(offer.type);
 
-  content += bold(`${offer.title} - ${offer.source} (${additionalInfo})`);
+  content += bold(
+    `${offer.title} - ${translationService.getSourceDisplay(offer.source)} (${additionalInfo})`,
+  );
   content += escapeText(` [${offer.id.toFixed()}`);
 
   // Image
