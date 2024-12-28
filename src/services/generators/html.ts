@@ -6,10 +6,11 @@ import type { Offer } from "@/types/database";
 import { logger } from "@/utils/logger";
 import { generateFeedTitle, generateFilename } from "@/utils/names";
 import { getDataPath } from "@/utils/path";
-import { cleanHtml, toCapitalCaseAll } from "@/utils/stringTools";
+import { cleanHtml } from "@/utils/stringTools";
 import Handlebars from "handlebars";
 import { DateTime } from "luxon";
 import { getGameWithInfo } from "../database/gameRepository";
+import { translationService } from "../translation";
 
 const TEMPLATE = `<!DOCTYPE html>
 <html lang="en">
@@ -172,7 +173,7 @@ export class HtmlGenerator {
             valid_to: offer.valid_to
               ? DateTime.fromISO(offer.valid_to).toFormat("yyyy-MM-dd")
               : undefined,
-            source: toCapitalCaseAll(offer.source),
+            source: translationService.getSourceDisplay(offer.source),
             url: offer.url,
             is_expired:
               offer.valid_to &&

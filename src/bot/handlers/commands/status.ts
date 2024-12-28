@@ -1,6 +1,6 @@
 import { escapeText } from "@/bot/utils/markdown";
 import { getTelegramSubscriptions } from "@/services/database/telegramSubscriptionRepository";
-import { toCapitalCaseAll } from "@/utils/stringTools";
+import { translationService } from "@/services/translation";
 import type { CommandContext } from "grammy";
 import { DateTime } from "luxon";
 import { getCallerName, getDbChat, logCall, userCanControlBot } from ".";
@@ -39,7 +39,7 @@ But I'd be happy to see you register any time with the /start command!`);
 
     for (const subscription of subscriptions) {
       subscriptionsTextMd += escapeText(
-        `  - ${toCapitalCaseAll(subscription.source)} / ${toCapitalCaseAll(subscription.type)} / ${toCapitalCaseAll(subscription.duration)}
+        `  - ${translationService.getSourceDisplay(subscription.source)} / ${translationService.getTypeDisplay(subscription.type)} / ${translationService.getDurationDisplay(subscription.duration)}
 `,
       );
     }

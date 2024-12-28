@@ -9,9 +9,9 @@ import { AtomFeed } from "@/utils/atom";
 import { logger } from "@/utils/logger";
 import { generateFeedTitle, generateFilename } from "@/utils/names";
 import { getDataPath } from "@/utils/path";
-import { toCapitalCaseAll } from "@/utils/stringTools";
 import { DateTime } from "luxon";
 import { getGameWithInfo } from "../database/gameRepository";
+import { translationService } from "../translation";
 
 export class RssGenerator {
   private readonly feedGenerator: AtomFeed;
@@ -132,11 +132,15 @@ export class RssGenerator {
   }
 
   private getEntryTitle(offer: Offer): string {
-    const additionalInfo: string[] = [toCapitalCaseAll(offer.type)];
+    const additionalInfo: string[] = [
+      translationService.getTypeDisplay(offer.type),
+    ];
     if (offer.duration !== OfferDuration.CLAIMABLE) {
-      additionalInfo.push(toCapitalCaseAll(offer.duration));
+      additionalInfo.push(
+        translationService.getDurationDisplay(offer.duration),
+      );
     }
-    return `${toCapitalCaseAll(offer.source)} (${additionalInfo.join(", ")}) - ${offer.title}`;
+    return `${translationService.getSourceDisplay(offer.source)} (${additionalInfo.join(", ")}) - ${offer.title}`;
   }
 
   private generateContent(
