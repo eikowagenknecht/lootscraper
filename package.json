@@ -43,6 +43,7 @@
     "cross-env": "7.0.3",
     "grammy": "1.33.0",
     "handlebars": "4.7.8",
+    "i18next": "24.2.0",
     "kysely": "0.27.5",
     "logform": "2.7.0",
     "luxon": "3.5.0",
