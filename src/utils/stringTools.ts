@@ -110,24 +110,6 @@ export function normalizeString(str: string): string {
   return str.normalize("NFD").replace(/\p{M}/gu, "").replace(/"/g, "").trim();
 }
 
-// For capitalizing first letter only
-export function toCapitalCase(str: string): string {
-  if (str.length === 0) return str;
-  return str.charAt(0).toUpperCase() + str.toLowerCase().slice(1);
-}
-
-// For capitalizing all words
-export function toCapitalCaseAll(str: string): string {
-  return str
-    .split(" ")
-    .map((word) =>
-      word.length > 0
-        ? word.charAt(0).toUpperCase() + word.toLowerCase().slice(1)
-        : word,
-    )
-    .join(" ");
-}
-
 export function cleanHtml(html: string): string {
   return html
     .split("\n")
