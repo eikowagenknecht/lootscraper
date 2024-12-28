@@ -3,7 +3,7 @@ import {
   getEnabledScraperCombinations,
 } from "@/scrapers/utils";
 import { config } from "@/services/config";
-import { OfferDuration, OfferType } from "@/types/config";
+import { OfferDuration, OfferType } from "@/types/basic";
 import { toCapitalCaseAll } from "./stringTools";
 
 export interface FilenameOptions {

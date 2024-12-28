@@ -1,4 +1,5 @@
-import { OfferDuration, OfferSource, OfferType } from "@/types/config";
+import { OfferDuration, OfferType } from "@/types/basic";
+import { OfferSource } from "@/types/basic";
 import type { NewOffer } from "@/types/database";
 import { logger } from "@/utils/logger";
 import { DateTime } from "luxon";
@@ -48,7 +49,7 @@ export class EpicGamesScraper extends BaseScraper<EpicRawOffer> {
     return "h1";
   }
 
-  protected override offersExpected(): boolean {
+  protected override shouldAlwaysHaveOffers(): boolean {
     return true;
   }
 

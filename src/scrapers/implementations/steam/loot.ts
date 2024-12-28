@@ -1,4 +1,4 @@
-import { OfferType } from "@/types/config";
+import { OfferType } from "@/types/basic";
 import type { Locator, Page } from "playwright";
 import { SteamBaseScraper } from "./base";
 

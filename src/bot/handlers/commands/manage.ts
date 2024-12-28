@@ -2,7 +2,7 @@ import { packData } from "@/bot/utils/callbackPack";
 import { getEnabledScraperCombinations } from "@/scrapers";
 import type { ScraperCombination } from "@/scrapers/utils";
 import { hasTelegramSubscription } from "@/services/database/telegramSubscriptionRepository";
-import { OfferDuration } from "@/types/config";
+import { OfferDuration } from "@/types/basic";
 import { logger } from "@/utils/logger";
 import { type CommandContext, InlineKeyboard } from "grammy";
 import type { z } from "zod";

@@ -1,8 +1,8 @@
 import { writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import type { ScraperCombination } from "@/scrapers/utils";
+import { OfferDuration } from "@/types/basic";
 import type { Config } from "@/types/config";
-import { OfferDuration } from "@/types/config";
 import type { Game, IgdbInfo, Offer, SteamInfo } from "@/types/database";
 import { FeedError } from "@/types/errors";
 import { AtomFeed } from "@/utils/atom";

@@ -1,8 +1,5 @@
-import {
-  OfferDuration,
-  type OfferSource,
-  type OfferType,
-} from "@/types/config";
+import { OfferDuration, type OfferType } from "@/types/basic";
+import type { OfferSource } from "@/types/basic";
 import type { NewOffer, Offer, OfferUpdate } from "@/types/database";
 import { calculateRealValidTo } from "@/utils";
 import { logger } from "@/utils/logger";

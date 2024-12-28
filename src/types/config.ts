@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { OfferDuration, OfferSource, OfferType } from "./basic";
 
 // Enums
 export const LogLevel = z.enum([
@@ -20,29 +21,6 @@ export const TelegramLogLevel = z.enum([
   "DEBUG",
 ]);
 export type TelegramLogLevel = z.infer<typeof TelegramLogLevel>;
-
-export enum OfferSource {
-  STEAM = "STEAM",
-  EPIC = "EPIC",
-  GOG = "GOG",
-  AMAZON = "AMAZON",
-  HUMBLE = "HUMBLE",
-  ITCH = "ITCH",
-  UBISOFT = "UBISOFT",
-  APPLE = "APPLE",
-  GOOGLE = "GOOGLE",
-}
-
-export enum OfferType {
-  GAME = "GAME",
-  LOOT = "LOOT",
-}
-
-export enum OfferDuration {
-  CLAIMABLE = "CLAIMABLE",
-  ALWAYS = "ALWAYS",
-  TEMPORARY = "TEMPORARY",
-}
 
 export const OfferSourceSchema = z.nativeEnum(OfferSource);
 export const OfferTypeSchema = z.nativeEnum(OfferType);

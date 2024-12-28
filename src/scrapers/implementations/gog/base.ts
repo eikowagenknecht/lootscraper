@@ -1,4 +1,5 @@
-import { OfferSource, OfferType } from "@/types/config";
+import { OfferType } from "@/types/basic";
+import { OfferSource } from "@/types/basic";
 import type { Page } from "playwright";
 import { BaseScraper, type RawOffer } from "../../base/scraper";
 

@@ -1,5 +1,5 @@
 import type { CronConfig } from "@/scrapers/base/scraper";
-import { OfferDuration } from "@/types/config";
+import { OfferDuration } from "@/types/basic";
 import type { NewOffer } from "@/types/database";
 import { logger } from "@/utils/logger";
 import { DateTime } from "luxon";
@@ -20,7 +20,7 @@ export class GogGamesAlwaysFreeScraper extends GogBaseScraper {
     return OfferDuration.ALWAYS;
   }
 
-  protected override offersExpected(): boolean {
+  protected override shouldAlwaysHaveOffers(): boolean {
     return true;
   }
 
