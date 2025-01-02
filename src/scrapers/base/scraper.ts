@@ -319,7 +319,11 @@ export abstract class BaseScraper<T extends RawOffer = RawOffer> {
       if (offer.type === OfferType.GAME && offer.rawtext !== undefined) {
         const parsed = JSON.parse(offer.rawtext) as Record<string, unknown>;
 
-        if ("title" in parsed && typeof parsed.title === "string") {
+        if (
+          "title" in parsed &&
+          typeof parsed.title === "string" &&
+          cleaned.title !== parsed.title
+        ) {
           logger.verbose(
             `Updating game title and probable game name from ${cleaned.title} to ${parsed.title}`,
           );
