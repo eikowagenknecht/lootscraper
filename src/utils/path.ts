@@ -1,4 +1,5 @@
 import { resolve } from "node:path";
+import { logger } from "./logger";
 
 /**
  * Get the path to the data directory.
@@ -9,6 +10,7 @@ import { resolve } from "node:path";
  */
 export function getDataPath(): string {
   if (process.env.DOCKER_CONTAINER === "true") {
+    logger.info("Running in Docker container, using /data for data storage");
     return "/data";
   }
 
