@@ -2,7 +2,7 @@ import { copyFileSync, mkdirSync, readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { type Config, ConfigSchema } from "@/types/config";
 import { logger } from "@/utils/logger";
-import { getDataPath } from "@/utils/path";
+import { getDataPath, getTemplatesPath } from "@/utils/path";
 import { parse } from "yaml";
 
 export class ConfigError extends Error {
@@ -71,8 +71,11 @@ export class ConfigService {
 
   private createDefaultConfig(targetPath: string): void {
     const defaultConfigPath = resolve(
-      __dirname,
-      "../../templates/config.default.yaml",
+      getTemplatesPath(),
+      "config.default.yaml",
+    );
+    logger.info(
+      `Copying default config from ${defaultConfigPath} to ${targetPath}`,
     );
 
     // Ensure the target directory exists
@@ -80,7 +83,6 @@ export class ConfigService {
 
     try {
       copyFileSync(defaultConfigPath, targetPath);
-      logger.info(`Created new config file at ${targetPath}`);
     } catch (error) {
       throw new ConfigError(
         `Failed to create default config: ${error instanceof Error ? error.message : String(error)}`,

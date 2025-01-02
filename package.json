@@ -5,6 +5,7 @@
   "author": "Eiko Wagenknecht <git@eiko-wagenknecht.de>",
   "license": "CC-BY-NC-SA-4.0",
   "type": "module",
+  "packageManager": "pnpm@9.15.2",
   "engines": {
     "node": ">=22.0.0",
     "pnpm": ">=9.0.0"
@@ -26,7 +27,7 @@
     "format": "biome format . --write",
     "type-check": "tsc --noEmit",
     "check": "pnpm run lint && pnpm run type-check",
-    "prepare": "lefthook install",
+    "prepare": "node -e \"process.env.CI || process.env.DOCKER_CONTAINER || process.exit(1)\" || lefthook install",
     "clean:npm": "pnpm exec rm -rf node_modules",
     "sync:npm": "pnpm i --frozen-lockfile",
     "upgrade:npm": "pnpm exec rm pnpm-lock.yaml && pnpm up --latest && pnpm i",

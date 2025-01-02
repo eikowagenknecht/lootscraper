@@ -1,13 +1,46 @@
-import { existsSync } from "node:fs";
 import { resolve } from "node:path";
 
+/**
+ * Get the path to the data directory.
+ * In a Docker container, this is `/data`.
+ * Otherwise, it is `./data`.
+ *
+ * @returns Path to the data directory
+ */
 export function getDataPath(): string {
-  // Check for Docker environment
-  const dockerPath = "/data/";
-  if (existsSync(dockerPath)) {
-    return resolve(dockerPath);
+  if (process.env.DOCKER_CONTAINER === "true") {
+    return "/data";
   }
 
-  // Fall back to local path
   return resolve(process.cwd(), "data");
+}
+
+/**
+ * Get the path to the templates directory.
+ * In a Docker container, this is `/app/templates`.
+ * Otherwise, it is `./templates`.
+ *
+ * @returns Path to the templates directory
+ */
+export function getTemplatesPath(): string {
+  if (process.env.DOCKER_CONTAINER === "true") {
+    return "/app/templates";
+  }
+
+  return resolve(process.cwd(), "templates");
+}
+
+/**
+ * Get the path to the module directory.
+ * In a Docker container, this is `/app/dist`.
+ * Otherwise, it is `./dist`.
+ *
+ * @returns Path to the module directory
+ */
+export function getModulePath(): string {
+  if (process.env.DOCKER_CONTAINER === "true") {
+    return "/app/dist";
+  }
+
+  return resolve(process.cwd(), "dist");
 }
