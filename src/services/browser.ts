@@ -2,7 +2,7 @@ import type { Config } from "@/types/config";
 import { BrowserError } from "@/types/errors";
 import { logger } from "@/utils/logger";
 import type { Browser, BrowserContext } from "playwright";
-import { chromium } from "playwright";
+import { firefox } from "playwright";
 
 export class BrowserService {
   private static instance: BrowserService;
@@ -23,7 +23,7 @@ export class BrowserService {
 
   public async initialize(config: Config): Promise<void> {
     try {
-      this.browser = await chromium.launch({
+      this.browser = await firefox.launch({
         headless: config.expert.headless,
       });
 
