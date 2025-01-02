@@ -1,11 +1,16 @@
+import { translationService } from "@/services/translation";
 import { OfferDuration, OfferType } from "@/types/basic";
 import { OfferSource } from "@/types/basic";
-import { describe, expect, test } from "vitest";
+import { beforeAll, describe, expect, test } from "vitest";
 import {
   type FilenameOptions,
   generateFeedTitle,
   generateFilename,
 } from "./names";
+
+beforeAll(async () => {
+  await translationService.initialize();
+});
 
 describe("generateFilename", () => {
   const baseOptions: FilenameOptions = {
@@ -53,6 +58,6 @@ describe("generateFeedTitle", () => {
         type: OfferType.GAME,
         duration: OfferDuration.TEMPORARY,
       }),
-    ).toBe("Free Epic Games (TEMPORARY)");
+    ).toBe("Free Epic Games Games (Temporary)");
   });
 });
