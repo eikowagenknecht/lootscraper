@@ -77,15 +77,26 @@ export class TranslationService {
     }
   }
 
+  public checkInitialized(): void {
+    if (!this.initialized) {
+      throw new Error(
+        "Translation service not initialized. Call initialize() first.",
+      );
+    }
+  }
+
   public getSourceDisplay(source: OfferSource): string {
+    this.checkInitialized();
     return i18next.t(`sources.${source}`);
   }
 
   public getTypeDisplay(type: OfferType, count = 1): string {
+    this.checkInitialized();
     return i18next.t(`types.${type}`, { count });
   }
 
   public getDurationDisplay(duration: OfferDuration): string {
+    this.checkInitialized();
     return i18next.t(`durations.${duration}`);
   }
 
@@ -94,6 +105,7 @@ export class TranslationService {
     type?: OfferType,
     duration?: OfferDuration,
   ): string {
+    this.checkInitialized();
     if (!source || !type) {
       return i18next.t("feed.titleAll");
     }
