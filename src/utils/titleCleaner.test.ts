@@ -40,4 +40,13 @@ describe.concurrent("Title Cleaner", () => {
     expect(cleanedGame).toBe("World of Warships");
     expect(cleanedOffer).toBe("World of Warships - Starter Pack: Dreadnought");
   });
+
+  test("should remove whitespace and newlines from game title", ({
+    expect,
+  }) => {
+    const title = "\n        Vambrace: Cold Soul\n    ";
+    const cleaned = "Vambrace: Cold Soul";
+
+    expect(cleanGameTitle(title)).toBe(cleaned);
+  });
 });

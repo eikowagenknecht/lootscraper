@@ -324,11 +324,13 @@ export abstract class BaseScraper<T extends RawOffer = RawOffer> {
           typeof parsed.title === "string" &&
           cleaned.title !== parsed.title
         ) {
+          const newTitle = cleanGameTitle(parsed.title);
+
           logger.verbose(
-            `Updating game title and probable game name from ${cleaned.title} to ${parsed.title}`,
+            `Updating game title and probable game name from ${cleaned.title} to ${newTitle}`,
           );
-          cleaned.title = cleanGameTitle(parsed.title);
-          cleaned.probable_game_name = cleaned.title;
+          cleaned.title = newTitle;
+          cleaned.probable_game_name = newTitle;
         }
 
         return cleaned;
