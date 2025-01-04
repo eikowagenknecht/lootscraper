@@ -201,7 +201,7 @@ export abstract class SteamBaseScraper extends BaseScraper<SteamRawOffer> {
       probable_game_name: probableGameName,
       seen_last: DateTime.now().toISO(),
       seen_first: DateTime.now().toISO(),
-      ...(validTo ? { valid_to: validTo.toISOString() } : null),
+      ...(validTo && { valid_to: validTo.toISOString() }),
       rawtext: JSON.stringify(rawtext),
       url: rawOffer.url ?? null,
       img_url: rawOffer.imgUrl ?? null,

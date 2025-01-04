@@ -90,7 +90,7 @@ export class ItchGamesScraper extends BaseScraper {
       return {
         title,
         url,
-        ...(imgUrl ? { imgUrl } : {}),
+        ...(imgUrl && { imgUrl }),
       };
     } catch (error) {
       logger.error(
