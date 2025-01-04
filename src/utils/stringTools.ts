@@ -112,6 +112,7 @@ export function normalizeString(str: string): string {
 
 export function cleanHtml(html: string): string {
   return html
+    .replace(/<!--[\s\S]*?-->/g, "") // Remove HTML comments, single and multiline
     .split("\n")
     .map((line) => line.trimEnd()) // Remove trailing whitespace
     .filter((line) => line.trim() !== "") // Remove empty lines
