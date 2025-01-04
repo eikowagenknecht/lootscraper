@@ -23,7 +23,6 @@ export class RssGenerator {
     this.feedGenerator = new AtomFeed({
       id: this.config.feed.idPrefix + this.getFeedId(),
       title: generateFeedTitle(this.combination),
-      updated: DateTime.now().toJSDate(),
       generator: {
         content: "LootScraper",
         uri: "https://github.com/eikowagenknecht/lootscraper",

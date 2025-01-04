@@ -109,8 +109,8 @@ interface AtomFeedOptions {
   id: string;
   /** Required. Contains a human readable title for the feed. Often the same as the title of the associated website. This value should not be blank. */
   title: string;
-  /** Required. Indicates the last time the feed was modified in a significant way. */
-  updated: Date;
+  /** Required. Indicates the last time the feed was modified in a significant way. If not provided, the latest updated value of the entries is used. */
+  updated?: Date;
   /** Recommended. Names one author of the feed. A feed may have multiple author elements. A feed must contain at least one author element unless all of the entry elements contain at least one author element. */
   author?: AtomPerson[];
   /** Recommended. Identifies a related Web page. The type of relation is defined by the rel attribute. A feed is limited to one alternate per type and hreflang. A feed should contain a link back to the feed itself. */
@@ -297,7 +297,7 @@ const feedTemplate = Handlebars.compile(`<?xml version="1.0" encoding="utf-8"?>
 `);
 
 class AtomEntry {
-  private readonly options: AtomEntryOptions;
+  readonly options: AtomEntryOptions;
 
   constructor(options: AtomEntryOptions) {
     this.options = options;
@@ -325,6 +325,21 @@ class AtomFeed {
   }
 
   toXML(): string {
+    let updated = this.options.updated;
+
+    if (!updated && this.entries.length > 0) {
+      // Find the latest updated date from the entries
+      updated = this.entries.reduce((acc, entry) => {
+        const entryUpdated = entry.options.updated;
+        return entryUpdated > acc ? entryUpdated : acc;
+      }, this.entries[0].options.updated);
+    }
+
+    // If no updated date is set or can be determined, use the current date
+    if (!updated) {
+      updated = new Date();
+    }
+
     return cleanHtml(
       feedTemplate({
         ...this.options,
