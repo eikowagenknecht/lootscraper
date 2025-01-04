@@ -28,17 +28,13 @@ export class BrowserService {
       });
 
       this.context = await this.browser.newContext({
-        viewport: { width: 1920, height: 1080 },
-        userAgent:
-          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36",
-        bypassCSP: true,
-        ignoreHTTPSErrors: true,
-        serviceWorkers: "block",
-        timezoneId: "UTC",
+        // Use Reykjavik timezone (=UTC) because UTC is not supported directly
+        timezoneId: "Atlantic/Reykjavik",
+        // Set locale to en-US to get the english pages
         locale: "en-US",
       });
 
-      // Set default timeout from config
+      // Set default timeout from config (in ms)
       this.context.setDefaultTimeout(config.expert.webTimeoutSeconds * 1000);
 
       logger.info("Browser service initialized");

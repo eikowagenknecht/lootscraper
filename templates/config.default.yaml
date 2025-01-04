@@ -11,7 +11,7 @@ expert:
   dbEcho: false
   # Timeout for web requests (in seconds). Increase if you have slow internet.
   webTimeoutSeconds: 5
-  # Run the browser in headless mode
+  # Run the browser in headless mode. Must be set to false for Epic Games to work.
   headless: true
 
 actions:
