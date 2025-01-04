@@ -12,18 +12,22 @@ import { DateTime } from "luxon";
 import { getGameWithInfo } from "../database/gameRepository";
 import { translationService } from "../translation";
 
+// The latest static URL for the Tailwind CSS stylesheet.
+const CSS_URL =
+  "https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css";
 const TEMPLATE = `<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <title>{{feed.title}}</title>
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="${CSS_URL}" rel="stylesheet">
 </head>
 <body class="bg-gray-100">
     <div class="container mx-auto p-8">
         <h1 class="text-4xl font-bold mb-4">{{feed.title}}</h1>
 
         {{#each entries}}
+        <!-- Header & Validity -->
         <h2 class="flex justify-between items-center text-2xl mb-2 {{#if is_expired}}line-through{{/if}}">
             <span class="font-bold">{{{title}}}</span>
             <span class="text-sm">Valid from {{{valid_from}}}{{#if valid_to}} to {{{valid_to}}}{{/if}}</span>
@@ -31,13 +35,16 @@ const TEMPLATE = `<!DOCTYPE html>
 
         <div class="flex bg-white rounded-lg shadow-md p-6 mb-8">
             {{#if img_url}}
+            <!-- Image -->
             <div>
                 <img src="{{{img_url}}}" alt="{{{title}}}" class="w-96">
             </div>
             {{/if}}
 
+            <!-- Content -->
             <div class="flex-1 ml-4">
                 {{#if has_game}}
+                <!-- Game Info -->
                 <div class="bg-gray-200 p-4 rounded-lg text-sm">
                     <div class="flex justify-between mb-2">
                         <h3 class="font-bold underline">{{{game_name}}}</h3>
@@ -46,6 +53,7 @@ const TEMPLATE = `<!DOCTYPE html>
                         {{/if}}
                     </div>
 
+                    <!-- Ratings -->
                     <div class="flex flex-wrap mb-2">
                         {{#if steam_percent}}
                         <span class="rounded-full px-3 py-1 text-sm font-semibold m-1
@@ -91,6 +99,7 @@ const TEMPLATE = `<!DOCTYPE html>
                     </div>
 
                     {{#if genres}}
+                    <!-- Genres -->
                     <div class="flex flex-wrap mb-2">
                         <div class="flex flex-wrap">
                             {{#each (split genres ", ")}}
@@ -101,6 +110,7 @@ const TEMPLATE = `<!DOCTYPE html>
                     {{/if}}
 
                     {{#if description}}
+                    <!-- Description -->
                     <div>{{description}}</div>
                     {{/if}}
                 </div>
@@ -108,12 +118,14 @@ const TEMPLATE = `<!DOCTYPE html>
 
                 <div class="flex justify-between items-center mt-4">
                     {{#if url}}
+                    <!-- Claim Button -->
                     <a href="{{{url}}}" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
                         Claim on {{{source}}}
                     </a>
                     {{/if}}
 
                     {{#if recommended_price}}
+                    <!-- Price -->
                     <span class="bg-gray-500 text-white font-bold py-2 px-4 rounded line-through">
                         {{recommended_price}} EUR
                     </span>
@@ -211,6 +223,10 @@ export class HtmlGenerator {
         author_email: this.config.feed.authorEmail,
         author_web: this.config.feed.authorWeb,
       },
+
+      // Sort time entries in descending order by valid_from date,
+      // then valid_to date (if present), and finally in ascending order by title.
+
       entries: entries.sort((a, b) => {
         // First compare by valid_from
         const validFromComparison = b.valid_from.localeCompare(a.valid_from);
