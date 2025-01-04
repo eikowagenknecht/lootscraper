@@ -7,6 +7,7 @@ import type {
 } from "kysely";
 import type { OfferDuration, OfferType } from "./basic";
 import type { OfferSource } from "./basic";
+import type { ChatType } from "./telegram";
 
 export interface Database {
   alembic_version: AlembicVersionTable;
@@ -114,7 +115,7 @@ export type SteamInfoUpdate = Updateable<SteamInfoTable>;
 interface TelegramChatsTable {
   id: Generated<number>;
   registration_date: string;
-  chat_type: string;
+  chat_type: ChatType;
   chat_id: number;
   user_id: number | null;
   thread_id: number | null;

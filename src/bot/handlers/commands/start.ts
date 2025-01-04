@@ -1,6 +1,7 @@
 import { bold, escapeText, link } from "@/bot/utils/markdown";
 import { createTelegramChat } from "@/services/database/telegramChatRepository";
 import { createTelegramSubscription } from "@/services/database/telegramSubscriptionRepository";
+import { ChatType } from "@/types";
 import { OfferDuration, OfferType } from "@/types/basic";
 import { OfferSource } from "@/types/basic";
 import type { CommandContext } from "grammy";
@@ -59,10 +60,25 @@ ${welcomeTextMd}
     return;
   }
 
+  function getChatTypeFromContext(
+    chatType: "private" | "group" | "supergroup" | "channel",
+  ): ChatType {
+    switch (chatType) {
+      case "group":
+        return ChatType.GROUP;
+      case "supergroup":
+        return ChatType.SUPERGROUP;
+      case "channel":
+        return ChatType.CHANNEL;
+      default:
+        return ChatType.PRIVATE;
+    }
+  }
+
   // Register new chat
   const chatId = await createTelegramChat({
     registration_date: DateTime.now().toISO(),
-    chat_type: ctx.chat.type,
+    chat_type: getChatTypeFromContext(ctx.chat.type),
     chat_id: ctx.chat.id,
     user_id: ctx.from?.id ?? null,
     thread_id: ctx.message?.message_thread_id ?? null,

@@ -26,6 +26,91 @@ export async function getOfferById(id: number): Promise<Offer | undefined> {
   }
 }
 
+/**
+ * Find an offer by its title and validTo date. validTo is interpreted as "at
+ * most 1 day older or 1 day newer" to avoid getting duplicates for offers where
+ * the exact end date is not clear.
+ *
+ * Offers that previously had no validTo date but now do have one are considered
+ * the same offer because some sites (Steam) add the "valid to" date only when
+ * the offer already has been there for a while.
+ */
+export async function findOffer({
+  source,
+  type,
+  duration,
+  title,
+  validTo,
+}: {
+  source: OfferSource;
+  type: OfferType;
+  duration: OfferDuration;
+  title: string;
+  validTo: string | null;
+}): Promise<Offer | undefined> {
+  try {
+    let query = getDb()
+      .selectFrom("offers")
+      .selectAll()
+      .where("source", "=", source)
+      .where("type", "=", type)
+      .where("duration", "=", duration)
+      .where("title", "=", title);
+
+    // If validTo is provided, match offers within ±1 day or those without validTo
+    if (validTo !== null) {
+      const validToDate = DateTime.fromISO(validTo);
+      const earliestDate = validToDate.minus({ days: 1 }).toISO();
+      const latestDate = validToDate.plus({ days: 1 }).toISO();
+
+      query = query.where((eb) =>
+        eb.or([
+          eb.and([
+            eb("valid_to", ">=", earliestDate),
+            eb("valid_to", "<=", latestDate),
+          ]),
+          eb("valid_to", "is", null),
+        ]),
+      );
+    }
+
+    const results = await query.execute();
+
+    if (results.length === 0) {
+      return undefined;
+    }
+
+    // If there's only one match, return it
+    if (results.length === 1) {
+      return results[0];
+    }
+
+    // If there are multiple matches, try to find exact validTo match
+    logger.verbose("Multiple offers found, trying to find exact match.");
+    if (validTo !== null) {
+      const exactMatch = results.find((offer) => offer.valid_to === validTo);
+      if (exactMatch) {
+        logger.verbose("Exact match found.");
+        return exactMatch;
+      }
+    }
+
+    // If multiple close matches exist, return the newest one.
+    // This should rarely happen and is a fallback in case the exact match
+    // wasn't found.
+    logger.warning(
+      `Found ${results.length.toFixed()} offers for "${title}" that are close to ${
+        validTo ?? "null"
+      }. Returning the newest one.`,
+    );
+
+    // Return the last result (newest one based on ID)
+    return results[results.length - 1];
+  } catch (error) {
+    handleError("find offer", error);
+  }
+}
+
 export async function getOfferByTitle(
   title: string,
 ): Promise<Offer | undefined> {
@@ -187,7 +272,7 @@ export async function getNewOffers(
   }
 }
 
-async function createOffer(offer: NewOffer): Promise<number> {
+export async function createOffer(offer: NewOffer): Promise<number> {
   try {
     const result = await getDb()
       .insertInto("offers")
@@ -213,43 +298,57 @@ export async function updateOffer(id: number, offer: OfferUpdate) {
   }
 }
 
-export async function createOrUpdateOffer(
-  offer: NewOffer,
-): Promise<{ action: "updated" | "created"; id: number }> {
-  try {
-    // Find existing offer by unique combination
-    const existingOffer = await getDb()
-      .selectFrom("offers")
-      .select(["id"])
-      .where("title", "=", offer.title)
-      .where("source", "=", offer.source)
-      .where("type", "=", offer.type)
-      .where("duration", "=", offer.duration)
-      .where("category", "=", offer.category)
-      .executeTakeFirst();
-
-    if (existingOffer !== undefined) {
-      // Update seen last date
-      const result = await getDb()
-        .updateTable("offers")
-        .set({
-          seen_last: DateTime.now().toISO(),
-        })
-        .where("id", "=", existingOffer.id)
-        .executeTakeFirst();
-      handleUpdateResult(result);
-      return {
-        action: "updated",
-        id: existingOffer.id,
-      };
-    }
-
-    const id = await createOffer(offer);
-    return {
-      action: "created",
-      id,
-    };
-  } catch (error) {
-    handleError("create or update offer", error);
+export async function addMissingFieldsToOffer(
+  id: number,
+  newOffer: NewOffer,
+): Promise<boolean> {
+  const previousOffer = await getOfferById(id);
+  if (!previousOffer) {
+    logger.error(`Offer with ID ${id.toFixed()} not found. Can't update.`);
+    return false;
   }
+
+  let changed = false;
+
+  const update: OfferUpdate = {};
+
+  // Update valid_from if it's not set
+  if (!previousOffer.valid_from && newOffer.valid_from) {
+    update.valid_from = newOffer.valid_from;
+    changed = true;
+  }
+
+  // Update valid_to if it's not set
+  if (!previousOffer.valid_to && newOffer.valid_to) {
+    update.valid_to = newOffer.valid_to;
+    changed = true;
+  }
+
+  // Update url if it's not set
+  if (!previousOffer.url && newOffer.url) {
+    update.url = newOffer.url;
+    changed = true;
+  }
+
+  // Update img url if it's not set
+  if (!previousOffer.img_url && newOffer.img_url) {
+    update.img_url = newOffer.img_url;
+    changed = true;
+  }
+
+  if (!changed) {
+    return false;
+  }
+
+  update.seen_last = DateTime.now().toISO();
+
+  await updateOffer(id, update);
+
+  return true;
+}
+
+export async function touchOffer(id: number): Promise<void> {
+  await updateOffer(id, {
+    seen_last: DateTime.now().toISO(),
+  });
 }

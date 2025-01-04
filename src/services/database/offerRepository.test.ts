@@ -7,7 +7,7 @@ import { DateTime } from "luxon";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import { insertTestData } from "../../../tests/testData";
 import {
-  createOrUpdateOffer,
+  createOffer,
   getActiveOffers,
   getOfferByTitle,
   updateOffer,
@@ -60,7 +60,7 @@ describe("Offer Repository", () => {
         category: "VALID",
       };
 
-      await createOrUpdateOffer(expiredOffer);
+      await createOffer(expiredOffer);
 
       const activeOffers = await getActiveOffers(DateTime.now().toJSDate());
       const expiredOfferInList = activeOffers.find(
@@ -86,73 +86,12 @@ describe("Offer Repository", () => {
         category: "VALID",
       };
 
-      const res = await createOrUpdateOffer(newOffer);
-      expect(res.id).toBe(4); // Since we had 3 offers in test data
+      const res = await createOffer(newOffer);
+      expect(res).toBe(4); // Since we had 3 offers in test data
 
       const createdOffer = await getOfferByTitle("New Game");
       expect(createdOffer).toBeDefined();
       expect(createdOffer?.title).toBe("New Game");
-    });
-
-    test("should update seen_last for existing offer", async () => {
-      const yesterday = DateTime.now().minus({ days: 1 });
-
-      const existingOffer: NewOffer = {
-        source: OfferSource.EPIC,
-        type: OfferType.GAME,
-        duration: OfferDuration.CLAIMABLE,
-        title: "Existing Game 1",
-        probable_game_name: "Existing Game 1",
-        seen_last: yesterday.toISO(),
-        seen_first: yesterday.toISO(),
-        rawtext: JSON.stringify({ title: "Existing Game 1" }),
-        url: "https://example.com/game1",
-        img_url: "https://example.com/game1.jpg",
-        category: "VALID",
-      };
-
-      const res = await createOrUpdateOffer(existingOffer);
-      expect(res.id).toBe(1); // Should be the same ID as the existing offer
-
-      const updatedOffer = await getOfferByTitle("Existing Game 1");
-      expect(updatedOffer).toBeDefined();
-      if (!updatedOffer) {
-        return;
-      }
-      expect(
-        DateTime.fromISO(updatedOffer.seen_last).toMillis(),
-      ).toBeGreaterThan(DateTime.fromISO(existingOffer.seen_last).toMillis());
-    });
-
-    test("should handle duplicate offer with different source", async () => {
-      const duplicateOffer: NewOffer = {
-        source: OfferSource.GOG, // Different source
-        type: OfferType.GAME,
-        duration: OfferDuration.CLAIMABLE,
-        title: "Existing Game 1",
-        probable_game_name: "Existing Game 1",
-        seen_last: DateTime.now().toISO(),
-        seen_first: DateTime.now().toISO(),
-        rawtext: JSON.stringify({ title: "Existing Game 1" }),
-        url: "https://example.com/game1",
-        img_url: "https://example.com/game1.jpg",
-        category: "VALID",
-      };
-
-      const res = await createOrUpdateOffer(duplicateOffer);
-      expect(res.id).toBe(4); // Should be a new offer
-
-      // Should find both offers
-      const offers = await dbService
-        .get()
-        .selectFrom("offers")
-        .where("title", "=", "Existing Game 1")
-        .selectAll()
-        .execute();
-
-      expect(offers).toHaveLength(2);
-      expect(offers.map((o) => o.source)).toContain(OfferSource.EPIC);
-      expect(offers.map((o) => o.source)).toContain(OfferSource.GOG);
     });
 
     test("should get offer by title", async () => {

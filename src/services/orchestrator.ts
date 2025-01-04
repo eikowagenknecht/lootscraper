@@ -7,7 +7,9 @@ import { browser } from "@/services/browser";
 import { config } from "@/services/config";
 import { database } from "@/services/database";
 import {
-  createOrUpdateOffer,
+  addMissingFieldsToOffer,
+  createOffer,
+  findOffer,
   getActiveOffers,
   getAllOffers,
 } from "@/services/database/offerRepository";
@@ -18,11 +20,6 @@ import { FeedService } from "./feed";
 import { uploadMultipleFiles } from "./ftp";
 import { GameInfoService } from "./gameinfo";
 import { translationService } from "./translation";
-
-interface ScrapeResult {
-  newOfferIds: number[];
-  offerCount: number;
-}
 
 interface ServiceState {
   isRunning: boolean;
@@ -139,9 +136,7 @@ function queueInitialScrapes(): void {
 /**
  * Run scraping for a single scraper and store results
  */
-async function runSingleScrape(
-  scraper: ScraperInstance,
-): Promise<ScrapeResult> {
+async function runSingleScrape(scraper: ScraperInstance): Promise<void> {
   logger.info(
     `Starting scrape run #${totalScrapeCount.toFixed()} for ${scraper.getSource()} ${scraper.getType()}...`,
   );
@@ -150,20 +145,48 @@ async function runSingleScrape(
 
   // Store offers and track if we found any new ones
   const newOfferIds: number[] = [];
+  const modifiedOfferIds: number[] = [];
 
   for (const newOffer of offers) {
-    const offer = await createOrUpdateOffer(newOffer);
-    if (offer.action === "created") {
-      newOfferIds.push(offer.id);
+    // Offers that are neither new nor updated just get a new "last seen" date
+    // Offers that are new get inserted into the database
+    const existingOffer = await findOffer({
+      duration: newOffer.duration,
+      source: newOffer.source,
+      title: newOffer.title,
+      type: newOffer.type,
+      validTo: newOffer.valid_to ?? null,
+    });
+
+    if (existingOffer) {
+      // Touch the offer's last seen date as we have seen it again
+      const changed = await addMissingFieldsToOffer(existingOffer.id, newOffer);
+
+      if (changed) {
+        modifiedOfferIds.push(existingOffer.id);
+        logger.verbose(`Updated offer ${existingOffer.id.toFixed()}.`);
+      }
+
+      continue;
     }
+
+    // Create new offer if it doesn't exist
+    newOfferIds.push(await createOffer(newOffer));
   }
 
-  logger.info(`Completed scrape with ${offers.length.toFixed()} offers`);
+  logger.info(
+    `Completed scrape with ${offers.length.toFixed()} offers (${newOfferIds.length.toFixed()} new).`,
+  );
 
-  return {
-    newOfferIds,
-    offerCount: offers.length,
-  };
+  if (newOfferIds.length === 0 && modifiedOfferIds.length === 0) {
+    return;
+  }
+
+  await updateGameInfo(newOfferIds);
+  await updateGameInfo(modifiedOfferIds);
+  await updateFeeds();
+  await uploadFeedsToServer();
+  // TODO: Send offers to Telegram
 }
 
 /**
@@ -171,7 +194,7 @@ async function runSingleScrape(
  */
 async function updateGameInfo(gameIds: number[]): Promise<void> {
   const cfg = config.get();
-  if (!cfg.actions.scrapeInfo) {
+  if (!cfg.actions.scrapeInfo || gameIds.length === 0) {
     return;
   }
 
@@ -183,7 +206,7 @@ async function updateGameInfo(gameIds: number[]): Promise<void> {
 }
 
 /**
- * Update feeds if new offers were found
+ * Update feeds if new offers were found or old ones updated
  */
 async function updateFeeds(): Promise<void> {
   const cfg = config.get();
@@ -230,12 +253,7 @@ function queueScraper(scraper: ScraperInstance): void {
   void runTask(async () => {
     try {
       totalScrapeCount++;
-      const result = await runSingleScrape(scraper);
-      if (result.newOfferIds.length > 0) {
-        await updateGameInfo(result.newOfferIds);
-        await updateFeeds();
-        await uploadFeedsToServer();
-      }
+      await runSingleScrape(scraper);
     } catch (error) {
       logger.error(
         `Failed to scrape ${scraper.getSource()} ${scraper.getType()}: ${error instanceof Error ? error.message : String(error)}`,

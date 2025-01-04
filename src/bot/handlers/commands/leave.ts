@@ -1,4 +1,4 @@
-import { deleteTelegramChat } from "@/services/database/telegramSubscriptionRepository";
+import { deleteTelegramChat } from "@/services/database/telegramChatRepository";
 import type { CommandContext } from "grammy";
 import { getCallerName, getDbChat, logCall, userCanControlBot } from ".";
 import type { BotContext } from "../../types/middleware";
@@ -19,7 +19,8 @@ export async function handleLeaveCommand(
     return;
   }
 
-  // Delete chat and all related data (subscriptions will be deleted by foreign key cascade)
+  // Delete chat and all related data
+  // TODO: Delete related data
   await deleteTelegramChat(dbChat.id);
 
   const message = `Bye ${getCallerName(ctx)}, I'm sad to see you go. The data stored for this chat has been deleted. If you want to come back at any time, just type /start!`;
