@@ -109,3 +109,14 @@ export async function deactivateTelegramChat(
     handleError("deactivate telegram chat", error);
   }
 }
+
+export async function deleteTelegramChat(chatId: number): Promise<void> {
+  try {
+    await getDb()
+      .deleteFrom("telegram_chats")
+      .where("id", "=", chatId)
+      .execute();
+  } catch (error) {
+    handleError("delete telegram chat", error);
+  }
+}

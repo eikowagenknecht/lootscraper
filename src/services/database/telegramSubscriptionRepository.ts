@@ -3,6 +3,7 @@ import type { OfferSource } from "@/types/basic";
 import type {
   NewTelegramSubscription,
   TelegramSubscription,
+  TelegramSubscriptionUpdate,
 } from "@/types/database";
 import { getDb } from "../database";
 import { handleError } from "./common";
@@ -60,28 +61,18 @@ export async function createTelegramSubscription(
   }
 }
 
-export async function updateTelegramSubscriptionLastOfferId(
-  chatId: number,
-  source: OfferSource,
-  type: OfferType,
-  duration: OfferDuration,
-  lastOfferId: number,
-): Promise<void> {
+export async function updateTelegramSubscription(
+  id: number,
+  subscription: TelegramSubscriptionUpdate,
+) {
   try {
     await getDb()
       .updateTable("telegram_subscriptions")
-      .set({ last_offer_id: lastOfferId })
-      .where((eb) =>
-        eb.and([
-          eb("chat_id", "=", chatId),
-          eb("source", "=", source),
-          eb("type", "=", type),
-          eb("duration", "=", duration),
-        ]),
-      )
+      .set(subscription)
+      .where("id", "=", id)
       .execute();
   } catch (error) {
-    handleError("update telegram subscription last offer id", error);
+    handleError("update telegram subscription", error);
   }
 }
 
@@ -105,16 +96,5 @@ export async function removeTelegramSubscription(
       .execute();
   } catch (error) {
     handleError("remove telegram subscription", error);
-  }
-}
-
-export async function deleteTelegramChat(chatId: number): Promise<void> {
-  try {
-    await getDb()
-      .deleteFrom("telegram_chats")
-      .where("id", "=", chatId)
-      .execute();
-  } catch (error) {
-    handleError("delete telegram chat", error);
   }
 }

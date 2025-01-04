@@ -1,13 +1,18 @@
-import { AnnouncementService } from "@/services/announcement";
+import { getAllActiveTelegramChats } from "@/services/database/telegramChatRepository";
 import type { Config } from "@/types/config";
 import { logger } from "@/utils/logger";
+import type { Bot } from "grammy";
+import {
+  sendNewAnnouncementsToChat,
+  sendNewOffersToChat,
+} from "./helpers/send";
 import { TelegramBot } from "./index";
 import type { BotConfig } from "./types/config";
+import type { BotContext } from "./types/middleware";
 
 export class TelegramBotService {
   private static instance: TelegramBotService | null = null;
   private bot: TelegramBot | null = null;
-  private announcementService: AnnouncementService | null = null;
   private checkInterval: NodeJS.Timeout | null = null;
 
   private constructor() {
@@ -31,9 +36,6 @@ export class TelegramBotService {
 
     this.bot = new TelegramBot(botConfig);
     await this.bot.initialize();
-
-    // Initialize announcement service
-    this.announcementService = new AnnouncementService(this.bot.getBot());
   }
 
   public async start(): Promise<void> {
@@ -59,14 +61,21 @@ export class TelegramBotService {
     }
   }
 
+  // TODO: Merge TelegramBotService with TelegramBot class
+  public getBot(): Bot<BotContext> {
+    if (!this.bot) {
+      throw new Error("Bot not initialized. Call initialize() first.");
+    }
+    return this.bot.getBot();
+  }
+
   private startAnnouncementCheck(): void {
-    // Check for new announcements every minute
+    // Check for new messages to send every minute
     this.checkInterval = setInterval(() => {
       void (async () => {
         try {
-          if (this.announcementService) {
-            await this.announcementService.broadcastNewAnnouncements();
-          }
+          // TODO: Make sure we're not running multiple instances of this function
+          await this.broadcastNewMessages();
         } catch (error) {
           logger.error(
             `Error in announcement check: ${error instanceof Error ? error.message : String(error)}`,
@@ -74,6 +83,25 @@ export class TelegramBotService {
         }
       })();
     }, 60000); // 1 minute
+  }
+
+  private async broadcastNewMessages(): Promise<void> {
+    if (!this.bot) {
+      throw new Error("Bot not initialized. Call initialize() first.");
+    }
+
+    try {
+      const chats = await getAllActiveTelegramChats();
+
+      for (const chat of chats) {
+        await sendNewAnnouncementsToChat(chat.id);
+        await sendNewOffersToChat(chat.id);
+      }
+    } catch (error) {
+      logger.error(
+        `Failed to broadcast: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
   }
 }
 
