@@ -5,9 +5,9 @@ import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import { insertTestData } from "../../../tests/testData";
 import {
   createGame,
-  findGameByIgdbName,
-  findGameBySteamName,
   getGameById,
+  getGameByIgdbName,
+  getGameBySteamName,
   getGameWithInfo,
   updateGameIgdbInfo,
   updateGameSteamInfo,
@@ -80,7 +80,7 @@ describe("Game Repository", () => {
     });
 
     test("should find game by steam name", async () => {
-      const game = await findGameBySteamName("Test Game Steam");
+      const game = await getGameBySteamName("Test Game Steam");
       expect(game).not.toBeNull();
       expect(game?.steam_id).toBe(steamInfoId);
     });
@@ -89,7 +89,7 @@ describe("Game Repository", () => {
       // First update the game with IGDB info
       await updateGameIgdbInfo(gameId, igdbInfoId);
 
-      const game = await findGameByIgdbName("Test Game IGDB");
+      const game = await getGameByIgdbName("Test Game IGDB");
       expect(game).not.toBeNull();
       expect(game?.igdb_id).toBe(igdbInfoId);
     });

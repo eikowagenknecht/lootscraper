@@ -1,20 +1,55 @@
 import type { Game, IgdbInfo, NewGame, SteamInfo } from "@/types/database";
 import { getDb } from "../database";
 import { handleError, handleInsertResult } from "./common";
+import { getIgdbInfoById } from "./igdbInfoRepository";
+import { getSteamInfoById } from "./steamInfoRepository";
 
-export async function createGame(game: NewGame): Promise<number> {
+export async function getGameById(gameId: number): Promise<Game | null> {
   try {
-    const result = await getDb()
-      .insertInto("games")
-      .values(game)
-      .executeTakeFirstOrThrow();
-    return handleInsertResult(result);
+    return (
+      (await getDb()
+        .selectFrom("games")
+        .where("id", "=", gameId)
+        .selectAll()
+        .executeTakeFirst()) ?? null
+    );
   } catch (error) {
-    handleError("create game", error);
+    handleError("get game", error);
   }
 }
 
-export async function findGameBySteamName(name: string): Promise<Game | null> {
+export async function getGameWithInfo(gameId: number): Promise<{
+  game: Game;
+  steamInfo: SteamInfo | null;
+  igdbInfo: IgdbInfo | null;
+} | null> {
+  try {
+    const game = await getDb()
+      .selectFrom("games")
+      .where("id", "=", gameId)
+      .selectAll()
+      .executeTakeFirst();
+
+    if (!game) return null;
+
+    let steamInfo: SteamInfo | null = null;
+    let igdbInfo: IgdbInfo | null = null;
+
+    if (game.steam_id) {
+      steamInfo = await getSteamInfoById(game.steam_id);
+    }
+
+    if (game.igdb_id) {
+      igdbInfo = await getIgdbInfoById(game.igdb_id);
+    }
+
+    return { game, steamInfo, igdbInfo };
+  } catch (error) {
+    handleError("get game with info", error);
+  }
+}
+
+export async function getGameBySteamName(name: string): Promise<Game | null> {
   try {
     return (
       (await getDb()
@@ -29,7 +64,7 @@ export async function findGameBySteamName(name: string): Promise<Game | null> {
   }
 }
 
-export async function findGameByIgdbName(name: string): Promise<Game | null> {
+export async function getGameByIgdbName(name: string): Promise<Game | null> {
   try {
     return (
       (await getDb()
@@ -41,6 +76,18 @@ export async function findGameByIgdbName(name: string): Promise<Game | null> {
     );
   } catch (error) {
     handleError("find game by IGDB name", error);
+  }
+}
+
+export async function createGame(game: NewGame): Promise<number> {
+  try {
+    const result = await getDb()
+      .insertInto("games")
+      .values(game)
+      .executeTakeFirstOrThrow();
+    return handleInsertResult(result);
+  } catch (error) {
+    handleError("create game", error);
   }
 }
 
@@ -71,56 +118,5 @@ export async function updateGameIgdbInfo(
       .execute();
   } catch (error) {
     handleError("update game IGDB info", error);
-  }
-}
-
-export async function getGameById(gameId: number): Promise<Game | null> {
-  try {
-    return (
-      (await getDb()
-        .selectFrom("games")
-        .where("id", "=", gameId)
-        .selectAll()
-        .executeTakeFirst()) ?? null
-    );
-  } catch (error) {
-    handleError("get game", error);
-  }
-}
-
-export async function getGameWithInfo(gameId: number): Promise<{
-  game: Game;
-  steamInfo: SteamInfo | null;
-  igdbInfo: IgdbInfo | null;
-} | null> {
-  try {
-    const game = await getDb()
-      .selectFrom("games")
-      .where("id", "=", gameId)
-      .selectAll()
-      .executeTakeFirst();
-
-    if (!game) return null;
-
-    const [steamInfo, igdbInfo] = await Promise.all([
-      game.steam_id
-        ? getDb()
-            .selectFrom("steam_info")
-            .where("id", "=", game.steam_id)
-            .selectAll()
-            .executeTakeFirstOrThrow()
-        : null,
-      game.igdb_id
-        ? getDb()
-            .selectFrom("igdb_info")
-            .where("id", "=", game.igdb_id)
-            .selectAll()
-            .executeTakeFirstOrThrow()
-        : null,
-    ]);
-
-    return { game, steamInfo, igdbInfo };
-  } catch (error) {
-    handleError("get game with info", error);
   }
 }
