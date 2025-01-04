@@ -208,6 +208,7 @@ export abstract class BaseScraper<T extends RawOffer = RawOffer> {
     try {
       const filename = resolve(
         getDataPath(),
+        "screenshots",
         `${this.getSource().toLowerCase()}_${DateTime.now().toFormat("yyyyMMdd_HHmmss")}_${suffix}.png`,
       );
 
@@ -287,19 +288,14 @@ export abstract class BaseScraper<T extends RawOffer = RawOffer> {
         }
       }
     } catch (error) {
-      // Try to take a screenshot to help diagnose the problem
-      try {
-        if (page === null) {
-          logger.error("Failed to create a new page. Can't take a screenshot.");
-          return [];
-        }
-        if (error instanceof errors.TimeoutError) {
-          await this.takeScreenshot(page, "browser_error");
-        } else {
-          await this.takeScreenshot(page, "other_error");
-        }
-      } catch {
-        // Ignore errors while taking a screenshot
+      if (page === null) {
+        logger.error("Failed to create a new page. Can't take a screenshot.");
+        return [];
+      }
+      if (error instanceof errors.TimeoutError) {
+        await this.takeScreenshot(page, "browser_error");
+      } else {
+        await this.takeScreenshot(page, "other_error");
       }
     } finally {
       await page?.close();
