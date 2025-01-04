@@ -22,11 +22,10 @@ export class RssGenerator {
   ) {
     this.feedGenerator = new AtomFeed({
       id: this.config.feed.idPrefix + this.getFeedId(),
-      title: this.getFeedTitle(),
+      title: generateFeedTitle(this.combination),
       updated: DateTime.now().toJSDate(),
       generator: {
         content: "LootScraper",
-        // TODO: Put in config and add version.
         uri: "https://github.com/eikowagenknecht/lootscraper",
       },
       language: "en",
@@ -124,10 +123,6 @@ export class RssGenerator {
     return feedId;
   }
 
-  private getFeedTitle(): string {
-    return generateFeedTitle(this.combination);
-  }
-
   private getEntryTitle(offer: Offer): string {
     const additionalInfo: string[] = [
       translationService.getTypeDisplay(offer.type),
@@ -182,11 +177,11 @@ export class RssGenerator {
 
     // Add claim link
     if (offer.url) {
-      content += `<p>Claim it now for free on <a href="${this.escapeHtml(offer.url)}">${this.escapeHtml(offer.source)}</a>.</p>`;
+      content += `<p>Claim it now for free on <a href="${this.escapeHtml(offer.url)}">${translationService.getSourceDisplay(offer.source)}</a>.</p>`;
     }
 
     // Add footer
-    content += `<p><small>Source: ${this.escapeHtml(offer.source)}, Seen first: ${DateTime.fromISO(
+    content += `<p><small>Source: ${translationService.getSourceDisplay(offer.source)}, Seen first: ${DateTime.fromISO(
       offer.seen_first,
     ).toFormat(
       "yyyy-MM-dd HH:mm:ss",
