@@ -19,32 +19,57 @@ expert:
 # The actions to perform. Set to false to disable.
 # You need to enable one or more actions to do anything.
 actions:
+  # Scrape offers from the sources (enable / disable below). This is the main action.
   scrapeOffers: false
+  # Scrape additional information about the offers (enable / disable sources below).
   scrapeInfo: false
+  # Generate HTML and RSS feed files.
   generateFeed: false
+  # Upload the feed files to an FTP server.
   uploadToFtp: false
+  # Enable the Telegram bot.
   telegramBot: false
 
 scraper:
+  # The sources to scrape offers from. Comment out to disable.
   offerSources:
+    # Amazon Games
     - AMAZON
+    # Apple App Store
     - APPLE
+    # Epic Games Store
     - EPIC
+    # GOG
     - GOG
+    # Google Play Store
     - GOOGLE
+    # Humble Store
     - HUMBLE
+    # Itch.io
     - ITCH
+    # Steam
     - STEAM
+    # Ubisoft Connect
     - UBISOFT
+  # The types of offers to scrape. Comment out to disable.
   offerTypes:
+    # Games
     - GAME
+    # Loot (e.g. DLC, in-game items)
     - LOOT
+  # The allowed durations of the offers. Comment out to disable.
   offerDurations:
+    # Always available
     - ALWAYS
+    # Claimable for a limited time
     - CLAIMABLE
+    # Temporary free (like Steam free weekends)
     - TEMPORARY
+  # The sources to scrape additional information from. Comment out to disable.
   infoSources:
+    # Steam
     - STEAM
+    # IGDB
     - IGDB
 
 igdb:
