@@ -14,15 +14,15 @@ interface OfferFilters {
   lastOfferId?: number;
 }
 
-async function createOffer(offer: NewOffer): Promise<number> {
+export async function getOfferById(id: number): Promise<Offer | undefined> {
   try {
-    const result = await getDb()
-      .insertInto("offers")
-      .values(offer)
-      .executeTakeFirstOrThrow();
-    return handleInsertResult(result);
+    return await getDb()
+      .selectFrom("offers")
+      .selectAll()
+      .where("id", "=", id)
+      .executeTakeFirst();
   } catch (error) {
-    handleError("create offer", error);
+    handleError("get offer", error);
   }
 }
 
@@ -40,15 +40,31 @@ export async function getOfferByTitle(
   }
 }
 
+export async function getAllOffers(): Promise<Offer[]> {
+  try {
+    return await getDb()
+      .selectFrom("offers")
+      .selectAll()
+      .orderBy("seen_first", "desc")
+      .execute();
+  } catch (error) {
+    handleError("get all offers", error);
+  }
+}
+
 export async function getActiveOffers(
   time: Date,
   filters?: OfferFilters,
 ): Promise<Offer[]> {
   try {
-    const yesterday = DateTime.fromJSDate(time).minus({ days: 1 }).toJSDate();
+    const seenCutoff = DateTime.fromJSDate(time)
+      .minus({ hours: 24 })
+      .toJSDate();
 
     logger.debug(`Getting active offers for ${time.toISOString()}`);
 
+    // Do as much filtering as possible in the database query to reduce the
+    // amount of data we have to process
     let query = getDb()
       .selectFrom("offers")
       .where((eb) =>
@@ -71,7 +87,7 @@ export async function getActiveOffers(
             eb.and([
               eb("valid_to", "is", null),
               eb("seen_last", "is not", null),
-              eb("seen_last", ">=", yesterday.toISOString()),
+              eb("seen_last", ">=", seenCutoff.toISOString()),
             ]),
           ]),
         ]),
@@ -97,7 +113,7 @@ export async function getActiveOffers(
       `Got ${offers.length.toFixed()} active offers: ${offers.map((o) => o.id).join(", ")}`,
     );
 
-    // Post-query filtering for real_valid_to
+    // Filter out offers that have a real end date that is in the future
     const filteredOffers = offers.filter((offer) => {
       const realValidTo = calculateRealValidTo(
         DateTime.fromISO(offer.seen_last).toJSDate(),
@@ -119,15 +135,52 @@ export async function getActiveOffers(
   }
 }
 
-export async function getAllOffers(): Promise<Offer[]> {
+export async function getNewOffers(
+  now: Date,
+  type: OfferType,
+  source: OfferSource,
+  duration: OfferDuration,
+  lastOfferId: number,
+): Promise<Offer[]> {
   try {
-    return await getDb()
+    let query = getDb()
       .selectFrom("offers")
       .selectAll()
-      .orderBy("seen_first", "desc")
-      .execute();
+      .where("id", ">", lastOfferId)
+      .where("type", "=", type)
+      .where("source", "=", source)
+      .where("duration", "=", duration);
+
+    // For non-ALWAYS offers, check if they're still valid
+    if (duration !== OfferDuration.ALWAYS) {
+      logger.debug(
+        `Filtering for offers that are still valid on ${DateTime.fromJSDate(now).toISO()}`,
+      );
+      query = query.where((eb) =>
+        eb.or([
+          eb("valid_to", "is", null),
+          eb("valid_to", ">", DateTime.fromJSDate(now).toISO()),
+        ]),
+      );
+    }
+
+    query = query.orderBy("id", "asc");
+
+    return await query.execute();
   } catch (error) {
-    handleError("get all offers", error);
+    handleError("get new offers", error);
+  }
+}
+
+async function createOffer(offer: NewOffer): Promise<number> {
+  try {
+    const result = await getDb()
+      .insertInto("offers")
+      .values(offer)
+      .executeTakeFirstOrThrow();
+    return handleInsertResult(result);
+  } catch (error) {
+    handleError("create offer", error);
   }
 }
 
@@ -183,54 +236,5 @@ export async function createOrUpdateOffer(
     };
   } catch (error) {
     handleError("create or update offer", error);
-  }
-}
-
-export async function getNewOffers(
-  now: Date,
-  type: OfferType,
-  source: OfferSource,
-  duration: OfferDuration,
-  lastOfferId: number,
-): Promise<Offer[]> {
-  try {
-    let query = getDb()
-      .selectFrom("offers")
-      .selectAll()
-      .where("id", ">", lastOfferId)
-      .where("type", "=", type)
-      .where("source", "=", source)
-      .where("duration", "=", duration);
-
-    // For non-ALWAYS offers, check if they're still valid
-    if (duration !== OfferDuration.ALWAYS) {
-      logger.debug(
-        `Filtering for offers that are still valid on ${DateTime.fromJSDate(now).toISO()}`,
-      );
-      query = query.where((eb) =>
-        eb.or([
-          eb("valid_to", "is", null),
-          eb("valid_to", ">", DateTime.fromJSDate(now).toISO()),
-        ]),
-      );
-    }
-
-    query = query.orderBy("id", "asc");
-
-    return await query.execute();
-  } catch (error) {
-    handleError("get new offers", error);
-  }
-}
-
-export async function getOfferById(id: number): Promise<Offer | undefined> {
-  try {
-    return await getDb()
-      .selectFrom("offers")
-      .selectAll()
-      .where("id", "=", id)
-      .executeTakeFirst();
-  } catch (error) {
-    handleError("get offer", error);
   }
 }

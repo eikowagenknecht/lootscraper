@@ -19,14 +19,12 @@ export interface Database {
   telegram_subscriptions: TelegramSubscriptionsTable;
 }
 
+/** Legacy table from LootScraper <2.0.0 */
 interface AlembicVersionTable {
   version_num: string;
 }
 
-export type AlembicVersion = Selectable<AlembicVersionTable>;
-export type NewAlembicVersion = Insertable<AlembicVersionTable>;
-export type AlembicVersionUpdate = Updateable<AlembicVersionTable>;
-
+/** An announcement to be pushed to Telegram users. */
 interface AnnouncementsTable {
   id: Generated<number>;
   channel: "TELEGRAM";
@@ -38,6 +36,7 @@ export type Announcement = Selectable<AnnouncementsTable>;
 export type NewAnnouncement = Insertable<AnnouncementsTable>;
 export type AnnouncementUpdate = Updateable<AnnouncementsTable>;
 
+/** A game, links igdb and steam info together. */
 interface GamesTable {
   id: Generated<number>;
   igdb_id: number | null;
@@ -48,6 +47,7 @@ export type Game = Selectable<GamesTable>;
 export type NewGame = Insertable<GamesTable>;
 export type GameUpdate = Updateable<GamesTable>;
 
+/** Information about a game, gathered from IDGB */
 interface IgdbInfoTable {
   id: number;
   url: string;
@@ -64,6 +64,7 @@ export type IgdbInfo = Selectable<IgdbInfoTable>;
 export type NewIgdbInfo = Insertable<IgdbInfoTable>;
 export type IgdbInfoUpdate = Updateable<IgdbInfoTable>;
 
+/** An offer, can be for a game or some other game related content (loot). */
 interface OffersTable {
   id: Generated<number>;
   source: OfferSource;
@@ -71,6 +72,7 @@ interface OffersTable {
   duration: OfferDuration;
   title: string;
   probable_game_name: string;
+  /** The valid to date as seen on the website. Some websites sometimes remove the offer before this date. */
   seen_last: string;
   rawtext: ColumnType<Record<string, unknown>, string | undefined, string>;
   url: string | null;
@@ -86,6 +88,7 @@ export type Offer = Selectable<OffersTable>;
 export type NewOffer = Insertable<OffersTable>;
 export type OfferUpdate = Updateable<OffersTable>;
 
+/** Information about a game, gathered from Steam */
 interface SteamInfoTable {
   id: number;
   url: string;
@@ -107,6 +110,7 @@ export type SteamInfo = Selectable<SteamInfoTable>;
 export type NewSteamInfo = Insertable<SteamInfoTable>;
 export type SteamInfoUpdate = Updateable<SteamInfoTable>;
 
+/** A Telegram chat. Can be a single user, a group or a channel. */
 interface TelegramChatsTable {
   id: Generated<number>;
   registration_date: string;
@@ -127,6 +131,7 @@ export type TelegramChat = Selectable<TelegramChatsTable>;
 export type NewTelegramChat = Insertable<TelegramChatsTable>;
 export type TelegramChatUpdate = Updateable<TelegramChatsTable>;
 
+/** Subscription of a chat to a category for Telegram notifications. */
 interface TelegramSubscriptionsTable {
   id: Generated<number>;
   chat_id: number;

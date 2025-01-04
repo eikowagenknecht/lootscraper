@@ -10,8 +10,8 @@ import { logger } from "@/utils/logger";
 import type { BrowserContext } from "playwright";
 import {
   createGame,
-  findGameByIgdbName,
-  findGameBySteamName,
+  getGameByIgdbName,
+  getGameBySteamName,
 } from "./database/gameRepository";
 import { createIgdbInfo } from "./database/igdbInfoRepository";
 import { getOfferById, updateOffer } from "./database/offerRepository";
@@ -78,12 +78,12 @@ export class GameInfoService {
 
   private async findExistingGame(gameName: string): Promise<Game | null> {
     if (this.config.scraper.infoSources.includes("IGDB")) {
-      const gameByIgdb = await findGameByIgdbName(gameName);
+      const gameByIgdb = await getGameByIgdbName(gameName);
       if (gameByIgdb) return gameByIgdb;
     }
 
     if (this.config.scraper.infoSources.includes("STEAM")) {
-      const gameBySteam = await findGameBySteamName(gameName);
+      const gameBySteam = await getGameBySteamName(gameName);
       if (gameBySteam) return gameBySteam;
     }
 
