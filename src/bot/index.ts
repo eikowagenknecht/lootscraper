@@ -168,7 +168,7 @@ export class TelegramBot {
 
     handleError(error);
 
-    if (this.config.developerChatId) {
+    if (this.config.botLogChatId) {
       try {
         let errorMessage = escapeText(`⚠️ ${error.message}`);
         if (error.stack) {
@@ -179,11 +179,9 @@ ${bold("Stack:")}
 ${escapeText(error.stack)}
 \`\`\``;
         }
-        await this.bot.api.sendMessage(
-          this.config.developerChatId,
-          errorMessage,
-          { parse_mode: "MarkdownV2" },
-        );
+        await this.bot.api.sendMessage(this.config.botLogChatId, errorMessage, {
+          parse_mode: "MarkdownV2",
+        });
       } catch (sendError) {
         logger.error(
           `Failed to send error to developer: ${sendError instanceof Error ? sendError.message : String(sendError)}`,
