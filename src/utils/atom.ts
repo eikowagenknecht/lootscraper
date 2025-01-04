@@ -308,6 +308,10 @@ class AtomEntry {
   }
 }
 
+/**
+ * Generates an Atom feed.
+ * See https://tools.ietf.org/html/rfc4287 for the specification.
+ */
 class AtomFeed {
   private readonly options: AtomFeedOptions;
   private readonly entries: AtomEntry[] = [];
