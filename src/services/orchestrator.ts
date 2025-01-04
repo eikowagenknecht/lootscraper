@@ -106,6 +106,7 @@ export async function initializeServices(): Promise<void> {
     registerShutdownHandlers();
 
     // Run initial tasks
+    logger.info("Running initial tasks...");
     await runInitialTasks();
   } catch (error) {
     await shutdownServices();
