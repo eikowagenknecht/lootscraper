@@ -34,13 +34,20 @@ export class GameInfoService {
         : null;
   }
 
+  /**
+   * Update an offer with game information. If the offer already has some
+   * information, just update the missing parts. Otherwise, create a new
+   * Game and try to populate it with information.
+   * @param offer
+   * @returns
+   */
   public async enrichOffer(offer: number | Offer): Promise<void> {
     let innerOffer: Offer;
     if (typeof offer === "number") {
       const dbOffer = await getOfferById(offer);
       if (!dbOffer) {
         logger.warn(
-          `Offer with ID ${offer.toFixed()} not found, skipping enrichment`,
+          `Offer with ID ${offer.toFixed()} not found, skipping enrichment.`,
         );
         return;
       }
@@ -50,7 +57,7 @@ export class GameInfoService {
     }
 
     if (!innerOffer.probable_game_name) {
-      logger.warn("Offer has no game name, skipping enrichment");
+      logger.warn("Offer has no game name, skipping enrichment.");
       return;
     }
 
