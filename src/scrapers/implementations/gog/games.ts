@@ -86,8 +86,8 @@ export class GogGamesScraper extends GogBaseScraper {
       return {
         title,
         validTo: validTo ?? "",
-        ...(url ? { url } : undefined),
-        ...(imgUrl ? { imgUrl } : undefined),
+        ...(url && { url }),
+        ...(imgUrl && { imgUrl }),
       };
     } catch (error) {
       logger.error(
@@ -196,7 +196,7 @@ export class GogGamesScraper extends GogBaseScraper {
       probable_game_name: rawOffer.title,
       seen_last: DateTime.now().toISO(),
       seen_first: DateTime.now().toISO(),
-      ...(validTo ? { valid_to: validTo.toISO() } : null),
+      ...(validTo && { valid_to: validTo.toISO() }),
       rawtext: JSON.stringify(rawtext),
       url: rawOffer.url ?? OFFER_URL,
       img_url: rawOffer.imgUrl ?? null,
