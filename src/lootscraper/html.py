@@ -295,7 +295,17 @@ def generate_html(
         entries.append(entry)
 
     # Sort entries dictionary by valid_from date, newest first
-    entries.sort(key=lambda x: x["valid_from"], reverse=True)
+    entries.sort(
+        key=lambda x: (
+            # Sort by valid_from (newest first)
+            x["valid_from"],
+            # Sort by valid_to if present (newest first), or use a default value
+            x.get("valid_to", ""),
+            # Sort by title
+            x["title"].lower(),
+        ),
+        reverse=True,
+    )
 
     feed = {
         "author_name": author_name,
