@@ -31,23 +31,20 @@ function initializeCore() {
   logger.info("Core services initialized");
 }
 
+/**
+ * Main function to start the application.
+ * Initializes core services like logging and config parsing first and then
+ * starts application services (database, translation, etc.).
+ */
 async function main(): Promise<void> {
-  try {
-    // Initialize core services first (logging, config)
-    initializeCore();
-
-    // Initialize and start application services
-    await initializeServices();
-    logger.info("Application started successfully");
-  } catch (error) {
-    handleError(error);
-    await shutdownServices();
-    process.exit(1);
-  }
+  initializeCore();
+  await initializeServices();
 }
 
-main().catch((error: unknown) => {
+try {
+  await main();
+} catch (error) {
   handleError(error);
-  void shutdownServices();
+  await shutdownServices();
   process.exit(1);
-});
+}
