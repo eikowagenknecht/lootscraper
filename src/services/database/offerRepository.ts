@@ -113,17 +113,32 @@ export async function getActiveOffers(
       `Got ${offers.length.toFixed()} active offers: ${offers.map((o) => o.id).join(", ")}`,
     );
 
-    // Filter out offers that have a real end date that is in the future
     const filteredOffers = offers.filter((offer) => {
+      // Skip entries without dates
+      if (!offer.valid_from && !offer.seen_last) {
+        return false;
+      }
+
+      // Skip entries that start in the future
+      if (offer.valid_from && offer.valid_from <= offer.seen_last) {
+        return false;
+      }
+
       const realValidTo = calculateRealValidTo(
         DateTime.fromISO(offer.seen_last).toJSDate(),
         offer.valid_to ? DateTime.fromISO(offer.valid_to).toJSDate() : null,
         time,
       );
-      return (
-        realValidTo === null ||
-        DateTime.fromJSDate(realValidTo) > DateTime.fromJSDate(time)
-      );
+
+      // Filter out offers that have a real end date that is in the past
+      if (
+        realValidTo &&
+        DateTime.fromJSDate(realValidTo) <= DateTime.fromJSDate(time)
+      ) {
+        return false;
+      }
+
+      return true;
     });
 
     logger.debug(

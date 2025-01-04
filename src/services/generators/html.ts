@@ -153,61 +153,56 @@ export class HtmlGenerator {
     logger.info(
       `Generating HTML feed for ${offers.length.toFixed()} offers...`,
     );
-    const entries = await Promise.all(
-      offers
-        .filter(
-          (offer) => !(offer.valid_from && offer.valid_from > offer.seen_last),
-        )
-        .map(async (offer) => {
-          const gameInfo = offer.game_id
-            ? await getGameWithInfo(offer.game_id)
-            : null;
 
-          return {
-            id: `${this.config.feed.idPrefix}${offer.id.toFixed()}`,
-            title: offer.title,
-            img_url: offer.img_url ?? gameInfo?.steamInfo?.image_url,
-            valid_from: offer.valid_from
-              ? DateTime.fromISO(offer.valid_from).toFormat("yyyy-MM-dd")
-              : DateTime.fromISO(offer.seen_first).toFormat("yyyy-MM-dd"),
-            valid_to: offer.valid_to
-              ? DateTime.fromISO(offer.valid_to).toFormat("yyyy-MM-dd")
-              : undefined,
-            source: translationService.getSourceDisplay(offer.source),
-            url: offer.url,
-            is_expired:
-              offer.valid_to &&
-              DateTime.fromISO(offer.valid_to) < DateTime.now(),
-            has_game: !!gameInfo,
-            game_name: gameInfo?.igdbInfo?.name ?? gameInfo?.steamInfo?.name,
-            metacritic_score: gameInfo?.steamInfo?.metacritic_score,
-            metacritic_url: gameInfo?.steamInfo?.metacritic_url,
-            steam_percent: gameInfo?.steamInfo?.percent,
-            steam_score: gameInfo?.steamInfo?.score,
-            steam_recommendations: gameInfo?.steamInfo?.recommendations,
-            steam_url: gameInfo?.steamInfo?.url,
-            igdb_meta_score: gameInfo?.igdbInfo?.meta_score,
-            igdb_meta_ratings: gameInfo?.igdbInfo?.meta_ratings,
-            igdb_url: gameInfo?.igdbInfo?.url,
-            igdb_user_score: gameInfo?.igdbInfo?.user_score,
-            igdb_user_ratings: gameInfo?.igdbInfo?.user_ratings,
-            release_date: gameInfo?.igdbInfo?.release_date
-              ? DateTime.fromISO(gameInfo.igdbInfo.release_date).toFormat(
-                  "yyyy-MM-dd",
-                )
-              : gameInfo?.steamInfo?.release_date
-                ? DateTime.fromISO(gameInfo.steamInfo.release_date).toFormat(
-                    "yyyy-MM-dd",
-                  )
-                : undefined,
-            recommended_price: gameInfo?.steamInfo?.recommended_price_eur,
-            description:
-              gameInfo?.igdbInfo?.short_description ??
-              gameInfo?.steamInfo?.short_description,
-            genres: gameInfo?.steamInfo?.genres,
-          };
-        }),
-    );
+    const entries = [];
+    for (const offer of offers) {
+      const gameInfo = offer.game_id
+        ? await getGameWithInfo(offer.game_id)
+        : null;
+
+      entries.push({
+        id: `${this.config.feed.idPrefix}${offer.id.toFixed()}`,
+        title: offer.title,
+        img_url: offer.img_url ?? gameInfo?.steamInfo?.image_url,
+        valid_from: offer.valid_from
+          ? DateTime.fromISO(offer.valid_from).toFormat("yyyy-MM-dd")
+          : DateTime.fromISO(offer.seen_first).toFormat("yyyy-MM-dd"),
+        valid_to: offer.valid_to
+          ? DateTime.fromISO(offer.valid_to).toFormat("yyyy-MM-dd")
+          : undefined,
+        source: translationService.getSourceDisplay(offer.source),
+        url: offer.url,
+        is_expired:
+          offer.valid_to && DateTime.fromISO(offer.valid_to) < DateTime.now(),
+        has_game: !!gameInfo,
+        game_name: gameInfo?.igdbInfo?.name ?? gameInfo?.steamInfo?.name,
+        metacritic_score: gameInfo?.steamInfo?.metacritic_score,
+        metacritic_url: gameInfo?.steamInfo?.metacritic_url,
+        steam_percent: gameInfo?.steamInfo?.percent,
+        steam_score: gameInfo?.steamInfo?.score,
+        steam_recommendations: gameInfo?.steamInfo?.recommendations,
+        steam_url: gameInfo?.steamInfo?.url,
+        igdb_meta_score: gameInfo?.igdbInfo?.meta_score,
+        igdb_meta_ratings: gameInfo?.igdbInfo?.meta_ratings,
+        igdb_url: gameInfo?.igdbInfo?.url,
+        igdb_user_score: gameInfo?.igdbInfo?.user_score,
+        igdb_user_ratings: gameInfo?.igdbInfo?.user_ratings,
+        release_date: gameInfo?.igdbInfo?.release_date
+          ? DateTime.fromISO(gameInfo.igdbInfo.release_date).toFormat(
+              "yyyy-MM-dd",
+            )
+          : gameInfo?.steamInfo?.release_date
+            ? DateTime.fromISO(gameInfo.steamInfo.release_date).toFormat(
+                "yyyy-MM-dd",
+              )
+            : undefined,
+        recommended_price: gameInfo?.steamInfo?.recommended_price_eur,
+        description:
+          gameInfo?.igdbInfo?.short_description ??
+          gameInfo?.steamInfo?.short_description,
+        genres: gameInfo?.steamInfo?.genres,
+      });
+    }
 
     const html = this.template({
       feed: {

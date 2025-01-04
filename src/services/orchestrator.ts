@@ -192,7 +192,13 @@ async function updateFeeds(): Promise<void> {
   logger.info("New offers found, regenerating feeds...");
   const feedService = new FeedService(cfg);
   const activeOffers = await getActiveOffers(new Date());
-  const allOffers = await getAllOffers();
+  const allOffers = (await getAllOffers()).filter(
+    (offer) =>
+      // Skip entries without dates or entries that start in the future
+      (offer.valid_from ?? offer.seen_last) &&
+      (!offer.valid_from || offer.valid_from > offer.seen_last),
+  );
+
   await feedService.generateFeeds(activeOffers, allOffers);
 }
 

@@ -54,9 +54,6 @@ export class RssGenerator {
     logger.info(`Generating RSS feed for ${offers.length.toFixed()} offers...`);
 
     for (const offer of offers) {
-      // Skip entries without dates or future entries
-      if (offer.valid_from && offer.valid_from > offer.seen_last) continue;
-
       const updated =
         offer.valid_from && offer.valid_from > offer.seen_first
           ? DateTime.fromISO(offer.valid_from).toJSDate()
