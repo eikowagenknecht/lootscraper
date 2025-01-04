@@ -1,14 +1,15 @@
+import { closeSchema, toggleSubscriptionSchema } from "@/bot/types/callbacks";
+import type { BotContext } from "@/bot/types/middleware";
 import { packData } from "@/bot/utils/callbackPack";
 import { getEnabledScraperCombinations } from "@/scrapers";
 import type { ScraperCombination } from "@/scrapers/utils";
 import { hasTelegramSubscription } from "@/services/database/telegramSubscriptionRepository";
+import { translationService } from "@/services/translation";
 import { OfferDuration } from "@/types/basic";
 import { logger } from "@/utils/logger";
 import { type CommandContext, InlineKeyboard } from "grammy";
 import type { z } from "zod";
 import { getDbChat, logCall, userCanControlBot } from ".";
-import { closeSchema, toggleSubscriptionSchema } from "../../types/callbacks";
-import type { BotContext } from "../../types/middleware";
 
 export async function handleManageCommand(
   ctx: CommandContext<BotContext>,
@@ -79,7 +80,7 @@ function getButtonText(
   const prefix = isSubscribed ? "[x] " : "";
   const suffix =
     combination.duration !== OfferDuration.CLAIMABLE
-      ? ` (${combination.duration})`
+      ? ` (${translationService.getDurationDisplay(combination.duration)})`
       : "";
   return `${prefix}${combination.source} ${combination.type}${suffix}`;
 }
