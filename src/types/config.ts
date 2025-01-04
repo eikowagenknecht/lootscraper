@@ -55,8 +55,8 @@ export const ConfigSchema = z.object({
   telegram: z.object({
     logLevel: TelegramLogLevel.default("ERROR"),
     accessToken: z.string().default(""),
-    developerChatId: z.number().default(0),
-    adminUserId: z.number().default(0),
+    botLogChatId: z.number().default(0),
+    botOwnerUserId: z.number().default(0),
   }),
   igdb: z.object({
     clientId: z.string().default(""),

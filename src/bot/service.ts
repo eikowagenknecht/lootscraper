@@ -29,8 +29,8 @@ export class TelegramBotService {
   public async initialize(config: Config): Promise<void> {
     const botConfig: BotConfig = {
       accessToken: config.telegram.accessToken,
-      developerChatId: config.telegram.developerChatId,
-      adminUserId: config.telegram.adminUserId,
+      botLogChatId: config.telegram.botLogChatId,
+      botOwnerUserId: config.telegram.botOwnerUserId,
       logLevel: config.telegram.logLevel,
     };
 

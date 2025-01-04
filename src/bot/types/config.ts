@@ -1,6 +1,6 @@
 export interface BotConfig {
   accessToken: string;
-  developerChatId: number;
-  adminUserId: number;
+  botLogChatId: number;
+  botOwnerUserId: number;
   logLevel: "DISABLED" | "ERROR" | "WARNING" | "INFO" | "DEBUG";
 }

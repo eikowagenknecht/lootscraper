@@ -1,28 +1,31 @@
 common:
-  # Path is /data if it exists (Docker), otherwise the relative directory data
+  # The filename inside "/data" for Docker, otherwise in the relative directory "./data".
   databaseFile: loot.db
+  # Prefix for the feed file name. "lootscraper" will result in "lootscraper_amazon_games.xml" etc.
   feedFilePrefix: lootscraper
-  logFile: lootscraper.log
+  # The log file name. Do not include the file extension.
+  logFile: lootscraper-%DATE%
   # One of: ERROR, WARN, INFO, HTTP, VERBOSE, DEBUG, SILLY
   logLevel: INFO
 
 expert:
-  # Output all database queries to the console
+  # Output all database queries to the console.
   dbEcho: false
   # Timeout for web requests (in seconds). Increase if you have slow internet.
   webTimeoutSeconds: 5
   # Run the browser in headless mode. Must be set to false for Epic Games to work.
-  headless: true
+  headless: false
 
+# The actions to perform. Set to false to disable.
+# You need to enable one or more actions to do anything.
 actions:
   scrapeOffers: false
-  scrapeInfo: true
+  scrapeInfo: false
   generateFeed: false
   uploadToFtp: false
   telegramBot: false
 
 scraper:
-  # But not mixed like this
   offerSources:
     - AMAZON
     - APPLE
@@ -51,25 +54,26 @@ igdb:
   clientSecret: ""
 
 feed:
-  authorName: John Doe
-  authorEmail: mail@example.com
-  authorWeb: https://example.com
-  urlPrefix: https://feed.example.com/
-  urlAlternate: https://example.com/loot
-  idPrefix: https://example.com/loot/
+  authorName: "John Doe"
+  authorEmail: "mail@example.com"
+  authorWeb: "https://example.com"
+  urlPrefix: "https://feed.example.com/"
+  urlAlternate: "https://example.com/loot"
+  idPrefix: "https://example.com/loot/"
 
+# Settings for the TLS FTP connection
 ftp:
-  # Settings for the TLS FTP connection
-  host: ftp.example.com
-  user: user
-  password: password
+  host: "ftp.example.com"
+  user: "user"
+  password: "password"
 
 telegram:
   # Telegram bot token
   accessToken: ""
-  # Chat ID for the developer
-  developerChatId: 0
   # User ID for the admin
-  adminUserId: 0
+  botOwnerUserId: 0
+  # Chat (can be a group, then it starts with a minus sign) where logs will be sent to
+  botLogChatId: 0
+  # Which errors to send by Telegram notification to the log chat.
   # One of: DEBUG, INFO, WARNING, ERROR, DISABLED
   logLevel: ERROR
