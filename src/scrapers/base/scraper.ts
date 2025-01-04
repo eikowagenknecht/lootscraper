@@ -4,7 +4,7 @@ import { OfferDuration, OfferType } from "@/types/basic";
 import type { OfferSource } from "@/types/basic";
 import type { Config } from "@/types/config";
 import type { NewOffer } from "@/types/database";
-import { BrowserError, ScraperError } from "@/types/errors";
+import { ScraperError } from "@/types/errors";
 import { cleanCombinedTitle, cleanGameTitle, cleanLootTitle } from "@/utils";
 import { logger } from "@/utils/logger";
 import { getDataPath } from "@/utils/path";
@@ -204,16 +204,22 @@ export abstract class BaseScraper<T extends RawOffer = RawOffer> {
     }
   }
 
-  /**
-   * Returns a filename for saving screenshots.
-   * @param suffix - A suffix to append to the filename
-   * @returns Path as string for saving the screenshot
-   */
-  protected getScreenshotFilename(suffix: string): string {
-    return resolve(
-      getDataPath(),
-      `${this.getSource().toLowerCase()}_${DateTime.now().toFormat("yyyyMMdd_HHmmss")}_${suffix}.png`,
-    );
+  private async takeScreenshot(page: Page, suffix = ""): Promise<void> {
+    try {
+      const filename = resolve(
+        getDataPath(),
+        `${this.getSource().toLowerCase()}_${DateTime.now().toFormat("yyyyMMdd_HHmmss")}_${suffix}.png`,
+      );
+
+      await page.screenshot({
+        path: filename,
+        fullPage: true,
+      });
+    } catch (error) {
+      logger.error(
+        `Failed to take screenshot: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
   }
 
   /**
@@ -238,35 +244,12 @@ export abstract class BaseScraper<T extends RawOffer = RawOffer> {
 
     try {
       page = await this.context.newPage();
+
       await page.goto(this.getOffersUrl(), { timeout: 30000 });
-
-      try {
-        await page.waitForSelector(this.getPageReadySelector(), {
-          timeout: 10000,
-        });
-        await this.pageLoadedHook(page);
-      } catch (error) {
-        // Try to take a screenshot to help diagnose the problem
-        // TODO: Move this at the end of the method try block
-        try {
-          await page.screenshot({
-            path: this.getScreenshotFilename("timeout"),
-            fullPage: true,
-          });
-        } catch (error) {
-          logger.error(
-            `Failed to take screenshot: ${error instanceof Error ? error.message : String(error)}`,
-          );
-        }
-
-        if (error instanceof errors.TimeoutError) {
-          throw new BrowserError(
-            "Page didn't get ready to be parsed",
-            this.getOffersUrl(),
-          );
-        }
-        throw error;
-      }
+      await page.waitForSelector(this.getPageReadySelector(), {
+        timeout: 10000,
+      });
+      await this.pageLoadedHook(page);
 
       for (const handler of this.getOfferHandlers(page)) {
         const elements = await handler.locator.all().catch(() => {
@@ -291,6 +274,32 @@ export abstract class BaseScraper<T extends RawOffer = RawOffer> {
             );
           }
         }
+      }
+
+      if (offers.length === 0) {
+        if (this.shouldAlwaysHaveOffers()) {
+          await this.takeScreenshot(page, "no_offers");
+          logger.warn(
+            "Found no offers, even though there should be at least one.",
+          );
+        } else {
+          logger.info("No offers found. Probably there are none.");
+        }
+      }
+    } catch (error) {
+      // Try to take a screenshot to help diagnose the problem
+      try {
+        if (page === null) {
+          logger.error("Failed to create a new page. Can't take a screenshot.");
+          return [];
+        }
+        if (error instanceof errors.TimeoutError) {
+          await this.takeScreenshot(page, "browser_error");
+        } else {
+          await this.takeScreenshot(page, "other_error");
+        }
+      } catch {
+        // Ignore errors while taking a screenshot
       }
     } finally {
       await page?.close();
