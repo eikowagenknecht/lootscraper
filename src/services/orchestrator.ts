@@ -38,6 +38,8 @@ const state: ServiceState = {
   taskQueue: [],
 };
 
+let totalScrapeCount = 0;
+
 /**
  * Run tasks ensuring only one runs at a time
  */
@@ -141,7 +143,7 @@ async function runSingleScrape(
   scraper: ScraperInstance,
 ): Promise<ScrapeResult> {
   logger.info(
-    `Starting scrape for ${scraper.getSource()} ${scraper.getType()}...`,
+    `Starting scrape run #${totalScrapeCount.toFixed()} for ${scraper.getSource()} ${scraper.getType()}...`,
   );
 
   const offers = await scraper.scrape();
@@ -227,6 +229,7 @@ async function uploadFeedsToServer(): Promise<void> {
 function queueScraper(scraper: ScraperInstance): void {
   void runTask(async () => {
     try {
+      totalScrapeCount++;
       const result = await runSingleScrape(scraper);
       if (result.newOfferIds.length > 0) {
         await updateGameInfo(result.newOfferIds);
