@@ -66,7 +66,11 @@ export const initialMigration = {
       .addColumn("id", "integer", (col) => col.primaryKey().notNull())
       .addColumn("source", "varchar(7)", (col) => col.notNull())
       .addColumn("type", "varchar(4)", (col) => col.notNull())
+      .addColumn("duration", "varchar(9)", (col) => col.notNull())
+      .addColumn("category", "varchar(10)", (col) => col.notNull())
       .addColumn("title", "varchar", (col) => col.notNull())
+      .addColumn("probable_game_name", "varchar", (col) => col.notNull())
+      .addColumn("game_id", "integer", (col) => col.references("games.id"))
       .addColumn("seen_first", "datetime")
       .addColumn("seen_last", "datetime", (col) => col.notNull())
       .addColumn("valid_from", "datetime")
@@ -74,10 +78,6 @@ export const initialMigration = {
       .addColumn("rawtext", "json")
       .addColumn("url", "varchar")
       .addColumn("img_url", "varchar")
-      .addColumn("game_id", "integer", (col) => col.references("games.id"))
-      .addColumn("probable_game_name", "varchar", (col) => col.notNull())
-      .addColumn("duration", "varchar(9)", (col) => col.notNull())
-      .addColumn("category", "varchar(10)", (col) => col.notNull())
       .execute();
 
     // telegram_chats table
