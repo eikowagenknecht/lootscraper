@@ -1,5 +1,4 @@
 import Handlebars from "handlebars";
-import { DateTime } from "luxon";
 import { cleanHtml } from "./stringTools";
 
 // Types for feed construction
@@ -142,7 +141,7 @@ function escapeXml(input: string): string {
 }
 
 function formatISODate(date: Date): string {
-  return DateTime.fromJSDate(date).toISO();
+  return date.toISOString();
 }
 
 // Register Handlebars helpers

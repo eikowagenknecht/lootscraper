@@ -143,22 +143,22 @@ export abstract class AmazonBaseScraper<
    * @param dateStr
    * @returns
    */
-  protected parseDateString(dateStr: string): Date | null {
+  protected parseDateString(dateStr: string): DateTime | null {
     try {
       const raw = dateStr.replace(/^Ends\s+/, "");
       const now = DateTime.now().setZone("UTC").startOf("day");
 
       if (raw.toLowerCase() === "today") {
-        return now.toJSDate();
+        return now;
       }
       if (raw.toLowerCase() === "tomorrow") {
-        return now.plus({ days: 1 }).toJSDate();
+        return now.plus({ days: 1 });
       }
 
       // Try parsing "MMM D, YYYY" format
       return DateTime.fromFormat(raw, "LLL d, yyyy", {
         zone: "UTC",
-      }).toJSDate();
+      });
     } catch (error) {
       logger.error(
         `Date parsing failed: ${error instanceof Error ? error.message : String(error)}`,

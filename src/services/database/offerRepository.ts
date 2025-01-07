@@ -137,15 +137,12 @@ export async function getAllOffers(): Promise<Offer[]> {
 }
 
 export async function getActiveOffers(
-  time: Date,
+  time: DateTime,
   filters?: OfferFilters,
 ): Promise<Offer[]> {
   try {
-    const seenCutoff = DateTime.fromJSDate(time)
-      .minus({ hours: 24 })
-      .toJSDate();
-
-    logger.debug(`Getting active offers for ${time.toISOString()}`);
+    const seenCutoff = time.minus({ hours: 24 });
+    logger.debug(`Getting active offers for ${time.toISO()}`);
 
     // Do as much filtering as possible in the database query to reduce the
     // amount of data we have to process
@@ -155,14 +152,14 @@ export async function getActiveOffers(
         eb.and([
           eb.or([
             // Definitely active offers
-            eb("valid_from", "<=", time.toISOString()),
+            eb("valid_from", "<=", time.toISO()),
             // Unknown valid_from (most offers don't explicitly state this)
             eb("valid_from", "is", null),
           ]),
           eb.or([
             eb.or([
               // Definitely active offers
-              eb("valid_to", ">=", time.toISOString()),
+              eb("valid_to", ">=", time.toISO()),
               // Unknown valid_to
               eb("valid_to", "is", null),
             ]),
@@ -171,7 +168,7 @@ export async function getActiveOffers(
             eb.and([
               eb("valid_to", "is", null),
               eb("seen_last", "is not", null),
-              eb("seen_last", ">=", seenCutoff.toISOString()),
+              eb("seen_last", ">=", seenCutoff.toISO()),
             ]),
           ]),
         ]),
@@ -209,16 +206,13 @@ export async function getActiveOffers(
       }
 
       const realValidTo = calculateRealValidTo(
-        DateTime.fromISO(offer.seen_last).toJSDate(),
-        offer.valid_to ? DateTime.fromISO(offer.valid_to).toJSDate() : null,
+        DateTime.fromISO(offer.seen_last),
+        offer.valid_to ? DateTime.fromISO(offer.valid_to) : null,
         time,
       );
 
       // Filter out offers that have a real end date that is in the past
-      if (
-        realValidTo &&
-        DateTime.fromJSDate(realValidTo) <= DateTime.fromJSDate(time)
-      ) {
+      if (realValidTo && realValidTo <= time) {
         return false;
       }
 
@@ -235,7 +229,7 @@ export async function getActiveOffers(
 }
 
 export async function getNewOffers(
-  now: Date,
+  now: DateTime,
   type: OfferType,
   source: OfferSource,
   duration: OfferDuration,
@@ -253,13 +247,10 @@ export async function getNewOffers(
     // For non-ALWAYS offers, check if they're still valid
     if (duration !== OfferDuration.ALWAYS) {
       logger.debug(
-        `Filtering for offers that are still valid on ${DateTime.fromJSDate(now).toISO()}`,
+        `Filtering for offers that are still valid on ${now.toISO()}`,
       );
       query = query.where((eb) =>
-        eb.or([
-          eb("valid_to", "is", null),
-          eb("valid_to", ">", DateTime.fromJSDate(now).toISO()),
-        ]),
+        eb.or([eb("valid_to", "is", null), eb("valid_to", ">", now.toISO())]),
       );
     }
 

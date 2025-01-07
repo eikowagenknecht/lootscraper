@@ -11,7 +11,6 @@ This will be replaced by GitHub issues again once this is migrated into the main
 - [ ] Simplify the utils/ folder
 - [ ] Autogenerate release notes
 - [ ] Try to send a Telegram message that is longer than 4096 characters. If it doesn't work, look at Python's chunkstring function.
-- [ ] Use luxon DateTime instead of builtin Date objects where possible (e.g. function signatures)
 - [ ] Add admin Telegram commands:
   - [ ] /rescrape ||/fix: drop all game info, then rescrape all games (like the "cleanup" command line argument before). Make sure to pause the scraping process while doing this. See tools.py
 - [ ] Test what happens with an invalid config file

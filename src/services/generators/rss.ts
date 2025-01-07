@@ -54,8 +54,8 @@ export class RssGenerator {
     for (const offer of offers) {
       const updated =
         offer.valid_from && offer.valid_from > offer.seen_first
-          ? DateTime.fromISO(offer.valid_from).toJSDate()
-          : DateTime.fromISO(offer.seen_first).toJSDate();
+          ? DateTime.fromISO(offer.valid_from)
+          : DateTime.fromISO(offer.seen_first);
 
       let gameInfo: {
         game: Game;
@@ -70,7 +70,7 @@ export class RssGenerator {
         id: `${this.config.feed.idPrefix}${offer.id.toFixed()}`,
         title: this.getEntryTitle(offer),
         ...(offer.url && { link: [{ href: offer.url }] }),
-        updated: updated,
+        updated: updated.toJSDate(),
         published: DateTime.fromISO(offer.seen_first).toJSDate(),
         content: {
           type: "xhtml",

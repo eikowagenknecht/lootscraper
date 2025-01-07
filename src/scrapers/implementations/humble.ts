@@ -143,11 +143,9 @@ export class HumbleGamesScraper extends BaseScraper<HumbleRawOffer> {
       title: rawOffer.title,
     };
 
-    let validTo: Date | null = null;
+    let validTo: DateTime | null = null;
     if (typeof rawOffer.validForMinutes === "number") {
-      validTo = DateTime.now()
-        .plus({ minutes: rawOffer.validForMinutes })
-        .toJSDate();
+      validTo = DateTime.now().plus({ minutes: rawOffer.validForMinutes });
     }
 
     // Categorize cheap games
@@ -165,7 +163,7 @@ export class HumbleGamesScraper extends BaseScraper<HumbleRawOffer> {
       probable_game_name: rawOffer.title,
       seen_last: DateTime.now().toISO(),
       seen_first: DateTime.now().toISO(),
-      ...(validTo && { valid_to: validTo.toISOString() }),
+      ...(validTo && { valid_to: validTo.toISO() }),
       rawtext: JSON.stringify(rawtext),
       url: rawOffer.url ?? null,
       img_url: rawOffer.imgUrl ?? null,

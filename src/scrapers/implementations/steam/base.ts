@@ -149,7 +149,7 @@ export abstract class SteamBaseScraper extends BaseScraper<SteamRawOffer> {
     };
 
     const now = DateTime.now();
-    let validTo: Date | null = null;
+    let validTo: DateTime | null = null;
 
     if (rawOffer.text) {
       const dateText = rawOffer.text
@@ -183,7 +183,7 @@ export abstract class SteamBaseScraper extends BaseScraper<SteamRawOffer> {
 
       if (parsedDate) {
         logger.debug(`Parsed date: ${parsedDate.toISO()}`);
-        validTo = parsedDate.toJSDate();
+        validTo = parsedDate;
       }
     }
 
@@ -200,7 +200,7 @@ export abstract class SteamBaseScraper extends BaseScraper<SteamRawOffer> {
       probable_game_name: probableGameName,
       seen_last: DateTime.now().toISO(),
       seen_first: DateTime.now().toISO(),
-      ...(validTo && { valid_to: validTo.toISOString() }),
+      ...(validTo && { valid_to: validTo.toISO() }),
       rawtext: JSON.stringify(rawtext),
       url: rawOffer.url ?? null,
       img_url: rawOffer.imgUrl ?? null,

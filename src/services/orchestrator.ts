@@ -16,6 +16,7 @@ import {
 import { logger } from "@/utils/logger";
 import { getAllEnabledFeedFilenames } from "@/utils/names";
 import { Cron } from "croner";
+import { DateTime } from "luxon";
 import { FeedService } from "./feed";
 import { uploadMultipleFiles } from "./ftp";
 import { GameInfoService } from "./gameinfo";
@@ -217,7 +218,7 @@ async function updateFeeds(): Promise<void> {
 
   logger.info("New offers found, regenerating feeds...");
   const feedService = new FeedService(cfg);
-  const activeOffers = await getActiveOffers(new Date());
+  const activeOffers = await getActiveOffers(DateTime.now());
   const allOffers = (await getAllOffers()).filter(
     (offer) =>
       // Skip entries without dates or entries that start in the future

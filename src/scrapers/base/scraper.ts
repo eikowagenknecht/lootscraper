@@ -412,7 +412,7 @@ export abstract class BaseScraper<T extends RawOffer = RawOffer> {
         categorized.category = OfferCategory.PRERELEASE;
       } else if (
         offer.valid_to &&
-        this.isFakeAlways(DateTime.fromISO(offer.valid_to).toJSDate())
+        this.isFakeAlways(DateTime.fromISO(offer.valid_to))
       ) {
         categorized.duration = OfferDuration.ALWAYS;
       }
@@ -488,9 +488,9 @@ export abstract class BaseScraper<T extends RawOffer = RawOffer> {
    * @param validTo
    * @returns
    */
-  protected isFakeAlways(validTo: Date): boolean {
+  protected isFakeAlways(validTo: DateTime): boolean {
     const futureDate = DateTime.now().plus({ days: 100 });
-    return DateTime.fromJSDate(validTo) > futureDate;
+    return validTo > futureDate;
   }
 
   /**
