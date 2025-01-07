@@ -4,13 +4,12 @@ export function cleanGameTitle(title: string): string {
     .replace(/ - /g, ": ")
     .replace(/ : /g, ": ")
     .trim()
-    .replace(/^(\[VIP]|\[ VIP ])/g, "")
+    .replace(/^\[ ?VIP ?\]/g, "")
     .replace(/ on Origin$/g, "")
-    .replace(/ Game of the Year Edition Deluxe$/g, "")
-    .replace(/ Game of the Year Edition$/g, "")
-    .replace(/ Definitive Edition$/g, "")
-    .replace(/ Deluxe Edition$/g, "")
+    .replace(/ Game of the Year Edition( Deluxe)?$/g, "")
+    .replace(/ (Definitive|Deluxe|Collectors) Edition$/g, "")
     .replace(/ \(Mobile\)$/g, "")
+    .replace(/ \([1-9]{4}\)$/g, "") // Remove years in brackets
     .trim()
     .replace(/[:|-]$/g, "")
     .trim();
