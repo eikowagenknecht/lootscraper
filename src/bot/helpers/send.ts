@@ -1,3 +1,6 @@
+import { telegramBotService } from "@/bot/service";
+import { formatOfferMessage } from "@/bot/utils/formatters";
+import { createOfferKeyboard } from "@/bot/utils/keyboards";
 import { getNewAnnouncements } from "@/services/database/announcementRepository";
 import { getNewOffers } from "@/services/database/offerRepository";
 import {
@@ -12,9 +15,6 @@ import {
 import { ChatType } from "@/types";
 import { logger } from "@/utils/logger";
 import { DateTime } from "luxon";
-import { telegramBotService } from "../service";
-import { formatOfferMessage } from "../utils/formatters";
-import { createOfferKeyboard } from "../utils/keyboards";
 
 export async function sendNewOffersToChat(
   dbChatId: number,

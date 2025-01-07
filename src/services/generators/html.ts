@@ -1,6 +1,8 @@
 import { writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import type { ScraperCombination } from "@/scrapers/utils";
+import { getGameWithInfo } from "@/services/database/gameRepository";
+import { translationService } from "@/services/translation";
 import type { Config } from "@/types/config";
 import type { Offer } from "@/types/database";
 import { logger } from "@/utils/logger";
@@ -9,8 +11,6 @@ import { getDataPath } from "@/utils/path";
 import { cleanHtml } from "@/utils/stringTools";
 import Handlebars from "handlebars";
 import { DateTime } from "luxon";
-import { getGameWithInfo } from "../database/gameRepository";
-import { translationService } from "../translation";
 
 // The latest static URL for the Tailwind CSS stylesheet.
 const CSS_URL =

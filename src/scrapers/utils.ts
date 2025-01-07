@@ -1,6 +1,5 @@
 import { config } from "@/services/config";
-import type { OfferDuration, OfferType } from "@/types/basic";
-import type { OfferSource } from "@/types/basic";
+import type { OfferDuration, OfferSource, OfferType } from "@/types/basic";
 import type { Config } from "@/types/config";
 import {
   AmazonGamesScraper,

@@ -1,12 +1,12 @@
+import { offerSchema } from "@/bot/types/callbacks";
 import type { BotContext } from "@/bot/types/middleware";
 import { unpackData } from "@/bot/utils/callbackPack";
+import { formatOfferMessage } from "@/bot/utils/formatters";
+import { createOfferKeyboard } from "@/bot/utils/keyboards";
 import { getOfferById } from "@/services/database/offerRepository";
 import { getTelegramChatById } from "@/services/database/telegramChatRepository";
 import { logger } from "@/utils/logger";
 import type { Filter } from "grammy";
-import { offerSchema } from "../../types/callbacks";
-import { formatOfferMessage } from "../../utils/formatters";
-import { createOfferKeyboard } from "../../utils/keyboards";
 
 export async function handleOfferDetailsCallback(
   ctx: Filter<BotContext, "callback_query:data">,

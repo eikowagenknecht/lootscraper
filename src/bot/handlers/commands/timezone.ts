@@ -1,10 +1,10 @@
 import { closeSchema, timezoneSchema } from "@/bot/types/callbacks";
+import type { BotContext } from "@/bot/types/middleware";
 import { packData } from "@/bot/utils/callbackPack";
 import type { CommandContext } from "grammy";
 import type { InlineKeyboardButton } from "grammy/types";
 import type { z } from "zod";
 import { logCall, userCanControlBot } from ".";
-import type { BotContext } from "../../types/middleware";
 
 export async function handleTimezoneCommand(
   ctx: CommandContext<BotContext>,

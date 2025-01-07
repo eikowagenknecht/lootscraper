@@ -1,5 +1,5 @@
+import { getDb } from "@/services/database";
 import type { IgdbInfo, NewIgdbInfo } from "@/types/database";
-import { getDb } from "../database";
 import { handleError, handleInsertResult } from "./common";
 
 export async function getIgdbInfoById(id: number): Promise<IgdbInfo | null> {

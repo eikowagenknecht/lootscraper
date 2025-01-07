@@ -1,5 +1,5 @@
+import { getDb } from "@/services/database";
 import type { NewSteamInfo, SteamInfo } from "@/types/database";
-import { getDb } from "../database";
 import { handleError, handleInsertResult } from "./common";
 
 export async function getSteamInfoById(id: number): Promise<SteamInfo | null> {

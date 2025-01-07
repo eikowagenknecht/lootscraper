@@ -1,7 +1,7 @@
 import { sendNewOffersToChat } from "@/bot/helpers/send";
+import type { BotContext } from "@/bot/types/middleware";
 import type { CommandContext } from "grammy";
 import { getDbChat, logCall, userCanControlBot } from ".";
-import type { BotContext } from "../../types/middleware";
 
 export async function handleRefreshCommand(
   ctx: CommandContext<BotContext>,

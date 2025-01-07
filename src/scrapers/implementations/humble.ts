@@ -1,16 +1,15 @@
-import { OfferCategory } from "@/types";
-import { OfferDuration, OfferType } from "@/types/basic";
-import { OfferSource } from "@/types/basic";
-import type { NewOffer } from "@/types/database";
-import { logger } from "@/utils/logger";
-import { DateTime } from "luxon";
-import type { Locator, Page } from "playwright";
 import {
   BaseScraper,
   type CronConfig,
   type OfferHandler,
   type RawOffer,
-} from "../base/scraper";
+} from "@/scrapers/base/scraper";
+import { OfferCategory } from "@/types";
+import { OfferDuration, OfferSource, OfferType } from "@/types/basic";
+import type { NewOffer } from "@/types/database";
+import { logger } from "@/utils/logger";
+import { DateTime } from "luxon";
+import type { Locator, Page } from "playwright";
 
 const BASE_URL = "https://humblebundle.com";
 const SEARCH_URL = `${BASE_URL}/store/search`;

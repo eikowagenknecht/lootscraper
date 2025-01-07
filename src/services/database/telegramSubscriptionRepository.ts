@@ -1,11 +1,10 @@
-import type { OfferDuration, OfferType } from "@/types/basic";
-import type { OfferSource } from "@/types/basic";
+import { getDb } from "@/services/database";
+import type { OfferDuration, OfferSource, OfferType } from "@/types/basic";
 import type {
   NewTelegramSubscription,
   TelegramSubscription,
   TelegramSubscriptionUpdate,
 } from "@/types/database";
-import { getDb } from "../database";
 import { handleError } from "./common";
 
 export async function getTelegramSubscriptions(

@@ -1,7 +1,7 @@
+import type { BotContext } from "@/bot/types/middleware";
 import { deleteTelegramChat } from "@/services/database/telegramChatRepository";
 import type { CommandContext } from "grammy";
 import { getCallerName, getDbChat, logCall, userCanControlBot } from ".";
-import type { BotContext } from "../../types/middleware";
 
 export async function handleLeaveCommand(
   ctx: CommandContext<BotContext>,

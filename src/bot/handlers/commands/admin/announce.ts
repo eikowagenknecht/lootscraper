@@ -1,9 +1,9 @@
+import type { BotContext } from "@/bot/types/middleware";
 import { config } from "@/services/config";
 import { createAnnouncement } from "@/services/database/announcementRepository";
 import type { CommandContext } from "grammy";
 import { DateTime } from "luxon";
 import { logCall } from "..";
-import type { BotContext } from "../../../types/middleware";
 
 export async function handleAnnounceCommand(
   ctx: CommandContext<BotContext>,

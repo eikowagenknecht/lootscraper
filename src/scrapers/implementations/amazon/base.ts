@@ -1,14 +1,13 @@
-import { OfferDuration } from "@/types/basic";
-import { OfferSource } from "@/types/basic";
-import { BrowserError } from "@/types/errors";
-import { logger } from "@/utils/logger";
-import { DateTime } from "luxon";
-import type { Locator, Page } from "playwright";
 import {
   BaseScraper,
   type CronConfig,
   type RawOffer,
-} from "../../base/scraper";
+} from "@/scrapers/base/scraper";
+import { OfferDuration, OfferSource } from "@/types/basic";
+import { BrowserError } from "@/types/errors";
+import { logger } from "@/utils/logger";
+import { DateTime } from "luxon";
+import type { Locator, Page } from "playwright";
 
 const BASE_URL = "https://gaming.amazon.com";
 const OFFER_URL = `${BASE_URL}/home`;

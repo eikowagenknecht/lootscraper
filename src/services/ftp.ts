@@ -2,11 +2,11 @@ import { basename, resolve } from "node:path";
 import { config } from "@/services/config";
 import { logger } from "@/utils/logger";
 import { getDataPath } from "@/utils/path";
-import FTPClient from "basic-ftp";
+import { Client } from "basic-ftp";
 
 interface FTPUploadOptions {
   reuseConnection?: boolean;
-  client?: FTPClient.Client;
+  client?: Client;
 }
 
 type FTPUploadResult = {
@@ -21,7 +21,7 @@ type FTPUploadResult = {
     }
 );
 
-async function createFTPClient(): Promise<FTPClient.Client | undefined> {
+async function createFTPClient(): Promise<Client | undefined> {
   logger.debug("Creating FTP client");
   const cfg = config.get();
 
@@ -35,7 +35,7 @@ async function createFTPClient(): Promise<FTPClient.Client | undefined> {
     return undefined;
   }
 
-  const client = new FTPClient.Client();
+  const client = new Client();
   client.ftp.verbose = cfg.common.logLevel === "DEBUG";
 
   try {

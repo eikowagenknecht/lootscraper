@@ -1,7 +1,6 @@
-import { OfferType } from "@/types/basic";
-import { OfferSource } from "@/types/basic";
+import { BaseScraper, type RawOffer } from "@/scrapers/base/scraper";
+import { OfferSource, OfferType } from "@/types/basic";
 import type { Page } from "playwright";
-import { BaseScraper, type RawOffer } from "../../base/scraper";
 
 // Base interface for GOG offers
 export interface GogRawOffer extends RawOffer {

@@ -1,5 +1,5 @@
+import { getDb } from "@/services/database";
 import type { NewTelegramChat, TelegramChat } from "@/types/database";
-import { getDb } from "../database";
 import { handleError, handleInsertResult } from "./common";
 
 export async function getTelegramChatById(

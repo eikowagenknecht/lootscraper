@@ -1,6 +1,6 @@
+import { dismissSchema, offerSchema } from "@/bot/types/callbacks";
 import type { Offer } from "@/types/database";
 import type { InlineKeyboardButton, InlineKeyboardMarkup } from "grammy/types";
-import { dismissSchema, offerSchema } from "../types/callbacks";
 import { packData } from "./callbackPack";
 
 export interface CreateOfferKeyboardOptions {

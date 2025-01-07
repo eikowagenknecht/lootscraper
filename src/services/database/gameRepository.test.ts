@@ -1,8 +1,8 @@
 import { config } from "@/services/config";
 import { DatabaseService } from "@/services/database";
 import { DateTime } from "luxon";
+import { insertTestData } from "tests/testData";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
-import { insertTestData } from "../../../tests/testData";
 import {
   createGame,
   getGameById,
