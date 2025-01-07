@@ -1,0 +1,15 @@
+*.js diff
+*.ts diff
+*.json diff
+
+*.yml diff
+*.yaml diff
+
+*.txt diff
+*.md diff
+*.ini diff
+
+Dockerfile diff
+
+*.png filter=lfs diff=lfs merge=lfs -text
+*.xcf filter=lfs diff=lfs merge=lfs -text
