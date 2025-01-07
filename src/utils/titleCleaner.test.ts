@@ -17,6 +17,22 @@ describe.concurrent("Title Cleaner", () => {
     expect(cleanedOffer).toBe("Lords Mobile - Warlord Pack");
   });
 
+  test("should handle dashed game title", ({ expect }) => {
+    const title = "Aces of the Luftwaffe - Squadron Extended Edition";
+    const cleanedGame = cleanGameTitle(title);
+
+    expect(cleanedGame).toBe(
+      "Aces of the Luftwaffe - Squadron Extended Edition",
+    );
+  });
+
+  test("should handle colon spaced game title", ({ expect }) => {
+    const title = "My City : Hospital";
+    const cleanedGame = cleanGameTitle(title);
+
+    expect(cleanedGame).toBe("My City: Hospital");
+  });
+
   test("should handle title with multiple colons", ({ expect }) => {
     const title = "Mobile Legends: Bang Bang: Amazon Prime Chest";
     const [cleanedGame, cleanedOffer] = cleanCombinedTitle(title);
