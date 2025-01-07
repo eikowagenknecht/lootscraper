@@ -157,7 +157,7 @@ export async function getActiveOffers(
           eb.or([
             // Definitely active offers
             eb("valid_from", "<=", time.toISOString()),
-            // Unknown valid_from
+            // Unknown valid_from (most offers don't explicitly state this)
             eb("valid_from", "is", null),
           ]),
           eb.or([
