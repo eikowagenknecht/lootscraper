@@ -45,6 +45,10 @@ export default tseslint.config(
             //   group: ["./*"],
             //   message: "Use '@/' imports instead of relative imports",
             // },
+            // {
+            //   group: ["."],
+            //   message: "Use '@/' imports instead of relative imports",
+            // },
           ],
         },
       ],
