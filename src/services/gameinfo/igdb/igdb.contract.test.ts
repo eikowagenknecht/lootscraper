@@ -27,6 +27,11 @@ describe("IgdbClient", () => {
     expect(result).toBe(241);
   });
 
+  test("searchGame resolves Lure of the Temptress", async () => {
+    const result = await client.searchGame("Lure of the Temptress");
+    expect(result).toBe(8482);
+  });
+
   test("getDetails returns correct game info", async () => {
     const details: NewIgdbInfo | null = await client.getDetails(241);
 
