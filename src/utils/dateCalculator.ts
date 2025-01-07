@@ -23,7 +23,7 @@ export function calculateRealValidTo(
   }
 
   // The offer had an end date but hasn't been seen for more than an hour
-  if (seenLast > seenLast.plus({ hours: 1 })) {
+  if (validTo > seenLast.plus({ hours: 1 })) {
     // The offer has been seen in the last day, we don't force end it yet.
     // Maybe the site is just down for a while.
     if (now <= seenLast.plus({ days: 1 })) {
