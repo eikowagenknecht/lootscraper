@@ -182,19 +182,6 @@ export abstract class BaseScraper<T extends RawOffer = RawOffer> {
       const categorizedOffers = this.categorizeOffers(uniqueOffers);
       const filteredOffers = this.filterForValidOffers(categorizedOffers);
 
-      const titles = filteredOffers.map((o) => o.title).join(", ");
-      if (filteredOffers.length > 0) {
-        logger.info(
-          `Found ${filteredOffers.length.toFixed()} offers: ${titles}`,
-        );
-      } else if (this.shouldAlwaysHaveOffers()) {
-        logger.warn(
-          "Found no offers, even though there should be at least one.",
-        );
-      } else {
-        logger.info("No offers found. Probably there are none.");
-      }
-
       return filteredOffers;
     } catch (error) {
       logger.error(
@@ -286,6 +273,14 @@ export abstract class BaseScraper<T extends RawOffer = RawOffer> {
         } else {
           logger.info("No offers found. Probably there are none.");
         }
+        return [];
+      }
+
+      const titles = offers.map((o) => o.title).join(", ");
+      if (offers.length > 0) {
+        logger.debug(
+          `Found ${offers.length.toFixed()} offers (raw titles): ${titles}`,
+        );
       }
     } catch (error) {
       if (page === null) {
@@ -310,6 +305,8 @@ export abstract class BaseScraper<T extends RawOffer = RawOffer> {
   ): Omit<NewOffer, "category">[] {
     // TODO: Since it's refreshed from the rawtext, there is no need to
     // set the title and probable_game_name in the scrapers anymore.
+    // ... or maybe there is because the scrapers know better if a title is
+    // formatted in a special way.
 
     return offers.map((offer) => {
       const cleaned: Omit<NewOffer, "category"> = {
@@ -320,17 +317,25 @@ export abstract class BaseScraper<T extends RawOffer = RawOffer> {
         }),
       };
 
-      // Game - Set title and probable_game_name from rawtext
-      if (offer.type === OfferType.GAME && offer.rawtext !== undefined) {
+      // Without rawtext, we can't do any more cleaning
+      if (offer.rawtext === undefined) {
+        return cleaned;
+      }
+
+      // Game - Update title and probable_game_name from rawtext
+      if (offer.type === OfferType.GAME) {
         const parsed = JSON.parse(offer.rawtext) as Record<string, unknown>;
 
-        if (
-          "title" in parsed &&
-          typeof parsed.title === "string" &&
-          cleaned.title !== parsed.title
-        ) {
-          const newTitle = cleanGameTitle(parsed.title);
+        let newTitle = "";
 
+        if ("title" in parsed && typeof parsed.title === "string") {
+          newTitle = cleanGameTitle(parsed.title);
+        }
+
+        if (
+          cleaned.title !== newTitle ||
+          cleaned.probable_game_name !== newTitle
+        ) {
           logger.verbose(
             `Updating game title and probable game name from ${cleaned.title} to ${newTitle}`,
           );
@@ -342,42 +347,35 @@ export abstract class BaseScraper<T extends RawOffer = RawOffer> {
       }
 
       // Loot - Set title and probable_game_name
-      if (offer.rawtext !== undefined) {
-        const parsed = JSON.parse(offer.rawtext) as Record<string, unknown>;
+      const parsed = JSON.parse(offer.rawtext) as Record<string, unknown>;
 
-        let newProbableGameName = "";
-        let newOfferTitle = "";
+      let newProbableGameName = "";
+      let newOfferTitle = "";
 
-        if (
-          "gametitle" in parsed &&
-          "title" in parsed &&
-          typeof parsed.gametitle === "string" &&
-          typeof parsed.title === "string"
-        ) {
-          newProbableGameName = cleanGameTitle(parsed.gametitle);
-          newOfferTitle = `${newProbableGameName} - ${cleanLootTitle(parsed.title)}`;
-        } else if ("title" in parsed && typeof parsed.title === "string") {
-          [newProbableGameName, newOfferTitle] = cleanCombinedTitle(
-            parsed.title,
-          );
-        }
+      if (
+        "gametitle" in parsed &&
+        "title" in parsed &&
+        typeof parsed.gametitle === "string" &&
+        typeof parsed.title === "string"
+      ) {
+        newProbableGameName = cleanGameTitle(parsed.gametitle);
+        newOfferTitle = `${newProbableGameName} - ${cleanLootTitle(parsed.title)}`;
+      } else if ("title" in parsed && typeof parsed.title === "string") {
+        [newProbableGameName, newOfferTitle] = cleanCombinedTitle(parsed.title);
+      }
 
-        if (
-          newProbableGameName &&
-          newProbableGameName !== offer.probable_game_name
-        ) {
-          logger.verbose(
-            `Updating loot probable game name from ${offer.probable_game_name} to ${newProbableGameName}`,
-          );
-          cleaned.probable_game_name = newProbableGameName;
-        }
+      if (cleaned.probable_game_name !== newProbableGameName) {
+        logger.verbose(
+          `Updating loot probable game name from ${offer.probable_game_name} to ${newProbableGameName}`,
+        );
+        cleaned.probable_game_name = newProbableGameName;
+      }
 
-        if (newOfferTitle && newOfferTitle !== offer.title) {
-          logger.verbose(
-            `Updating loot title from ${offer.title} to ${newOfferTitle}`,
-          );
-          cleaned.title = newOfferTitle;
-        }
+      if (cleaned.title !== newOfferTitle) {
+        logger.verbose(
+          `Updating loot title from ${offer.title} to ${newOfferTitle}`,
+        );
+        cleaned.title = newOfferTitle;
       }
 
       return cleaned;
