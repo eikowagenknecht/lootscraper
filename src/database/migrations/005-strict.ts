@@ -68,7 +68,11 @@ export const strictModeMigration = {
       .addColumn("id", "integer", (col) => col.primaryKey().notNull())
       .addColumn("source", "text", (col) => col.notNull())
       .addColumn("type", "text", (col) => col.notNull())
+      .addColumn("duration", "text", (col) => col.notNull())
+      .addColumn("category", "text", (col) => col.notNull())
       .addColumn("title", "text", (col) => col.notNull())
+      .addColumn("probable_game_name", "text", (col) => col.notNull())
+      .addColumn("game_id", "integer", (col) => col.references("games.id"))
       .addColumn("seen_first", "text", (col) => col.notNull()) // SQLite doesn't have a native datetime type
       .addColumn("seen_last", "text", (col) => col.notNull())
       .addColumn("valid_from", "text")
@@ -76,10 +80,6 @@ export const strictModeMigration = {
       .addColumn("rawtext", "text") // JSON will be stored as TEXT
       .addColumn("url", "text")
       .addColumn("img_url", "text")
-      .addColumn("game_id", "integer", (col) => col.references("games.id"))
-      .addColumn("probable_game_name", "text", (col) => col.notNull())
-      .addColumn("duration", "text", (col) => col.notNull())
-      .addColumn("category", "text", (col) => col.notNull())
       .modifyEnd(sql`strict`)
       .execute();
 
@@ -116,23 +116,64 @@ export const strictModeMigration = {
       .modifyEnd(sql`strict`)
       .execute();
 
-    // Copy data from old tables to new ones
-    await sql`INSERT INTO igdb_info_new SELECT * FROM igdb_info`.execute(db);
-    await sql`INSERT INTO steam_info_new SELECT * FROM steam_info`.execute(db);
-    await sql`INSERT INTO games_new SELECT * FROM games`.execute(db);
-    await sql`INSERT INTO announcements_new SELECT * FROM announcements`.execute(
-      db,
-    );
-    await sql`INSERT INTO offers_new SELECT * FROM offers`.execute(db);
-    await sql`INSERT INTO telegram_chats_new 
-      SELECT id, registration_date, chat_type, chat_id, user_id, thread_id, 
-             chat_details, user_details, timezone_offset, 
-             CASE WHEN active = true THEN 1 ELSE 0 END, 
-             inactive_reason, offers_received_count, last_announcement_id 
-      FROM telegram_chats`.execute(db);
-    await sql`INSERT INTO telegram_subscriptions_new SELECT * FROM telegram_subscriptions`.execute(
-      db,
-    );
+    // Copy data with explicit column specifications
+    await sql`\
+INSERT INTO igdb_info_new (id, url, name, short_description, release_date, 
+  user_score, user_ratings, meta_score, meta_ratings)
+SELECT id, url, name, short_description, release_date, 
+  user_score, user_ratings, meta_score, meta_ratings
+FROM igdb_info
+`.execute(db);
+
+    await sql`\
+INSERT INTO steam_info_new (id, url, name, short_description, release_date,
+  genres, publishers, image_url, recommendations, percent, score,
+  metacritic_score, metacritic_url, recommended_price_eur)
+SELECT id, url, name, short_description, release_date,
+  genres, publishers, image_url, recommendations, percent, score,
+  metacritic_score, metacritic_url, recommended_price_eur
+FROM steam_info
+`.execute(db);
+
+    await sql`\
+INSERT INTO games_new (id, igdb_id, steam_id)
+SELECT id, igdb_id, steam_id
+FROM games
+`.execute(db);
+
+    await sql`\
+INSERT INTO announcements_new (id, channel, date, text_markdown)
+SELECT id, channel, date, text_markdown
+FROM announcements
+`.execute(db);
+
+    await sql`\
+INSERT INTO offers_new (id, source, type, title, seen_first, seen_last,
+  valid_from, valid_to, rawtext, url, img_url, game_id,
+  probable_game_name, duration, category)
+SELECT id, source, type, title, seen_first, seen_last,
+  valid_from, valid_to, rawtext, url, img_url, game_id,
+  probable_game_name, duration, category
+FROM offers
+`.execute(db);
+
+    await sql`\
+INSERT INTO telegram_chats_new (id, registration_date, chat_type, chat_id,
+  user_id, thread_id, chat_details, user_details, timezone_offset,
+  active, inactive_reason, offers_received_count, last_announcement_id)
+SELECT id, registration_date, chat_type, chat_id,
+  user_id, thread_id, chat_details, user_details, timezone_offset,
+  CASE WHEN active = true THEN 1 ELSE 0 END,
+  inactive_reason, offers_received_count, last_announcement_id
+FROM telegram_chats
+`.execute(db);
+
+    await sql`\
+INSERT INTO telegram_subscriptions_new (id, chat_id, source, type,
+  last_offer_id, duration)
+SELECT id, chat_id, source, type, last_offer_id, duration
+FROM telegram_subscriptions
+`.execute(db);
 
     // Drop old tables
     await db.schema.dropTable("telegram_subscriptions").execute();
