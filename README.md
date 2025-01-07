@@ -2,8 +2,8 @@
 
 ![image](images/ls_2880x1024.png)
 
+[![Quality Check](https://github.com/eikowagenknecht/lootscraper/actions/workflows/quality-check.yml/badge.svg)](https://github.com/eikowagenknecht/lootscraper/actions/workflows/quality-check.yml)
 [![Publish to Docker Hub and Github Packages](https://github.com/eikowagenknecht/lootscraper/actions/workflows/publish-docker.yml/badge.svg)](https://github.com/eikowagenknecht/lootscraper/actions/workflows/publish-docker.yml)
-[![CC BY-NC-SA 4.0][cc-by-nc-sa-shield]][cc-by-nc-sa]
 
 You like getting games for free, but you *don't* like having to keep track of the various sources (Amazon Prime, Epic Games, Steam, ...) for free offers?
 Also your F5 key starts to look a bit worn out?
@@ -149,7 +149,7 @@ You can find them [here](https://eikowagenknecht.de/posts/userscripts-to-claim-f
 
 ## How it works
 
-This Python (3.12+) application uses Playwright to automatically visit websites with free game-related offers (see below for the supported sources) and then puts the collected information neatly into RSS feeds and a Telegram bot.
+This application uses Playwright to automatically visit websites with free game-related offers (see below for the supported sources) and then puts the collected information neatly into RSS feeds and a Telegram bot.
 
 If you encounter any problems feel free to open an issue here and I'll do my best to help.
 I'd also love to hear your feature requests!
@@ -189,4 +189,3 @@ This work is licensed under a
 
 [cc-by-nc-sa]: http://creativecommons.org/licenses/by-nc-sa/4.0/
 [cc-by-nc-sa-image]: https://licensebuttons.net/l/by-nc-sa/4.0/88x31.png
-[cc-by-nc-sa-shield]: https://img.shields.io/badge/License-CC%20BY--NC--SA%204.0-lightgrey.svg
