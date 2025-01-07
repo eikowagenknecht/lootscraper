@@ -6,6 +6,6 @@ LuxonSettings.defaultZone = "utc";
 LuxonSettings.throwOnInvalid = true;
 
 // Set a fixed start time for all tests
-const referenceDate = 1733055717000; // 2024-12-01T12:21:57.000Z
-const offset = DateTime.now().toMillis() - referenceDate;
-LuxonSettings.now = () => Date.now() - offset; // 2024-12-01T12:21:57.000Z
+const referenceDate = DateTime.fromISO("2024-12-01T15:00:00.000Z");
+const offset = DateTime.now().toMillis() - referenceDate.toMillis();
+LuxonSettings.now = () => Date.now() - offset;

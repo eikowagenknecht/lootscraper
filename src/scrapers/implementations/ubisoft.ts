@@ -131,13 +131,13 @@ export class UbisoftGamesScraper extends BaseScraper<UbisoftRawOffer> {
       .replace(/^Offer ends /, "")
       .replace(/ UTC\.$/, "");
 
-    let validTo: Date | null = null;
+    let validTo: DateTime | null = null;
 
     // Try standard format first: "January 23, 2023 at 3PM"
     try {
       validTo = DateTime.fromFormat(validToText, "MMMM d, yyyy 'at' ha", {
         zone: "UTC",
-      }).toJSDate();
+      });
     } catch (error) {
       logger.debug(
         `Failed to parse date in standard format: ${error instanceof Error ? error.message : String(error)}`,
@@ -147,7 +147,7 @@ export class UbisoftGamesScraper extends BaseScraper<UbisoftRawOffer> {
       try {
         validTo = DateTime.fromFormat(validToText, "MMMM d 'at' yyyy 'at' ha", {
           zone: "UTC",
-        }).toJSDate();
+        });
       } catch (error) {
         logger.error(
           `Failed to parse date in alternate format: ${error instanceof Error ? error.message : String(error)}`,
@@ -163,7 +163,7 @@ export class UbisoftGamesScraper extends BaseScraper<UbisoftRawOffer> {
       probable_game_name: title,
       seen_last: DateTime.now().toISO(),
       seen_first: DateTime.now().toISO(),
-      ...(validTo && { valid_to: validTo.toISOString() }),
+      ...(validTo && { valid_to: validTo.toISO() }),
       rawtext: JSON.stringify(rawtext),
       url: rawOffer.url ?? null,
       img_url: rawOffer.imgUrl ?? null,

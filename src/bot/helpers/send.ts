@@ -43,7 +43,7 @@ export async function sendNewOffersToChat(
       let latestOfferId = subscription.last_offer_id;
 
       const offers = await getNewOffers(
-        DateTime.now().toJSDate(),
+        DateTime.now(),
         subscription.type,
         subscription.source,
         subscription.duration,

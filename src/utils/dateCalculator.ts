@@ -1,4 +1,4 @@
-import { DateTime } from "luxon";
+import type { DateTime } from "luxon";
 
 /**
  * Calculate the real end date of an offer.
@@ -8,16 +8,13 @@ import { DateTime } from "luxon";
  * @returns The calculated real end date or null if indeterminate
  */
 export function calculateRealValidTo(
-  seenLast: Date,
-  validTo: Date | null,
-  now: Date,
-): Date | null {
-  const seenLastDt = DateTime.fromJSDate(seenLast);
-  const nowDt = DateTime.fromJSDate(now);
-
+  seenLast: DateTime,
+  validTo: DateTime | null,
+  now: DateTime,
+): DateTime | null {
   if (!validTo) {
     // The offer has no end date and hasn't been seen for more than a day
-    if (nowDt > seenLastDt.plus({ days: 1 })) {
+    if (now > seenLast.plus({ days: 1 })) {
       return seenLast;
     }
     // The offer has no end date and is still there.
@@ -25,13 +22,11 @@ export function calculateRealValidTo(
     return null;
   }
 
-  const validToDt = DateTime.fromJSDate(validTo);
-
   // The offer had an end date but hasn't been seen for more than an hour
-  if (validToDt > seenLastDt.plus({ hours: 1 })) {
+  if (seenLast > seenLast.plus({ hours: 1 })) {
     // The offer has been seen in the last day, we don't force end it yet.
     // Maybe the site is just down for a while.
-    if (nowDt <= seenLastDt.plus({ days: 1 })) {
+    if (now <= seenLast.plus({ days: 1 })) {
       return validTo;
     }
 
@@ -42,8 +37,8 @@ export function calculateRealValidTo(
 
   // The offer should have ended, but it's still there. So we approximate the
   // end date by adding 1 hour to the last time we saw it.
-  if (validToDt < seenLastDt) {
-    return seenLastDt.plus({ hours: 1 }).toJSDate();
+  if (validTo < seenLast) {
+    return seenLast.plus({ hours: 1 });
   }
 
   // In all other cases, we believe what the offer says.
