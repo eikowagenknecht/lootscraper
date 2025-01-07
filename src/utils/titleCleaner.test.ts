@@ -22,7 +22,7 @@ describe.concurrent("Title Cleaner", () => {
     const cleanedGame = cleanGameTitle(title);
 
     expect(cleanedGame).toBe(
-      "Aces of the Luftwaffe - Squadron Extended Edition",
+      "Aces of the Luftwaffe: Squadron Extended Edition",
     );
   });
 
