@@ -1,6 +1,8 @@
 import { writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import type { ScraperCombination } from "@/scrapers/utils";
+import { getGameWithInfo } from "@/services/database/gameRepository";
+import { translationService } from "@/services/translation";
 import { OfferDuration } from "@/types/basic";
 import type { Config } from "@/types/config";
 import type { Game, IgdbInfo, Offer, SteamInfo } from "@/types/database";
@@ -10,8 +12,6 @@ import { logger } from "@/utils/logger";
 import { generateFeedTitle, generateFilename } from "@/utils/names";
 import { getDataPath } from "@/utils/path";
 import { DateTime } from "luxon";
-import { getGameWithInfo } from "../database/gameRepository";
-import { translationService } from "../translation";
 
 export class RssGenerator {
   private readonly feedGenerator: AtomFeed;

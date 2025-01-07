@@ -1,7 +1,7 @@
+import type { BotContext } from "@/bot/types/middleware";
 import { bold, escapeText } from "@/bot/utils/markdown";
 import type { CommandContext } from "grammy";
 import { logCall, userCanControlBot } from ".";
-import type { BotContext } from "../../types/middleware";
 export async function handleHelpCommand(
   ctx: CommandContext<BotContext>,
 ): Promise<void> {

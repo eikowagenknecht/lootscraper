@@ -5,8 +5,7 @@ import type {
   Selectable,
   Updateable,
 } from "kysely";
-import type { OfferDuration, OfferType } from "./basic";
-import type { OfferSource } from "./basic";
+import type { OfferDuration, OfferSource, OfferType } from "./basic";
 import type { ChatType } from "./telegram";
 
 export interface Database {

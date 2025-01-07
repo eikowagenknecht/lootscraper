@@ -1,15 +1,14 @@
-import { OfferDuration, OfferType } from "@/types/basic";
-import { OfferSource } from "@/types/basic";
-import type { NewOffer } from "@/types/database";
-import { logger } from "@/utils/logger";
-import { DateTime } from "luxon";
-import type { Locator, Page } from "playwright";
 import {
   BaseScraper,
   type CronConfig,
   type OfferHandler,
   type RawOffer,
-} from "../base/scraper";
+} from "@/scrapers/base/scraper";
+import { OfferDuration, OfferSource, OfferType } from "@/types/basic";
+import type { NewOffer } from "@/types/database";
+import { logger } from "@/utils/logger";
+import { DateTime } from "luxon";
+import type { Locator, Page } from "playwright";
 
 const BASE_URL = "https://store.epicgames.com";
 const OFFER_URL = `${BASE_URL}/en-US/`;

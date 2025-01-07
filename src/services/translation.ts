@@ -1,6 +1,6 @@
 import { OfferDuration, type OfferSource, type OfferType } from "@/types/basic";
 import { logger } from "@/utils/logger";
-import i18next from "i18next";
+import { init, t } from "i18next";
 
 const resources = {
   en: {
@@ -57,7 +57,7 @@ export class TranslationService {
     }
 
     try {
-      await i18next.init({
+      await init({
         resources,
         lng: "en", // Default language
         fallbackLng: "en",
@@ -87,17 +87,17 @@ export class TranslationService {
 
   public getSourceDisplay(source: OfferSource): string {
     this.checkInitialized();
-    return i18next.t(`sources.${source}`);
+    return t(`sources.${source}`);
   }
 
   public getTypeDisplay(type: OfferType, count = 1): string {
     this.checkInitialized();
-    return i18next.t(`types.${type}`, { count });
+    return t(`types.${type}`, { count });
   }
 
   public getDurationDisplay(duration: OfferDuration): string {
     this.checkInitialized();
-    return i18next.t(`durations.${duration}`);
+    return t(`durations.${duration}`);
   }
 
   public getFeedTitle(
@@ -107,7 +107,7 @@ export class TranslationService {
   ): string {
     this.checkInitialized();
     if (!source || !type) {
-      return i18next.t("feed.titleAll");
+      return t("feed.titleAll");
     }
 
     const context = {
@@ -116,13 +116,13 @@ export class TranslationService {
     };
 
     if (duration && duration !== OfferDuration.CLAIMABLE) {
-      return i18next.t("feed.titleWithDuration", {
+      return t("feed.titleWithDuration", {
         ...context,
         duration: this.getDurationDisplay(duration),
       });
     }
 
-    return i18next.t("feed.title", context);
+    return t("feed.title", context);
   }
 }
 

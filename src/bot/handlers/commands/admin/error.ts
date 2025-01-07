@@ -1,7 +1,7 @@
+import type { BotContext } from "@/bot/types/middleware";
 import { config } from "@/services/config";
 import type { CommandContext } from "grammy";
 import { logCall } from "..";
-import type { BotContext } from "../../../types/middleware";
 
 export async function handleErrorCommand(
   ctx: CommandContext<BotContext>,

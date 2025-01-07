@@ -1,9 +1,9 @@
+import type { OfferHandler } from "@/scrapers/base/scraper";
 import { OfferType } from "@/types/basic";
 import type { NewOffer } from "@/types/database";
 import { logger } from "@/utils/logger";
 import { DateTime } from "luxon";
 import type { Locator, Page } from "playwright";
-import type { OfferHandler } from "../../base/scraper";
 import { AmazonBaseScraper, type AmazonRawOffer } from "./base";
 
 export class AmazonGamesScraper extends AmazonBaseScraper {

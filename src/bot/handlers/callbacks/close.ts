@@ -1,9 +1,9 @@
+import { refreshOffersForChat } from "@/bot/handlers/commands/refresh";
+import { closeSchema } from "@/bot/types/callbacks";
 import type { BotContext } from "@/bot/types/middleware";
 import { unpackData } from "@/bot/utils/callbackPack";
 import { logger } from "@/utils/logger";
 import type { Filter } from "grammy";
-import { closeSchema } from "../../types/callbacks";
-import { refreshOffersForChat } from "../commands/refresh";
 
 export async function handleCloseCallback(
   ctx: Filter<BotContext, "callback_query:data">,

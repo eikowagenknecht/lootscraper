@@ -1,8 +1,8 @@
+import type { BotContext } from "@/bot/types/middleware";
+import { formatJsonForMarkdown } from "@/bot/utils/markdown";
 import { config } from "@/services/config";
 import type { CommandContext } from "grammy";
 import { logCall } from "..";
-import type { BotContext } from "../../../types/middleware";
-import { formatJsonForMarkdown } from "../../../utils/markdown";
 
 export async function handleDebugCommand(
   ctx: CommandContext<BotContext>,

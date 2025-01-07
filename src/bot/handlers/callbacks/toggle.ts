@@ -1,3 +1,6 @@
+import { getDbChat } from "@/bot/handlers/commands";
+import { buildManageKeyboard } from "@/bot/handlers/commands/manage";
+import { toggleSubscriptionSchema } from "@/bot/types/callbacks";
 import type { BotContext } from "@/bot/types/middleware";
 import { unpackData } from "@/bot/utils/callbackPack";
 import {
@@ -8,9 +11,6 @@ import {
 import { logger } from "@/utils/logger";
 import type { Filter } from "grammy";
 import type { z } from "zod";
-import { toggleSubscriptionSchema } from "../../types/callbacks";
-import { getDbChat } from "../commands";
-import { buildManageKeyboard } from "../commands/manage";
 
 export async function handleToggleCallback(
   ctx: Filter<BotContext, "callback_query:data">,
