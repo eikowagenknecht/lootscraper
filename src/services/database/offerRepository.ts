@@ -195,13 +195,8 @@ export async function getActiveOffers(
     );
 
     const filteredOffers = offers.filter((offer) => {
-      // Skip entries without dates
-      if (!offer.valid_from && !offer.seen_last) {
-        return false;
-      }
-
       // Skip entries that start in the future
-      if (offer.valid_from && offer.valid_from <= offer.seen_last) {
+      if (offer.valid_from && DateTime.fromISO(offer.valid_from) > time) {
         return false;
       }
 
