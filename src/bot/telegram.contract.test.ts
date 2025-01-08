@@ -1,7 +1,8 @@
 import { fail } from "node:assert";
 import { telegramBotService } from "@/bot/service";
 import { config } from "@/services/config";
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { DateTime } from "luxon";
+import { afterAll, beforeAll, describe, expect, test } from "vitest";
 
 describe("Telegram Message Length", () => {
   beforeAll(async () => {
@@ -14,11 +15,11 @@ describe("Telegram Message Length", () => {
     await telegramBotService.stop();
   });
 
-  it("should handle messages longer than 4096 characters", async () => {
+  test("should fail with longer than 4096 characters", async () => {
     const testChatId = config.get().telegram.botLogChatId; // Use log chat for testing
 
-    // Generate message of 5000 characters
-    const longMessage = generateRandomString(5000);
+    // Generate message of 1 over the limit
+    const longMessage = generateRandomString(4097);
     console.log(`Generated message length: ${longMessage.length.toFixed()}`);
 
     try {
@@ -37,27 +38,54 @@ describe("Telegram Message Length", () => {
   });
 });
 
+describe("Telegram Rate Limits", () => {
+  beforeAll(async () => {
+    config.loadConfig();
+    await telegramBotService.initialize(config.get());
+  });
+
+  afterAll(async () => {
+    await telegramBotService.stop();
+  });
+
+  test(
+    "should handle sequential message sending with delays",
+    { timeout: 120000 },
+    async () => {
+      const TEST_CHAT_ID = config.get().telegram.botLogChatId;
+
+      const messages = Array.from({ length: 30 }, (_, i) => {
+        const number = (i + 1).toString().padStart(2, "0");
+        return `Sequential message ${number} sent at ${DateTime.now().toFormat("HH:mm:ss.SSS")}`;
+      });
+
+      console.log("Starting sequential send test...");
+      const startTime = DateTime.now();
+
+      // Send messages with delay between them
+      for (const [i, msg] of messages.entries()) {
+        try {
+          await telegramBotService.getBot().api.sendMessage(TEST_CHAT_ID, msg);
+          console.log(`Message ${(i + 1).toFixed()} sent successfully`);
+          // Add a small delay between messages
+          await new Promise((resolve) => setTimeout(resolve, 500));
+        } catch (error) {
+          console.log(
+            `Message ${(i + 1).toFixed()} failed: ${error instanceof Error ? error.message : String(error)}`,
+          );
+        }
+      }
+
+      const endTime = DateTime.now();
+      console.log(
+        `Test took ${endTime.diff(startTime).toFormat("s.SSS")} seconds`,
+      );
+    },
+  );
+});
+
 function generateRandomString(length: number): string {
-  // Create paragraphs to make the text more readable
-  const paragraphs: string[] = [];
-  let remainingLength = length;
-
-  while (remainingLength > 0) {
-    // Generate a random paragraph length between 100 and 500 characters
-    const paragraphLength = Math.min(
-      remainingLength,
-      Math.floor(Math.random() * 400) + 100,
-    );
-
-    // Generate random text for the paragraph
-    const text = Array.from({ length: paragraphLength }, () =>
-      String.fromCharCode(Math.floor(Math.random() * 26) + 97),
-    ).join("");
-
-    paragraphs.push(text);
-    remainingLength -= paragraphLength;
-  }
-
-  // Join paragraphs with double newlines
-  return paragraphs.join("\n\n");
+  return Array.from({ length }, () =>
+    String.fromCharCode(Math.floor(Math.random() * 26) + 97),
+  ).join("");
 }
