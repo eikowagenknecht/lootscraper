@@ -6,7 +6,8 @@ import {
   writeFileSync,
 } from "node:fs";
 import { resolve } from "node:path";
-import { ConfigError, config } from "@/services/config";
+import { config } from "@/services/config";
+import { ConfigError } from "@/types";
 import { getDataPath } from "@/utils/path";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
 
