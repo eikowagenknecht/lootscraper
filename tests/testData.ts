@@ -1,6 +1,4 @@
-// import { OfferDuration, OfferSource, OfferType } from "@/types/config";
-import { OfferDuration, OfferType } from "@/types/basic";
-import { OfferSource } from "@/types/basic";
+import { OfferDuration, OfferSource, OfferType } from "@/types/basic";
 import type { Database } from "@/types/database";
 import type { Kysely } from "kysely";
 import { DateTime } from "luxon";
@@ -83,12 +81,44 @@ export async function insertTestData(db: Kysely<Database>) {
         source: OfferSource.EPIC,
         type: OfferType.GAME,
         duration: OfferDuration.CLAIMABLE,
-        title: "Demo Game",
-        probable_game_name: "Demo Game",
+        title: "Existing Game 3",
+        probable_game_name: "Existing Game 3",
         seen_first: yesterday.toISO(),
         seen_last: now.toISO(),
         valid_from: yesterday.toISO(),
         valid_to: tomorrow.toISO(),
+        rawtext: JSON.stringify({ title: "Demo Title" }),
+        url: "https://example.com/demo",
+        img_url: "https://example.com/demo.jpg",
+        category: "DEMO",
+      },
+      // Not currently active
+      {
+        id: 4,
+        source: OfferSource.EPIC,
+        type: OfferType.GAME,
+        duration: OfferDuration.CLAIMABLE,
+        title: "Existing Game 4",
+        probable_game_name: "Existing Game 4",
+        seen_first: yesterday.toISO(),
+        seen_last: now.toISO(),
+        valid_from: yesterday.toISO(),
+        valid_to: yesterday.toISO(),
+        rawtext: JSON.stringify({ title: "Demo Title" }),
+        url: "https://example.com/demo",
+        img_url: "https://example.com/demo.jpg",
+        category: "DEMO",
+      },
+      // Not currently active V2
+      {
+        id: 5,
+        source: OfferSource.EPIC,
+        type: OfferType.GAME,
+        duration: OfferDuration.CLAIMABLE,
+        title: "Existing Game 5",
+        probable_game_name: "Existing Game 5",
+        seen_first: twoDaysAgo.toISO(),
+        seen_last: twoDaysAgo.toISO(),
         rawtext: JSON.stringify({ title: "Demo Title" }),
         url: "https://example.com/demo",
         img_url: "https://example.com/demo.jpg",

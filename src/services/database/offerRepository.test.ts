@@ -86,7 +86,7 @@ describe("Offer Repository", () => {
       };
 
       const res = await createOffer(newOffer);
-      expect(res).toBe(4); // Since we had 3 offers in test data
+      expect(res).toBe(6); // Since we had 5 offers in test data, the next created should get the id 6
 
       const createdOffer = await getOfferByTitle("New Game");
       expect(createdOffer).toBeDefined();
