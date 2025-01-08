@@ -1,5 +1,6 @@
 import { handleError } from "@/utils/errorHandler";
 import { logger } from "@/utils/logger";
+import { splitIntoChunks } from "@/utils/stringTools";
 import { autoRetry } from "@grammyjs/auto-retry";
 import { CommandGroup, commandNotFound, commands } from "@grammyjs/commands";
 import { Bot, type BotError, GrammyError, HttpError } from "grammy";
@@ -179,9 +180,15 @@ ${bold("Stack:")}
 ${escapeText(error.stack)}
 \`\`\``;
         }
-        await this.bot.api.sendMessage(this.config.botLogChatId, errorMessage, {
-          parse_mode: "MarkdownV2",
-        });
+
+        // Send the error message in chunks since stack traces can be long
+        const chunks = splitIntoChunks(errorMessage, 4000);
+
+        for (const chunk of chunks) {
+          await this.bot.api.sendMessage(this.config.botLogChatId, chunk, {
+            parse_mode: "MarkdownV2",
+          });
+        }
       } catch (sendError) {
         logger.error(
           `Failed to send error to developer: ${sendError instanceof Error ? sendError.message : String(sendError)}`,
