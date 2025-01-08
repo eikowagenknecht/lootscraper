@@ -378,3 +378,58 @@ export function getAllEnabledFeedFilenames(prefix: string) {
 
   return res;
 }
+
+/**
+ * Splits a string into chunks, preferring natural word boundaries up to the maximum size
+ * @param input The string to split into chunks
+ * @param maxChunkSize The maximum size of each chunk
+ * @returns An array of string chunks
+ * @throws If maxChunkSize is less than 1
+ */
+export function splitIntoChunks(input: string, maxChunkSize: number): string[] {
+  if (maxChunkSize < 1) {
+    throw new Error("Chunk size must be at least 1");
+  }
+
+  const chunks: string[] = [];
+  let currentPosition = 0;
+
+  while (currentPosition < input.length) {
+    // If remaining text is shorter than max size, take it all
+    if (currentPosition + maxChunkSize >= input.length) {
+      chunks.push(input.slice(currentPosition));
+      break;
+    }
+
+    let cutPosition = currentPosition + maxChunkSize;
+
+    // Look for natural break points
+    const naturalBreaks = [
+      input.lastIndexOf(" ", cutPosition),
+      input.lastIndexOf("-", cutPosition),
+      input.lastIndexOf(",", cutPosition),
+      input.lastIndexOf(";", cutPosition),
+      input.lastIndexOf(".", cutPosition),
+    ].filter((pos): pos is number => pos > currentPosition);
+
+    // If we found any natural break points, use the latest one
+    if (naturalBreaks.length > 0) {
+      cutPosition = Math.max(...naturalBreaks);
+      // Move past the break character for next chunk
+      const nextPosition = cutPosition + 1;
+      chunks.push(input.slice(currentPosition, nextPosition));
+      currentPosition = nextPosition;
+    } else {
+      // No natural breaks found, cut at max size
+      chunks.push(input.slice(currentPosition, cutPosition));
+      currentPosition = cutPosition;
+    }
+
+    // Skip leading spaces in next chunk
+    while (input[currentPosition] === " ") {
+      currentPosition += 1;
+    }
+  }
+
+  return chunks;
+}
