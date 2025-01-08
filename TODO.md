@@ -10,7 +10,6 @@ This will be replaced by GitHub issues again once this is migrated into the main
   - [ ] /rescrape ||/fix: drop all game info, then rescrape all games (like the "cleanup" command line argument before). Make sure to pause the scraping process while doing this. See tools.py
 - [ ] Check if the telegram logging sensitivity is working correctly
 - [ ] Send new offers to Telegram after they have been scraped (processing.py > send_new_offers_telegram)
-- [ ] Try what happens if too many offers are sent to a user in a short time
 - [ ] Upload only if the file has changed
 - [ ] Add auto generated semantic release notes back in
 
