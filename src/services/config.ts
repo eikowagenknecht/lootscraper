@@ -1,14 +1,18 @@
 import { copyFileSync, mkdirSync, readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
+import { ConfigError } from "@/types";
 import { type Config, ConfigSchema } from "@/types/config";
 import { logger } from "@/utils/logger";
 import { getDataPath, getTemplatesPath } from "@/utils/path";
 import { parse } from "yaml";
+import { ZodError } from "zod";
 
-export class ConfigError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = "ConfigError";
+class ConfigValidationError extends ConfigError {
+  constructor(
+    message: string,
+    public readonly validationErrors: ZodError[],
+  ) {
+    super(`${message}: ${validationErrors.map((e) => e.message).join(", ")}`);
   }
 }
 
@@ -52,20 +56,212 @@ export class ConfigService {
       const configFile = readFileSync(path, "utf8");
       const parsedConfig: unknown = parse(configFile);
 
-      const result = ConfigSchema.safeParse(parsedConfig);
+      // Validate basic structure and types
+      const result = this.validateConfigSchema(parsedConfig);
 
-      if (!result.success) {
-        throw new ConfigError(
-          `Invalid config: ${result.error.errors.map((e) => e.message).join(", ")}`,
-        );
-      }
+      // Validate internal consistency
+      this.validateConfigConsistency(result);
 
-      this.config = result.data;
+      this.config = result;
     } catch (error) {
       if (error instanceof Error) {
         throw new ConfigError(`Failed to load config: ${error.message}`);
       }
       throw error;
+    }
+  }
+
+  private validateConfigSchema(config: unknown): Config {
+    // First do a non-strict parse to collect all unknown fields
+    const result = ConfigSchema.safeParse(config);
+
+    // Then do a strict parse to catch extra fields
+    const strictResult = ConfigSchema.strict().safeParse(config);
+
+    if (!strictResult.success) {
+      const unknownFieldErrors = strictResult.error.issues.filter(
+        (issue) => issue.code === "unrecognized_keys",
+      );
+
+      if (unknownFieldErrors.length > 0) {
+        throw new ConfigValidationError("Unknown fields in config", [
+          new ZodError(unknownFieldErrors),
+        ]);
+      }
+    }
+
+    if (!result.success) {
+      throw new ConfigValidationError("Invalid config schema", [result.error]);
+    }
+
+    return result.data;
+  }
+
+  private validateConfigConsistency(config: Config): void {
+    const errors: ZodError[] = [];
+
+    // Validate that actions have required configurations
+    if (config.actions.uploadToFtp && !config.ftp.host) {
+      errors.push(
+        new ZodError([
+          {
+            code: "custom",
+            path: ["ftp", "host"],
+            message: "FTP host is required when uploadToFtp is enabled",
+          },
+        ]),
+      );
+    }
+
+    if (config.actions.uploadToFtp && !config.ftp.user) {
+      errors.push(
+        new ZodError([
+          {
+            code: "custom",
+            path: ["ftp", "user"],
+            message: "FTP user is required when uploadToFtp is enabled",
+          },
+        ]),
+      );
+    }
+
+    if (config.actions.uploadToFtp && !config.ftp.password) {
+      errors.push(
+        new ZodError([
+          {
+            code: "custom",
+            path: ["ftp", "password"],
+            message: "FTP password is required when uploadToFtp is enabled",
+          },
+        ]),
+      );
+    }
+
+    if (config.actions.telegramBot && !config.telegram.accessToken) {
+      errors.push(
+        new ZodError([
+          {
+            code: "custom",
+            path: ["telegram", "accessToken"],
+            message:
+              "Telegram access token is required when telegramBot is enabled",
+          },
+        ]),
+      );
+    }
+
+    if (config.actions.telegramBot && !config.telegram.botOwnerUserId) {
+      errors.push(
+        new ZodError([
+          {
+            code: "custom",
+            path: ["telegram", "botOwnerUserId"],
+            message:
+              "Bot owner user ID is required when telegramBot is enabled",
+          },
+        ]),
+      );
+    }
+
+    // Validate that feed URLs are valid when feed generation is enabled
+    if (config.actions.generateFeed) {
+      try {
+        new URL(config.feed.urlPrefix);
+        new URL(config.feed.urlAlternate);
+      } catch {
+        errors.push(
+          new ZodError([
+            {
+              code: "custom",
+              path: ["feed"],
+              message: "Invalid feed URLs provided",
+            },
+          ]),
+        );
+      }
+    }
+
+    // Validate that igdb credentials are provided when using the igdb scraper
+    if (config.scraper.infoSources.includes("IGDB") && !config.igdb.clientId) {
+      errors.push(
+        new ZodError([
+          {
+            code: "custom",
+            path: ["igdb", "clientId"],
+            message:
+              "IGDB client ID is required when IGDB is used as an info source",
+          },
+        ]),
+      );
+    }
+
+    if (
+      config.scraper.infoSources.includes("IGDB") &&
+      !config.igdb.clientSecret
+    ) {
+      errors.push(
+        new ZodError([
+          {
+            code: "custom",
+            path: ["igdb", "clientSecret"],
+            message:
+              "IGDB client secret is required when IGDB is used as an info source",
+          },
+        ]),
+      );
+    }
+
+    // Validate that offer sources are defined when scraping is enabled
+    if (
+      config.actions.scrapeOffers &&
+      config.scraper.offerSources.length === 0
+    ) {
+      errors.push(
+        new ZodError([
+          {
+            code: "custom",
+            path: ["scraper", "offerSources"],
+            message:
+              "At least one offer source must be defined when scraping is enabled",
+          },
+        ]),
+      );
+    }
+
+    if (config.actions.scrapeOffers && config.scraper.offerTypes.length === 0) {
+      errors.push(
+        new ZodError([
+          {
+            code: "custom",
+            path: ["scraper", "offerTypes"],
+            message:
+              "At least one offer type must be defined when scraping is enabled",
+          },
+        ]),
+      );
+    }
+
+    if (
+      config.actions.scrapeOffers &&
+      config.scraper.offerDurations.length === 0
+    ) {
+      errors.push(
+        new ZodError([
+          {
+            code: "custom",
+            path: ["scraper", "offerDurations"],
+            message:
+              "At least one offer duration must be defined when scraping is enabled",
+          },
+        ]),
+      );
+    }
+
+    if (errors.length > 0) {
+      throw new ConfigValidationError(
+        "Config consistency validation failed",
+        errors,
+      );
     }
   }
 
