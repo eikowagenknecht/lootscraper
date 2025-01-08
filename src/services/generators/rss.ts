@@ -9,8 +9,8 @@ import type { Game, IgdbInfo, Offer, SteamInfo } from "@/types/database";
 import { FeedError } from "@/types/errors";
 import { AtomFeed } from "@/utils/atom";
 import { logger } from "@/utils/logger";
-import { generateFeedTitle, generateFilename } from "@/utils/names";
 import { getDataPath } from "@/utils/path";
+import { generateFeedTitle, generateFilename } from "@/utils/stringTools";
 import { DateTime } from "luxon";
 
 export class RssGenerator {

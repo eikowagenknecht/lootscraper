@@ -14,7 +14,7 @@ import {
   getAllOffers,
 } from "@/services/database/offerRepository";
 import { logger } from "@/utils/logger";
-import { getAllEnabledFeedFilenames } from "@/utils/names";
+import { getAllEnabledFeedFilenames } from "@/utils/stringTools";
 import { Cron } from "croner";
 import { DateTime } from "luxon";
 import { FeedService } from "./feed";
@@ -234,7 +234,7 @@ async function uploadFeedsToServer(): Promise<void> {
   if (!cfg.actions.uploadToFtp || !cfg.actions.generateFeed) return;
 
   try {
-    const feedFiles = getAllEnabledFeedFilenames();
+    const feedFiles = getAllEnabledFeedFilenames(cfg.common.feedFilePrefix);
     const uploadResults = await uploadMultipleFiles(feedFiles);
     for (const result of uploadResults) {
       if (result.success) {

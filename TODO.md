@@ -6,7 +6,6 @@ This will be replaced by GitHub issues again once this is migrated into the main
 ## Tasks
 
 - [ ] Run xvfb in Docker only if needed (see <https://www.npmjs.com/package/xvfb> for an outdated example) (see main.py)
-- [ ] Simplify the utils/ folder
 - [ ] Try to send a Telegram message that is longer than 4096 characters. If it doesn't work, look at Python's chunkstring function.
 - [ ] Add admin Telegram commands:
   - [ ] /rescrape ||/fix: drop all game info, then rescrape all games (like the "cleanup" command line argument before). Make sure to pause the scraping process while doing this. See tools.py

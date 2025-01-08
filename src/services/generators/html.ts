@@ -6,9 +6,12 @@ import { translationService } from "@/services/translation";
 import type { Config } from "@/types/config";
 import type { Offer } from "@/types/database";
 import { logger } from "@/utils/logger";
-import { generateFeedTitle, generateFilename } from "@/utils/names";
 import { getDataPath } from "@/utils/path";
-import { cleanHtml } from "@/utils/stringTools";
+import {
+  cleanHtml,
+  generateFeedTitle,
+  generateFilename,
+} from "@/utils/stringTools";
 import Handlebars from "handlebars";
 import { DateTime } from "luxon";
 

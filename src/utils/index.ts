@@ -1,7 +1,8 @@
 export { calculateRealValidTo } from "./dateCalculator";
-export { getMatchScore, normalizeString } from "./stringTools";
 export {
+  cleanCombinedTitle,
   cleanGameTitle,
   cleanLootTitle,
-  cleanCombinedTitle,
-} from "./titleCleaner";
+  getMatchScore,
+  normalizeString,
+} from "./stringTools";
