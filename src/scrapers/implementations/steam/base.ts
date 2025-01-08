@@ -7,7 +7,7 @@ import {
 import { OfferDuration, OfferSource, OfferType } from "@/types/basic";
 import type { NewOffer } from "@/types/database";
 import { logger } from "@/utils/logger";
-import { cleanCombinedTitle, cleanGameTitle } from "@/utils/titleCleaner";
+import { cleanCombinedTitle, cleanGameTitle } from "@/utils/stringTools";
 import { DateTime } from "luxon";
 import type { Locator, Page } from "playwright";
 
