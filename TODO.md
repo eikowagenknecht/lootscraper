@@ -13,6 +13,7 @@ This will be replaced by GitHub issues again once this is migrated into the main
 - [ ] Upload only if the file has changed
 - [ ] Add auto generated semantic release notes back in
 - [ ] Handle shutdown more gracefully, especially with errors
+- [ ] Skip loading images if not needed
 
 ## Stats
 
