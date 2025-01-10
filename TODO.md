@@ -12,6 +12,7 @@ This will be replaced by GitHub issues again once this is migrated into the main
 - [ ] Send new offers to Telegram after they have been scraped (processing.py > send_new_offers_telegram)
 - [ ] Upload only if the file has changed
 - [ ] Add auto generated semantic release notes back in
+- [ ] Handle shutdown more gracefully, especially with errors
 
 ## Stats
 
