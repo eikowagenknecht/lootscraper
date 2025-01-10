@@ -28,10 +28,10 @@ export const ConfigSchema = z.object({
     logFile: z.string().default("lootscraper.log"),
     logLevel: LogLevel.default("INFO"),
   }),
-  expert: z.object({
-    dbEcho: z.boolean().default(false),
-    webTimeoutSeconds: z.number().default(5),
+  browser: z.object({
+    timeoutSeconds: z.number().default(5),
     headless: z.boolean().default(true),
+    loadImages: z.boolean().default(false),
   }),
   scraper: z.object({
     offerSources: z.array(OfferSourceSchema).default([]),

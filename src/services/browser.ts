@@ -24,7 +24,7 @@ export class BrowserService {
   public async initialize(config: Config): Promise<void> {
     try {
       this.browser = await firefox.launch({
-        headless: config.expert.headless,
+        headless: config.browser.headless,
       });
 
       this.context = await this.browser.newContext({
@@ -35,7 +35,7 @@ export class BrowserService {
       });
 
       // Set default timeout from config (in ms)
-      this.context.setDefaultTimeout(config.expert.webTimeoutSeconds * 1000);
+      this.context.setDefaultTimeout(config.browser.timeoutSeconds * 1000);
 
       logger.info("Browser service initialized");
     } catch (error) {
