@@ -13,13 +13,7 @@ export const LogLevel = z.enum([
 ]);
 export type LogLevel = z.infer<typeof LogLevel>;
 
-export const TelegramLogLevel = z.enum([
-  "DISABLED",
-  "ERROR",
-  "WARNING",
-  "INFO",
-  "DEBUG",
-]);
+export const TelegramLogLevel = LogLevel;
 export type TelegramLogLevel = z.infer<typeof TelegramLogLevel>;
 
 export const OfferSourceSchema = z.nativeEnum(OfferSource);

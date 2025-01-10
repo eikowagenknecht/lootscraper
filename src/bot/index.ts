@@ -1,6 +1,5 @@
 import { handleError } from "@/utils/errorHandler";
 import { logger } from "@/utils/logger";
-import { splitIntoChunks } from "@/utils/stringTools";
 import { autoRetry } from "@grammyjs/auto-retry";
 import { CommandGroup, commandNotFound, commands } from "@grammyjs/commands";
 import { Bot, type BotError, GrammyError, HttpError } from "grammy";
@@ -19,13 +18,12 @@ import { handleStatusCommand } from "./handlers/commands/status";
 import { handleTimezoneCommand } from "./handlers/commands/timezone";
 import type { BotConfig } from "./types/config";
 import type { BotContext } from "./types/middleware";
-import { bold, escapeText } from "./utils/markdown";
 
 export class TelegramBot {
   private bot: Bot<BotContext>;
   private initialized = false;
 
-  constructor(private readonly config: BotConfig) {
+  constructor(config: BotConfig) {
     this.bot = new Bot<BotContext>(config.accessToken);
   }
 
@@ -153,7 +151,7 @@ export class TelegramBot {
     }
   }
 
-  private async handleError(error: BotError): Promise<void> {
+  private handleError(error: BotError): void {
     logger.debug(
       `Error while handling update ${error.ctx.update.update_id.toFixed()}:`,
       JSON.stringify(error.ctx, null, 2),
@@ -164,36 +162,7 @@ export class TelegramBot {
     } else if (error instanceof HttpError) {
       logger.error("Could not connect to Telegram:", error);
     } else {
-      logger.error("Unknown error:", error);
-    }
-
-    handleError(error);
-
-    if (this.config.botLogChatId) {
-      try {
-        let errorMessage = escapeText(`⚠️ ${error.message}`);
-        if (error.stack) {
-          errorMessage += `
-
-${bold("Stack:")}
-\`\`\`
-${escapeText(error.stack)}
-\`\`\``;
-        }
-
-        // Send the error message in chunks since stack traces can be long
-        const chunks = splitIntoChunks(errorMessage, 4000);
-
-        for (const chunk of chunks) {
-          await this.bot.api.sendMessage(this.config.botLogChatId, chunk, {
-            parse_mode: "MarkdownV2",
-          });
-        }
-      } catch (sendError) {
-        logger.error(
-          `Failed to send error to developer: ${sendError instanceof Error ? sendError.message : String(sendError)}`,
-        );
-      }
+      handleError(error);
     }
   }
 
