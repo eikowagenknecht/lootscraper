@@ -1,11 +1,7 @@
 import { config } from "@/services/config";
 import { initializeServices, shutdownServices } from "@/services/orchestrator";
 import { handleError } from "@/utils/errorHandler";
-import {
-  initializeFileTransport,
-  logger,
-  updateConsoleLevel,
-} from "@/utils/logger";
+import { addFileTransport, logger, updateConsoleLevel } from "@/utils/logger";
 import { Settings as LuxonSettings } from "luxon";
 
 function initializeCore() {
@@ -16,7 +12,7 @@ function initializeCore() {
   // Configure logging based on config
   const configuredLevel = cfg.common.logLevel;
   updateConsoleLevel(configuredLevel);
-  initializeFileTransport(configuredLevel, cfg.common.logFile);
+  addFileTransport(configuredLevel, cfg.common.logFile);
 
   // Log debug information
   if (process.env.DEBUG) {

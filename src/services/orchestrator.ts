@@ -13,7 +13,7 @@ import {
   getActiveOffers,
   getAllOffers,
 } from "@/services/database/offerRepository";
-import { logger } from "@/utils/logger";
+import { addTelegramTransport, logger } from "@/utils/logger";
 import { getAllEnabledFeedFilenames } from "@/utils/stringTools";
 import { Cron } from "croner";
 import { DateTime } from "luxon";
@@ -92,6 +92,11 @@ export async function initializeServices(): Promise<void> {
     if (cfg.actions.telegramBot) {
       logger.info("Initializing Telegram bot...");
       await telegramBotService.initialize(cfg);
+
+      // Add Telegram logging transport after bot is initialized
+      logger.info("Adding Telegram transport to logger...");
+      addTelegramTransport(cfg.telegram.logLevel, cfg.telegram.botLogChatId);
+      logger.info("Telegram transport added to logger.");
     }
 
     if (cfg.actions.scrapeOffers) {
