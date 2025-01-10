@@ -12,7 +12,7 @@ describe("Steam Game Info Contract Tests", () => {
   let steam: SteamClient;
 
   beforeEach(() => {
-    steam = new SteamClient(browser.getContext());
+    steam = new SteamClient();
   });
 
   describe("Steam App ID Resolution", () => {

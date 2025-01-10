@@ -4,7 +4,7 @@ import {
   type OfferHandler,
   type RawOffer,
 } from "@/scrapers/base/scraper";
-import { OfferCategory } from "@/types";
+import { OfferCategory, ScraperError } from "@/types";
 import { OfferDuration, OfferSource, OfferType } from "@/types/basic";
 import type { NewOffer } from "@/types/database";
 import { logger } from "@/utils/logger";
@@ -96,6 +96,13 @@ export class HumbleGamesScraper extends BaseScraper<HumbleRawOffer> {
   }
 
   private async addDetails(offer: HumbleRawOffer, url: string): Promise<void> {
+    if (!this.context) {
+      throw new ScraperError(
+        "Browser context not initialized. Call initialize() first.",
+        this.getSource(),
+      );
+    }
+
     let page = null;
     try {
       page = await this.context.newPage();

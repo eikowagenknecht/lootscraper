@@ -4,6 +4,7 @@ import {
   type OfferHandler,
   type RawOffer,
 } from "@/scrapers/base/scraper";
+import { ScraperError } from "@/types";
 import { OfferDuration, OfferSource, OfferType } from "@/types/basic";
 import type { NewOffer } from "@/types/database";
 import { logger } from "@/utils/logger";
@@ -64,6 +65,13 @@ export abstract class SteamBaseScraper extends BaseScraper<SteamRawOffer> {
   }
 
   private async readRawOffer(element: Locator): Promise<SteamRawOffer | null> {
+    if (!this.context) {
+      throw new ScraperError(
+        "Browser context not initialized. Call initialize() first.",
+        this.getSource(),
+      );
+    }
+
     try {
       const title = await element.locator(".title").textContent();
       if (!title) throw new Error("Couldn't find title");

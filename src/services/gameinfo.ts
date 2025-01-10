@@ -7,7 +7,6 @@ import type {
   Offer,
 } from "@/types/database";
 import { logger } from "@/utils/logger";
-import type { BrowserContext } from "playwright";
 import {
   createGame,
   getGameByIgdbName,
@@ -23,11 +22,8 @@ export class GameInfoService {
   private readonly steamClient: SteamClient;
   private readonly igdbClient: IgdbClient | null;
 
-  constructor(
-    private readonly config: Config,
-    readonly browserContext: BrowserContext,
-  ) {
-    this.steamClient = new SteamClient(browserContext);
+  constructor(private readonly config: Config) {
+    this.steamClient = new SteamClient();
     this.igdbClient =
       config.igdb.clientId && config.igdb.clientSecret
         ? new IgdbClient(config.igdb.clientId, config.igdb.clientSecret)

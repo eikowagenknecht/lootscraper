@@ -4,6 +4,13 @@ import { logger } from "@/utils/logger";
 import type { Browser, BrowserContext } from "playwright";
 import { firefox } from "playwright";
 
+const CONTEXT_OPTIONS = {
+  // Use Reykjavik timezone (=UTC) because UTC is not supported directly
+  timezoneId: "Atlantic/Reykjavik",
+  // Set locale to en-US to get the english pages
+  locale: "en-US",
+};
+
 export class BrowserService {
   private static instance: BrowserService;
   private browser: Browser | null = null;
@@ -27,12 +34,7 @@ export class BrowserService {
         headless: config.browser.headless,
       });
 
-      this.context = await this.browser.newContext({
-        // Use Reykjavik timezone (=UTC) because UTC is not supported directly
-        timezoneId: "Atlantic/Reykjavik",
-        // Set locale to en-US to get the english pages
-        locale: "en-US",
-      });
+      this.context = await this.browser.newContext(CONTEXT_OPTIONS);
 
       // Set default timeout from config (in ms)
       this.context.setDefaultTimeout(config.browser.timeoutSeconds * 1000);
@@ -52,6 +54,19 @@ export class BrowserService {
       );
     }
     return this.context;
+  }
+
+  public async refreshContext(): Promise<void> {
+    if (!this.browser) {
+      throw new BrowserError(
+        "Browser not initialized. Call initialize() first.",
+      );
+    }
+
+    if (this.context) {
+      await this.context.close();
+      this.context = await this.browser.newContext(CONTEXT_OPTIONS);
+    }
   }
 
   public async destroy(): Promise<void> {

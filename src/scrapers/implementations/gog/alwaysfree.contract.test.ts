@@ -10,10 +10,7 @@ describe("GOG Always Free Games Scraper Contract Tests", () => {
   });
 
   test("should scrape always-free games correctly", async () => {
-    const scraper = new GogGamesAlwaysFreeScraper(
-      browser.getContext(),
-      config.get(),
-    );
+    const scraper = new GogGamesAlwaysFreeScraper(config.get());
     const results = await scraper.scrape();
 
     expect(results.length).toBeGreaterThan(40);

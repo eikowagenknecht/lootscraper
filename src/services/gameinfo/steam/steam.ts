@@ -1,8 +1,9 @@
+import { browser } from "@/services/browser";
 import type { NewSteamInfo } from "@/types/database";
 import { getMatchScore } from "@/utils";
 import { logger } from "@/utils/logger";
 import { DateTime } from "luxon";
-import { type BrowserContext, errors } from "playwright";
+import { errors } from "playwright";
 
 type SteamApiResponse = Record<
   string,
@@ -40,16 +41,16 @@ export class SteamClient {
     "https://store.steampowered.com/api/appdetails";
   private static readonly RESULT_MATCH_THRESHOLD = 0.75;
 
-  constructor(private readonly context: BrowserContext) {}
-
   public async findSteamId(searchString: string): Promise<number | null> {
     logger.debug(`Finding Steam ID for: ${searchString}`);
+
+    const context = browser.getContext();
 
     const searchUrl = new URL("https://store.steampowered.com/search/");
     searchUrl.searchParams.set("term", searchString);
     searchUrl.searchParams.set("category1", "998"); // Games category
 
-    const page = await this.context.newPage();
+    const page = await context.newPage();
     try {
       await page.goto(searchUrl.toString(), { timeout: 30000 });
 
@@ -137,7 +138,8 @@ export class SteamClient {
     score?: number;
     recommendations?: number;
   }> {
-    const page = await this.context.newPage();
+    const context = browser.getContext();
+    const page = await context.newPage();
     try {
       await page.goto(`${SteamClient.STORE_URL}/app/${appId.toFixed()}`, {
         timeout: 30000,
