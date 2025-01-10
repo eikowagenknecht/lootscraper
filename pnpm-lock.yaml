@@ -53,6 +53,9 @@ importers:
       winston-daily-rotate-file:
         specifier: 5.0.0
         version: 5.0.0(winston@3.17.0)
+      winston-transport:
+        specifier: 4.9.0
+        version: 4.9.0
       yaml:
         specifier: 2.7.0
         version: 2.7.0
