@@ -98,7 +98,8 @@ telegram:
   # User ID for the admin
   botOwnerUserId: 0
   # Chat (can be a group, then it starts with a minus sign) where logs will be sent to
+  # Set to 0 to disable logging.
   botLogChatId: 0
   # Which errors to send by Telegram notification to the log chat.
-  # One of: DEBUG, INFO, WARNING, ERROR, DISABLED
+  # One of: ERROR, WARN, INFO, HTTP, VERBOSE, DEBUG, SILLY
   logLevel: ERROR
