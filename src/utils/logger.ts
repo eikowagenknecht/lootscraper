@@ -129,10 +129,9 @@ function createLoggerInstance() {
   };
 }
 
-interface LogCounter {
-  count: number;
+interface TimeoutState {
   lastReset: DateTime;
-  notifiedLimit: boolean;
+  notifiedTimeout: boolean;
 }
 
 /**
@@ -161,11 +160,9 @@ interface LogCounter {
  * @throws {Error} When Telegram API calls timeout (after 5 seconds)
  */
 class TelegramTransport extends Transport {
-  private readonly maxLogsPerMinute = 10;
-  private counter: LogCounter = {
-    count: 0,
+  private timeoutState: TimeoutState = {
     lastReset: DateTime.now(),
-    notifiedLimit: false,
+    notifiedTimeout: false,
   };
 
   constructor(
@@ -175,13 +172,12 @@ class TelegramTransport extends Transport {
     super(opts);
   }
 
-  private resetCounterIfNeeded(): void {
+  private resetTimeoutStateIfNeeded(): void {
     const now = DateTime.now();
-    if (now.diff(this.counter.lastReset).as("minutes") >= 1) {
-      this.counter = {
-        count: 0,
+    if (now.diff(this.timeoutState.lastReset).as("minutes") >= 1) {
+      this.timeoutState = {
         lastReset: now,
-        notifiedLimit: false,
+        notifiedTimeout: false,
       };
     }
   }
@@ -190,78 +186,78 @@ class TelegramTransport extends Transport {
     info: LogEntry & { timestamp: string; stack?: string },
     callback: () => void,
   ) {
-    try {
-      setImmediate(() => this.emit("logged", info));
-
-      if (!this.botLogChatId) {
-        callback();
-        return;
-      }
-
+    setImmediate(() => this.emit("logged", info));
+    if (this.botLogChatId) {
       await this.handleLogMessage(info);
-    } catch (error) {
-      console.error("Failed to send log to Telegram:", error);
-    } finally {
-      callback();
     }
+    callback();
   }
 
   private async handleLogMessage(
     info: LogEntry & { timestamp: string; stack?: string },
   ) {
-    if (await this.handleRateLimiting()) {
-      return;
-    }
-
     const telegramMessage = this.formatTelegramMessage(info);
     await this.sendMessageInChunks(telegramMessage);
   }
 
-  private async handleRateLimiting(): Promise<boolean> {
-    this.resetCounterIfNeeded();
+  private async handleTimeout(): Promise<void> {
+    this.resetTimeoutStateIfNeeded();
 
-    if (this.counter.count < this.maxLogsPerMinute) {
-      return false;
+    if (!this.timeoutState.notifiedTimeout) {
+      try {
+        // Send warning without timeout to ensure delivery
+        await telegramBotService
+          .getBot()
+          .api.sendMessage(
+            this.botLogChatId,
+            "⚠️ Message delivery is taking longer than expected. Some log messages may be delayed or missing. Please check the log file for complete information.",
+          );
+        this.timeoutState.notifiedTimeout = true;
+      } catch (error) {
+        console.error("Failed to send timeout warning message:", error);
+      }
     }
-
-    if (!this.counter.notifiedLimit) {
-      await this.sendWithTimeout(
-        this.botLogChatId,
-        "⚠️ High log volume detected: 10+ entries in the past minute. Log notifications paused for cooldown. Please review the log file for details.",
-      );
-      this.counter.notifiedLimit = true;
-    }
-
-    return true;
   }
 
   private formatTelegramMessage(
     info: LogEntry & { timestamp: string; stack?: string },
   ): string {
-    const level = info.level.toUpperCase();
-    const messageText =
-      typeof info.message === "string"
-        ? info.message
-        : JSON.stringify(info.message);
+    try {
+      const level = info.level.toUpperCase() || "INFO";
+      const messageText = (() => {
+        try {
+          return typeof info.message === "string"
+            ? info.message
+            : JSON.stringify(info.message);
+        } catch {
+          return "[Unparseable message]";
+        }
+      })();
 
-    const icon = level === "ERROR" ? "❌" : level === "WARN" ? "⚠️" : "ℹ️";
-    let message = escapeText(`${icon} ${messageText}`);
+      const icon = level === "ERROR" ? "❌" : level === "WARN" ? "⚠️" : "ℹ️";
+      let message = escapeText(`${icon} ${messageText}`);
 
-    if (info.stack) {
-      message += `\n\n${bold("Stack:")}\n\`\`\`\n${escapeText(info.stack)}\n\`\`\``;
+      if (info.stack) {
+        message += `\n\n${bold("Stack:")}\n\`\`\`\n${escapeText(info.stack)}\n\`\`\``;
+      }
+
+      return message;
+    } catch {
+      // If everything fails, return a generic error message
+      return escapeText("❌ Error formatting log message");
     }
-
-    return message;
   }
 
   private async sendMessageInChunks(message: string) {
     const chunks = splitIntoChunks(message, 4000);
-
     for (const chunk of chunks) {
-      await this.sendWithTimeout(this.botLogChatId, chunk, {
-        parse_mode: "MarkdownV2",
-      });
-      this.counter.count++;
+      try {
+        await this.sendWithTimeout(this.botLogChatId, chunk, {
+          parse_mode: "MarkdownV2",
+        });
+      } catch {
+        await this.handleTimeout();
+      }
     }
   }
 
@@ -275,7 +271,6 @@ class TelegramTransport extends Transport {
         reject(new Error("Telegram API timeout"));
       }, 5000);
     });
-
     await Promise.race([
       telegramBotService.getBot().api.sendMessage(chatId, message, options),
       timeoutPromise,
