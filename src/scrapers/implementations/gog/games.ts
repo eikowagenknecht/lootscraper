@@ -1,4 +1,5 @@
 import type { CronConfig } from "@/scrapers/base/scraper";
+import { ScraperError } from "@/types";
 import { OfferDuration } from "@/types/basic";
 import type { NewOffer } from "@/types/database";
 import { logger } from "@/utils/logger";
@@ -138,6 +139,13 @@ export class GogGamesScraper extends GogBaseScraper {
   }
 
   private async readOfferFromDetailsPage(url: string): Promise<GogRawOffer> {
+    if (!this.context) {
+      throw new ScraperError(
+        "Browser context not initialized. Call initialize() first.",
+        this.getSource(),
+      );
+    }
+
     let page = null;
     try {
       page = await this.context.newPage();

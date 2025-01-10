@@ -13,6 +13,7 @@ import {
   getActiveOffers,
   getAllOffers,
 } from "@/services/database/offerRepository";
+import type { NewOffer } from "@/types";
 import { addTelegramTransport, logger } from "@/utils/logger";
 import { getAllEnabledFeedFilenames } from "@/utils/stringTools";
 import { Cron } from "croner";
@@ -132,9 +133,8 @@ function queueInitialScrapes(): void {
     // Run all enabled scrapers once on startup
     const enabledScrapers = getEnabledScraperClasses();
 
-    const context = browser.getContext();
     for (const scraper of enabledScrapers) {
-      const scraperInstance = new scraper(context, config.get());
+      const scraperInstance = new scraper(config.get());
       queueScraper(scraperInstance);
     }
   }
@@ -148,7 +148,14 @@ async function runSingleScrape(scraper: ScraperInstance): Promise<void> {
     `Starting scrape run #${totalScrapeCount.toFixed()} for ${scraper.getSource()} ${scraper.getType()}...`,
   );
 
-  const offers = await scraper.scrape();
+  let offers: NewOffer[];
+
+  try {
+    offers = await scraper.scrape();
+  } finally {
+    // Refresh the context after each scrape to prevent memory leaks
+    await browser.refreshContext();
+  }
 
   // Store offers and track if we found any new ones
   const newOfferIds: number[] = [];
@@ -193,7 +200,6 @@ async function runSingleScrape(scraper: ScraperInstance): Promise<void> {
   await updateGameInfo(modifiedOfferIds);
   await updateFeeds();
   await uploadFeedsToServer();
-  // TODO: Send offers to Telegram
 }
 
 /**
@@ -206,7 +212,7 @@ async function updateGameInfo(gameIds: number[]): Promise<void> {
   }
 
   logger.info("New offers found, fetching game information ...");
-  const gameInfoService = new GameInfoService(cfg, browser.getContext());
+  const gameInfoService = new GameInfoService(cfg);
   for (const gameId of gameIds) {
     await gameInfoService.enrichOffer(gameId);
   }
@@ -303,9 +309,8 @@ function startServices() {
     const enabledScrapers = getEnabledScraperClasses();
 
     // Setup schedules for each scraper
-    const context = browser.getContext();
     for (const scraper of enabledScrapers) {
-      const scraperInstance = new scraper(context, cfg);
+      const scraperInstance = new scraper(cfg);
       scheduleScraper(scraperInstance);
     }
   }

@@ -4,7 +4,7 @@ import {
   type RawOffer,
 } from "@/scrapers/base/scraper";
 import { OfferDuration, OfferSource } from "@/types/basic";
-import { BrowserError } from "@/types/errors";
+import { BrowserError, ScraperError } from "@/types/errors";
 import { logger } from "@/utils/logger";
 import { DateTime } from "luxon";
 import type { Locator, Page } from "playwright";
@@ -90,6 +90,13 @@ export abstract class AmazonBaseScraper<
   }
 
   private async readDateFromDetailsPage(url: string): Promise<string> {
+    if (!this.context) {
+      throw new ScraperError(
+        "Browser context not initialized. Call initialize() first.",
+        this.getSource(),
+      );
+    }
+
     let page: Page | null = null;
     try {
       page = await this.context.newPage();

@@ -10,7 +10,7 @@ describe("Apple Games Scraper Contract Tests", () => {
   });
 
   test("should scrape free games correctly", async () => {
-    const scraper = new AppleGamesScraper(browser.getContext(), config.get());
+    const scraper = new AppleGamesScraper(config.get());
     const results = await scraper.scrape();
 
     expect(results.length).toBeGreaterThan(0);

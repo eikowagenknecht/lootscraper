@@ -10,7 +10,7 @@ describe("Google Play Games Scraper Contract Tests", () => {
   });
 
   test("should scrape free games correctly", async () => {
-    const scraper = new GoogleGamesScraper(browser.getContext(), config.get());
+    const scraper = new GoogleGamesScraper(config.get());
     const results = await scraper.scrape();
 
     expect(results.length).toBeGreaterThan(0);

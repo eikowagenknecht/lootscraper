@@ -11,7 +11,7 @@ describe("Amazon Games Scraper Contract Tests", () => {
   });
 
   test("should scrape games correctly", { timeout: 120000 }, async () => {
-    const scraper = new AmazonGamesScraper(browser.getContext(), config.get());
+    const scraper = new AmazonGamesScraper(config.get());
     const results = await scraper.scrape();
 
     expect(results.length).toBeGreaterThan(0);

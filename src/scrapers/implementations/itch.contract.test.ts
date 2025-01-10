@@ -10,7 +10,7 @@ describe("Itch.io Games Scraper Contract Tests", () => {
   });
 
   test("should scrape free games correctly", { timeout: 120000 }, async () => {
-    const scraper = new ItchGamesScraper(browser.getContext(), config.get());
+    const scraper = new ItchGamesScraper(config.get());
     const results = await scraper.scrape();
 
     expect(results.length).toBeGreaterThan(0);

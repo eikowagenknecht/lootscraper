@@ -11,7 +11,7 @@ describe("Steam Loot Scraper Contract Tests", () => {
   });
 
   it("should scrape free DLC correctly", { timeout: 120000 }, async () => {
-    const scraper = new SteamLootScraper(browser.getContext(), config.get());
+    const scraper = new SteamLootScraper(config.get());
     const results = await scraper.scrape();
 
     expect(results.length).toBeGreaterThan(0);

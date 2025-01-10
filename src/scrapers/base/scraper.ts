@@ -1,4 +1,5 @@
 import { resolve } from "node:path";
+import { browser } from "@/services/browser";
 import { OfferCategory } from "@/types";
 import { OfferDuration, OfferType } from "@/types/basic";
 import type { OfferSource } from "@/types/basic";
@@ -71,10 +72,9 @@ export interface OfferHandler<T extends RawOffer> {
  * @public
  */
 export abstract class BaseScraper<T extends RawOffer = RawOffer> {
-  constructor(
-    protected readonly context: BrowserContext,
-    protected readonly config: Config,
-  ) {}
+  protected context: BrowserContext | undefined;
+
+  constructor(protected readonly config: Config) {}
 
   // Abstract methods that must be implemented by concrete scrapers
 
@@ -175,6 +175,8 @@ export abstract class BaseScraper<T extends RawOffer = RawOffer> {
       `Analyzing ${this.getSource()} for offers: ${this.getType()} / ${this.getDuration()}`,
     );
 
+    this.context = browser.getContext();
+
     try {
       const offers = await this.readOffers();
       const cleanedOffers = this.cleanOffers(offers);
@@ -227,6 +229,13 @@ export abstract class BaseScraper<T extends RawOffer = RawOffer> {
    * @protected
    */
   protected async readOffers(): Promise<Omit<NewOffer, "category">[]> {
+    if (!this.context) {
+      throw new ScraperError(
+        "Browser context not initialized. Call initialize() first.",
+        this.getSource(),
+      );
+    }
+
     const offers: Omit<NewOffer, "category">[] = [];
     let page: Page | null = null;
 

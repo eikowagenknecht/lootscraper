@@ -11,7 +11,7 @@ describe("Amazon Loot Scraper Contract Tests", () => {
   });
 
   test("should scrape loot correctly", { timeout: 120000 }, async () => {
-    const scraper = new AmazonLootScraper(browser.getContext(), config.get());
+    const scraper = new AmazonLootScraper(config.get());
     const results = await scraper.scrape();
 
     expect(results.length).toBeGreaterThan(0);
