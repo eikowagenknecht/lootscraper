@@ -8,13 +8,13 @@ common:
   # One of: ERROR, WARN, INFO, HTTP, VERBOSE, DEBUG, SILLY
   logLevel: INFO
 
-expert:
-  # Output all database queries to the console.
-  dbEcho: false
+browser:
   # Timeout for web requests (in seconds). Increase if you have slow internet.
-  webTimeoutSeconds: 5
+  timeoutSeconds: 5
   # Run the browser in headless mode. Must be set to false for Epic Games to work.
-  headless: false
+  headless: true
+  # Load images while browsing (increases resource usage).
+  loadImages: false
 
 # The actions to perform. Set to false to disable.
 # You need to enable one or more actions to do anything.
