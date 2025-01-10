@@ -51,6 +51,7 @@
     "playwright": "1.49.1",
     "winston": "3.17.0",
     "winston-daily-rotate-file": "5.0.0",
+    "winston-transport": "4.9.0",
     "yaml": "2.7.0",
     "zod": "3.24.1"
   },
