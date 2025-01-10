@@ -135,6 +135,31 @@ interface LogCounter {
   notifiedLimit: boolean;
 }
 
+/**
+ * A Winston transport for sending logs to Telegram.
+ * Implements rate limiting and message chunking for better handling of log messages.
+ *
+ * @class TelegramTransport
+ * @extends {Transport}
+ *
+ * @property {number} maxLogsPerMinute - Maximum number of logs that can be sent per minute (default: 10)
+ * @property {LogCounter} counter - Tracks the number of logs sent within the current minute
+ *
+ * @example
+ * ```typescript
+ * const telegramTransport = new TelegramTransport(chatId);
+ * logger.add(telegramTransport);
+ * ```
+ *
+ * Features:
+ * - Rate limiting to prevent spam (10 messages per minute)
+ * - Automatic message chunking for long messages
+ * - Stack trace formatting
+ * - Markdown support
+ * - Timeout handling for API calls
+ *
+ * @throws {Error} When Telegram API calls timeout (after 5 seconds)
+ */
 class TelegramTransport extends Transport {
   private readonly maxLogsPerMinute = 10;
   private counter: LogCounter = {
@@ -165,79 +190,96 @@ class TelegramTransport extends Transport {
     info: LogEntry & { timestamp: string; stack?: string },
     callback: () => void,
   ) {
-    setImmediate(() => {
-      this.emit("logged", info);
-    });
-
-    // Only send logs if we have a valid chat ID
-    if (!this.botLogChatId) {
-      callback();
-      return;
-    }
-
     try {
-      this.resetCounterIfNeeded();
+      setImmediate(() => this.emit("logged", info));
 
-      // Never wait more than 5 seconds for the log to be sent
-      const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => {
-          reject(new Error("Telegram API timeout"));
-        }, 1000);
-      });
-
-      // If we're at the limit, only send the limit message once per minute
-      // to avoid spamming the chat
-      if (this.counter.count >= this.maxLogsPerMinute) {
-        if (!this.counter.notifiedLimit) {
-          await Promise.race([
-            await telegramBotService
-              .getBot()
-              .api.sendMessage(
-                this.botLogChatId,
-                "⚠️ More than 10 logs in the last minute. Check your instance for details.",
-                {},
-              ),
-            timeoutPromise,
-          ]);
-
-          this.counter.notifiedLimit = true;
-        }
+      if (!this.botLogChatId) {
         callback();
         return;
       }
 
-      const level = info.level.toUpperCase();
-      const messageText =
-        typeof info.message === "string"
-          ? info.message
-          : JSON.stringify(info.message);
-
-      let telegramMessage = escapeText(`⚠️ [${level}] ${messageText}`);
-      if (info.stack) {
-        telegramMessage += `
-  
-  ${bold("Stack:")}
-  \`\`\`
-  ${escapeText(info.stack)}
-  \`\`\``;
-      }
-
-      // Send the error message in chunks since stack traces can be long
-      const chunks = splitIntoChunks(telegramMessage, 4000);
-
-      for (const chunk of chunks) {
-        await telegramBotService
-          .getBot()
-          .api.sendMessage(this.botLogChatId, chunk, {
-            parse_mode: "MarkdownV2",
-          });
-        this.counter.count++;
-      }
+      await this.handleLogMessage(info);
     } catch (error) {
       console.error("Failed to send log to Telegram:", error);
+    } finally {
+      callback();
+    }
+  }
+
+  private async handleLogMessage(
+    info: LogEntry & { timestamp: string; stack?: string },
+  ) {
+    if (await this.handleRateLimiting()) {
+      return;
     }
 
-    callback();
+    const telegramMessage = this.formatTelegramMessage(info);
+    await this.sendMessageInChunks(telegramMessage);
+  }
+
+  private async handleRateLimiting(): Promise<boolean> {
+    this.resetCounterIfNeeded();
+
+    if (this.counter.count < this.maxLogsPerMinute) {
+      return false;
+    }
+
+    if (!this.counter.notifiedLimit) {
+      await this.sendWithTimeout(
+        this.botLogChatId,
+        "⚠️ High log volume detected: 10+ entries in the past minute. Log notifications paused for cooldown. Please review the log file for details.",
+      );
+      this.counter.notifiedLimit = true;
+    }
+
+    return true;
+  }
+
+  private formatTelegramMessage(
+    info: LogEntry & { timestamp: string; stack?: string },
+  ): string {
+    const level = info.level.toUpperCase();
+    const messageText =
+      typeof info.message === "string"
+        ? info.message
+        : JSON.stringify(info.message);
+
+    const icon = level === "ERROR" ? "❌" : level === "WARN" ? "⚠️" : "ℹ️";
+    let message = escapeText(`${icon} ${messageText}`);
+
+    if (info.stack) {
+      message += `\n\n${bold("Stack:")}\n\`\`\`\n${escapeText(info.stack)}\n\`\`\``;
+    }
+
+    return message;
+  }
+
+  private async sendMessageInChunks(message: string) {
+    const chunks = splitIntoChunks(message, 4000);
+
+    for (const chunk of chunks) {
+      await this.sendWithTimeout(this.botLogChatId, chunk, {
+        parse_mode: "MarkdownV2",
+      });
+      this.counter.count++;
+    }
+  }
+
+  private async sendWithTimeout(
+    chatId: number,
+    message: string,
+    options: object = {},
+  ): Promise<void> {
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => {
+        reject(new Error("Telegram API timeout"));
+      }, 5000);
+    });
+
+    await Promise.race([
+      telegramBotService.getBot().api.sendMessage(chatId, message, options),
+      timeoutPromise,
+    ]);
   }
 }
 
