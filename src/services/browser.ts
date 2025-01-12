@@ -15,6 +15,8 @@ export class BrowserService {
   private static instance: BrowserService;
   private browser: Browser | null = null;
   private context: BrowserContext | null = null;
+  private timeoutSeconds: number | null = null;
+  private loadImages: boolean | null = null;
 
   private constructor() {
     // Private constructor to prevent instantiation
@@ -34,10 +36,11 @@ export class BrowserService {
         headless: config.browser.headless,
       });
 
-      this.context = await this.browser.newContext(CONTEXT_OPTIONS);
+      // Set default timeout from config
+      this.timeoutSeconds = config.browser.timeoutSeconds;
+      this.loadImages = config.browser.loadImages;
 
-      // Set default timeout from config (in ms)
-      this.context.setDefaultTimeout(config.browser.timeoutSeconds * 1000);
+      await this.refreshContext();
 
       logger.info("Browser service initialized");
     } catch (error) {
@@ -57,16 +60,44 @@ export class BrowserService {
   }
 
   public async refreshContext(): Promise<void> {
-    if (!this.browser) {
+    if (
+      !this.browser ||
+      this.timeoutSeconds === null ||
+      this.loadImages === null
+    ) {
       throw new BrowserError(
         "Browser not initialized. Call initialize() first.",
       );
     }
 
+    // Close the current context if it exists
     if (this.context) {
       await this.context.close();
-      this.context = await this.browser.newContext(CONTEXT_OPTIONS);
     }
+
+    const newContext = await this.browser.newContext(CONTEXT_OPTIONS);
+
+    if (!this.loadImages) {
+      // Skip images
+      await newContext.route("**/*", (route) => {
+        const url = route.request().url();
+        const isImageExtension = /\.(png|jpg|jpeg|gif|webp|svg|ico)$/i.test(
+          url,
+        );
+        const isImageResource = route.request().resourceType() === "image";
+
+        // Block if either condition is true
+        if (isImageExtension || isImageResource) {
+          return route.abort();
+        }
+        return route.continue();
+      });
+    }
+
+    // Set default timeout from config (in ms)
+    newContext.setDefaultTimeout(this.timeoutSeconds * 1000);
+
+    this.context = newContext;
   }
 
   public async destroy(): Promise<void> {
