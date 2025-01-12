@@ -1,4 +1,4 @@
-import { getTelegramChatById } from "@/services/database/telegramChatRepository";
+import { getTelegramChatByChatId } from "@/services/database/telegramChatRepository";
 import { logger } from "@/utils/logger";
 import type { Context } from "grammy";
 
@@ -60,9 +60,9 @@ export async function getDbChat(ctx: Context) {
       "message_thread_id" in ctx.message
         ? ctx.message.message_thread_id
         : undefined;
-    return await getTelegramChatById(ctx.chat.id, threadId);
+    return await getTelegramChatByChatId(ctx.chat.id, threadId);
   }
 
   // Otherwise, look up the chat by its ID
-  return await getTelegramChatById(ctx.chat.id);
+  return await getTelegramChatByChatId(ctx.chat.id);
 }
