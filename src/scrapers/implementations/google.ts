@@ -73,18 +73,28 @@ export class GoogleGamesScraper extends BaseScraper {
         url = BASE_URL + url;
       }
 
-      const style = await element.locator("span.pic_div").getAttribute("style");
-      if (!style) throw new Error(`Couldn't find image for ${title}`);
+      // Try to get img from data attribute.
+      let imgUrl = await element
+        .locator("span.pic_div")
+        .getAttribute("data-ico");
 
-      // Extract URL from background-image style
-      const imgUrl = style
-        .replace('background-image: url("', "")
-        .replace('");', "");
+      // Fallback to style (it's moved here when the image is loaded)
+      if (!imgUrl) {
+        const style = await element
+          .locator("span.pic_div")
+          .getAttribute("style");
+        if (style) {
+          // Extract URL from background-image style
+          imgUrl = style
+            .replace('background-image: url("', "")
+            .replace('");', "");
+        }
+      }
 
       return {
         title,
         url,
-        imgUrl,
+        ...(imgUrl && { imgUrl }),
       };
     } catch (error) {
       logger.error(
