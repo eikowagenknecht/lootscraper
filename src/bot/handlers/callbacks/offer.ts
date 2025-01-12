@@ -4,7 +4,7 @@ import { unpackData } from "@/bot/utils/callbackPack";
 import { formatOfferMessage } from "@/bot/utils/formatters";
 import { createOfferKeyboard } from "@/bot/utils/keyboards";
 import { getOfferById } from "@/services/database/offerRepository";
-import { getTelegramChatById } from "@/services/database/telegramChatRepository";
+import { getTelegramChatByChatId } from "@/services/database/telegramChatRepository";
 import { logger } from "@/utils/logger";
 import type { Filter } from "grammy";
 
@@ -19,7 +19,7 @@ export async function handleOfferDetailsCallback(
 
   const unpackedData = unpackData(data, offerSchema);
 
-  const dbChat = await getTelegramChatById(ctx.chat.id);
+  const dbChat = await getTelegramChatByChatId(ctx.chat.id);
   if (!dbChat) {
     await ctx.answerCallbackQuery({
       text: "Error: Chat not registered",

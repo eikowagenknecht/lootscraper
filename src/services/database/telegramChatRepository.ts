@@ -10,6 +10,26 @@ export async function getTelegramChatById(
     let query = getDb()
       .selectFrom("telegram_chats")
       .selectAll()
+      .where("id", "=", chatId);
+
+    if (threadId !== undefined) {
+      query = query.where("thread_id", "=", threadId);
+    }
+
+    return await query.executeTakeFirst();
+  } catch (error) {
+    handleError("get telegram chat", error);
+  }
+}
+
+export async function getTelegramChatByChatId(
+  chatId: number,
+  threadId?: number | null,
+): Promise<TelegramChat | undefined> {
+  try {
+    let query = getDb()
+      .selectFrom("telegram_chats")
+      .selectAll()
       .where("chat_id", "=", chatId);
 
     if (threadId !== undefined) {
