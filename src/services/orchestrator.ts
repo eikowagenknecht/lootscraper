@@ -1,3 +1,4 @@
+import { sendNewOffersToChat } from "@/bot/helpers/send";
 import { telegramBotService } from "@/bot/service";
 import {
   type ScraperInstance,
@@ -18,6 +19,7 @@ import { addTelegramTransport, logger } from "@/utils/logger";
 import { getAllEnabledFeedFilenames } from "@/utils/stringTools";
 import { Cron } from "croner";
 import { DateTime } from "luxon";
+import { getAllActiveTelegramChats } from "./database/telegramChatRepository";
 import { FeedService } from "./feed";
 import { uploadMultipleFiles } from "./ftp";
 import { GameInfoService } from "./gameinfo";
@@ -200,6 +202,22 @@ async function runSingleScrape(scraper: ScraperInstance): Promise<void> {
   await updateGameInfo(modifiedOfferIds);
   await updateFeeds();
   await uploadFeedsToServer();
+  await sendNewOffersToTelegram();
+}
+
+async function sendNewOffersToTelegram(): Promise<void> {
+  const cfg = config.get();
+  if (!cfg.actions.telegramBot) {
+    return;
+  }
+
+  logger.info("New offers found, sending updates to Telegram...");
+
+  const activeChats = await getAllActiveTelegramChats();
+
+  for (const chat of activeChats) {
+    await sendNewOffersToChat(chat.id);
+  }
 }
 
 /**
