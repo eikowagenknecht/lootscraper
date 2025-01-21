@@ -5,7 +5,7 @@
   "author": "Eiko Wagenknecht <git@eiko-wagenknecht.de>",
   "license": "CC-BY-NC-SA-4.0",
   "type": "module",
-  "packageManager": "pnpm@9.15.2",
+  "packageManager": "pnpm@9.15.4",
   "engines": {
     "node": ">=22.0.0",
     "pnpm": ">=9.0.0"
@@ -34,6 +34,9 @@
     "code:dump": "vite-node tools/codeDump.ts",
     "code:list": "vite-node tools/codeList.ts",
     "knip": "knip"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": ["better-sqlite3"]
   },
   "dependencies": {
     "@grammyjs/auto-retry": "2.0.2",
