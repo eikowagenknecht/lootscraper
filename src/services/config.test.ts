@@ -40,6 +40,8 @@ describe("ConfigService", () => {
 common:
   databaseFile: test.db
   logLevel: INFO
+browser:
+  timeoutSeconds: 5
 scraper:
   offerSources: [STEAM, EPIC]
   offerTypes: [GAME]
