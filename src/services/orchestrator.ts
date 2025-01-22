@@ -126,6 +126,7 @@ export async function initializeServices(): Promise<void> {
 async function runInitialTasks(): Promise<void> {
   await updateFeeds();
   await uploadFeedsToServer();
+  await sendNewOffersToTelegram();
   queueInitialScrapes();
 }
 
