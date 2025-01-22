@@ -27,7 +27,7 @@ actions:
   generateFeed: false
   # Upload the feed files to an FTP server.
   uploadToFtp: false
-  # Enable the Telegram bot.
+  # Enable the Telegram bot. Needs credentials, see below.
   telegramBot: false
 
 scraper:
@@ -69,8 +69,8 @@ scraper:
   infoSources:
     # Steam
     - STEAM
-    # IGDB
-    - IGDB
+    # IGDB (needs credentials, see below)
+    # - IGDB
 
 igdb:
   # Twitch API client ID
