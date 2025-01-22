@@ -78,29 +78,29 @@ export async function updateTelegramChatTimezone(
       .updateTable("telegram_chats")
       .set({ timezone_offset: timezoneOffset })
       .where("chat_id", "=", chatId)
-      .execute();
+      .executeTakeFirst();
   } catch (error) {
     handleError("update telegram chat timezone", error);
   }
 }
 
 export async function updateTelegramChatLastAnnouncementId(
-  chatId: number,
+  id: number,
   announcementId: number,
 ): Promise<void> {
   try {
     await getDb()
       .updateTable("telegram_chats")
       .set({ last_announcement_id: announcementId })
-      .where("id", "=", chatId)
-      .execute();
+      .where("id", "=", id)
+      .executeTakeFirst();
   } catch (error) {
     handleError("update telegram chat last announcement id", error);
   }
 }
 
 export async function incrementTelegramChatOffersReceived(
-  chatId: number,
+  id: number,
 ): Promise<void> {
   try {
     await getDb()
@@ -108,34 +108,35 @@ export async function incrementTelegramChatOffersReceived(
       .set((eb) => ({
         offers_received_count: eb("offers_received_count", "+", 1),
       }))
-      .where("chat_id", "=", chatId)
-      .execute();
+      .where("id", "=", id)
+      .executeTakeFirst();
   } catch (error) {
     handleError("increment telegram chat offers received", error);
   }
 }
 
 export async function deactivateTelegramChat(
-  chatId: number,
+  id: number,
   reason: string,
 ): Promise<void> {
   try {
     await getDb()
       .updateTable("telegram_chats")
       .set({ active: 0, inactive_reason: reason })
-      .where("chat_id", "=", chatId)
-      .execute();
+      .where("id", "=", id)
+      .executeTakeFirst();
+    // TODO: Throw if no rows were updated, slso for the other methods here
   } catch (error) {
     handleError("deactivate telegram chat", error);
   }
 }
 
-export async function deleteTelegramChat(chatId: number): Promise<void> {
+export async function deleteTelegramChat(id: number): Promise<void> {
   try {
     await getDb()
       .deleteFrom("telegram_chats")
-      .where("id", "=", chatId)
-      .execute();
+      .where("id", "=", id)
+      .executeTakeFirst();
   } catch (error) {
     handleError("delete telegram chat", error);
   }
