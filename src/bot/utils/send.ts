@@ -4,6 +4,7 @@ import { createOfferKeyboard } from "@/bot/utils/keyboards";
 import { getNewAnnouncements } from "@/services/database/announcementRepository";
 import { getNewOffers } from "@/services/database/offerRepository";
 import {
+  deactivateTelegramChat,
   getTelegramChatById,
   incrementTelegramChatOffersReceived,
   updateTelegramChatLastAnnouncementId,
@@ -14,6 +15,7 @@ import {
 } from "@/services/database/telegramSubscriptionRepository";
 import { ChatType } from "@/types";
 import { logger } from "@/utils/logger";
+import { GrammyError } from "grammy";
 import { DateTime } from "luxon";
 
 export async function sendNewOffersToChat(
@@ -99,6 +101,19 @@ export async function sendNewOffersToChat(
       }
     }
   } catch (error) {
+    // Check for blocked chat errors
+    if (
+      error instanceof GrammyError &&
+      (error.description.includes("chat not found") ||
+        error.description.includes("bot was blocked by the user"))
+    ) {
+      logger.info(
+        `Chat ${chat.chat_id.toFixed()} is no longer accessible, marking as inactive.`,
+      );
+      await deactivateTelegramChat(dbChatId, "Chat no longer accessible");
+      return;
+    }
+
     logger.error(
       `Failed to process offers for chat ${chat.chat_id.toFixed()}: ${
         error instanceof Error ? error.message : String(error)
@@ -142,8 +157,23 @@ export async function sendNewAnnouncementsToChat(
       }
     }
   } catch (error) {
+    // Check for blocked chat errors
+    if (
+      error instanceof GrammyError &&
+      (error.description.includes("chat not found") ||
+        error.description.includes("bot was blocked by the user"))
+    ) {
+      logger.info(
+        `Chat ${chat.chat_id.toFixed()} is no longer accessible, marking as inactive.`,
+      );
+      await deactivateTelegramChat(dbChatId, "Chat no longer accessible");
+      return;
+    }
+
     logger.error(
-      `Failed to process announcements for chat ${chat.chat_id.toFixed()}: ${error instanceof Error ? error.message : String(error)}`,
+      `Failed to process announcements for chat ${chat.chat_id.toFixed()}: ${
+        error instanceof Error ? error.message : String(error)
+      }`,
     );
   }
 }

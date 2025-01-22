@@ -1,5 +1,5 @@
-import { sendNewOffersToChat } from "@/bot/helpers/send";
 import { telegramBotService } from "@/bot/service";
+import { sendNewOffersToChat } from "@/bot/utils/send";
 import {
   type ScraperInstance,
   getEnabledScraperClasses,

@@ -2,13 +2,10 @@ import { getAllActiveTelegramChats } from "@/services/database/telegramChatRepos
 import type { Config } from "@/types/config";
 import { logger } from "@/utils/logger";
 import type { Bot } from "grammy";
-import {
-  sendNewAnnouncementsToChat,
-  sendNewOffersToChat,
-} from "./helpers/send";
 import { TelegramBot } from "./index";
 import type { BotConfig } from "./types/config";
 import type { BotContext } from "./types/middleware";
+import { sendNewAnnouncementsToChat, sendNewOffersToChat } from "./utils/send";
 
 export class TelegramBotService {
   private static instance: TelegramBotService | null = null;
