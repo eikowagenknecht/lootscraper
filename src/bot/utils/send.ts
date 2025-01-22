@@ -110,7 +110,7 @@ export async function sendNewOffersToChat(
       logger.info(
         `Chat ${chat.chat_id.toFixed()} is no longer accessible, marking as inactive.`,
       );
-      await deactivateTelegramChat(dbChatId, "Chat no longer accessible");
+      await deactivateTelegramChat(dbChatId, error.description);
       return;
     }
 
@@ -166,7 +166,7 @@ export async function sendNewAnnouncementsToChat(
       logger.info(
         `Chat ${chat.chat_id.toFixed()} is no longer accessible, marking as inactive.`,
       );
-      await deactivateTelegramChat(dbChatId, "Chat no longer accessible");
+      await deactivateTelegramChat(dbChatId, error.description);
       return;
     }
 
