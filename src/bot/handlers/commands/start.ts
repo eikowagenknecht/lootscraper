@@ -1,6 +1,9 @@
 import type { BotContext } from "@/bot/types/middleware";
 import { bold, escapeText, link } from "@/bot/utils/markdown";
-import { createTelegramChat } from "@/services/database/telegramChatRepository";
+import {
+  activateTelegramChat,
+  createTelegramChat,
+} from "@/services/database/telegramChatRepository";
 import { createTelegramSubscription } from "@/services/database/telegramSubscriptionRepository";
 import { ChatType } from "@/types";
 import { OfferDuration, OfferSource, OfferType } from "@/types/basic";
@@ -46,10 +49,26 @@ This will immediately delete all data about you. \
 Also, I will be sad to see you go.`)}`;
   const dbChat = await getDbChat(ctx);
 
-  if (dbChat) {
+  // Active chat
+  if (dbChat?.active === 1) {
     const messageMd = `\
 ${escapeText(`Welcome back, ${getCallerName(ctx)} 👋. \
 You are already registered ❤. \
+In case you forgot, this was my initial message to you:`)}
+
+${welcomeTextMd}
+`;
+
+    await ctx.reply(messageMd, { parse_mode: "MarkdownV2" });
+    return;
+  }
+
+  if (dbChat) {
+    await activateTelegramChat(dbChat.id);
+
+    const messageMd = `\
+${escapeText(`Welcome back, ${getCallerName(ctx)} 👋. \
+You have reactivated your account ❤. \
 In case you forgot, this was my initial message to you:`)}
 
 ${welcomeTextMd}
