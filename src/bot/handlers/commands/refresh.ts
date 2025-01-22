@@ -1,5 +1,5 @@
-import { sendNewOffersToChat } from "@/bot/helpers/send";
 import type { BotContext } from "@/bot/types/middleware";
+import { sendNewOffersToChat } from "@/bot/utils/send";
 import type { CommandContext } from "grammy";
 import { getDbChat, logCall, userCanControlBot } from ".";
 
