@@ -199,6 +199,14 @@ FROM telegram_subscriptions
       db,
     );
 
+    // Add unique constraints
+    await db.schema
+      .createIndex("unique_chat")
+      .on("telegram_chats")
+      .expression(sql`chat_id, COALESCE(user_id, -1), COALESCE(thread_id, -1)`)
+      .unique()
+      .execute();
+
     // Re-enable foreign key constraints
     await sql`PRAGMA foreign_keys = ON`.execute(db);
 

@@ -131,6 +131,19 @@ export async function deactivateTelegramChat(
   }
 }
 
+export async function activateTelegramChat(id: number): Promise<void> {
+  try {
+    await getDb()
+      .updateTable("telegram_chats")
+      .set({ active: 1, inactive_reason: null })
+      .where("id", "=", id)
+      .executeTakeFirst();
+    // TODO: Throw if no rows were updated, slso for the other methods here
+  } catch (error) {
+    handleError("activate telegram chat", error);
+  }
+}
+
 export async function deleteTelegramChat(id: number): Promise<void> {
   try {
     await getDb()
