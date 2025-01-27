@@ -21,7 +21,7 @@ updates:
           - "minor"
           - "patch"
 
-  # # Check for updates to GitHub Actions every week
+  # Check for updates to GitHub Actions every week
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
