@@ -342,6 +342,7 @@ class AtomFeed {
     return cleanHtml(
       feedTemplate({
         ...this.options,
+        updated,
         entries: this.entries.map((entry) => entry.toXML()),
       }),
     );
