@@ -5,10 +5,17 @@
   "author": "Eiko Wagenknecht <git@eiko-wagenknecht.de>",
   "license": "CC-BY-NC-SA-4.0",
   "type": "module",
+  "main": "dist/main.js",
+  "bin": {
+    "lootscraper": "./dist/main.js"
+  },
   "packageManager": "pnpm@9.15.4",
   "engines": {
     "node": ">=22.0.0",
     "pnpm": ">=9.0.0"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": ["better-sqlite3", "@biomejs/biome", "esbuild"]
   },
   "scripts": {
     "dev": "cross-env DEBUG=\"grammy*\" vite-node src/main.ts",
@@ -22,8 +29,8 @@
     "test:all": "pnpm test && pnpm test:contract",
     "lint": "tsc --noEmit && eslint --fix ./src && prettier --write ./src && biome check --fix --unsafe ./src ./tools",
     "lint:eslint": "eslint --fix ./src",
-    "lint:biome": "biome check --write ./src",
     "lint:prettier": "prettier --write ./src",
+    "lint:biome": "biome check --fix --unsafe ./src",
     "format": "biome format . --write",
     "type-check": "tsc --noEmit",
     "check": "pnpm run lint && pnpm run type-check",
@@ -35,23 +42,20 @@
     "code:list": "vite-node tools/codeList.ts",
     "knip": "knip"
   },
-  "pnpm": {
-    "onlyBuiltDependencies": ["better-sqlite3"]
-  },
   "dependencies": {
     "@grammyjs/auto-retry": "2.0.2",
-    "@grammyjs/commands": "1.0.3",
+    "@grammyjs/commands": "1.0.4",
     "basic-ftp": "5.0.5",
-    "better-sqlite3": "11.7.2",
+    "better-sqlite3": "11.8.1",
     "croner": "9.0.0",
     "cross-env": "7.0.3",
     "grammy": "1.34.0",
     "handlebars": "4.7.8",
-    "i18next": "24.2.0",
+    "i18next": "24.2.2",
     "kysely": "0.27.5",
     "logform": "2.7.0",
     "luxon": "3.5.0",
-    "playwright": "1.49.1",
+    "playwright": "1.50.0",
     "winston": "3.17.0",
     "winston-daily-rotate-file": "5.0.0",
     "winston-transport": "4.9.0",
@@ -63,23 +67,23 @@
     "@commitlint/cli": "19.6.1",
     "@commitlint/config-conventional": "19.6.0",
     "@commitlint/types": "19.5.0",
-    "@eslint/js": "9.17.0",
+    "@eslint/js": "9.19.0",
     "@testing-library/jest-dom": "6.6.3",
     "@types/better-sqlite3": "7.6.12",
     "@types/luxon": "3.4.2",
-    "@types/node": "22.10.5",
-    "@vitest/coverage-v8": "2.1.8",
-    "eslint": "9.17.0",
+    "@types/node": "22.10.10",
+    "@vitest/coverage-v8": "3.0.4",
+    "eslint": "9.19.0",
     "eslint-import-resolver-typescript": "3.7.0",
     "eslint-plugin-import-x": "4.6.1",
     "globals": "15.14.0",
-    "knip": "5.41.1",
-    "lefthook": "1.10.1",
+    "knip": "5.43.3",
+    "lefthook": "1.10.10",
     "prettier": "3.4.2",
-    "typescript": "5.7.2",
-    "typescript-eslint": "8.19.0",
-    "vite": "6.0.7",
-    "vite-node": "2.1.8",
-    "vitest": "2.1.8"
+    "typescript": "5.7.3",
+    "typescript-eslint": "8.21.0",
+    "vite": "6.0.11",
+    "vite-node": "3.0.4",
+    "vitest": "3.0.4"
   }
 }
