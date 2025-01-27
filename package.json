@@ -9,10 +9,10 @@
   "bin": {
     "lootscraper": "./dist/main.js"
   },
-  "packageManager": "pnpm@9.15.4",
+  "packageManager": "pnpm@10.1.0",
   "engines": {
     "node": ">=22.0.0",
-    "pnpm": ">=9.0.0"
+    "pnpm": ">=10.0.0"
   },
   "pnpm": {
     "onlyBuiltDependencies": ["better-sqlite3", "@biomejs/biome", "esbuild"]
