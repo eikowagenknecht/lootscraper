@@ -11,13 +11,13 @@ readme = "README.md"
 authors = [{ name = "Eiko Wagenknecht", email = "git@eiko-wagenknecht.de" }]
 license = { text = "CC-BY-NC-SA-4.0" }
 dependencies = [
-    "alembic==1.14.0",
+    "alembic==1.14.1",
     "feedgen==1.0.0",
     "humanize==4.11.0",
     "httpx==0.28.1",
     "python-telegram-bot[rate-limiter]==21.10",
     "playwright==1.49.1",
-    "SQLAlchemy==2.0.36",
+    "SQLAlchemy==2.0.37",
     "Unidecode==1.3.8",
     "xvfbwrapper==0.2.9",
     "jinja2==3.1.5",
