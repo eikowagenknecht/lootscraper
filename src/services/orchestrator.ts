@@ -127,10 +127,9 @@ async function runInitialTasks(): Promise<void> {
   await updateFeeds();
   await uploadFeedsToServer();
   await sendNewOffersToTelegram();
-  queueInitialScrapes();
 }
 
-function queueInitialScrapes(): void {
+export function queueAllScrapes(): void {
   const cfg = config.get();
   if (cfg.actions.scrapeOffers) {
     // Run all enabled scrapers once on startup
@@ -319,8 +318,8 @@ function startServices() {
 
   // Start Telegram bot if enabled
   if (cfg.actions.telegramBot) {
-    // Do not await bot start to prevent blocking
-    void telegramBotService.start();
+    // This never resolves as long as the bot is running
+    telegramBotService.start();
   }
 
   // Initialize and schedule scrapers if enabled
