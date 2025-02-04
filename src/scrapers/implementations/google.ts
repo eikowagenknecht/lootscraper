@@ -21,6 +21,10 @@ export class GoogleGamesScraper extends BaseScraper {
     ];
   }
 
+  getScraperName(): string {
+    return "GoogleGames";
+  }
+
   getSource(): OfferSource {
     return OfferSource.GOOGLE;
   }

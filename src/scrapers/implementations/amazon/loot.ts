@@ -11,6 +11,10 @@ interface AmazonLootRawOffer extends AmazonRawOffer {
 }
 
 export class AmazonLootScraper extends AmazonBaseScraper<AmazonLootRawOffer> {
+  getScraperName(): string {
+    return "AmazonLoot";
+  }
+
   getType(): OfferType {
     return OfferType.LOOT;
   }

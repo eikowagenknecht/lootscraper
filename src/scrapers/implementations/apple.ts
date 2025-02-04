@@ -26,6 +26,10 @@ export class AppleGamesScraper extends BaseScraper {
     ];
   }
 
+  getScraperName(): string {
+    return "AppleGames";
+  }
+
   getSource(): OfferSource {
     return OfferSource.APPLE;
   }

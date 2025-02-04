@@ -24,6 +24,10 @@ export class UbisoftGamesScraper extends BaseScraper<UbisoftRawOffer> {
     ];
   }
 
+  getScraperName(): string {
+    return "UbisoftGames";
+  }
+
   getSource(): OfferSource {
     return OfferSource.UBISOFT;
   }

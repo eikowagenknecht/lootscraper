@@ -7,6 +7,10 @@ import type { Locator, Page } from "playwright";
 import { AmazonBaseScraper, type AmazonRawOffer } from "./base";
 
 export class AmazonGamesScraper extends AmazonBaseScraper {
+  getScraperName(): string {
+    return "AmazonGames";
+  }
+
   getType(): OfferType {
     return OfferType.GAME;
   }

@@ -3,6 +3,10 @@ import type { Locator, Page } from "playwright";
 import { SteamBaseScraper } from "./base";
 
 export class SteamGamesScraper extends SteamBaseScraper {
+  getScraperName(): string {
+    return "SteamGames";
+  }
+
   getType(): OfferType {
     return OfferType.GAME;
   }

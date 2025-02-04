@@ -79,6 +79,12 @@ export abstract class BaseScraper<T extends RawOffer = RawOffer> {
   // Abstract methods that must be implemented by concrete scrapers
 
   /**
+   * Returns the name of the scraper.
+   * This is used for config and logging purposes.
+   */
+  abstract getScraperName(): string;
+
+  /**
    * Returns the source platform/website where offers are being scraped from.
    * This identifies where the offers originate.
    * @returns {OfferSource} The source platform identifier
