@@ -137,24 +137,18 @@ export async function sendNewAnnouncementsToChat(
 
     // Send each announcement
     for (const announcement of announcements) {
-      try {
-        await telegramBotService
-          .getBot()
-          .api.sendMessage(chat.chat_id, announcement.text_markdown, {
-            parse_mode: "MarkdownV2",
-            ...(chat.thread_id && { message_thread_id: chat.thread_id }),
-          });
+      await telegramBotService
+        .getBot()
+        .api.sendMessage(chat.chat_id, announcement.text_markdown, {
+          parse_mode: "MarkdownV2",
+          ...(chat.thread_id && { message_thread_id: chat.thread_id }),
+        });
 
-        await updateTelegramChatLastAnnouncementId(chat.id, announcement.id);
+      await updateTelegramChatLastAnnouncementId(chat.id, announcement.id);
 
-        logger.verbose(
-          `Sent announcement ${announcement.id.toFixed()} to chat ${chat.chat_id.toFixed()}`,
-        );
-      } catch (error) {
-        logger.error(
-          `Failed to send announcement ${announcement.id.toFixed()} to chat ${chat.chat_id.toFixed()}: ${error instanceof Error ? error.message : String(error)}`,
-        );
-      }
+      logger.verbose(
+        `Sent announcement ${announcement.id.toFixed()} to chat ${chat.chat_id.toFixed()}`,
+      );
     }
   } catch (error) {
     // Check for blocked chat errors
