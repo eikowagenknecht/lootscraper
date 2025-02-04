@@ -17,6 +17,10 @@ export class GogGamesScraper extends GogBaseScraper {
     ];
   }
 
+  getScraperName(): string {
+    return "GogGames";
+  }
+
   getDuration(): OfferDuration {
     return OfferDuration.CLAIMABLE;
   }

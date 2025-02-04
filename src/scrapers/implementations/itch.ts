@@ -20,6 +20,11 @@ export class ItchGamesScraper extends BaseScraper {
       { schedule: "0 0 */3 * * *" }, // Every 3 hours
     ];
   }
+
+  getScraperName(): string {
+    return "ItchGames";
+  }
+
   getSource(): OfferSource {
     return OfferSource.ITCH;
   }

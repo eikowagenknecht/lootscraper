@@ -28,6 +28,10 @@ export class EpicGamesScraper extends BaseScraper<EpicRawOffer> {
     ];
   }
 
+  getScraperName(): string {
+    return "EpicGames";
+  }
+
   getSource(): OfferSource {
     return OfferSource.EPIC;
   }

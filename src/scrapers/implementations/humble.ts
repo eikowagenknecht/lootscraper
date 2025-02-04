@@ -30,6 +30,10 @@ export class HumbleGamesScraper extends BaseScraper<HumbleRawOffer> {
     ];
   }
 
+  getScraperName(): string {
+    return "HumbleGames";
+  }
+
   getSource(): OfferSource {
     return OfferSource.HUMBLE;
   }

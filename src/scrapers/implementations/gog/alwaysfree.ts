@@ -16,6 +16,10 @@ export class GogGamesAlwaysFreeScraper extends GogBaseScraper {
     ];
   }
 
+  getScraperName(): string {
+    return "GogAlwaysFree";
+  }
+
   getDuration(): OfferDuration {
     return OfferDuration.ALWAYS;
   }
