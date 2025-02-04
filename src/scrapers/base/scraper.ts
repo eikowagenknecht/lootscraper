@@ -177,9 +177,7 @@ export abstract class BaseScraper<T extends RawOffer = RawOffer> {
    * const offers = await scraper.scrape();
    */
   public async scrape(): Promise<NewOffer[]> {
-    logger.info(
-      `Analyzing ${this.getSource()} for offers: ${this.getType()} / ${this.getDuration()}`,
-    );
+    logger.info(`Running scraper ${this.getScraperName()}`);
 
     this.context = browser.getContext();
 
@@ -193,7 +191,7 @@ export abstract class BaseScraper<T extends RawOffer = RawOffer> {
       return filteredOffers;
     } catch (error) {
       logger.error(
-        `Failed to scrape ${this.getSource()}: ${error instanceof Error ? error.message : String(error)}`,
+        `Running scraper ${this.getScraperName()}: ${error instanceof Error ? error.message : String(error)}`,
       );
       return [];
     }
@@ -204,7 +202,7 @@ export abstract class BaseScraper<T extends RawOffer = RawOffer> {
       const filename = resolve(
         getDataPath(),
         "screenshots",
-        `${this.getSource().toLowerCase()}_${DateTime.now().toFormat("yyyyMMdd_HHmmss")}_${suffix}.png`,
+        `${this.getScraperName()}_${DateTime.now().toFormat("yyyyMMdd_HHmmss")}_${suffix}.png`,
       );
 
       await page.screenshot({
@@ -238,7 +236,7 @@ export abstract class BaseScraper<T extends RawOffer = RawOffer> {
     if (!this.context) {
       throw new ScraperError(
         "Browser context not initialized. Call initialize() first.",
-        this.getSource(),
+        this.getScraperName(),
       );
     }
 
@@ -258,7 +256,7 @@ export abstract class BaseScraper<T extends RawOffer = RawOffer> {
         const elements = await handler.locator.all().catch(() => {
           throw new ScraperError(
             "Couldn't find any offers",
-            this.getSource(),
+            this.getScraperName(),
             this.getOffersUrl(),
           );
         });
