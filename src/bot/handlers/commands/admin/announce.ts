@@ -1,4 +1,5 @@
 import type { BotContext } from "@/bot/types/middleware";
+import { bold, escapeText } from "@/bot/utils/markdown";
 import { config } from "@/services/config";
 import { createAnnouncement } from "@/services/database/announcementRepository";
 import type { CommandContext } from "grammy";
@@ -31,7 +32,7 @@ export async function handleAnnounceCommand(
   }
 
   const [header, content] = parts.map((p) => p.trim());
-  const formattedText = `*${header}*\n\n${content}`;
+  const formattedText = `${bold(header)}\n\n${escapeText(content)}`;
 
   await createAnnouncement({
     channel: "TELEGRAM",
@@ -40,6 +41,6 @@ export async function handleAnnounceCommand(
   });
 
   await ctx.reply(
-    "Announcement added successfully. Sending it with the next scraping run.",
+    "Announcement added successfully. Sending it with the next batch processing run.",
   );
 }

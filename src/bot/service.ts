@@ -35,12 +35,13 @@ export class TelegramBotService {
     await this.bot.initialize();
   }
 
-  public async start(): Promise<void> {
+  public start(): void {
     if (!this.bot) {
       throw new Error("Bot not initialized. Call initialize() first.");
     }
 
-    await this.bot.start();
+    // This never resolves as long as the bot is running, so we don't await it
+    void this.bot.start();
 
     // Start periodic announcement check
     this.startAnnouncementCheck();
@@ -67,10 +68,12 @@ export class TelegramBotService {
   }
 
   private startAnnouncementCheck(): void {
+    logger.verbose("Scheduling announcement check to run every minute");
     // Check for new messages to send every minute
     this.checkInterval = setInterval(() => {
       void (async () => {
         try {
+          logger.verbose("Checking for new announcements and offers...");
           // TODO: Make sure we're not running multiple instances of this function
           await this.broadcastNewMessages();
         } catch (error) {
@@ -83,8 +86,8 @@ export class TelegramBotService {
   }
 
   private async broadcastNewMessages(): Promise<void> {
-    if (!this.bot) {
-      throw new Error("Bot not initialized. Call initialize() first.");
+    if (!this.bot?.getBot().isRunning()) {
+      logger.error("Bot is not running, skipping announcement check");
     }
 
     try {
