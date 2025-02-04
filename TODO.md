@@ -9,6 +9,7 @@ This will be replaced by GitHub issues again once this is migrated into the main
 
 ## Optional
 
+- Use a table to persist the scraping queue over restarts
 - Add admin Telegram commands:
   - /rescrape ||/fix: drop all game info, then rescrape all games (like the "cleanup" command line argument before). Make sure to pause the scraping process while doing this. See tools.py
 - Upload only if the file has changed

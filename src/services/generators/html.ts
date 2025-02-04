@@ -143,7 +143,7 @@ const TEMPLATE = `<!DOCTYPE html>
 
 interface HtmlGeneratorOptions {
   combination?: ScraperCombination;
-  all?: boolean;
+  withHistory?: boolean;
 }
 
 export class HtmlGenerator {
@@ -264,6 +264,9 @@ export class HtmlGenerator {
       extension: "html",
       ...(this.options.combination && {
         combination: this.options.combination,
+      }),
+      ...(this.options.withHistory && {
+        withHistory: this.options.withHistory,
       }),
     });
   }

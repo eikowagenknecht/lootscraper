@@ -58,8 +58,8 @@ export class FeedService {
 
     // Generate full history HTML view
     const htmlHistoryGen = new HtmlGenerator(this.config, {
-      ...combination,
-      all: true,
+      combination,
+      withHistory: true,
     });
     await htmlHistoryGen.generateHtml(filteredAllOffers);
   }
@@ -78,7 +78,7 @@ export class FeedService {
 
     // Generate full history HTML view
     const htmlHistoryGen = new HtmlGenerator(this.config, {
-      all: true,
+      withHistory: true,
     });
     await htmlHistoryGen.generateHtml(allOffers);
   }

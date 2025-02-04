@@ -95,7 +95,8 @@ export class RssGenerator {
 
     try {
       const outputPath = resolve(getDataPath(), this.getFilename());
-      await writeFile(outputPath, this.feedGenerator.toXML());
+      const fileContent = this.feedGenerator.toXML();
+      await writeFile(outputPath, fileContent);
     } catch (error) {
       throw new FeedError(
         `Failed to write feed: ${error instanceof Error ? error.message : String(error)}`,
@@ -108,9 +109,7 @@ export class RssGenerator {
       prefix: this.config.common.feedFilePrefix,
       extension: "xml",
       ...(this.combination && {
-        source: this.combination.source,
-        type: this.combination.type,
-        duration: this.combination.duration,
+        combination: this.combination,
       }),
     });
   }
