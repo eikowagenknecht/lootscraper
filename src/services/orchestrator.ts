@@ -1,364 +1,140 @@
 import { telegramBotService } from "@/bot/service";
-import { sendNewOffersToChat } from "@/bot/utils/send";
-import {
-  type ScraperInstance,
-  getEnabledScraperClasses,
-} from "@/scrapers/utils";
 import { browser } from "@/services/browser";
 import { config } from "@/services/config";
 import { database } from "@/services/database";
-import {
-  addMissingFieldsToOffer,
-  createOffer,
-  findOffer,
-  getActiveOffers,
-  getAllOffers,
-} from "@/services/database/offerRepository";
-import type { NewOffer } from "@/types";
+import type { Config } from "@/types";
 import { addTelegramTransport, logger } from "@/utils/logger";
-import { getAllEnabledFeedFilenames } from "@/utils/stringTools";
-import { Cron } from "croner";
-import { DateTime } from "luxon";
-import { getAllActiveTelegramChats } from "./database/telegramChatRepository";
-import { FeedService } from "./feed";
-import { uploadMultipleFiles } from "./ftp";
-import { GameInfoService } from "./gameinfo";
+import { feedService } from "./feed";
+import { ftpService } from "./ftp";
+import { gameInfoService } from "./gameinfo";
+import { scraperService } from "./scraper";
 import { translationService } from "./translation";
 
 interface ServiceState {
   isRunning: boolean;
-  scrapeJobs: Cron[];
-  currentTask: Promise<void> | null;
-  taskQueue: (() => Promise<void>)[];
 }
 
 const state: ServiceState = {
   isRunning: false,
-  scrapeJobs: [],
-  currentTask: null,
-  taskQueue: [],
 };
-
-let totalScrapeCount = 0;
-
-/**
- * Run tasks ensuring only one runs at a time
- */
-async function runTask(task: () => Promise<void>): Promise<void> {
-  if (state.currentTask) {
-    // If a task is running, queue this one
-    logger.debug("Adding task to queue.");
-    return new Promise((resolve) => {
-      state.taskQueue.push(async () => {
-        await task();
-        resolve();
-      });
-    });
-  }
-
-  try {
-    // Set current task and run it
-    state.currentTask = task();
-    await state.currentTask;
-  } finally {
-    state.currentTask = null;
-
-    // Process next in queue if any
-    const nextTask = state.taskQueue.shift();
-    if (nextTask) {
-      logger.debug("Processing next queued task.");
-      void runTask(nextTask);
-    }
-  }
-}
 
 /**
  * Initialize application services based on config
  */
-export async function initializeServices(): Promise<void> {
+export async function startApp(): Promise<void> {
   if (state.isRunning) {
-    logger.warn("Services already initialized");
+    logger.warn("App already started.");
     return;
   }
 
   try {
     const cfg = config.get();
 
-    // Initialize core services
-    logger.info("Initializing translation service...");
-    await translationService.initialize();
-
-    logger.info("Initializing database service...");
-    await database.initialize(cfg);
-
-    // Initialize optional services based on config
-    if (cfg.actions.telegramBot) {
-      logger.info("Initializing Telegram bot...");
-      await telegramBotService.initialize(cfg);
-
-      // Add Telegram logging transport after bot is initialized
-      logger.info("Adding Telegram transport to logger...");
-      addTelegramTransport(cfg.telegram.logLevel, cfg.telegram.botLogChatId);
-      logger.info("Telegram transport added to logger.");
-    }
-
-    if (cfg.actions.scrapeOffers) {
-      logger.info("Initializing browser service...");
-      await browser.initialize(cfg);
-    }
-
-    state.isRunning = true;
+    // Initialize services
+    logger.info("Inizializing services");
+    await initializeServices(cfg);
     logger.info("Service initialization complete");
 
-    // Start services and schedule jobs
+    // Start services
     startServices();
+    state.isRunning = true;
+
+    // Register shutdown handlers
     registerShutdownHandlers();
 
     // Run initial tasks
     logger.info("Running initial tasks...");
-    await runInitialTasks();
+    if (cfg.actions.generateFeed) {
+      await feedService.updateFeeds();
+    }
+    if (cfg.actions.generateFeed && cfg.actions.uploadToFtp) {
+      await ftpService.uploadEnabledFeedsToServer();
+    }
   } catch (error) {
-    await shutdownServices();
+    await shutdownApp();
     throw error;
   }
 }
 
-async function runInitialTasks(): Promise<void> {
-  await updateFeeds();
-  await uploadFeedsToServer();
-  await sendNewOffersToTelegram();
-}
+async function initializeServices(cfg: Config): Promise<void> {
+  // Initialize core services
+  logger.info("Initializing translation service...");
+  await translationService.initialize();
 
-export function queueAllScrapes(): void {
-  const cfg = config.get();
+  logger.info("Initializing database service...");
+  await database.initialize(cfg);
+
+  // Initialize optional services based on config
+  if (cfg.actions.telegramBot) {
+    logger.info("Initializing Telegram bot...");
+    await telegramBotService.initialize(cfg);
+
+    // Add Telegram logging transport after bot is initialized
+    logger.info("Adding Telegram transport to logger...");
+    addTelegramTransport(cfg.telegram.logLevel, cfg.telegram.botLogChatId);
+    logger.info("Telegram transport added to logger.");
+  }
+
+  if (cfg.actions.generateFeed) {
+    logger.info("Initializing feed service...");
+    feedService.initialize(cfg);
+  }
+
+  if (cfg.actions.uploadToFtp) {
+    logger.info("Initializing FTP service...");
+    ftpService.initialize(cfg);
+  }
+
+  // Browser and scraper services are only needed for scraping
+  if (cfg.actions.scrapeOffers || cfg.actions.scrapeInfo) {
+    logger.info("Initializing browser service...");
+    await browser.initialize(cfg);
+  }
+
   if (cfg.actions.scrapeOffers) {
-    // Run all enabled scrapers once on startup
-    const enabledScrapers = getEnabledScraperClasses();
+    logger.info("Initializing scraper service...");
+    await scraperService.initialize(cfg);
+  }
 
-    for (const scraper of enabledScrapers) {
-      const scraperInstance = new scraper(config.get());
-      queueScraper(scraperInstance);
-    }
+  if (cfg.actions.scrapeInfo) {
+    logger.info("Initializing game info service...");
+    gameInfoService.initialize(cfg);
   }
 }
 
-/**
- * Run scraping for a single scraper and store results
- */
-async function runSingleScrape(scraper: ScraperInstance): Promise<void> {
-  logger.info(
-    `Starting scrape run #${totalScrapeCount.toFixed()} for ${scraper.getSource()} ${scraper.getType()}...`,
-  );
-
-  let offers: NewOffer[];
-
-  try {
-    offers = await scraper.scrape();
-  } finally {
-    // Refresh the context after each scrape to prevent memory leaks
-    await browser.refreshContext();
-  }
-
-  // Store offers and track if we found any new ones
-  const newOfferIds: number[] = [];
-  const modifiedOfferIds: number[] = [];
-
-  for (const newOffer of offers) {
-    // Offers that are neither new nor updated just get a new "last seen" date
-    // Offers that are new get inserted into the database
-    const existingOffer = await findOffer({
-      duration: newOffer.duration,
-      source: newOffer.source,
-      title: newOffer.title,
-      type: newOffer.type,
-      validTo: newOffer.valid_to ?? null,
-    });
-
-    if (existingOffer) {
-      // Touch the offer's last seen date as we have seen it again
-      const changed = await addMissingFieldsToOffer(existingOffer.id, newOffer);
-
-      if (changed) {
-        modifiedOfferIds.push(existingOffer.id);
-        logger.verbose(`Updated offer ${existingOffer.id.toFixed()}.`);
-      }
-
-      continue;
-    }
-
-    // Create new offer if it doesn't exist
-    newOfferIds.push(await createOffer(newOffer));
-  }
-
-  logger.info(
-    `Completed scrape with ${offers.length.toFixed()} offers (${newOfferIds.length.toFixed()} new).`,
-  );
-
-  if (newOfferIds.length === 0 && modifiedOfferIds.length === 0) {
-    return;
-  }
-
-  await updateGameInfo(newOfferIds);
-  await updateGameInfo(modifiedOfferIds);
-  await updateFeeds();
-  await uploadFeedsToServer();
-  await sendNewOffersToTelegram();
-}
-
-async function sendNewOffersToTelegram(): Promise<void> {
-  const cfg = config.get();
-  if (!cfg.actions.telegramBot) {
-    return;
-  }
-
-  logger.info("New offers found, sending updates to Telegram...");
-
-  const activeChats = await getAllActiveTelegramChats();
-
-  for (const chat of activeChats) {
-    await sendNewOffersToChat(chat.id);
-  }
-}
-
-/**
- * Update game information if new offers were found
- */
-async function updateGameInfo(gameIds: number[]): Promise<void> {
-  const cfg = config.get();
-  if (!cfg.actions.scrapeInfo || gameIds.length === 0) {
-    return;
-  }
-
-  logger.info("New offers found, fetching game information ...");
-  const gameInfoService = new GameInfoService(cfg);
-  for (const gameId of gameIds) {
-    await gameInfoService.enrichOffer(gameId);
-  }
-}
-
-/**
- * Update feeds if new offers were found or old ones updated
- */
-async function updateFeeds(): Promise<void> {
-  const cfg = config.get();
-  if (!cfg.actions.generateFeed) {
-    return;
-  }
-
-  logger.info("New offers found, regenerating feeds...");
-  const feedService = new FeedService(cfg);
-  const activeOffers = await getActiveOffers(DateTime.now());
-  const allOffers = (await getAllOffers()).filter(
-    (offer) =>
-      // Skip entries without dates or entries that start in the future
-      (offer.valid_from ?? offer.seen_last) &&
-      (!offer.valid_from || offer.valid_from > offer.seen_last),
-  );
-
-  await feedService.generateFeeds(activeOffers, allOffers);
-}
-
-async function uploadFeedsToServer(): Promise<void> {
-  const cfg = config.get();
-  if (!cfg.actions.uploadToFtp || !cfg.actions.generateFeed) return;
-
-  try {
-    const feedFiles = getAllEnabledFeedFilenames(cfg.common.feedFilePrefix);
-    const uploadResults = await uploadMultipleFiles(feedFiles);
-    for (const result of uploadResults) {
-      if (result.success) {
-        logger.info(`Uploaded ${result.fileName}.`);
-      } else {
-        logger.error(`Failed to upload ${result.fileName}: ${result.error}`);
-      }
-    }
-  } catch (error) {
-    logger.error(
-      `Failed to upload feeds: ${error instanceof Error ? error.message : String(error)}`,
-    );
-    throw error;
-  }
-}
-
-function queueScraper(scraper: ScraperInstance): void {
-  void runTask(async () => {
-    try {
-      totalScrapeCount++;
-      await runSingleScrape(scraper);
-    } catch (error) {
-      logger.error(
-        `Failed to scrape ${scraper.getSource()} ${scraper.getType()}: ${error instanceof Error ? error.message : String(error)}`,
-      );
-    }
-  });
-}
-
-/**
- * Schedule regular scraping for a scraper
- */
-function scheduleScraper(scraper: ScraperInstance): void {
-  // Schedule scraper based on its defined schedule
-  for (const schedule of scraper.getSchedule()) {
-    const job = new Cron(
-      schedule.schedule,
-      { timezone: schedule.timezone ?? "UTC" },
-      () => {
-        queueScraper(scraper);
-      },
-    );
-    state.scrapeJobs.push(job);
-  }
-}
-
-/**
- * Start all active services and schedule scraper jobs
- */
 function startServices() {
   const cfg = config.get();
 
   // Start Telegram bot if enabled
   if (cfg.actions.telegramBot) {
-    // This never resolves as long as the bot is running
+    // This starts the bot in the background until stopped
     telegramBotService.start();
   }
 
-  // Initialize and schedule scrapers if enabled
+  // Start scraper service if enabled
   if (cfg.actions.scrapeOffers) {
-    const enabledScrapers = getEnabledScraperClasses();
-
-    // Setup schedules for each scraper
-    for (const scraper of enabledScrapers) {
-      const scraperInstance = new scraper(cfg);
-      scheduleScraper(scraperInstance);
-    }
+    // This starts the scraper service in the background until stopped
+    scraperService.start();
   }
 }
 
 /**
  * Gracefully shut down all services
  */
-export async function shutdownServices(): Promise<void> {
-  logger.info("Shutting down services...");
-
-  // Stop all scraper jobs and clear queue
-  for (const job of state.scrapeJobs) {
-    job.stop();
-  }
-  state.scrapeJobs = [];
-  state.taskQueue = [];
-
-  // Wait for current scrape to finish if any
-  if (state.currentTask) {
-    try {
-      await state.currentTask;
-    } catch (error) {
-      logger.error("Error while waiting for current scrape to finish:", error);
-    }
-  }
-
-  // Shutdown services in reverse order of initialization
+export async function shutdownApp(): Promise<void> {
+  // Stop services in reverse order of starting
+  logger.info("Stopping services...");
   await telegramBotService.stop();
+  await scraperService.stop();
+
+  // Destroy services in reverse order of initialization
+  logger.info("Destroying services...");
+  //await feedService.destroy();
+  //await ftpService.destroy();
+  //await gameInfoService.destroy();
+  //await scraperService.destroy();
   await browser.destroy();
+  //await telegramBotService.destroy();
   await database.destroy();
 
   state.isRunning = false;
@@ -371,7 +147,7 @@ export async function shutdownServices(): Promise<void> {
 function registerShutdownHandlers(): void {
   const shutdown = async (signal: string) => {
     logger.info(`Received ${signal}, initiating graceful shutdown...`);
-    await shutdownServices();
+    await shutdownApp();
     process.exit(0);
   };
 

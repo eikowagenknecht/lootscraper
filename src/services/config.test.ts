@@ -43,9 +43,7 @@ common:
 browser:
   timeoutSeconds: 5
 scraper:
-  offerSources: [STEAM, EPIC]
-  offerTypes: [GAME]
-  offerDurations: [CLAIMABLE]
+  enabledScrapers: [SteamGames]
 actions:
   scrapeInfo: true
 telegram:
@@ -59,13 +57,24 @@ feed:
     config.loadConfig(tempConfigPath);
     const result = config.get();
     expect(result.common.databaseFile).toBe("test.db");
-    expect(result.scraper.offerSources).toContain("STEAM");
+    expect(result.scraper.enabledScrapers).toContain("SteamGames");
   });
 
-  test("should throw on invalid config", () => {
+  test("should throw on invalid log level", () => {
     const invalidConfig = `
 common:
   logLevel: INVALID_LEVEL
+`;
+    writeFileSync(tempConfigPath, invalidConfig);
+    expect(() => {
+      config.loadConfig(tempConfigPath);
+    }).toThrow(ConfigError);
+  });
+
+  test("should throw on invalid scraper", () => {
+    const invalidConfig = `
+scraper:
+  enabledScrapers: [InvalidScraper]
 `;
     writeFileSync(tempConfigPath, invalidConfig);
     expect(() => {

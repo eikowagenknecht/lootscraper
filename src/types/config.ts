@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { OfferDuration, OfferSource, OfferType } from "./basic";
+import { InfoSource, OfferDuration, OfferSource, OfferType } from "./basic";
 
 // Enums
 export const LogLevel = z.enum([
@@ -34,10 +34,8 @@ export const ConfigSchema = z.object({
     loadImages: z.boolean().default(false),
   }),
   scraper: z.object({
-    offerSources: z.array(OfferSourceSchema).default([]),
-    offerTypes: z.array(OfferTypeSchema).default([]),
-    offerDurations: z.array(OfferDurationSchema).default([]),
-    infoSources: z.array(z.enum(["STEAM", "IGDB"])).default([]),
+    enabledScrapers: z.array(z.string()).default([]),
+    infoSources: z.array(z.nativeEnum(InfoSource)).default([]),
   }),
   actions: z.object({
     scrapeOffers: z.boolean().default(false),

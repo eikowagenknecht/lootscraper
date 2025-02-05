@@ -8,7 +8,7 @@ import { getDataPath } from "@/utils/path";
 import SQLite from "better-sqlite3";
 import { Kysely, SqliteDialect } from "kysely";
 
-export class DatabaseService {
+class DatabaseService {
   private static instance: DatabaseService;
   private db: Kysely<DatabaseType> | null = null;
 
@@ -74,3 +74,5 @@ export const database = DatabaseService.getInstance();
 export function getDb(): Kysely<DatabaseType> {
   return database.get();
 }
+
+export const databaseService = DatabaseService.getInstance();

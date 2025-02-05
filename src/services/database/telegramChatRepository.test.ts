@@ -1,5 +1,5 @@
 import { config } from "@/services/config";
-import { DatabaseService } from "@/services/database";
+import { databaseService } from "@/services/database";
 import { ChatType } from "@/types";
 import { DateTime } from "luxon";
 import { insertTestData } from "tests/testData";
@@ -16,17 +16,14 @@ import {
 } from "./telegramChatRepository";
 
 describe("Telegram Chats Repository", () => {
-  let dbService: DatabaseService;
-
   beforeEach(async () => {
     config.loadConfig();
-    dbService = DatabaseService.getInstance();
-    await dbService.initialize(config.get(), true);
-    await insertTestData(dbService.get());
+    await databaseService.initialize(config.get(), true);
+    await insertTestData(databaseService.get());
   });
 
   afterEach(async () => {
-    await dbService.destroy();
+    await databaseService.destroy();
   });
 
   test("should create and get telegram chat", async () => {

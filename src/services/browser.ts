@@ -11,7 +11,7 @@ const CONTEXT_OPTIONS = {
   locale: "en-US",
 };
 
-export class BrowserService {
+class BrowserService {
   private static instance: BrowserService;
   private browser: Browser | null = null;
   private context: BrowserContext | null = null;

@@ -35,7 +35,7 @@ const resources = {
   },
 };
 
-export class TranslationService {
+class TranslationService {
   private static instance: TranslationService;
   private initialized = false;
 

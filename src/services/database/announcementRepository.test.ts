@@ -1,5 +1,5 @@
 import { config } from "@/services/config";
-import { DatabaseService } from "@/services/database";
+import { databaseService } from "@/services/database";
 import { DateTime } from "luxon";
 import { insertTestData } from "tests/testData";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
@@ -9,17 +9,14 @@ import {
 } from "./announcementRepository";
 
 describe("Announcement Repository", () => {
-  let dbService: DatabaseService;
-
   beforeEach(async () => {
     config.loadConfig();
-    dbService = DatabaseService.getInstance();
-    await dbService.initialize(config.get(), true);
-    await insertTestData(dbService.get());
+    await databaseService.initialize(config.get(), true);
+    await insertTestData(databaseService.get());
   });
 
   afterEach(async () => {
-    await dbService.destroy();
+    await databaseService.destroy();
   });
 
   describe("Announcement Operations", () => {

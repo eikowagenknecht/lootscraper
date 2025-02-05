@@ -1,25 +1,73 @@
-import { getEnabledScraperCombinations } from "@/scrapers";
-import type { ScraperCombination } from "@/scrapers/utils";
+import {
+  type FeedCombination,
+  getEnabledFeedCombinations,
+} from "@/scrapers/utils";
 import type { Config } from "@/types/config";
 import type { Offer } from "@/types/database";
 import { logger } from "@/utils/logger";
+import { DateTime } from "luxon";
+import { getActiveOffers, getAllOffers } from "./database/offerRepository";
 import { HtmlGenerator } from "./generators/html";
 import { RssGenerator } from "./generators/rss";
 
-export class FeedService {
-  constructor(private readonly config: Config) {}
+class FeedService {
+  private static instance: FeedService;
+  private config: Config | null = null;
+
+  private constructor() {
+    // Private constructor to prevent instantiation
+  }
+
+  public static getInstance(): FeedService {
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+    if (!FeedService.instance) {
+      FeedService.instance = new FeedService();
+    }
+    return FeedService.instance;
+  }
+
+  public initialize(config: Config): void {
+    this.config = config;
+  }
+
+  /**
+   * Update feeds if new offers were found or old ones updated
+   */
+  public async updateFeeds(): Promise<void> {
+    if (!this.config) {
+      throw new Error("Feed service not initialized");
+    }
+
+    if (!this.config.actions.generateFeed) {
+      return;
+    }
+
+    logger.info("New offers found, regenerating feeds...");
+    const activeOffers = await getActiveOffers(DateTime.now());
+    const allOffers = (await getAllOffers()).filter(
+      (offer) =>
+        // Skip entries without dates or entries that start in the future
+        (offer.valid_from ?? offer.seen_last) &&
+        (!offer.valid_from || offer.valid_from > offer.seen_last),
+    );
+
+    await this.generateFeeds(activeOffers, allOffers);
+  }
 
   public async generateFeeds(
     activeOffers: Offer[],
     allOffers: Offer[],
   ): Promise<void> {
+    if (!this.config) {
+      throw new Error("Feed service not initialized");
+    }
+
     if (!this.config.actions.generateFeed) {
       logger.info("Feed generation disabled, skipping");
       return;
     }
 
-    const enabledCombinations: ScraperCombination[] =
-      getEnabledScraperCombinations();
+    const enabledCombinations: FeedCombination[] = getEnabledFeedCombinations();
 
     for (const combination of enabledCombinations) {
       await this.generateSourceFeed(combination, activeOffers, allOffers);
@@ -30,10 +78,14 @@ export class FeedService {
   }
 
   private async generateSourceFeed(
-    combination: ScraperCombination,
+    combination: FeedCombination,
     activeOffers: Offer[],
     allOffers: Offer[],
   ): Promise<void> {
+    if (!this.config) {
+      throw new Error("Feed service not initialized");
+    }
+
     const filteredActiveOffers = activeOffers.filter(
       (offer) =>
         offer.source === combination.source &&
@@ -68,6 +120,10 @@ export class FeedService {
     activeOffers: Offer[],
     allOffers: Offer[],
   ): Promise<void> {
+    if (!this.config) {
+      throw new Error("Feed service not initialized");
+    }
+
     // Generate main Atom feed
     const feedGen = new RssGenerator(this.config);
     await feedGen.generateFeed(activeOffers);
@@ -83,3 +139,5 @@ export class FeedService {
     await htmlHistoryGen.generateHtml(allOffers);
   }
 }
+
+export const feedService = FeedService.getInstance();

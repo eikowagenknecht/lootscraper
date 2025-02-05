@@ -1,6 +1,7 @@
 import { copyFileSync, mkdirSync, readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
-import { ConfigError } from "@/types";
+import { type ScraperClass, allScrapers } from "@/scrapers/utils";
+import { ConfigError, InfoSource } from "@/types";
 import { type Config, ConfigSchema } from "@/types/config";
 import { logger } from "@/utils/logger";
 import { getDataPath, getTemplatesPath } from "@/utils/path";
@@ -16,7 +17,7 @@ class ConfigValidationError extends ConfigError {
   }
 }
 
-export class ConfigService {
+class ConfigService {
   private static instance: ConfigService;
   private config: Config | null = null;
 
@@ -182,7 +183,10 @@ export class ConfigService {
     }
 
     // Validate that igdb credentials are provided when using the igdb scraper
-    if (config.scraper.infoSources.includes("IGDB") && !config.igdb.clientId) {
+    if (
+      config.scraper.infoSources.includes(InfoSource.IGDB) &&
+      !config.igdb.clientId
+    ) {
       errors.push(
         new ZodError([
           {
@@ -196,7 +200,7 @@ export class ConfigService {
     }
 
     if (
-      config.scraper.infoSources.includes("IGDB") &&
+      config.scraper.infoSources.includes(InfoSource.IGDB) &&
       !config.igdb.clientSecret
     ) {
       errors.push(
@@ -211,50 +215,42 @@ export class ConfigService {
       );
     }
 
-    // Validate that offer sources are defined when scraping is enabled
+    // Validate that scrapers are defined when scraping is enabled
     if (
       config.actions.scrapeOffers &&
-      config.scraper.offerSources.length === 0
+      config.scraper.enabledScrapers.length === 0
     ) {
       errors.push(
         new ZodError([
           {
             code: "custom",
-            path: ["scraper", "offerSources"],
+            path: ["scraper", "enabledScrapers"],
             message:
-              "At least one offer source must be defined when scraping is enabled",
+              "At least one scraper must be defined when scraping is enabled",
           },
         ]),
       );
     }
 
-    if (config.actions.scrapeOffers && config.scraper.offerTypes.length === 0) {
-      errors.push(
-        new ZodError([
-          {
-            code: "custom",
-            path: ["scraper", "offerTypes"],
-            message:
-              "At least one offer type must be defined when scraping is enabled",
-          },
-        ]),
-      );
-    }
+    // Validate that only valid scrapers are enabled
+    if (config.actions.scrapeOffers) {
+      for (const scraper of config.scraper.enabledScrapers) {
+        const scraperList = allScrapers.map((s: ScraperClass) =>
+          s.prototype.getScraperName(),
+        );
 
-    if (
-      config.actions.scrapeOffers &&
-      config.scraper.offerDurations.length === 0
-    ) {
-      errors.push(
-        new ZodError([
-          {
-            code: "custom",
-            path: ["scraper", "offerDurations"],
-            message:
-              "At least one offer duration must be defined when scraping is enabled",
-          },
-        ]),
-      );
+        if (!scraperList.includes(scraper)) {
+          errors.push(
+            new ZodError([
+              {
+                code: "custom",
+                path: ["scraper", "enabledScrapers"],
+                message: `Invalid scraper enabled: ${scraper}`,
+              },
+            ]),
+          );
+        }
+      }
     }
 
     if (errors.length > 0) {
