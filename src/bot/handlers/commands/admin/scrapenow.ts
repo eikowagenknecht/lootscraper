@@ -1,6 +1,6 @@
 import type { BotContext } from "@/bot/types/middleware";
 import { config } from "@/services/config";
-import { queueAllScrapes } from "@/services/orchestrator";
+import { scraperService } from "@/services/scraper";
 import type { CommandContext } from "grammy";
 import { logCall } from "..";
 
@@ -14,7 +14,14 @@ export async function handleScrapeNowCommand(
     return;
   }
 
-  queueAllScrapes();
+  const cfg = config.get();
+  if (!cfg.actions.scrapeOffers) {
+    await ctx.reply("Scraping offers is not enabled.");
+    return;
+  }
+
+  await scraperService.queueEnabledScrapers(true);
+  await scraperService.processQueue();
 
   await ctx.reply(
     "All enabled scrapers have been queued for immediate scraping.",

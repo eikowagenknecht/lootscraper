@@ -17,6 +17,7 @@ export interface Database {
   steam_info: SteamInfoTable;
   telegram_chats: TelegramChatsTable;
   telegram_subscriptions: TelegramSubscriptionsTable;
+  scraping_runs: ScrapingRunsTable;
 }
 
 /** Legacy table from LootScraper <2.0.0 */
@@ -144,3 +145,19 @@ interface TelegramSubscriptionsTable {
 export type TelegramSubscription = Selectable<TelegramSubscriptionsTable>;
 export type NewTelegramSubscription = Insertable<TelegramSubscriptionsTable>;
 export type TelegramSubscriptionUpdate = Updateable<TelegramSubscriptionsTable>;
+
+/** A list of scraping runs. */
+interface ScrapingRunsTable {
+  id: Generated<number>;
+  scraper: string;
+  scheduled_date: string;
+  started_date: string | null;
+  finished_date: string | null;
+  offers_found: number | null;
+  offers_new: number | null;
+  offers_modified: number | null;
+}
+
+export type ScrapingRun = Selectable<ScrapingRunsTable>;
+export type NewScrapingRun = Insertable<ScrapingRunsTable>;
+export type ScrapingRunUpdate = Updateable<ScrapingRunsTable>;

@@ -1,6 +1,6 @@
 import { writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
-import type { ScraperCombination } from "@/scrapers/utils";
+import type { FeedCombination } from "@/scrapers/utils";
 import { getGameWithInfo } from "@/services/database/gameRepository";
 import { translationService } from "@/services/translation";
 import { OfferDuration } from "@/types/basic";
@@ -18,7 +18,7 @@ export class RssGenerator {
 
   constructor(
     private readonly config: Config,
-    private readonly combination?: ScraperCombination,
+    private readonly combination?: FeedCombination,
   ) {
     this.feedGenerator = new AtomFeed({
       id: this.config.feed.idPrefix + this.getFeedId(),

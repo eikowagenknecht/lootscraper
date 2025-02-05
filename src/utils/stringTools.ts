@@ -1,5 +1,7 @@
-import { getEnabledScraperCombinations } from "@/scrapers";
-import type { ScraperCombination } from "@/scrapers/utils";
+import {
+  type FeedCombination,
+  getEnabledFeedCombinations,
+} from "@/scrapers/utils";
 import { translationService } from "@/services/translation";
 import { OfferDuration } from "@/types";
 
@@ -263,7 +265,7 @@ export function generateFilename({
 }: {
   prefix: string;
   extension: string;
-  combination?: ScraperCombination;
+  combination?: FeedCombination;
   withHistory?: boolean;
 }): string {
   const parts = [prefix];
@@ -280,7 +282,7 @@ export function generateFilename({
   return `${parts.join("_")}.${extension}`;
 }
 
-export function generateFeedTitle(combination?: ScraperCombination): string {
+export function generateFeedTitle(combination?: FeedCombination): string {
   // Return default title if no options specified
   if (!combination) {
     return translationService.getFeedTitle();
@@ -301,7 +303,7 @@ export function getEnabledFeedFilenames({
 }: {
   prefix: string;
   extension: string;
-  enabledCombinations?: ScraperCombination[];
+  enabledCombinations?: FeedCombination[];
   withHistory?: boolean;
 }): string[] {
   if (!enabledCombinations)
@@ -355,7 +357,7 @@ export function getAllEnabledFeedFilenames(prefix: string) {
     ...getEnabledFeedFilenames({
       prefix: prefix,
       extension: "xml",
-      enabledCombinations: getEnabledScraperCombinations(),
+      enabledCombinations: getEnabledFeedCombinations(),
     }),
   );
   // Source html feeds
@@ -363,7 +365,7 @@ export function getAllEnabledFeedFilenames(prefix: string) {
     ...getEnabledFeedFilenames({
       prefix: prefix,
       extension: "html",
-      enabledCombinations: getEnabledScraperCombinations(),
+      enabledCombinations: getEnabledFeedCombinations(),
     }),
   );
   // Source html feeds - History
@@ -371,7 +373,7 @@ export function getAllEnabledFeedFilenames(prefix: string) {
     ...getEnabledFeedFilenames({
       prefix: prefix,
       extension: "html",
-      enabledCombinations: getEnabledScraperCombinations(),
+      enabledCombinations: getEnabledFeedCombinations(),
       withHistory: true,
     }),
   );

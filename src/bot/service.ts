@@ -10,7 +10,8 @@ import { sendNewAnnouncementsToChat, sendNewOffersToChat } from "./utils/send";
 export class TelegramBotService {
   private static instance: TelegramBotService | null = null;
   private bot: TelegramBot | null = null;
-  private checkInterval: NodeJS.Timeout | null = null;
+  private executor: NodeJS.Timeout | null = null;
+  private sendingBroadcast = false;
 
   private constructor() {
     // Private constructor to prevent instantiation
@@ -49,9 +50,9 @@ export class TelegramBotService {
 
   public async stop(): Promise<void> {
     // Stop periodic checks
-    if (this.checkInterval) {
-      clearInterval(this.checkInterval);
-      this.checkInterval = null;
+    if (this.executor) {
+      clearInterval(this.executor);
+      this.executor = null;
     }
 
     if (this.bot) {
@@ -68,21 +69,30 @@ export class TelegramBotService {
   }
 
   private startAnnouncementCheck(): void {
-    logger.verbose("Scheduling announcement check to run every minute");
-    // Check for new messages to send every minute
-    this.checkInterval = setInterval(() => {
-      void (async () => {
-        try {
-          logger.verbose("Checking for new announcements and offers...");
-          // TODO: Make sure we're not running multiple instances of this function
-          await this.broadcastNewMessages();
-        } catch (error) {
-          logger.error(
-            `Error in announcement check: ${error instanceof Error ? error.message : String(error)}`,
-          );
-        }
-      })();
-    }, 60000); // 1 minute
+    const checkNewMessages = async () => {
+      if (this.sendingBroadcast) {
+        logger.verbose("Skipping new messages check, already running");
+        return;
+      }
+      this.sendingBroadcast = true;
+      try {
+        logger.verbose("Checking for new announcements and offers...");
+        await this.broadcastNewMessages();
+        this.sendingBroadcast = false;
+      } catch (error) {
+        logger.error(
+          `Error in new message check: ${error instanceof Error ? error.message : String(error)}`,
+        );
+        this.sendingBroadcast = false;
+      }
+    };
+
+    // Run immediately
+    logger.verbose("Running new messages check immediately");
+    void checkNewMessages();
+
+    logger.verbose("Scheduling new messages check to run every minute");
+    this.executor = setInterval(() => void checkNewMessages(), 60000);
   }
 
   private async broadcastNewMessages(): Promise<void> {

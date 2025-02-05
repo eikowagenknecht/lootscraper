@@ -42,6 +42,19 @@ export enum OfferSource {
 }
 
 /**
+ * Enum representing different sources/platforms for game information.
+ * @enum {string}
+ * @readonly
+ * @description Contains major gaming platforms where game information can be scraped from
+ * @property {string} STEAM - Valve's Steam platform
+ * @property {string} IGDB - Internet Game Database
+ */
+export enum InfoSource {
+  STEAM = "STEAM",
+  IGDB = "IGDB",
+}
+
+/**
  * Represents the type of offer available in the system.
  * @enum {string}
  * @readonly

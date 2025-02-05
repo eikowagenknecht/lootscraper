@@ -1,6 +1,7 @@
 import { config } from "@/services/config";
 import type { OfferDuration, OfferSource, OfferType } from "@/types/basic";
 import type { Config } from "@/types/config";
+import type { CronConfig } from "./base/scraper";
 import {
   AmazonGamesScraper,
   AmazonLootScraper,
@@ -16,13 +17,18 @@ import {
   UbisoftGamesScraper,
 } from "./implementations";
 
-export interface ScraperCombination {
+export interface FeedCombination {
   source: OfferSource;
   type: OfferType;
   duration: OfferDuration;
 }
 
-const allScrapers = [
+export interface ScraperSchedule {
+  name: string;
+  schedule: CronConfig[];
+}
+
+export const allScrapers = [
   AmazonGamesScraper,
   AmazonLootScraper,
   AppleGamesScraper,
@@ -37,51 +43,66 @@ const allScrapers = [
   UbisoftGamesScraper,
 ];
 
-export type ScraperClass = typeof allScrapers;
+export type ScraperClass =
+  | typeof AmazonGamesScraper
+  | typeof AmazonLootScraper
+  | typeof AppleGamesScraper
+  | typeof EpicGamesScraper
+  | typeof GogGamesScraper
+  | typeof GogGamesAlwaysFreeScraper
+  | typeof GoogleGamesScraper
+  | typeof HumbleGamesScraper
+  | typeof ItchGamesScraper
+  | typeof SteamGamesScraper
+  | typeof SteamLootScraper
+  | typeof UbisoftGamesScraper;
 
-export type ScraperInstance = InstanceType<ScraperClass[number]>;
+export type ScraperInstance = InstanceType<ScraperClass>;
 
-// Helper function to get scraper combination
-function getScraperCombination(
-  Scraper: ScraperClass[number],
-): ScraperCombination {
+export function getScraperSchedule(Scraper: ScraperClass): ScraperSchedule {
   return {
-    source: Scraper.prototype.getSource(),
-    type: Scraper.prototype.getType(),
-    duration: Scraper.prototype.getDuration(),
+    name: Scraper.prototype.getScraperName(),
+    schedule: Scraper.prototype.getSchedule(),
   };
 }
 
 // Helper function to check if scraper is enabled in config
-function isScraperEnabled(
-  combination: ScraperCombination,
-  cfg: Config,
-): boolean {
-  return (
-    cfg.scraper.offerSources.includes(combination.source) &&
-    cfg.scraper.offerTypes.includes(combination.type) &&
-    cfg.scraper.offerDurations.includes(combination.duration)
-  );
+function isScraperEnabled(name: string, cfg: Config): boolean {
+  return cfg.scraper.enabledScrapers.includes(name);
 }
 
-// Get all unique combinations of source/type/duration from the available scrapers
-export function getEnabledScraperCombinations(): ScraperCombination[] {
-  const combinations: ScraperCombination[] = [];
+export function getEnabledScraperSchedules(): ScraperSchedule[] {
+  const schedules: ScraperSchedule[] = [];
   const cfg = config.get();
 
   for (const Scraper of allScrapers) {
-    const combination = getScraperCombination(Scraper);
-    if (isScraperEnabled(combination, cfg)) {
-      combinations.push(combination);
+    const schedule = getScraperSchedule(Scraper);
+    if (isScraperEnabled(schedule.name, cfg)) {
+      schedules.push(schedule);
     }
   }
 
-  return combinations;
+  return schedules;
 }
 
-export function getEnabledScraperClasses(): ScraperClass {
+export function getEnabledScraperClasses(): ScraperClass[] {
   const cfg = config.get();
   return allScrapers.filter((Scraper) =>
-    isScraperEnabled(getScraperCombination(Scraper), cfg),
+    isScraperEnabled(getScraperSchedule(Scraper).name, cfg),
   );
+}
+
+export function getEnabledFeedCombinations(): FeedCombination[] {
+  const combinations: FeedCombination[] = [];
+  const enabledScraperClasses = getEnabledScraperClasses();
+
+  for (const scraperClass of enabledScraperClasses) {
+    combinations.push({
+      source: scraperClass.prototype.getSource(),
+      type: scraperClass.prototype.getType(),
+      duration: scraperClass.prototype.getDuration(),
+    });
+  }
+
+  return combinations;
 }

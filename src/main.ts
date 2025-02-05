@@ -1,5 +1,5 @@
 import { config } from "@/services/config";
-import { initializeServices, shutdownServices } from "@/services/orchestrator";
+import { shutdownApp, startApp } from "@/services/orchestrator";
 import { handleError } from "@/utils/errorHandler";
 import { addFileTransport, logger, updateConsoleLevel } from "@/utils/logger";
 import { Settings as LuxonSettings } from "luxon";
@@ -34,13 +34,13 @@ function initializeCore() {
  */
 async function main(): Promise<void> {
   initializeCore();
-  await initializeServices();
+  await startApp();
 }
 
 try {
   await main();
 } catch (error) {
   handleError(error);
-  await shutdownServices();
+  await shutdownApp();
   process.exit(1);
 }

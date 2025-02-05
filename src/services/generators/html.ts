@@ -1,6 +1,6 @@
 import { writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
-import type { ScraperCombination } from "@/scrapers/utils";
+import type { FeedCombination } from "@/scrapers/utils";
 import { getGameWithInfo } from "@/services/database/gameRepository";
 import { translationService } from "@/services/translation";
 import type { Config } from "@/types/config";
@@ -142,7 +142,7 @@ const TEMPLATE = `<!DOCTYPE html>
 </html>`;
 
 interface HtmlGeneratorOptions {
-  combination?: ScraperCombination;
+  combination?: FeedCombination;
   withHistory?: boolean;
 }
 

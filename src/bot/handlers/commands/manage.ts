@@ -1,8 +1,10 @@
 import { closeSchema, toggleSubscriptionSchema } from "@/bot/types/callbacks";
 import type { BotContext } from "@/bot/types/middleware";
 import { packData } from "@/bot/utils/callbackPack";
-import { getEnabledScraperCombinations } from "@/scrapers";
-import type { ScraperCombination } from "@/scrapers/utils";
+import {
+  type FeedCombination,
+  getEnabledFeedCombinations,
+} from "@/scrapers/utils";
 import { hasTelegramSubscription } from "@/services/database/telegramSubscriptionRepository";
 import { translationService } from "@/services/translation";
 import { OfferDuration } from "@/types/basic";
@@ -42,7 +44,7 @@ export async function buildManageKeyboard(chatId: number) {
   logger.verbose(`Building manage keyboard for chat ${chatId.toFixed()}`);
 
   // Add subscription toggle buttons for each source/type/duration combination
-  const combinations = getEnabledScraperCombinations();
+  const combinations = getEnabledFeedCombinations();
 
   for (const combination of combinations) {
     const { source, type, duration } = combination;
@@ -74,7 +76,7 @@ export async function buildManageKeyboard(chatId: number) {
 }
 
 function getButtonText(
-  combination: ScraperCombination,
+  combination: FeedCombination,
   isSubscribed: boolean,
 ): string {
   const prefix = isSubscribed ? "[x] " : "";

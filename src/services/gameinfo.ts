@@ -1,3 +1,4 @@
+import { InfoSource } from "@/types";
 import type { Config } from "@/types/config";
 import type {
   Game,
@@ -18,11 +19,26 @@ import { createSteamInfo } from "./database/steamInfoRepository";
 import { IgdbClient } from "./gameinfo/igdb/igdb";
 import { SteamClient } from "./gameinfo/steam/steam";
 
-export class GameInfoService {
-  private readonly steamClient: SteamClient;
-  private readonly igdbClient: IgdbClient | null;
+class GameInfoService {
+  private static instance: GameInfoService;
+  private config: Config | null = null;
+  private steamClient: SteamClient | null = null;
+  private igdbClient: IgdbClient | null = null;
 
-  constructor(private readonly config: Config) {
+  private constructor() {
+    // Private constructor to prevent instantiation
+  }
+
+  public static getInstance(): GameInfoService {
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+    if (!GameInfoService.instance) {
+      GameInfoService.instance = new GameInfoService();
+    }
+    return GameInfoService.instance;
+  }
+
+  public initialize(config: Config): void {
+    this.config = config;
     this.steamClient = new SteamClient();
     this.igdbClient =
       config.igdb.clientId && config.igdb.clientSecret
@@ -75,17 +91,25 @@ export class GameInfoService {
       return;
     }
 
+    logger.info(
+      `Enriching offer with game info: ${innerOffer.probable_game_name}`,
+    );
+
     const newGame = await this.saveGameInfo(steamInfo, igdbInfo);
     await updateOffer(innerOffer.id, { game_id: newGame });
   }
 
   private async findExistingGame(gameName: string): Promise<Game | null> {
-    if (this.config.scraper.infoSources.includes("IGDB")) {
+    if (!this.config) {
+      throw new Error("GameInfo service not initialized");
+    }
+
+    if (this.config.scraper.infoSources.includes(InfoSource.IGDB)) {
       const gameByIgdb = await getGameByIgdbName(gameName);
       if (gameByIgdb) return gameByIgdb;
     }
 
-    if (this.config.scraper.infoSources.includes("STEAM")) {
+    if (this.config.scraper.infoSources.includes(InfoSource.STEAM)) {
       const gameBySteam = await getGameBySteamName(gameName);
       if (gameBySteam) return gameBySteam;
     }
@@ -94,7 +118,12 @@ export class GameInfoService {
   }
 
   private async getSteamInfo(gameName: string): Promise<NewSteamInfo | null> {
-    if (!this.config.scraper.infoSources.includes("STEAM")) return null;
+    if (!this.config || !this.steamClient) {
+      throw new Error("GameInfo service not initialized");
+    }
+
+    if (!this.config.scraper.infoSources.includes(InfoSource.STEAM))
+      return null;
     logger.debug(`Fetching Steam info for: ${gameName}`);
 
     try {
@@ -117,7 +146,14 @@ export class GameInfoService {
   }
 
   private async getIgdbInfo(gameName: string): Promise<NewIgdbInfo | null> {
-    if (!this.igdbClient || !this.config.scraper.infoSources.includes("IGDB")) {
+    if (!this.config) {
+      throw new Error("GameInfo service not initialized");
+    }
+
+    if (
+      !this.igdbClient ||
+      !this.config.scraper.infoSources.includes(InfoSource.IGDB)
+    ) {
       return null;
     }
     logger.debug(`Fetching IGDB info for: ${gameName}`);
@@ -157,3 +193,5 @@ export class GameInfoService {
     return await createGame(game);
   }
 }
+
+export const gameInfoService = GameInfoService.getInstance();
