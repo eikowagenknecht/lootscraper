@@ -87,13 +87,14 @@ export async function updateTelegramChatTimezone(
 export async function updateTelegramChatLastAnnouncementId(
   id: number,
   announcementId: number,
-): Promise<void> {
+): Promise<boolean> {
   try {
-    await getDb()
+    const result = await getDb()
       .updateTable("telegram_chats")
       .set({ last_announcement_id: announcementId })
       .where("id", "=", id)
       .executeTakeFirst();
+    return result.numUpdatedRows > 0;
   } catch (error) {
     handleError("update telegram chat last announcement id", error);
   }
@@ -101,15 +102,16 @@ export async function updateTelegramChatLastAnnouncementId(
 
 export async function incrementTelegramChatOffersReceived(
   id: number,
-): Promise<void> {
+): Promise<boolean> {
   try {
-    await getDb()
+    const result = await getDb()
       .updateTable("telegram_chats")
       .set((eb) => ({
         offers_received_count: eb("offers_received_count", "+", 1),
       }))
       .where("id", "=", id)
       .executeTakeFirst();
+    return result.numUpdatedRows > 0;
   } catch (error) {
     handleError("increment telegram chat offers received", error);
   }
@@ -118,38 +120,44 @@ export async function incrementTelegramChatOffersReceived(
 export async function deactivateTelegramChat(
   id: number,
   reason: string,
-): Promise<void> {
+): Promise<boolean> {
   try {
-    await getDb()
+    const result = await getDb()
       .updateTable("telegram_chats")
       .set({ active: 0, inactive_reason: reason })
       .where("id", "=", id)
       .executeTakeFirst();
-    // TODO: Throw if no rows were updated, slso for the other methods here
+    return result.numUpdatedRows > 0;
   } catch (error) {
     handleError("deactivate telegram chat", error);
   }
 }
 
-export async function activateTelegramChat(id: number): Promise<void> {
+export async function activateTelegramChat(id: number): Promise<boolean> {
   try {
-    await getDb()
+    const result = await getDb()
       .updateTable("telegram_chats")
       .set({ active: 1, inactive_reason: null })
       .where("id", "=", id)
       .executeTakeFirst();
-    // TODO: Throw if no rows were updated, slso for the other methods here
+    return result.numUpdatedRows > 0;
   } catch (error) {
     handleError("activate telegram chat", error);
   }
 }
 
-export async function deleteTelegramChat(id: number): Promise<void> {
+export async function deleteTelegramChat(id: number): Promise<boolean> {
   try {
+    // Delete related subscriptions first to avoid foreign key constraint
     await getDb()
+      .deleteFrom("telegram_subscriptions")
+      .where("chat_id", "=", id)
+      .executeTakeFirst();
+    const result = await getDb()
       .deleteFrom("telegram_chats")
       .where("id", "=", id)
       .executeTakeFirst();
+    return result.numDeletedRows > 0;
   } catch (error) {
     handleError("delete telegram chat", error);
   }
