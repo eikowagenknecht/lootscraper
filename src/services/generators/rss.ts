@@ -1,7 +1,7 @@
 import { writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
-import type { FeedCombination } from "@/scrapers/utils";
 import { getGameWithInfo } from "@/services/database/gameRepository";
+import type { FeedCombination } from "@/services/scraper/utils";
 import { translationService } from "@/services/translation";
 import { OfferDuration } from "@/types/basic";
 import type { Config } from "@/types/config";

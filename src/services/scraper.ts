@@ -3,7 +3,7 @@ import {
   type ScraperInstance,
   getEnabledScraperClasses,
   getScraperSchedule,
-} from "@/scrapers/utils";
+} from "@/services/scraper/utils";
 import type { Config, NewOffer } from "@/types";
 import { logger } from "@/utils/logger";
 import { Cron } from "croner";

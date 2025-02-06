@@ -1,11 +1,11 @@
-import { TelegramBot } from "@/bot";
-import type { BotConfig } from "@/bot/types/config";
-import type { BotContext } from "@/bot/types/middleware";
+import { getAllActiveTelegramChats } from "@/services/database/telegramChatRepository";
+import { TelegramBot } from "@/services/telegrambot/index";
+import type { BotConfig } from "@/services/telegrambot/types/config";
+import type { BotContext } from "@/services/telegrambot/types/middleware";
 import {
   sendNewAnnouncementsToChat,
   sendNewOffersToChat,
-} from "@/bot/utils/send";
-import { getAllActiveTelegramChats } from "@/services/database/telegramChatRepository";
+} from "@/services/telegrambot/utils/send";
 import type { Config } from "@/types/config";
 import { logger } from "@/utils/logger";
 import type { Bot } from "grammy";
