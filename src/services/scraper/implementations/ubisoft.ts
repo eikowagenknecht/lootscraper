@@ -2,7 +2,6 @@ import {
   BaseScraper,
   type CronConfig,
   type OfferHandler,
-  type RawOffer,
 } from "@/services/scraper/base/scraper";
 import { OfferDuration, OfferSource, OfferType } from "@/types/basic";
 import type { NewOffer } from "@/types/database";
@@ -13,11 +12,7 @@ import type { Locator, Page } from "playwright";
 const BASE_URL = "https://store.ubi.com";
 const OFFER_URL = `${BASE_URL}/us/`;
 
-interface UbisoftRawOffer extends RawOffer {
-  validTo: string;
-}
-
-export class UbisoftGamesScraper extends BaseScraper<UbisoftRawOffer> {
+export class UbisoftGamesScraper extends BaseScraper {
   override getSchedule(): CronConfig[] {
     return [
       { schedule: "0 0 */3 * * *" }, // Every 3 hours
@@ -52,30 +47,28 @@ export class UbisoftGamesScraper extends BaseScraper<UbisoftRawOffer> {
     return ".wrapper";
   }
 
-  getOfferHandlers(page: Page): OfferHandler<UbisoftRawOffer>[] {
+  getOfferHandlers(page: Page): OfferHandler[] {
     return [
       {
         locator: page.locator(".c-focus-banner__wrapper"),
-        readOffer: this.readRawOffer.bind(this),
-        normalizeOffer: this.normalizeOffer.bind(this),
+        readOffer: this.readOffer.bind(this),
       },
     ];
   }
 
-  private async readRawOffer(
+  private async readOffer(
     element: Locator,
-  ): Promise<UbisoftRawOffer | null> {
+  ): Promise<Omit<NewOffer, "category"> | null> {
     try {
       // Scroll element into view to load img url
       await element.scrollIntoViewIfNeeded();
 
-      // Format: "Get <Assassin's Creed> for free!"
       const title = await element
         .locator(".c-focus-banner__title")
         .textContent();
       if (!title) throw new Error("Couldn't find title");
 
-      // Filter out various other promotions
+      // Promotions look like "Get <Assassin's Creed> for free!"
       const compareTitle = title.toLowerCase();
       if (
         !compareTitle.startsWith("get ") ||
@@ -84,11 +77,16 @@ export class UbisoftGamesScraper extends BaseScraper<UbisoftRawOffer> {
         return null;
       }
 
-      // Format: "Offer ends <January 23, 2023 at 3PM UTC>"
-      const validTo = await element
+      let validTo = await element
         .locator(".c-focus-banner__legal-line")
         .innerText();
       if (!validTo) throw new Error(`Couldn't find valid to for ${title}`);
+
+      // Date looks like "Offer ends <January 23, 2023 at 3PM UTC>"
+      validTo = validTo
+        .replace(/^Offer valid until /, "")
+        .replace(/^Offer ends /, "")
+        .replace(/ UTC\.$/, "");
 
       let url = await element.locator("a.button").getAttribute("href");
       if (!url) throw new Error(`Couldn't find url for ${title}`);
@@ -102,11 +100,49 @@ export class UbisoftGamesScraper extends BaseScraper<UbisoftRawOffer> {
         imgUrl = BASE_URL + imgUrl;
       }
 
+      let validToDate: DateTime | null = null;
+
+      // Try standard format first: "January 23, 2023 at 3PM"
+      try {
+        validToDate = DateTime.fromFormat(validTo, "MMMM d, yyyy 'at' ha", {
+          zone: "UTC",
+        });
+      } catch (error) {
+        logger.debug(
+          `Failed to parse date in standard format: ${error instanceof Error ? error.message : String(error)}`,
+        );
+
+        // Try alternate format: "January 23 at 2023 at 3PM"
+        try {
+          validToDate = DateTime.fromFormat(
+            validTo,
+            "MMMM d 'at' yyyy 'at' ha",
+            {
+              zone: "UTC",
+            },
+          );
+        } catch (error) {
+          logger.error(
+            `Failed to parse date in alternate format: ${error instanceof Error ? error.message : String(error)}`,
+          );
+        }
+      }
+
       return {
+        source: this.getSource(),
+        duration: this.getDuration(),
+        type: this.getType(),
         title,
-        validTo,
-        url,
-        imgUrl,
+        probable_game_name: title,
+        seen_last: DateTime.now().toISO(),
+        seen_first: DateTime.now().toISO(),
+        ...(validToDate && { valid_to: validToDate.toISO() }),
+        rawtext: JSON.stringify({
+          title: title,
+          enddate: validTo,
+        }),
+        url: url,
+        img_url: imgUrl,
       };
     } catch (error) {
       logger.error(
@@ -114,63 +150,5 @@ export class UbisoftGamesScraper extends BaseScraper<UbisoftRawOffer> {
       );
       return null;
     }
-  }
-
-  private normalizeOffer(
-    rawOffer: UbisoftRawOffer,
-  ): Omit<NewOffer, "category"> {
-    const rawtext = {
-      title: rawOffer.title,
-      enddate: rawOffer.validTo,
-    };
-
-    // Clean up title
-    const title = rawOffer.title
-      .replace(/^Get /, "")
-      .replace(/ for FREE!$/, "");
-
-    // Clean up date
-    const validToText = rawOffer.validTo
-      .replace(/^Offer valid until /, "")
-      .replace(/^Offer ends /, "")
-      .replace(/ UTC\.$/, "");
-
-    let validTo: DateTime | null = null;
-
-    // Try standard format first: "January 23, 2023 at 3PM"
-    try {
-      validTo = DateTime.fromFormat(validToText, "MMMM d, yyyy 'at' ha", {
-        zone: "UTC",
-      });
-    } catch (error) {
-      logger.debug(
-        `Failed to parse date in standard format: ${error instanceof Error ? error.message : String(error)}`,
-      );
-
-      // Try alternate format: "January 23 at 2023 at 3PM"
-      try {
-        validTo = DateTime.fromFormat(validToText, "MMMM d 'at' yyyy 'at' ha", {
-          zone: "UTC",
-        });
-      } catch (error) {
-        logger.error(
-          `Failed to parse date in alternate format: ${error instanceof Error ? error.message : String(error)}`,
-        );
-      }
-    }
-
-    return {
-      source: this.getSource(),
-      duration: this.getDuration(),
-      type: this.getType(),
-      title,
-      probable_game_name: title,
-      seen_last: DateTime.now().toISO(),
-      seen_first: DateTime.now().toISO(),
-      ...(validTo && { valid_to: validTo.toISO() }),
-      rawtext: JSON.stringify(rawtext),
-      url: rawOffer.url ?? null,
-      img_url: rawOffer.imgUrl ?? null,
-    };
   }
 }

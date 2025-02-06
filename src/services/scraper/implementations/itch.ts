@@ -2,7 +2,6 @@ import {
   BaseScraper,
   type CronConfig,
   type OfferHandler,
-  type RawOffer,
 } from "@/services/scraper/base/scraper";
 import { OfferDuration, OfferSource, OfferType } from "@/types/basic";
 import type { NewOffer } from "@/types/database";
@@ -53,19 +52,20 @@ export class ItchGamesScraper extends BaseScraper {
     await this.scrollPageToBottom(page);
   }
 
-  getOfferHandlers(page: Page): OfferHandler<RawOffer>[] {
+  getOfferHandlers(page: Page): OfferHandler[] {
     return [
       {
         locator: page.locator(".game_grid_widget .game_cell", {
           has: page.locator(".sale_tag", { hasText: "100" }),
         }),
-        readOffer: this.readRawOffer.bind(this),
-        normalizeOffer: this.normalizeOffer.bind(this),
+        readOffer: this.readOffer.bind(this),
       },
     ];
   }
 
-  private async readRawOffer(element: Locator): Promise<RawOffer | null> {
+  private async readOffer(
+    element: Locator,
+  ): Promise<Omit<NewOffer, "category"> | null> {
     try {
       // Scroll into view to make sure the image is loaded
       await element.scrollIntoViewIfNeeded();
@@ -92,9 +92,19 @@ export class ItchGamesScraper extends BaseScraper {
       }
 
       return {
-        title,
-        url,
-        ...(imgUrl && { imgUrl }),
+        source: this.getSource(),
+        duration: this.getDuration(),
+        type: this.getType(),
+        title: title,
+        probable_game_name: title,
+        seen_last: DateTime.now().toISO(),
+        seen_first: DateTime.now().toISO(),
+        valid_to: null,
+        rawtext: JSON.stringify({
+          title: title,
+        }),
+        url: url,
+        img_url: imgUrl ?? null,
       };
     } catch (error) {
       logger.error(
@@ -102,25 +112,5 @@ export class ItchGamesScraper extends BaseScraper {
       );
       return null;
     }
-  }
-
-  private normalizeOffer(rawOffer: RawOffer): Omit<NewOffer, "category"> {
-    const rawtext = {
-      title: rawOffer.title,
-    };
-
-    return {
-      source: this.getSource(),
-      duration: this.getDuration(),
-      type: this.getType(),
-      title: rawOffer.title,
-      probable_game_name: rawOffer.title,
-      seen_last: DateTime.now().toISO(),
-      seen_first: DateTime.now().toISO(),
-      valid_to: null,
-      rawtext: JSON.stringify(rawtext),
-      url: rawOffer.url ?? null,
-      img_url: rawOffer.imgUrl ?? null,
-    };
   }
 }

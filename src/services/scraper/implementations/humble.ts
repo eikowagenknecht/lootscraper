@@ -2,7 +2,6 @@ import {
   BaseScraper,
   type CronConfig,
   type OfferHandler,
-  type RawOffer,
 } from "@/services/scraper/base/scraper";
 import { OfferCategory, ScraperError } from "@/types";
 import { OfferDuration, OfferSource, OfferType } from "@/types/basic";
@@ -18,12 +17,7 @@ const SEARCH_PARAMS = new URLSearchParams({
   filter: "onsale",
 });
 
-interface HumbleRawOffer extends RawOffer {
-  validForMinutes?: number;
-  originalPrice?: number;
-}
-
-export class HumbleGamesScraper extends BaseScraper<HumbleRawOffer> {
+export class HumbleGamesScraper extends BaseScraper {
   override getSchedule(): CronConfig[] {
     return [
       { schedule: "0 0 */3 * * *" }, // Every 3 hours
@@ -54,19 +48,18 @@ export class HumbleGamesScraper extends BaseScraper<HumbleRawOffer> {
     return "li div.discount-amount";
   }
 
-  getOfferHandlers(page: Page): OfferHandler<HumbleRawOffer>[] {
+  getOfferHandlers(page: Page): OfferHandler[] {
     return [
       {
         locator: page.locator("li", {
           has: page.locator("div.discount-amount", { hasText: "100" }),
         }),
-        readOffer: this.readRawOffer.bind(this),
-        normalizeOffer: this.normalizeOffer.bind(this),
+        readOffer: this.readOffer.bind(this),
       },
     ];
   }
 
-  private async readRawOffer(element: Locator): Promise<HumbleRawOffer | null> {
+  private async readOffer(element: Locator): Promise<NewOffer | null> {
     try {
       const title = await element.locator("span.entity-title").textContent();
       if (!title) throw new Error("Couldn't find title");
@@ -82,15 +75,35 @@ export class HumbleGamesScraper extends BaseScraper<HumbleRawOffer> {
         .getAttribute("src");
       if (!imgUrl) throw new Error(`Couldn't find image for ${title}`);
 
-      const offer: HumbleRawOffer = {
-        title,
-        url,
-        imgUrl,
+      const { validForMinutes, originalPrice } = await this.getDetails(url);
+
+      let validTo: DateTime | null = null;
+      if (typeof validForMinutes === "number") {
+        validTo = DateTime.now().plus({ minutes: validForMinutes });
+      }
+
+      // Categorize cheap games
+      const category =
+        originalPrice !== undefined && originalPrice < 1.0
+          ? OfferCategory.CHEAP
+          : OfferCategory.VALID;
+
+      return {
+        source: this.getSource(),
+        duration: this.getDuration(),
+        type: this.getType(),
+        category,
+        title: title,
+        probable_game_name: title,
+        seen_last: DateTime.now().toISO(),
+        seen_first: DateTime.now().toISO(),
+        ...(validTo && { valid_to: validTo.toISO() }),
+        rawtext: JSON.stringify({
+          title: title,
+        }),
+        url: url,
+        img_url: imgUrl,
       };
-
-      await this.addDetails(offer, url);
-
-      return offer;
     } catch (error) {
       logger.error(
         `Failed to read raw offer: ${error instanceof Error ? error.message : String(error)}`,
@@ -99,7 +112,7 @@ export class HumbleGamesScraper extends BaseScraper<HumbleRawOffer> {
     }
   }
 
-  private async addDetails(offer: HumbleRawOffer, url: string): Promise<void> {
+  private async getDetails(url: string) {
     if (!this.context) {
       throw new ScraperError(
         "Browser context not initialized. Call initialize() first.",
@@ -124,22 +137,25 @@ export class HumbleGamesScraper extends BaseScraper<HumbleRawOffer> {
         .textContent();
 
       if (!daysValid || !hoursValid || !minutesValid) {
-        throw new Error(`Couldn't find valid to for ${offer.title}`);
+        throw new Error(`Couldn't find valid to on ${url}.`);
       }
 
-      // Calculate total minutes
-      offer.validForMinutes =
-        Number.parseInt(daysValid) * 24 * 60 +
-        Number.parseInt(hoursValid) * 60 +
-        Number.parseInt(minutesValid);
+      const result: { validForMinutes: number; originalPrice?: number } = {
+        validForMinutes:
+          Number.parseInt(daysValid) * 24 * 60 +
+          Number.parseInt(hoursValid) * 60 +
+          Number.parseInt(minutesValid),
+      };
 
       const originalPrice = await page.locator(".full-price").textContent();
 
       if (originalPrice) {
-        offer.originalPrice = Number.parseFloat(
+        result.originalPrice = Number.parseFloat(
           originalPrice.replace("€", "").trim(),
         );
       }
+
+      return result;
     } catch (error) {
       throw new Error(
         `Failed to add offer details: ${error instanceof Error ? error.message : String(error)}`,
@@ -147,37 +163,5 @@ export class HumbleGamesScraper extends BaseScraper<HumbleRawOffer> {
     } finally {
       await page?.close();
     }
-  }
-
-  private normalizeOffer(rawOffer: HumbleRawOffer): NewOffer {
-    const rawtext = {
-      title: rawOffer.title,
-    };
-
-    let validTo: DateTime | null = null;
-    if (typeof rawOffer.validForMinutes === "number") {
-      validTo = DateTime.now().plus({ minutes: rawOffer.validForMinutes });
-    }
-
-    // Categorize cheap games
-    const category =
-      rawOffer.originalPrice !== undefined && rawOffer.originalPrice < 1.0
-        ? OfferCategory.CHEAP
-        : OfferCategory.VALID;
-
-    return {
-      source: this.getSource(),
-      duration: this.getDuration(),
-      type: this.getType(),
-      category,
-      title: rawOffer.title,
-      probable_game_name: rawOffer.title,
-      seen_last: DateTime.now().toISO(),
-      seen_first: DateTime.now().toISO(),
-      ...(validTo && { valid_to: validTo.toISO() }),
-      rawtext: JSON.stringify(rawtext),
-      url: rawOffer.url ?? null,
-      img_url: rawOffer.imgUrl ?? null,
-    };
   }
 }

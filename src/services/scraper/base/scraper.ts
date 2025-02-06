@@ -19,23 +19,12 @@ export interface CronConfig {
 }
 
 /**
- * Base interface for raw offer data
- */
-export interface RawOffer {
-  title: string;
-  url?: string;
-  imgUrl?: string;
-  validTo?: string;
-}
-
-/**
  * Handler for processing offers
  * @template T - Raw offer data type
  */
-export interface OfferHandler<T extends RawOffer> {
+export interface OfferHandler {
   locator: Locator;
-  readOffer: (element: Locator) => Promise<T | null>;
-  normalizeOffer: (rawOffer: T) => Omit<NewOffer, "category">;
+  readOffer: (element: Locator) => Promise<Omit<NewOffer, "category"> | null>;
 }
 
 /**
@@ -71,7 +60,7 @@ export interface OfferHandler<T extends RawOffer> {
  *
  * @public
  */
-export abstract class BaseScraper<T extends RawOffer = RawOffer> {
+export abstract class BaseScraper {
   protected context: BrowserContext | undefined;
 
   constructor(protected readonly config: Config) {}
@@ -125,7 +114,7 @@ export abstract class BaseScraper<T extends RawOffer = RawOffer> {
    * @param {Page} page - The Playwright Page object to extract offers from
    * @returns {OfferHandler<T>[]} Array of offer handlers
    */
-  abstract getOfferHandlers(page: Page): OfferHandler<T>[];
+  abstract getOfferHandlers(page: Page): OfferHandler[];
 
   // Optional methods that can be overridden
 
@@ -261,11 +250,9 @@ export abstract class BaseScraper<T extends RawOffer = RawOffer> {
 
         for (const element of elements) {
           try {
-            // TODO: Do we need readOffer and normalizeOffer or can we merge them?
-            const rawOffer = await handler.readOffer(element);
-            if (!rawOffer) continue;
-            const normalizedOffer = handler.normalizeOffer(rawOffer);
-            offers.push(normalizedOffer);
+            const offer = await handler.readOffer(element);
+            if (!offer) continue;
+            offers.push(offer);
           } catch (error) {
             // Log and skip offer if processing fails
             logger.error(

@@ -1,8 +1,4 @@
-import {
-  BaseScraper,
-  type CronConfig,
-  type RawOffer,
-} from "@/services/scraper/base/scraper";
+import { BaseScraper, type CronConfig } from "@/services/scraper/base/scraper";
 import { OfferDuration, OfferSource } from "@/types/basic";
 import { BrowserError, ScraperError } from "@/types/errors";
 import { logger } from "@/utils/logger";
@@ -12,13 +8,14 @@ import type { Locator, Page } from "playwright";
 const BASE_URL = "https://gaming.amazon.com";
 const OFFER_URL = `${BASE_URL}/home`;
 
-export interface AmazonRawOffer extends RawOffer {
+interface AmazonBaseOffer {
+  title: string;
+  url: string;
+  imgUrl: string;
   validTo?: string;
 }
 
-export abstract class AmazonBaseScraper<
-  T extends AmazonRawOffer = AmazonRawOffer,
-> extends BaseScraper<T> {
+export abstract class AmazonBaseScraper extends BaseScraper {
   override getSchedule(): CronConfig[] {
     return [
       { schedule: "0 0 * * * *" }, // Every hour
@@ -50,7 +47,7 @@ export abstract class AmazonBaseScraper<
     return false;
   }
 
-  protected async readBaseRawOffer(element: Locator): Promise<AmazonRawOffer> {
+  protected async readBaseOffer(element: Locator): Promise<AmazonBaseOffer> {
     const title = await element
       .locator(".item-card-details__body__primary h3")
       .textContent();

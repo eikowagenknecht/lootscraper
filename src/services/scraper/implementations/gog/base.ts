@@ -1,15 +1,16 @@
-import { BaseScraper, type RawOffer } from "@/services/scraper/base/scraper";
+import { BaseScraper } from "@/services/scraper/base/scraper";
 import { OfferSource, OfferType } from "@/types/basic";
 import type { Page } from "playwright";
 
 // Base interface for GOG offers
-export interface GogRawOffer extends RawOffer {
+export interface GogRawOffer {
+  title: string;
+  url: string;
+  imgUrl: string;
   validTo?: string;
 }
 
-export abstract class GogBaseScraper<
-  T extends GogRawOffer = GogRawOffer,
-> extends BaseScraper<T> {
+export abstract class GogBaseScraper extends BaseScraper {
   getSource(): OfferSource {
     return OfferSource.GOG;
   }

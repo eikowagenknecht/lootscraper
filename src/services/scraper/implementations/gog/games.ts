@@ -38,27 +38,26 @@ export class GogGamesScraper extends GogBaseScraper {
       {
         // Banner giveaways
         locator: page.locator("a.giveaway-banner"),
-        readOffer: this.readRawOfferV1.bind(this),
-        normalizeOffer: this.normalizeOffer.bind(this),
+        readOffer: this.readOfferV1.bind(this),
       },
       {
         // Big spot offers
         locator: page.locator("a.big-spot", {
           has: page.locator('[ng-if="tile.isFreeVisible"]'),
         }),
-        readOffer: this.readRawOfferV2.bind(this),
-        normalizeOffer: this.normalizeOffer.bind(this),
+        readOffer: this.readOfferV2.bind(this),
       },
       {
         // Giveaway component offers
         locator: page.locator("giveaway"),
-        readOffer: this.readRawOfferV3.bind(this),
-        normalizeOffer: this.normalizeOffer.bind(this),
+        readOffer: this.readOfferV3.bind(this),
       },
     ];
   }
 
-  private async readRawOfferV1(element: Locator): Promise<GogRawOffer | null> {
+  private async readOfferV1(
+    element: Locator,
+  ): Promise<Omit<NewOffer, "category"> | null> {
     try {
       let title = await element
         .locator(".giveaway-banner__title")
@@ -80,6 +79,8 @@ export class GogGamesScraper extends GogBaseScraper {
         url = BASE_URL + url;
       }
 
+      if (!url) throw new Error(`Couldn't find url for ${title}`);
+
       const imgUrl = this.sanitizeImgUrl(
         await element
           .locator(
@@ -88,12 +89,14 @@ export class GogGamesScraper extends GogBaseScraper {
           .getAttribute("srcset"),
       );
 
-      return {
+      if (!imgUrl) throw new Error(`Couldn't find image for ${title}`);
+
+      return this.normalizeOffer({
         title,
         validTo: validTo ?? "",
-        ...(url && { url }),
-        ...(imgUrl && { imgUrl }),
-      };
+        url,
+        imgUrl,
+      });
     } catch (error) {
       logger.error(
         `Failed to read raw offer v1: ${error instanceof Error ? error.message : String(error)}`,
@@ -102,7 +105,9 @@ export class GogGamesScraper extends GogBaseScraper {
     }
   }
 
-  private async readRawOfferV2(element: Locator): Promise<GogRawOffer | null> {
+  private async readOfferV2(
+    element: Locator,
+  ): Promise<Omit<NewOffer, "category"> | null> {
     try {
       // Verify it's really free
       const priceElement = element.locator('[ng-if="tile.isFreeVisible"]');
@@ -117,7 +122,7 @@ export class GogGamesScraper extends GogBaseScraper {
       if (!href) return null;
 
       const url = href.startsWith("http") ? href : BASE_URL + href;
-      return await this.readOfferFromDetailsPage(url);
+      return this.normalizeOffer(await this.readOfferFromDetailsPage(url));
     } catch (error) {
       logger.error(
         `Failed to read raw offer v2: ${error instanceof Error ? error.message : String(error)}`,
@@ -126,14 +131,16 @@ export class GogGamesScraper extends GogBaseScraper {
     }
   }
 
-  private async readRawOfferV3(element: Locator): Promise<GogRawOffer | null> {
+  private async readOfferV3(
+    element: Locator,
+  ): Promise<Omit<NewOffer, "category"> | null> {
     try {
       const link = element.locator("a.giveaway__overlay-link");
       const href = await link.getAttribute("href");
       if (!href) return null;
 
       const url = href.startsWith("http") ? href : BASE_URL + href;
-      return await this.readOfferFromDetailsPage(url);
+      return this.normalizeOffer(await this.readOfferFromDetailsPage(url));
     } catch (error) {
       logger.error(
         `Failed to read raw offer v3: ${error instanceof Error ? error.message : String(error)}`,
@@ -210,8 +217,8 @@ export class GogGamesScraper extends GogBaseScraper {
       seen_first: DateTime.now().toISO(),
       ...(validTo && { valid_to: validTo.toISO() }),
       rawtext: JSON.stringify(rawtext),
-      url: rawOffer.url ?? OFFER_URL,
-      img_url: rawOffer.imgUrl ?? null,
+      url: rawOffer.url,
+      img_url: rawOffer.imgUrl,
     };
   }
 }
