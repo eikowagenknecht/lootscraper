@@ -1,6 +1,6 @@
 import { resolve } from "node:path";
-import { telegramBotService } from "@/bot/service";
 import { bold, escapeText } from "@/bot/utils/markdown";
+import { telegramBotService } from "@/services/telegrambot";
 import type { TelegramLogLevel } from "@/types";
 import type { Format, TransformableInfo } from "logform";
 import { DateTime } from "luxon";

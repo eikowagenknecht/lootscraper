@@ -1,6 +1,6 @@
 import { fail } from "node:assert";
-import { telegramBotService } from "@/bot/service";
 import { config } from "@/services/config";
+import { telegramBotService } from "@/services/telegrambot";
 import { DateTime } from "luxon";
 import { afterAll, beforeAll, describe, expect, test } from "vitest";
 
