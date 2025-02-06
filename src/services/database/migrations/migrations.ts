@@ -2,13 +2,13 @@ import { DatabaseError } from "@/types/errors";
 import { logger } from "@/utils/logger";
 import { type Kysely, type Migration, Migrator } from "kysely";
 import { DateTime } from "luxon";
-import { initialMigration } from "./migrations/001-initial";
-import { dropAlembicMigration } from "./migrations/002-alembic";
-import { indicesMigration } from "./migrations/003-indices";
-import { nullabilityMigration } from "./migrations/004-nullability";
-import { strictModeMigration } from "./migrations/005-strict";
-import { dateFormatMigration } from "./migrations/006-dateformat";
-import { scrapingRunsMigration } from "./migrations/007-scrapingruns";
+import { initialMigration } from "./001-initial";
+import { dropAlembicMigration } from "./002-alembic";
+import { indicesMigration } from "./003-indices";
+import { nullabilityMigration } from "./004-nullability";
+import { strictModeMigration } from "./005-strict";
+import { dateFormatMigration } from "./006-dateformat";
+import { scrapingRunsMigration } from "./007-scrapingruns";
 
 // Define the migrations type
 const migrations: Record<string, Migration> = {
