@@ -6,6 +6,7 @@ WORKDIR /app
 ENV CI=true
 
 # Install pnpm by package.json config
+RUN npm i -g corepack@latest
 RUN corepack enable
 
 # Install dependencies
@@ -46,6 +47,7 @@ mkdir -p /data
 # chown -R node:node /data
 
 # Install pnpm by package.json config
+RUN npm i -g corepack@latest
 RUN corepack enable
 
 # Copy package files first
