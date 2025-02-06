@@ -218,14 +218,40 @@ export class SteamClient {
       throw new Error("Invalid Steam API response");
     }
 
+    let releaseDate: string | null = null;
+
+    if (data.release_date) {
+      try {
+        releaseDate = DateTime.fromFormat(data.release_date.date, "d MMM, y", {
+          zone: "UTC",
+        }).toISO();
+      } catch {
+        logger.debug(
+          `Couldn't parse date, trying next format: ${data.release_date.date}`,
+        );
+      }
+
+      if (!releaseDate) {
+        try {
+          releaseDate = DateTime.fromFormat(data.release_date.date, "y", {
+            zone: "UTC",
+          })
+            .startOf("year")
+            .toISO();
+        } catch {
+          logger.verbose(
+            `Couldn't parse date, ignoring it: ${data.release_date.date}`,
+          );
+        }
+      }
+    }
+
     const steamInfo: NewSteamInfo = {
       id: appId,
       url: `${SteamClient.STORE_URL}/app/${appId.toFixed()}`,
       name: data.name,
       short_description: data.short_description ?? null,
-      release_date: data.release_date?.date
-        ? DateTime.fromFormat(data.release_date.date, "d MMM, y").toISO()
-        : null,
+      release_date: releaseDate,
       genres: data.genres?.map((g) => g.description).join(", ") ?? null,
       publishers: data.publishers?.join(", ") ?? null,
       image_url:
