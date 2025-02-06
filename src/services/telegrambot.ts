@@ -158,17 +158,17 @@ export class TelegramBotService {
   }
 
   public start(): void {
-    if (!this.bot) {
+    if (!this.bot || !this.botConfig) {
       throw new Error("Bot not initialized. Call initialize() first.");
     }
 
     try {
-      // TODO: Drop pending updates (configurable)
       // This never resolves as long as the bot is running, so we don't await it
       void this.bot.start({
         onStart: () => {
           logger.info("Telegram bot listening to messages.");
         },
+        drop_pending_updates: this.botConfig.dropPendingUpdates,
       });
     } catch (error) {
       throw new Error(
