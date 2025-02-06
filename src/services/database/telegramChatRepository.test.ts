@@ -64,13 +64,23 @@ describe("Telegram Chats Repository", () => {
     await deactivateTelegramChat(id, "test reason");
 
     let retrieved = await getTelegramChatById(id);
-    expect(retrieved?.active).toBe(0);
-    expect(retrieved?.inactive_reason).toBe("test reason");
+
+    if (!retrieved) {
+      throw new Error("Chat not found");
+    }
+
+    expect(retrieved.active).toBe(0);
+    expect(retrieved.inactive_reason).toBe("test reason");
 
     await activateTelegramChat(id);
     retrieved = await getTelegramChatById(id);
-    expect(retrieved?.active).toBe(1);
-    expect(retrieved?.inactive_reason).toBeNull();
+
+    if (!retrieved) {
+      throw new Error("Chat not found");
+    }
+
+    expect(retrieved.active).toBe(1);
+    expect(retrieved.inactive_reason).toBeNull();
   });
 
   test("should update chat properties", async () => {
@@ -91,9 +101,14 @@ describe("Telegram Chats Repository", () => {
     await incrementTelegramChatOffersReceived(id);
 
     const retrieved = await getTelegramChatById(id);
-    expect(retrieved?.timezone_offset).toBe(180);
-    expect(retrieved?.last_announcement_id).toBe(5);
-    expect(retrieved?.offers_received_count).toBe(1);
+
+    if (!retrieved) {
+      throw new Error("Chat not found");
+    }
+
+    expect(retrieved.timezone_offset).toBe(180);
+    expect(retrieved.last_announcement_id).toBe(5);
+    expect(retrieved.offers_received_count).toBe(1);
   });
 
   test("should throw if creating duplicate chat", async () => {
