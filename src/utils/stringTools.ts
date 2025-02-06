@@ -142,15 +142,21 @@ export function cleanGameTitle(title: string): string {
     .trim();
 }
 
-export function cleanLootTitle(title: string): string {
-  return title
+function cleanLootTitle(title: string): string {
+  let cleaned = title
     .replace(/\n/g, "")
     .replace(/ - /g, ": ")
     .replace(/ : /g, ": ")
     .trim()
     .replace(/[:|-]$/g, "")
     .trim();
+
+  if (cleaned.length > 0) {
+    cleaned = cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
+  }
+  return cleaned;
 }
+
 /**
  * Clean the combined title.
  *
@@ -239,15 +245,9 @@ export function cleanCombinedTitle(title: string): [string, string] {
     }
   }
 
-  // Clean game name
+  // Clean game and loot name
   probableGameName = cleanGameTitle(probableGameName);
-
-  // Capitalize first letter of loot name
-  probableLootName = probableLootName.trim();
-  if (probableLootName) {
-    probableLootName =
-      probableLootName.charAt(0).toUpperCase() + probableLootName.slice(1);
-  }
+  probableLootName = cleanLootTitle(probableLootName);
 
   // Construct final title
   const resultingOfferTitle = probableLootName

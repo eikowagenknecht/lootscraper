@@ -1,12 +1,14 @@
 import { resolve } from "node:path";
 import { browserService } from "@/services/browser";
-import { OfferCategory } from "@/types";
-import { OfferDuration, OfferType } from "@/types/basic";
-import type { OfferSource } from "@/types/basic";
+import {
+  OfferCategory,
+  OfferDuration,
+  type OfferSource,
+  type OfferType,
+} from "@/types";
 import type { Config } from "@/types/config";
 import type { NewOffer } from "@/types/database";
 import { ScraperError } from "@/types/errors";
-import { cleanCombinedTitle, cleanGameTitle, cleanLootTitle } from "@/utils";
 import { logger } from "@/utils/logger";
 import { getDataPath } from "@/utils/path";
 import { DateTime } from "luxon";
@@ -301,11 +303,6 @@ export abstract class BaseScraper {
   protected cleanOffers(
     offers: Omit<NewOffer, "category">[],
   ): Omit<NewOffer, "category">[] {
-    // TODO: Since it's refreshed from the rawtext, there is no need to
-    // set the title and probable_game_name in the scrapers anymore.
-    // ... or maybe there is because the scrapers know better if a title is
-    // formatted in a special way.
-
     return offers.map((offer) => {
       const cleaned: Omit<NewOffer, "category"> = {
         ...offer,
@@ -315,68 +312,78 @@ export abstract class BaseScraper {
         }),
       };
 
-      // Without rawtext, we can't do any more cleaning
-      if (offer.rawtext === undefined) {
-        return cleaned;
-      }
-
-      // Game - Update title and probable_game_name from rawtext
-      if (offer.type === OfferType.GAME) {
-        const parsed = JSON.parse(offer.rawtext) as Record<string, unknown>;
-
-        let newTitle = "";
-
-        if ("title" in parsed && typeof parsed.title === "string") {
-          newTitle = cleanGameTitle(parsed.title);
-        }
-
-        if (
-          cleaned.title !== newTitle ||
-          cleaned.probable_game_name !== newTitle
-        ) {
-          logger.verbose(
-            `Updating game title and probable game name from ${cleaned.title} to ${newTitle}`,
-          );
-          cleaned.title = newTitle;
-          cleaned.probable_game_name = newTitle;
-        }
-
-        return cleaned;
-      }
-
-      // Loot - Set title and probable_game_name
-      const parsed = JSON.parse(offer.rawtext) as Record<string, unknown>;
-
-      let newProbableGameName = "";
-      let newOfferTitle = "";
-
-      if (
-        "gametitle" in parsed &&
-        "title" in parsed &&
-        typeof parsed.gametitle === "string" &&
-        typeof parsed.title === "string"
-      ) {
-        newProbableGameName = cleanGameTitle(parsed.gametitle);
-        newOfferTitle = `${newProbableGameName} - ${cleanLootTitle(parsed.title)}`;
-      } else if ("title" in parsed && typeof parsed.title === "string") {
-        [newProbableGameName, newOfferTitle] = cleanCombinedTitle(parsed.title);
-      }
-
-      if (cleaned.probable_game_name !== newProbableGameName) {
-        logger.verbose(
-          `Updating loot probable game name from ${offer.probable_game_name} to ${newProbableGameName}`,
-        );
-        cleaned.probable_game_name = newProbableGameName;
-      }
-
-      if (cleaned.title !== newOfferTitle) {
-        logger.verbose(
-          `Updating loot title from ${offer.title} to ${newOfferTitle}`,
-        );
-        cleaned.title = newOfferTitle;
-      }
-
       return cleaned;
+
+      // The following section is commented out because the names should be set
+      // in the scraper implementations as those know best how to clean the titles.
+
+      // // Without rawtext, we can't do any more cleaning
+      // if (offer.rawtext === undefined) {
+      //   return cleaned;
+      // }
+
+      // // When the probable_game_name is already set, we don't need to update it
+      // if (cleaned.probable_game_name) {
+      //   return cleaned;
+      // }
+
+      // // Game - Update title and probable_game_name from rawtext
+      // if (offer.type === OfferType.GAME) {
+      //   const parsed = JSON.parse(offer.rawtext) as Record<string, unknown>;
+
+      //   let newTitle = "";
+
+      //   if ("title" in parsed && typeof parsed.title === "string") {
+      //     newTitle = cleanGameTitle(parsed.title);
+      //   }
+
+      //   if (
+      //     cleaned.title !== newTitle ||
+      //     cleaned.probable_game_name !== newTitle
+      //   ) {
+      //     logger.verbose(
+      //       `Updating game title and probable game name from ${cleaned.title} to ${newTitle}`,
+      //     );
+      //     cleaned.title = newTitle;
+      //     cleaned.probable_game_name = newTitle;
+      //   }
+
+      //   return cleaned;
+      // }
+
+      // // Loot - Set title and probable_game_name
+      // const parsed = JSON.parse(offer.rawtext) as Record<string, unknown>;
+
+      // let newProbableGameName = "";
+      // let newOfferTitle = "";
+
+      // if (
+      //   "gametitle" in parsed &&
+      //   "title" in parsed &&
+      //   typeof parsed.gametitle === "string" &&
+      //   typeof parsed.title === "string"
+      // ) {
+      //   newProbableGameName = cleanGameTitle(parsed.gametitle);
+      //   newOfferTitle = `${newProbableGameName} - ${cleanLootTitle(parsed.title)}`;
+      // } else if ("title" in parsed && typeof parsed.title === "string") {
+      //   [newProbableGameName, newOfferTitle] = cleanCombinedTitle(parsed.title);
+      // }
+
+      // if (cleaned.probable_game_name !== newProbableGameName) {
+      //   logger.verbose(
+      //     `Updating loot probable game name from ${offer.probable_game_name} to ${newProbableGameName}`,
+      //   );
+      //   cleaned.probable_game_name = newProbableGameName;
+      // }
+
+      // if (cleaned.title !== newOfferTitle) {
+      //   logger.verbose(
+      //     `Updating loot title from ${offer.title} to ${newOfferTitle}`,
+      //   );
+      //   cleaned.title = newOfferTitle;
+      // }
+
+      // return cleaned;
     });
   }
 

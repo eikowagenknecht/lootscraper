@@ -43,19 +43,18 @@ export class AmazonLootScraper extends AmazonBaseScraper {
       if (!gameTitle) throw new Error("Couldn't find game title");
 
       const validTo = baseOffer.validTo
-        ? this.parseDateString(baseOffer.validTo)
-        : null;
-      const title = `${gameTitle}: ${baseOffer.title}`;
+        ? this.parseDateString(baseOffer.validTo)?.toISO()
+        : undefined;
 
       return {
         source: this.getSource(),
         duration: this.getDuration(),
         type: this.getType(),
-        title,
+        title: `${gameTitle} - ${baseOffer.title}`,
         probable_game_name: gameTitle,
         seen_last: DateTime.now().toISO(),
         seen_first: DateTime.now().toISO(),
-        valid_to: validTo?.toISO() ?? null,
+        valid_to: validTo ?? null,
         rawtext: JSON.stringify({
           title: baseOffer.title,
           gametitle: gameTitle,
