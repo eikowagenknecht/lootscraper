@@ -10,7 +10,7 @@ import { logger } from "./logger";
  */
 export function getDataPath(): string {
   if (process.env.DOCKER_CONTAINER === "true") {
-    logger.info("Running in Docker container, using /data for data storage");
+    logger.debug("Running in Docker container, using /data for data storage");
     return "/data";
   }
 
