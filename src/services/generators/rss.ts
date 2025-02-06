@@ -8,7 +8,6 @@ import type { Config } from "@/types/config";
 import type { Game, IgdbInfo, Offer, SteamInfo } from "@/types/database";
 import { FeedError } from "@/types/errors";
 import { AtomFeed } from "@/utils/atom";
-import { logger } from "@/utils/logger";
 import { getDataPath } from "@/utils/path";
 import { generateFeedTitle, generateFilename } from "@/utils/stringTools";
 import { DateTime } from "luxon";
@@ -49,8 +48,6 @@ export class RssGenerator {
   }
 
   public async generateFeed(offers: Offer[]): Promise<void> {
-    logger.info(`Generating RSS feed for ${offers.length.toFixed()} offers...`);
-
     for (const offer of offers) {
       const updated =
         offer.valid_from && offer.valid_from > offer.seen_first

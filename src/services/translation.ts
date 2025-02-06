@@ -1,5 +1,4 @@
 import { OfferDuration, type OfferSource, type OfferType } from "@/types/basic";
-import { logger } from "@/utils/logger";
 import { init, t } from "i18next";
 
 const resources = {
@@ -67,7 +66,6 @@ class TranslationService {
       });
 
       this.initialized = true;
-      logger.info("Translation service initialized successfully");
     } catch (error) {
       throw new Error(
         `Failed to initialize translation service: ${

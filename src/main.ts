@@ -16,7 +16,7 @@ function initializeCore() {
 
   // Log debug information
   if (process.env.DEBUG) {
-    logger.info(`DEBUG env is set to ${process.env.DEBUG}`);
+    logger.info(`DEBUG env is set to ${process.env.DEBUG}.`);
   }
 
   // Set timezone for consistent date handling
@@ -24,7 +24,9 @@ function initializeCore() {
   LuxonSettings.defaultLocale = "en-US";
   LuxonSettings.throwOnInvalid = true;
 
-  logger.info("Core services initialized");
+  logger.info(
+    `Core initialized. Logging with level ${configuredLevel} from now on.`,
+  );
 }
 
 /**

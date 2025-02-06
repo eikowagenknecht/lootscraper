@@ -116,13 +116,14 @@ class ScraperService {
       return;
     }
 
-    logger.info(
-      `Scheduled next run for ${schedule.name} at ${nextRun.toISO()}`,
-    );
-    await scheduleRun({
+    const dbRun = await scheduleRun({
       scraper: schedule.name,
       scheduled_date: nextRun.toISO(),
     });
+
+    logger.info(
+      `Run #${dbRun.toFixed()} (${schedule.name}) is due ${nextRun.toISO()}`,
+    );
   }
 
   async processQueue(): Promise<void> {
