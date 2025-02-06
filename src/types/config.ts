@@ -49,6 +49,7 @@ export const ConfigSchema = z.object({
     accessToken: z.string().default(""),
     botLogChatId: z.number().default(0),
     botOwnerUserId: z.number().default(0),
+    dropPendingMessages: z.boolean().default(false),
   }),
   igdb: z.object({
     clientId: z.string().default(""),
