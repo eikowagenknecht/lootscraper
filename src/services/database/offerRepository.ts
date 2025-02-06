@@ -1,5 +1,5 @@
 import { getDb } from "@/services/database";
-import { OfferDuration, type OfferSource, type OfferType } from "@/types/basic";
+import type { OfferDuration, OfferSource, OfferType } from "@/types/basic";
 import type { NewOffer, Offer, OfferUpdate } from "@/types/database";
 import { calculateRealValidTo } from "@/utils";
 import { logger } from "@/utils/logger";
@@ -191,7 +191,7 @@ export async function getActiveOffers(
     const offers = await query.selectAll().execute();
 
     logger.debug(
-      `Got ${offers.length.toFixed()} active offers: ${offers.map((o) => o.id).join(", ")}`,
+      `Got ${offers.length.toFixed()} offers: ${offers.map((o) => o.id).join(", ")}`,
     );
 
     const filteredOffers = offers.filter((offer) => {
@@ -215,45 +215,11 @@ export async function getActiveOffers(
     });
 
     logger.debug(
-      `Filtered active offers: ${filteredOffers.map((o) => o.id).join(", ")}`,
+      `Actually active offers: ${filteredOffers.map((o) => o.id).join(", ")}`,
     );
     return filteredOffers;
   } catch (error) {
     handleError("get active offers", error);
-  }
-}
-
-export async function getNewOffers(
-  now: DateTime,
-  type: OfferType,
-  source: OfferSource,
-  duration: OfferDuration,
-  lastOfferId: number,
-): Promise<Offer[]> {
-  try {
-    let query = getDb()
-      .selectFrom("offers")
-      .selectAll()
-      .where("id", ">", lastOfferId)
-      .where("type", "=", type)
-      .where("source", "=", source)
-      .where("duration", "=", duration);
-
-    // For non-ALWAYS offers, check if they're still valid
-    if (duration !== OfferDuration.ALWAYS) {
-      logger.debug(
-        `Filtering for offers that are still valid on ${now.toISO()}`,
-      );
-      query = query.where((eb) =>
-        eb.or([eb("valid_to", "is", null), eb("valid_to", ">", now.toISO())]),
-      );
-    }
-
-    query = query.orderBy("id", "asc");
-
-    return await query.execute();
-  } catch (error) {
-    handleError("get new offers", error);
   }
 }
 

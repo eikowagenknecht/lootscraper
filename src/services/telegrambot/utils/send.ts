@@ -1,5 +1,5 @@
 import { getNewAnnouncements } from "@/services/database/announcementRepository";
-import { getNewOffers } from "@/services/database/offerRepository";
+import { getActiveOffers } from "@/services/database/offerRepository";
 import {
   deactivateTelegramChat,
   getTelegramChatById,
@@ -44,13 +44,12 @@ export async function sendNewOffersToChat(
     for (const subscription of subscriptions) {
       let latestOfferId = subscription.last_offer_id;
 
-      const offers = await getNewOffers(
-        DateTime.now(),
-        subscription.type,
-        subscription.source,
-        subscription.duration,
-        subscription.last_offer_id,
-      );
+      const offers = await getActiveOffers(DateTime.now(), {
+        type: subscription.type,
+        source: subscription.source,
+        duration: subscription.duration,
+        lastOfferId: subscription.last_offer_id,
+      });
 
       for (const offer of offers) {
         // For channels, groups and supergroups, show no buttons as they would
