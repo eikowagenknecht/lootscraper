@@ -1,7 +1,7 @@
-import { telegramBotService } from "@/bot/service";
 import { browserService } from "@/services/browser";
 import { config } from "@/services/config";
 import { database } from "@/services/database";
+import { telegramBotService } from "@/services/telegrambot";
 import type { Config } from "@/types";
 import { addTelegramTransport, logger } from "@/utils/logger";
 import { feedService } from "./feed";

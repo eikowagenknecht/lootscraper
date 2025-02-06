@@ -135,6 +135,7 @@ export class TelegramBot {
 
     try {
       // Start the bot
+      // TODO: Drop pending updates (configurable)
       await this.bot.start({
         onStart: () => {
           logger.info("Telegram bot started successfully");

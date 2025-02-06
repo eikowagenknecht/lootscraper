@@ -1,4 +1,3 @@
-import { telegramBotService } from "@/bot/service";
 import { formatOfferMessage } from "@/bot/utils/formatters";
 import { createOfferKeyboard } from "@/bot/utils/keyboards";
 import { getNewAnnouncements } from "@/services/database/announcementRepository";
@@ -13,6 +12,7 @@ import {
   getTelegramSubscriptions,
   updateTelegramSubscription,
 } from "@/services/database/telegramSubscriptionRepository";
+import { telegramBotService } from "@/services/telegrambot";
 import { ChatType } from "@/types";
 import { logger } from "@/utils/logger";
 import { GrammyError } from "grammy";
