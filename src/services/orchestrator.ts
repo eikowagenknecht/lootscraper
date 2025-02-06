@@ -1,5 +1,5 @@
 import { telegramBotService } from "@/bot/service";
-import { browser } from "@/services/browser";
+import { browserService } from "@/services/browser";
 import { config } from "@/services/config";
 import { database } from "@/services/database";
 import type { Config } from "@/types";
@@ -87,7 +87,7 @@ async function initializeServices(cfg: Config): Promise<void> {
   // Browser and scraper services are only needed for scraping
   if (cfg.actions.scrapeOffers || cfg.actions.scrapeInfo) {
     logger.info("Initializing browser service.");
-    await browser.initialize(cfg);
+    await browserService.initialize(cfg);
   }
 
   if (cfg.actions.scrapeOffers) {
@@ -132,7 +132,7 @@ export async function shutdownApp(): Promise<void> {
   //await ftpService.destroy();
   //await gameInfoService.destroy();
   //await scraperService.destroy();
-  await browser.destroy();
+  await browserService.destroy();
   //await telegramBotService.destroy();
   await database.destroy();
 

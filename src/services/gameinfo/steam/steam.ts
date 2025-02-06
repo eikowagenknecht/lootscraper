@@ -1,4 +1,4 @@
-import { browser } from "@/services/browser";
+import { browserService } from "@/services/browser";
 import type { NewSteamInfo } from "@/types/database";
 import { getMatchScore } from "@/utils";
 import { logger } from "@/utils/logger";
@@ -44,7 +44,7 @@ export class SteamClient {
   public async findSteamId(searchString: string): Promise<number | null> {
     logger.debug(`Finding Steam ID for: ${searchString}`);
 
-    const context = browser.getContext();
+    const context = browserService.getContext();
 
     const searchUrl = new URL("https://store.steampowered.com/search/");
     searchUrl.searchParams.set("term", searchString);
@@ -138,7 +138,7 @@ export class SteamClient {
     score?: number;
     recommendations?: number;
   }> {
-    const context = browser.getContext();
+    const context = browserService.getContext();
     const page = await context.newPage();
     try {
       await page.goto(`${SteamClient.STORE_URL}/app/${appId.toFixed()}`, {

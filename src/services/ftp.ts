@@ -51,14 +51,7 @@ class FTPService {
       const feedFiles = getAllEnabledFeedFilenames(
         this.config.common.feedFilePrefix,
       );
-      const uploadResults = await this.uploadMultipleFiles(feedFiles);
-      for (const result of uploadResults) {
-        if (result.success) {
-          logger.info(`Uploaded ${result.fileName}.`);
-        } else {
-          logger.error(`Failed to upload ${result.fileName}: ${result.error}`);
-        }
-      }
+      await this.uploadMultipleFiles(feedFiles);
     } catch (error) {
       logger.error(
         `Failed to upload feeds: ${error instanceof Error ? error.message : String(error)}`,

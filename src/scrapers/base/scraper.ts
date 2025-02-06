@@ -1,5 +1,5 @@
 import { resolve } from "node:path";
-import { browser } from "@/services/browser";
+import { browserService } from "@/services/browser";
 import { OfferCategory } from "@/types";
 import { OfferDuration, OfferType } from "@/types/basic";
 import type { OfferSource } from "@/types/basic";
@@ -177,7 +177,7 @@ export abstract class BaseScraper<T extends RawOffer = RawOffer> {
    * const offers = await scraper.scrape();
    */
   public async scrape(): Promise<NewOffer[]> {
-    this.context = browser.getContext();
+    this.context = browserService.getContext();
 
     try {
       const offers = await this.readOffers();

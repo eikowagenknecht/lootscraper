@@ -8,7 +8,7 @@ import type { Config, NewOffer } from "@/types";
 import { logger } from "@/utils/logger";
 import { Cron } from "croner";
 import { DateTime } from "luxon";
-import { browser } from "./browser";
+import { browserService } from "./browser";
 import {
   addMissingFieldsToOffer,
   createOffer,
@@ -90,7 +90,7 @@ class ScraperService {
   async queueScraper(
     scraperClass: ScraperClass,
     forceNow = false,
-  ): Promise<void> {
+  ): Promise<DateTime> {
     const schedule = getScraperSchedule(scraperClass);
 
     let nextRun: DateTime | undefined = undefined;
@@ -112,8 +112,7 @@ class ScraperService {
     }
 
     if (!nextRun) {
-      logger.error(`Failed to calculate next execution for ${schedule.name}`);
-      return;
+      throw new Error("Failed to calculate next execution time.");
     }
 
     const dbRun = await scheduleRun({
@@ -122,20 +121,20 @@ class ScraperService {
     });
 
     logger.info(
-      `Run #${dbRun.toFixed()} (${schedule.name}) is due ${nextRun.toISO()}`,
+      `Run #${dbRun.toFixed()} (${schedule.name}) is due ${nextRun.toISO()}.`,
     );
+
+    return nextRun;
   }
 
   async processQueue(): Promise<void> {
     if (!this.config) {
-      logger.error("Scraper service not initialized");
+      logger.error("Scraper service not initialized.");
       return;
     }
 
     if (this.isScraping) {
-      logger.verbose(
-        "Scraper service is already scraping, skipping execution...",
-      );
+      logger.verbose("Scraper service is already scraping, skipping check.");
       return;
     }
 
@@ -144,7 +143,7 @@ class ScraperService {
     const nextRun = await getNextDueRun();
 
     if (!nextRun) {
-      logger.verbose("No scraping run is due at this time.");
+      logger.debug("No scraping run is due at this time.");
       this.isScraping = false;
       return;
     }
@@ -164,14 +163,17 @@ class ScraperService {
       return;
     }
 
-    logger.info(`Running scraper ${nextRun.scraper}...`);
-
     // Step 3 - Update the run to mark it as started
     await updateScrapingRun(nextRun.id, {
       started_date: DateTime.now().toISO(),
     });
 
-    // Step 4 - Initialize the scraper and run it
+    // Step 4 - Spin up the browser if needed
+    if (!browserService.isInitialized()) {
+      await browserService.initialize(this.config);
+    }
+
+    // Step 5 - Initialize the scraper and run it
     try {
       const scraper = new scraperClass(this.config);
       logger.info(
@@ -179,7 +181,7 @@ class ScraperService {
       );
       const scrapeResults = await this.runSingleScrape(scraper);
 
-      // Step 5 - Mark the run as completed
+      // Step 6 - Mark the run as completed
       await updateScrapingRun(nextRun.id, {
         finished_date: DateTime.now().toISO(),
         offers_found: scrapeResults.offers,
@@ -198,10 +200,25 @@ class ScraperService {
       });
     }
 
-    // Step 6 - Queue the next run for this scraper
+    // Step 7 - Queue the next run for this scraper
     await this.queueScraper(scraperClass);
 
-    // Step 7 - Done, ready for the next run
+    // Step 8 - Check if we have a pause of more than 3min between runs and spin
+    // down the browser to save resources
+
+    const nextDueRun = await getNextDueRun();
+
+    if (nextDueRun) {
+      const nextDueRunDate = DateTime.fromISO(nextDueRun.scheduled_date);
+      if (nextDueRunDate > DateTime.now().plus({ minutes: 3 })) {
+        logger.info(
+          `Next run is in more than 3 minutes (${nextDueRunDate.toISO()}), spinning down browser to save resources.`,
+        );
+        await browserService.destroy();
+      }
+    }
+
+    // Step 8 - Done, ready for the next run
     this.isScraping = false;
   }
 
@@ -219,7 +236,7 @@ class ScraperService {
       offers = await scraper.scrape();
     } finally {
       // Refresh the context after each scrape to prevent memory leaks
-      await browser.refreshContext();
+      await browserService.refreshContext();
     }
 
     // Store offers and track if we found any new ones

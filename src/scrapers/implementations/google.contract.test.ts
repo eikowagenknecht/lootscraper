@@ -1,4 +1,4 @@
-import { browser } from "@/services/browser";
+import { browserService } from "@/services/browser";
 import { config } from "@/services/config";
 import { beforeAll, describe, expect, test } from "vitest";
 import { GoogleGamesScraper } from "./google";
@@ -6,7 +6,7 @@ import { GoogleGamesScraper } from "./google";
 describe("Google Play Games Scraper Contract Tests", () => {
   beforeAll(async () => {
     config.loadConfig();
-    await browser.initialize(config.get());
+    await browserService.initialize(config.get());
   });
 
   test("should scrape free games correctly", async () => {

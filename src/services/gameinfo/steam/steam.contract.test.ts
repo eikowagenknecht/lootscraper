@@ -1,4 +1,4 @@
-import { browser } from "@/services/browser";
+import { browserService } from "@/services/browser";
 import { config } from "@/services/config";
 import { beforeAll, beforeEach, describe, expect, test } from "vitest";
 import { SteamClient } from "./steam";
@@ -6,7 +6,7 @@ import { SteamClient } from "./steam";
 describe("Steam Game Info Contract Tests", () => {
   beforeAll(async () => {
     config.loadConfig();
-    await browser.initialize(config.get());
+    await browserService.initialize(config.get());
   });
 
   let steam: SteamClient;
