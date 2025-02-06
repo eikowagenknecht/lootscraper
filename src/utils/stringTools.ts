@@ -295,7 +295,7 @@ export function generateFeedTitle(combination?: FeedCombination): string {
   );
 }
 
-export function getEnabledFeedFilenames({
+function getEnabledFeedFilenames({
   prefix,
   extension,
   enabledCombinations,

@@ -16,10 +16,7 @@ export async function getIgdbInfoById(id: number): Promise<IgdbInfo | null> {
   }
 }
 
-export async function updateIgdbInfo(
-  id: number,
-  info: IgdbInfoUpdate,
-): Promise<void> {
+async function updateIgdbInfo(id: number, info: IgdbInfoUpdate): Promise<void> {
   try {
     await getDb()
       .updateTable("igdb_info")

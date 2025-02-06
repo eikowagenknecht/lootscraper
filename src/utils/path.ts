@@ -31,18 +31,3 @@ export function getTemplatesPath(): string {
 
   return resolve(process.cwd(), "templates");
 }
-
-/**
- * Get the path to the module directory.
- * In a Docker container, this is `/app/dist`.
- * Otherwise, it is `./dist`.
- *
- * @returns Path to the module directory
- */
-export function getModulePath(): string {
-  if (process.env.DOCKER_CONTAINER === "true") {
-    return "/app/dist";
-  }
-
-  return resolve(process.cwd(), "dist");
-}

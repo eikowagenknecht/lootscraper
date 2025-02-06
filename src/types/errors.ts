@@ -45,14 +45,3 @@ export class FeedError extends LootScraperError {
     super(`Feed generation error: ${message}`);
   }
 }
-
-export class BotError extends LootScraperError {
-  constructor(
-    message: string,
-    public readonly chatId?: number,
-  ) {
-    super(
-      `Bot error: ${message}${chatId ? ` for chat ${chatId.toFixed()}` : ""}`,
-    );
-  }
-}

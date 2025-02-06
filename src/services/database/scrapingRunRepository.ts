@@ -8,9 +8,7 @@ import type { UpdateResult } from "kysely";
 import { DateTime } from "luxon";
 import { handleError, handleInsertResult, handleUpdateResult } from "./common";
 
-export async function getScheduledRuns(
-  scraper: string,
-): Promise<ScrapingRun[]> {
+async function getScheduledRuns(scraper: string): Promise<ScrapingRun[]> {
   try {
     let query = getDb()
       .selectFrom("scraping_runs")
