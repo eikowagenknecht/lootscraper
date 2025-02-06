@@ -1,4 +1,4 @@
-import { browser } from "@/services/browser";
+import { browserService } from "@/services/browser";
 import { config } from "@/services/config";
 import { DateTime } from "luxon";
 import { beforeAll, describe, expect, test } from "vitest";
@@ -7,7 +7,7 @@ import { AmazonLootScraper } from "./loot";
 describe("Amazon Loot Scraper Contract Tests", () => {
   beforeAll(async () => {
     config.loadConfig();
-    await browser.initialize(config.get());
+    await browserService.initialize(config.get());
   });
 
   test("should scrape loot correctly", { timeout: 120000 }, async () => {

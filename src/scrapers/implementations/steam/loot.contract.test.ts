@@ -1,4 +1,4 @@
-import { browser } from "@/services/browser";
+import { browserService } from "@/services/browser";
 import { config } from "@/services/config";
 import { DateTime } from "luxon";
 import { beforeAll, describe, expect, it } from "vitest";
@@ -7,7 +7,7 @@ import { SteamLootScraper } from "./loot";
 describe("Steam Loot Scraper Contract Tests", () => {
   beforeAll(async () => {
     config.loadConfig();
-    await browser.initialize(config.get());
+    await browserService.initialize(config.get());
   });
 
   it("should scrape free DLC correctly", { timeout: 120000 }, async () => {

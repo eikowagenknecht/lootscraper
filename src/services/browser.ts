@@ -47,6 +47,10 @@ class BrowserService {
     }
   }
 
+  public isInitialized(): boolean {
+    return this.browser !== null;
+  }
+
   public getContext(): BrowserContext {
     if (!this.context) {
       throw new BrowserError(
@@ -110,4 +114,4 @@ class BrowserService {
 }
 
 // Export a singleton instance
-export const browser = BrowserService.getInstance();
+export const browserService = BrowserService.getInstance();

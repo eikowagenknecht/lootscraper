@@ -45,7 +45,7 @@ export class TelegramBotService {
     void this.bot.start();
 
     // Start periodic announcement check
-    this.startAnnouncementCheck();
+    this.startBroadcastCheck();
   }
 
   public async stop(): Promise<void> {
@@ -68,36 +68,38 @@ export class TelegramBotService {
     return this.bot.getBot();
   }
 
-  private startAnnouncementCheck(): void {
+  private startBroadcastCheck(): void {
     const checkNewMessages = async () => {
       if (this.sendingBroadcast) {
-        logger.verbose("Skipping new messages check, already running.");
+        logger.verbose(
+          "Telegram service is already broadcasting messages, skipping check.",
+        );
         return;
       }
       this.sendingBroadcast = true;
       try {
-        logger.verbose("Checking for new announcements and offers.");
+        logger.debug("Checking for new broadcasts to send.");
         await this.broadcastNewMessages();
         this.sendingBroadcast = false;
       } catch (error) {
         logger.error(
-          `Error in new message check: ${error instanceof Error ? error.message : String(error)}`,
+          `Error in broadcast check: ${error instanceof Error ? error.message : String(error)}`,
         );
         this.sendingBroadcast = false;
       }
     };
 
     // Run immediately
-    logger.verbose("Running new messages check immediately.");
+    logger.verbose("Running broadcast check immediately.");
     void checkNewMessages();
 
-    logger.verbose("Scheduling new messages check to run every 5s.");
+    logger.verbose("Scheduling broadcast check to run every 5s.");
     this.executor = setInterval(() => void checkNewMessages(), 5000);
   }
 
   private async broadcastNewMessages(): Promise<void> {
     if (!this.bot?.getBot().isRunning()) {
-      logger.error("Bot is not running, skipping announcement check.");
+      logger.error("Bot is not running, skipping broadcast check.");
     }
 
     try {

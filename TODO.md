@@ -20,10 +20,6 @@ This will be replaced by GitHub issues again once this is migrated into the main
 ## Performance improvements
 
 - Run xvfb in Docker only if needed (see <https://www.npmjs.com/package/xvfb> for an outdated example) (see main.py)
-- Manage browser instances
-  - Use max 1 browser instance
-  - If a scraper is done running, close the browser. Unless another one is scheduled to run in the next minute.
-  - maybe browser.borrowContext() which creates the beowser and browser.returnContext() which closes it?
 - Spend less database queries after new games have been scraped
 
 ## Stats
