@@ -1,6 +1,10 @@
 import { resolve } from "node:path";
 import { telegramBotService } from "@/services/telegrambot";
-import { bold, escapeText } from "@/services/telegrambot/utils/markdown";
+import {
+  bold,
+  escapeCode,
+  escapeText,
+} from "@/services/telegrambot/utils/markdown";
 import type { TelegramLogLevel } from "@/types";
 import type { Format, TransformableInfo } from "logform";
 import { DateTime } from "luxon";
@@ -238,7 +242,7 @@ class TelegramTransport extends Transport {
       let message = escapeText(`${icon} ${messageText}`);
 
       if (info.stack) {
-        message += `\n\n${bold("Stack:")}\n\`\`\`\n${escapeText(info.stack)}\n\`\`\``;
+        message += `\n\n${bold("Stack:")}\n\`\`\`\n${escapeCode(info.stack)}\n\`\`\``;
       }
 
       return message;

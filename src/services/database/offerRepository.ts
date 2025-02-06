@@ -344,12 +344,6 @@ export async function addMissingFieldsToOffer(
   return true;
 }
 
-export async function touchOffer(id: number): Promise<void> {
-  await updateOffer(id, {
-    seen_last: DateTime.now().toISO(),
-  });
-}
-
 export async function clearGames() {
   try {
     await getDb()

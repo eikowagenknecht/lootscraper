@@ -23,7 +23,7 @@ export interface FeedCombination {
   duration: OfferDuration;
 }
 
-export interface ScraperSchedule {
+interface ScraperSchedule {
   name: string;
   schedule: CronConfig[];
 }
@@ -71,24 +71,10 @@ function isScraperEnabled(name: string, cfg: Config): boolean {
   return cfg.scraper.enabledScrapers.includes(name);
 }
 
-export function getEnabledScraperSchedules(): ScraperSchedule[] {
-  const schedules: ScraperSchedule[] = [];
-  const cfg = config.get();
-
-  for (const Scraper of allScrapers) {
-    const schedule = getScraperSchedule(Scraper);
-    if (isScraperEnabled(schedule.name, cfg)) {
-      schedules.push(schedule);
-    }
-  }
-
-  return schedules;
-}
-
 export function getEnabledScraperClasses(): ScraperClass[] {
   const cfg = config.get();
   return allScrapers.filter((Scraper) =>
-    isScraperEnabled(getScraperSchedule(Scraper).name, cfg),
+    isScraperEnabled(Scraper.prototype.getScraperName(), cfg),
   );
 }
 

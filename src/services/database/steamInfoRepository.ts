@@ -20,7 +20,7 @@ export async function getSteamInfoById(id: number): Promise<SteamInfo | null> {
   }
 }
 
-export async function updateSteamInfo(
+async function updateSteamInfo(
   id: number,
   info: SteamInfoUpdate,
 ): Promise<void> {

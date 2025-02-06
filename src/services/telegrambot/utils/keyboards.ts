@@ -6,7 +6,7 @@ import type { Offer } from "@/types/database";
 import type { InlineKeyboardButton, InlineKeyboardMarkup } from "grammy/types";
 import { packData } from "./callbackPack";
 
-export interface CreateOfferKeyboardOptions {
+interface CreateOfferKeyboardOptions {
   detailsShowButton?: boolean;
   detailsHideButton?: boolean;
   dismissButton?: boolean;

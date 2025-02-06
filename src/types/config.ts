@@ -1,8 +1,8 @@
 import { z } from "zod";
-import { InfoSource, OfferDuration, OfferSource, OfferType } from "./basic";
+import { InfoSource } from "./basic";
 
 // Enums
-export const LogLevel = z.enum([
+const LogLevel = z.enum([
   "ERROR",
   "WARN",
   "INFO",
@@ -11,14 +11,10 @@ export const LogLevel = z.enum([
   "DEBUG",
   "SILLY",
 ]);
-export type LogLevel = z.infer<typeof LogLevel>;
+type LogLevel = z.infer<typeof LogLevel>;
 
 export const TelegramLogLevel = LogLevel;
 export type TelegramLogLevel = z.infer<typeof TelegramLogLevel>;
-
-export const OfferSourceSchema = z.nativeEnum(OfferSource);
-export const OfferTypeSchema = z.nativeEnum(OfferType);
-export const OfferDurationSchema = z.nativeEnum(OfferDuration);
 
 // Config Schema
 export const ConfigSchema = z.object({
