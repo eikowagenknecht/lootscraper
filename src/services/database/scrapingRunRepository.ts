@@ -5,6 +5,7 @@ import type {
   ScrapingRunUpdate,
 } from "@/types/database";
 import type { UpdateResult } from "kysely";
+import { DateTime } from "luxon";
 import { handleError, handleInsertResult, handleUpdateResult } from "./common";
 
 export async function getScheduledRuns(
@@ -102,11 +103,18 @@ export async function removeScheduledRun(id: number): Promise<void> {
   }
 }
 
-export async function clearQueue(): Promise<void> {
+export async function cleanQueue(): Promise<void> {
   try {
     await getDb()
       .deleteFrom("scraping_runs")
-      .where("started_date", "is", null)
+      .where("started_date", "is not", null)
+      .where("finished_date", "is", null)
+      .execute();
+
+    // Also delete all runs that have been finished more than 30 days ago to keep the table size
+    await getDb()
+      .deleteFrom("scraping_runs")
+      .where("finished_date", "<", DateTime.now().minus({ days: 30 }).toISO())
       .execute();
   } catch (error) {
     handleError("clear scraping queue", error);

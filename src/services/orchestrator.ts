@@ -36,7 +36,7 @@ export async function startApp(): Promise<void> {
     logger.info("Service initialization complete");
 
     // Start services
-    startServices();
+    await startServices();
     state.isRunning = true;
 
     // Register shutdown handlers
@@ -102,7 +102,7 @@ async function initializeServices(cfg: Config): Promise<void> {
   }
 }
 
-function startServices() {
+async function startServices() {
   const cfg = config.get();
 
   // Start Telegram bot if enabled
@@ -114,7 +114,7 @@ function startServices() {
   // Start scraper service if enabled
   if (cfg.actions.scrapeOffers) {
     // This starts the scraper service in the background until stopped
-    scraperService.start();
+    await scraperService.start();
   }
 }
 

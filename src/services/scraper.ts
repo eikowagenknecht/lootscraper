@@ -15,6 +15,7 @@ import {
   findOffer,
 } from "./database/offerRepository";
 import {
+  cleanQueue,
   getNextDueRun,
   removeScheduledRun,
   scheduleRun,
@@ -53,7 +54,10 @@ class ScraperService {
     await this.queueEnabledScrapers();
   }
 
-  public start(): void {
+  public async start(): Promise<void> {
+    // Clean leftovers from previous runs
+    await cleanQueue();
+
     this.executor = setInterval(() => {
       void this.processQueue();
     }, 5000); // Check every 5 seconds
@@ -139,7 +143,7 @@ class ScraperService {
     const nextRun = await getNextDueRun();
 
     if (!nextRun) {
-      logger.verbose("No run is due at this time.");
+      logger.verbose("No scraping run is due at this time.");
       this.isScraping = false;
       return;
     }
@@ -169,7 +173,9 @@ class ScraperService {
     // Step 4 - Initialize the scraper and run it
     try {
       const scraper = new scraperClass(this.config);
-      logger.info(`Starting scrape run ${nextRun.id.toFixed()}...`);
+      logger.info(
+        `Starting scrape run ${nextRun.id.toFixed()} (${nextRun.scraper}).`,
+      );
       const scrapeResults = await this.runSingleScrape(scraper);
 
       // Step 5 - Mark the run as completed

@@ -177,8 +177,6 @@ export abstract class BaseScraper<T extends RawOffer = RawOffer> {
    * const offers = await scraper.scrape();
    */
   public async scrape(): Promise<NewOffer[]> {
-    logger.info(`Running scraper ${this.getScraperName()}`);
-
     this.context = browser.getContext();
 
     try {
@@ -191,7 +189,7 @@ export abstract class BaseScraper<T extends RawOffer = RawOffer> {
       return filteredOffers;
     } catch (error) {
       logger.error(
-        `Running scraper ${this.getScraperName()}: ${error instanceof Error ? error.message : String(error)}`,
+        `Error in scraper ${this.getScraperName()}: ${error instanceof Error ? error.message : String(error)}`,
       );
       return [];
     }
