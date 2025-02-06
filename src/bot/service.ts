@@ -71,12 +71,12 @@ export class TelegramBotService {
   private startAnnouncementCheck(): void {
     const checkNewMessages = async () => {
       if (this.sendingBroadcast) {
-        logger.verbose("Skipping new messages check, already running");
+        logger.verbose("Skipping new messages check, already running.");
         return;
       }
       this.sendingBroadcast = true;
       try {
-        logger.verbose("Checking for new announcements and offers...");
+        logger.verbose("Checking for new announcements and offers.");
         await this.broadcastNewMessages();
         this.sendingBroadcast = false;
       } catch (error) {
@@ -88,16 +88,16 @@ export class TelegramBotService {
     };
 
     // Run immediately
-    logger.verbose("Running new messages check immediately");
+    logger.verbose("Running new messages check immediately.");
     void checkNewMessages();
 
-    logger.verbose("Scheduling new messages check to run every minute");
-    this.executor = setInterval(() => void checkNewMessages(), 60000);
+    logger.verbose("Scheduling new messages check to run every 5s.");
+    this.executor = setInterval(() => void checkNewMessages(), 5000);
   }
 
   private async broadcastNewMessages(): Promise<void> {
     if (!this.bot?.getBot().isRunning()) {
-      logger.error("Bot is not running, skipping announcement check");
+      logger.error("Bot is not running, skipping announcement check.");
     }
 
     try {

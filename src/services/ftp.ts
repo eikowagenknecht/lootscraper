@@ -117,7 +117,7 @@ class FTPService {
   ): Promise<FTPUploadResult> {
     const fileName = basename(file);
 
-    logger.debug(`Start UploadFile ${fileName}`);
+    logger.verbose(`Uploading ${fileName}.`);
 
     if (!options.client && !options.reuseConnection) {
       const client = await this.createFTPClient();
@@ -142,16 +142,15 @@ class FTPService {
 
     try {
       const absolutePath = resolve(getDataPath(), file);
-      logger.debug(`Uploading ${fileName}`);
       await client.uploadFrom(absolutePath, fileName);
-      logger.debug(`Uploaded ${fileName}`);
+      logger.verbose(`Uploaded ${fileName}.`);
       return {
         fileName,
         success: true,
       };
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : String(err);
-      logger.error(`Failed to upload ${fileName}: ${errorMessage}`);
+      logger.error(`Failed to upload ${fileName}: ${errorMessage}.`);
       return {
         fileName,
         success: false,
@@ -159,7 +158,7 @@ class FTPService {
       };
     } finally {
       if (!options.reuseConnection) {
-        logger.debug("Closing FTP client because reuseConnection is false");
+        logger.debug("Closing FTP client because reuseConnection is false.");
         client.close();
       }
     }
@@ -169,6 +168,8 @@ class FTPService {
     if (files.length === 0) {
       return [];
     }
+
+    logger.info(`Batch uploading ${files.length.toFixed(0)} files.`);
 
     const client = await this.createFTPClient();
     if (!client) {
@@ -191,7 +192,6 @@ class FTPService {
       return results;
     } finally {
       client.close();
-      logger.info(`Completed upload batch of ${files.length.toFixed(0)} files`);
     }
   }
 }
