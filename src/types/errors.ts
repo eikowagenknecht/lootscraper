@@ -1,4 +1,4 @@
-// TODO: Use these everywhere
+// TODO: Use these more consistently
 export class LootScraperError extends Error {
   constructor(message: string) {
     super(message);
