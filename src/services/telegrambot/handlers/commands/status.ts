@@ -1,6 +1,6 @@
 import { getTelegramSubscriptions } from "@/services/database/telegramSubscriptionRepository";
-import { DATE_FORMATS } from "@/services/telegrambot/types/formatters";
 import type { BotContext } from "@/services/telegrambot/types/middleware";
+import { DATE_FORMATS } from "@/services/telegrambot/utils/formatters";
 import { escapeText } from "@/services/telegrambot/utils/markdown";
 import { translationService } from "@/services/translation";
 import type { CommandContext } from "grammy";

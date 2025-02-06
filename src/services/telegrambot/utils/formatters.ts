@@ -5,8 +5,10 @@ import type { Offer } from "@/types/database";
 import { DateTime, type Duration } from "luxon";
 import { bold, escapeText, italic, link } from "./markdown";
 
-const TIMESTAMP_READABLE_WITH_HOUR = "yyyy-MM-dd - HH:mm";
-const TIMESTAMP_SHORT = "yyyy-MM-dd";
+export const DATE_FORMATS = {
+  READABLE_WITH_HOUR: "yyyy-MM-dd - HH:mm",
+  SHORT: "yyyy-MM-dd",
+} as const;
 
 interface FormatOfferMessageOptions {
   tzOffset?: number | null;
@@ -56,9 +58,9 @@ export async function formatOfferMessage(
       ? validTo
           .setZone(`UTC${tzOffset >= 0 ? "+" : ""}${tzOffset.toFixed()}`)
           .toFormat(
-            `${TIMESTAMP_READABLE_WITH_HOUR} UTC${tzOffset >= 0 ? "+" : "-"}${tzOffset.toFixed()}`,
+            `${DATE_FORMATS.READABLE_WITH_HOUR} UTC${tzOffset >= 0 ? "+" : "-"}${tzOffset.toFixed()}`,
           )
-      : validTo.toUTC().toFormat(`${TIMESTAMP_READABLE_WITH_HOUR} UTC`);
+      : validTo.toUTC().toFormat(`${DATE_FORMATS.READABLE_WITH_HOUR} UTC`);
 
     const now = DateTime.now();
     let diff: Duration;
@@ -157,11 +159,13 @@ export async function formatOfferMessage(
   // Release date
   if (game.igdbInfo?.release_date) {
     content += `${bold("Release date:")} ${escapeText(
-      DateTime.fromISO(game.igdbInfo.release_date).toFormat(TIMESTAMP_SHORT),
+      DateTime.fromISO(game.igdbInfo.release_date).toFormat(DATE_FORMATS.SHORT),
     )}\n`;
   } else if (game.steamInfo?.release_date) {
     content += `${bold("Release date:")} ${escapeText(
-      DateTime.fromISO(game.steamInfo.release_date).toFormat(TIMESTAMP_SHORT),
+      DateTime.fromISO(game.steamInfo.release_date).toFormat(
+        DATE_FORMATS.SHORT,
+      ),
     )}\n`;
   }
 
