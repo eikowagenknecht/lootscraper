@@ -1,6 +1,6 @@
 import { copyFileSync, mkdirSync, readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
-import { type ScraperClass, allScrapers } from "@/scrapers/utils";
+import { type ScraperClass, allScrapers } from "@/services/scraper/utils";
 import { ConfigError, InfoSource } from "@/types";
 import { type Config, ConfigSchema } from "@/types/config";
 import { logger } from "@/utils/logger";

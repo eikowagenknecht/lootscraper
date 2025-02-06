@@ -1,7 +1,7 @@
 import {
   type FeedCombination,
   getEnabledFeedCombinations,
-} from "@/scrapers/utils";
+} from "@/services/scraper/utils";
 import type { Config } from "@/types/config";
 import type { Offer } from "@/types/database";
 import { logger } from "@/utils/logger";
