@@ -10,8 +10,8 @@ export const strictModeMigration = {
     await db.schema
       .createTable("igdb_info_new")
       .addColumn("id", "integer", (col) => col.primaryKey().notNull())
-      .addColumn("url", "text")
       .addColumn("name", "text")
+      .addColumn("url", "text")
       .addColumn("short_description", "text")
       .addColumn("release_date", "text") // SQLite doesn't have a native datetime type
       .addColumn("user_score", "integer")
@@ -25,8 +25,8 @@ export const strictModeMigration = {
     await db.schema
       .createTable("steam_info_new")
       .addColumn("id", "integer", (col) => col.primaryKey().notNull())
-      .addColumn("url", "text", (col) => col.notNull())
       .addColumn("name", "text")
+      .addColumn("url", "text", (col) => col.notNull())
       .addColumn("short_description", "text")
       .addColumn("release_date", "text") // SQLite doesn't have a native datetime type
       .addColumn("genres", "text")
