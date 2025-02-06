@@ -66,6 +66,7 @@ export class GogGamesScraper extends GogBaseScraper {
 
       // Clean up title
       title = title
+        .replace(/\n/g, " ")
         .trim()
         .replace(/^Claim /, "")
         .replace(/ and don't miss the best GOG offers in the future!$/, "");
@@ -162,10 +163,12 @@ export class GogGamesScraper extends GogBaseScraper {
       page = await this.context.newPage();
       await page.goto(url, { timeout: 30000 });
 
-      const title = await page
+      let title = await page
         .locator(".productcard-basics__title")
         .textContent();
       if (!title) throw new Error("Couldn't find title");
+
+      title = title.replace(/\n/g, " ").trim();
 
       const imgUrl = this.sanitizeImgUrl(
         await page.locator(".productcard-player__logo").getAttribute("srcset"),
