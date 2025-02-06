@@ -49,9 +49,9 @@ function levenshteinDistance(s1: string, s2: string): number {
 }
 
 /**
- * TODO: This is currently a Claude-generated Levenshtein distance algorithm.
- * The results need to be checked against the Python difflib implementation.
- * If they are not close enough, it should be replaced with e.g. fuse.js.
+ * Warning: This is currently a Claude-generated Levenshtein distance algorithm.
+ * The results need to be monitored. If it is not good enough, it should be
+ * replaced with e.g. fuse.js. The benchmark is Python's difflib.SequenceMatcher.
  *
  * @param search
  * @param result

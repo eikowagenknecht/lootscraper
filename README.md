@@ -9,6 +9,18 @@ You like getting games for free, but you *don't* like having to keep track of th
 Also your F5 key starts to look a bit worn out?
 Then this is for you!
 
+## Version 2.0
+
+In version 2.0, the project has been completely rewritten.
+It now uses TypeScript instead of Python.
+If you want to migrate from the old version to the new one, you can keep the old database.
+But you need to create a new configuration file as it's format and options have changed significantly.
+
+The new version runs a lot faster (10min instead of 22min when I compared a complete run over all scrapers) and should be more reliable.
+But there may still be some bugs, so please report them if you find any.
+
+You can find the old Python version in the `legacy` branch.
+
 ## Public feeds / channels / bots
 
 Let's face it, you're probably not here because you're interested in the technical details of how this works.
