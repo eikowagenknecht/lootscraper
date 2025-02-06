@@ -8,6 +8,7 @@ import {
   handleAnnounceCommand,
   handleDebugCommand,
   handleErrorCommand,
+  handleRefreshInfoCommand,
   handleScrapeNowCommand,
 } from "./handlers/commands/admin";
 import { handleHelpCommand } from "./handlers/commands/help";
@@ -78,6 +79,11 @@ export class TelegramBot {
       );
       adminCommands.command("debug", "Show chat IDs", handleDebugCommand);
       adminCommands.command("scrapenow", "Scrape now", handleScrapeNowCommand);
+      adminCommands.command(
+        "refreshinfo",
+        "Refresh game info",
+        handleRefreshInfoCommand,
+      );
       adminCommands.command("error", "Generate an error", handleErrorCommand);
 
       this.bot.use(userCommands);

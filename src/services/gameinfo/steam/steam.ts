@@ -66,7 +66,7 @@ export class SteamClient {
         const title = await element.locator(".title").textContent();
         const appId = await element.getAttribute("data-ds-appid");
 
-        logger.verbose(
+        logger.debug(
           `Found title (Steam Id): ${String(title)} (${String(appId)})`,
         );
 

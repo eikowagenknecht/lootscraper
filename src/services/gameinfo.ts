@@ -1,12 +1,6 @@
 import { InfoSource } from "@/types";
 import type { Config } from "@/types/config";
-import type {
-  Game,
-  NewGame,
-  NewIgdbInfo,
-  NewSteamInfo,
-  Offer,
-} from "@/types/database";
+import type { Game, NewIgdbInfo, NewSteamInfo } from "@/types/database";
 import { logger } from "@/utils/logger";
 import {
   createGame,
@@ -24,6 +18,7 @@ class GameInfoService {
   private config: Config | null = null;
   private steamClient: SteamClient | null = null;
   private igdbClient: IgdbClient | null = null;
+  private running = false;
 
   private constructor() {
     // Private constructor to prevent instantiation
@@ -46,57 +41,74 @@ class GameInfoService {
         : null;
   }
 
+  public isRunning() {
+    return this.running;
+  }
+
   /**
    * Update an offer with game information. If the offer already has some
    * information, just update the missing parts. Otherwise, create a new
    * Game and try to populate it with information.
-   * @param offer
+   * @param offerId
    * @returns
    */
-  public async enrichOffer(offer: number | Offer): Promise<void> {
-    let innerOffer: Offer;
-    if (typeof offer === "number") {
-      const dbOffer = await getOfferById(offer);
-      if (!dbOffer) {
-        logger.warn(
-          `Offer with ID ${offer.toFixed()} not found, skipping enrichment.`,
-        );
-        return;
-      }
-      innerOffer = dbOffer;
-    } else {
-      innerOffer = offer;
+  public async enrichOffer(offerId: number): Promise<void> {
+    if (this.running) {
+      logger.error("Game Info service can only process one item at a time.");
     }
 
-    if (!innerOffer.probable_game_name) {
-      logger.warn("Offer has no game name, skipping enrichment.");
+    this.running = true;
+
+    const offer = await getOfferById(offerId);
+    if (!offer) {
+      logger.warn(
+        `Offer with ID ${offerId.toFixed()} not found, skipping enrichment.`,
+      );
+      this.running = false;
       return;
     }
 
-    const existingGame = await this.findExistingGame(
-      innerOffer.probable_game_name,
-    );
+    if (!offer.probable_game_name) {
+      logger.warn("Offer has no game name, skipping enrichment.");
+      this.running = false;
+      return;
+    }
+
+    const existingGame = await this.findExistingGame(offer.probable_game_name);
     if (existingGame) {
-      innerOffer.game_id = existingGame.id;
+      logger.verbose("Game info already exists, using existing info.");
+      await updateOffer(offer.id, { game_id: existingGame.id });
+      this.running = false;
       return;
     }
 
     const [steamInfo, igdbInfo] = await Promise.all([
-      this.getSteamInfo(innerOffer.probable_game_name),
-      this.getIgdbInfo(innerOffer.probable_game_name),
+      this.getSteamInfo(offer.probable_game_name),
+      this.getIgdbInfo(offer.probable_game_name),
     ]);
 
     if (!steamInfo && !igdbInfo) {
-      logger.info(`No game info found for: ${innerOffer.probable_game_name}`);
+      logger.info(`No game info found for ${offer.probable_game_name}.`);
+      this.running = false;
       return;
     }
 
-    logger.info(
-      `Enriching offer with game info: ${innerOffer.probable_game_name}`,
-    );
+    logger.info(`Enriching ${offer.probable_game_name} with game info.`);
 
-    const newGame = await this.saveGameInfo(steamInfo, igdbInfo);
-    await updateOffer(innerOffer.id, { game_id: newGame });
+    if (steamInfo) {
+      await createSteamInfo(steamInfo);
+    }
+    if (igdbInfo) {
+      await createIgdbInfo(igdbInfo);
+    }
+    const newGame = await createGame({
+      steam_id: steamInfo?.id ?? null,
+      igdb_id: igdbInfo?.id ?? null,
+    });
+
+    await updateOffer(offer.id, { game_id: newGame });
+
+    this.running = false;
   }
 
   private async findExistingGame(gameName: string): Promise<Game | null> {
@@ -170,27 +182,6 @@ class GameInfoService {
       );
       return null;
     }
-  }
-
-  private async saveGameInfo(
-    steamInfo: NewSteamInfo | null,
-    igdbInfo: NewIgdbInfo | null,
-  ): Promise<number> {
-    const game: NewGame = {
-      steam_id: steamInfo?.id ?? null,
-      igdb_id: igdbInfo?.id ?? null,
-    };
-
-    // Create game info first as it's required for the game
-    if (steamInfo) {
-      await createSteamInfo(steamInfo);
-    }
-
-    if (igdbInfo) {
-      await createIgdbInfo(igdbInfo);
-    }
-
-    return await createGame(game);
   }
 }
 

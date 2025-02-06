@@ -1,5 +1,5 @@
 import { getDb } from "@/services/database";
-import type { IgdbInfo, NewIgdbInfo } from "@/types/database";
+import type { IgdbInfo, IgdbInfoUpdate, NewIgdbInfo } from "@/types/database";
 import { handleError, handleInsertResult } from "./common";
 
 export async function getIgdbInfoById(id: number): Promise<IgdbInfo | null> {
@@ -16,7 +16,29 @@ export async function getIgdbInfoById(id: number): Promise<IgdbInfo | null> {
   }
 }
 
+export async function updateIgdbInfo(
+  id: number,
+  info: IgdbInfoUpdate,
+): Promise<void> {
+  try {
+    await getDb()
+      .updateTable("igdb_info")
+      .set(info)
+      .where("id", "=", id)
+      .executeTakeFirst();
+  } catch (error) {
+    handleError("update IGDB info", error);
+  }
+}
+
 export async function createIgdbInfo(info: NewIgdbInfo): Promise<number> {
+  const existingInfo = await getIgdbInfoById(info.id);
+
+  if (existingInfo) {
+    await updateIgdbInfo(existingInfo.id, info);
+    return existingInfo.id;
+  }
+
   try {
     const result = await getDb()
       .insertInto("igdb_info")

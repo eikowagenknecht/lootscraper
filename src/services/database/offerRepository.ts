@@ -257,6 +257,18 @@ export async function getNewOffers(
   }
 }
 
+export async function getOffersWithMissingGameInfo(): Promise<Offer[]> {
+  try {
+    return await getDb()
+      .selectFrom("offers")
+      .selectAll()
+      .where("game_id", "is", null)
+      .execute();
+  } catch (error) {
+    handleError("get offers with missing game info", error);
+  }
+}
+
 export async function createOffer(offer: NewOffer): Promise<number> {
   try {
     const result = await getDb()
@@ -336,4 +348,19 @@ export async function touchOffer(id: number): Promise<void> {
   await updateOffer(id, {
     seen_last: DateTime.now().toISO(),
   });
+}
+
+export async function clearGames() {
+  try {
+    await getDb()
+      .transaction()
+      .execute(async (trx) => {
+        await trx.updateTable("offers").set({ game_id: null }).execute();
+        await trx.deleteFrom("games").execute();
+        await trx.deleteFrom("steam_info").execute();
+        await trx.deleteFrom("igdb_info").execute();
+      });
+  } catch (error) {
+    handleError("delete all game info", error);
+  }
 }
