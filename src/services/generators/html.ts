@@ -5,7 +5,6 @@ import { getGameWithInfo } from "@/services/database/gameRepository";
 import { translationService } from "@/services/translation";
 import type { Config } from "@/types/config";
 import type { Offer } from "@/types/database";
-import { logger } from "@/utils/logger";
 import { getDataPath } from "@/utils/path";
 import {
   cleanHtml,
@@ -165,10 +164,6 @@ export class HtmlGenerator {
   }
 
   public async generateHtml(offers: Offer[]): Promise<void> {
-    logger.info(
-      `Generating HTML feed for ${offers.length.toFixed()} offers...`,
-    );
-
     const entries = [];
     for (const offer of offers) {
       const gameInfo = offer.game_id

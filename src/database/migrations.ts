@@ -22,15 +22,17 @@ const migrations: Record<string, Migration> = {
 };
 
 export async function migrateToLatest(db: Kysely<unknown>): Promise<void> {
-  logger.info("Migrating database to latest version");
+  logger.verbose("Checking for DB migrations.");
 
   const hasExistingTables = await checkForExistingTables(db);
-  const hasMigrationTables = await checkForMigrationTables(db);
+  const hasKyselyTables = await checkForKyselyTables(db);
 
   // For existing databases from a pre-Kysely version, add the migration tables
   // and first migration manually to get them up to speed.
-  if (hasExistingTables && !hasMigrationTables) {
-    logger.info("Adding migration tables to existing database.");
+  if (hasExistingTables && !hasKyselyTables) {
+    logger.info(
+      "You are migrating from the Python database. This can take a while.",
+    );
 
     await db.schema
       .createTable("kysely_migration")
@@ -63,27 +65,29 @@ export async function migrateToLatest(db: Kysely<unknown>): Promise<void> {
   try {
     const { error, results } = await migrator.migrateToLatest();
 
-    if (results !== undefined) {
-      for (const migration of results) {
-        if (migration.status === "Success") {
-          logger.info(
-            `Migration "${migration.migrationName}" was executed successfully.`,
-          );
-        } else if (migration.status === "Error") {
-          logger.error(
-            `Failed to execute migration "${migration.migrationName}".`,
-          );
-        }
-      }
+    if (error || results === undefined) {
+      throw new Error(String(error));
     }
 
-    if (error) {
-      // eslint-disable-next-line @typescript-eslint/no-base-to-string
-      throw new DatabaseError(`Failed to migrate: ${String(error)}`);
+    if (results.length === 0) {
+      logger.info("DB is up to date.");
+      return;
+    }
+
+    for (const migration of results) {
+      if (migration.status === "Success") {
+        logger.info(
+          `DB Migration "${migration.migrationName}" was executed successfully.`,
+        );
+      } else if (migration.status === "Error") {
+        logger.error(
+          `Failed to execute DB migration "${migration.migrationName}".`,
+        );
+      }
     }
   } catch (error) {
     throw new DatabaseError(
-      `Migration error: ${error instanceof Error ? error.message : String(error)}`,
+      `DB Migration error: ${error instanceof Error ? error.message : String(error)}`,
     );
   }
 }
@@ -94,12 +98,11 @@ async function checkForExistingTables(db: Kysely<unknown>): Promise<boolean> {
   return tables.length > 0;
 }
 
-async function checkForMigrationTables(db: Kysely<unknown>): Promise<boolean> {
+async function checkForKyselyTables(db: Kysely<unknown>): Promise<boolean> {
   const tables = await db.introspection.getTables({
     withInternalKyselyTables: true,
   });
   // Only look at Kysely's own tables
-  logger.info(`Tables: ${tables.map((table) => table.name).join(", ")}`);
   const systemTables = tables.filter((table) =>
     table.name.startsWith("kysely"),
   );

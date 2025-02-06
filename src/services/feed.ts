@@ -42,7 +42,7 @@ class FeedService {
       return;
     }
 
-    logger.info("New offers found, regenerating feeds...");
+    logger.info("Regenerating feeds.");
     const activeOffers = await getActiveOffers(DateTime.now());
     const allOffers = (await getAllOffers()).filter(
       (offer) =>
@@ -63,17 +63,22 @@ class FeedService {
     }
 
     if (!this.config.actions.generateFeed) {
-      logger.info("Feed generation disabled, skipping");
+      logger.info("Feed generation disabled, skipping.");
       return;
     }
 
     const enabledCombinations: FeedCombination[] = getEnabledFeedCombinations();
 
     for (const combination of enabledCombinations) {
+      logger.info(
+        `Generating feeds for ${combination.source} - ${combination.type} - ${combination.duration}.`,
+      );
+
       await this.generateSourceFeed(combination, activeOffers, allOffers);
     }
 
     // Generate main feed with all offers
+    logger.info("Generating main feed.");
     await this.generateMainFeed(activeOffers, allOffers);
   }
 

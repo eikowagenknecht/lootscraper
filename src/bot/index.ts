@@ -115,7 +115,6 @@ export class TelegramBot {
       await this.bot.init();
 
       this.initialized = true;
-      logger.info("Telegram bot initialized successfully");
     } catch (error) {
       throw new Error(
         `Failed to initialize Telegram bot: ${error instanceof Error ? error.message : String(error)}`,

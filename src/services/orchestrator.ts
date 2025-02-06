@@ -31,11 +31,11 @@ export async function startApp(): Promise<void> {
     const cfg = config.get();
 
     // Initialize services
-    logger.info("Inizializing services");
+    logger.info("Inizializing services.");
     await initializeServices(cfg);
-    logger.info("Service initialization complete");
 
     // Start services
+    logger.info("Starting services.");
     await startServices();
     state.isRunning = true;
 
@@ -43,7 +43,7 @@ export async function startApp(): Promise<void> {
     registerShutdownHandlers();
 
     // Run initial tasks
-    logger.info("Running initial tasks...");
+    logger.info("Running initial tasks.");
     if (cfg.actions.generateFeed) {
       await feedService.updateFeeds();
     }
@@ -58,46 +58,45 @@ export async function startApp(): Promise<void> {
 
 async function initializeServices(cfg: Config): Promise<void> {
   // Initialize core services
-  logger.info("Initializing translation service...");
+  logger.info("Initializing translation service.");
   await translationService.initialize();
 
-  logger.info("Initializing database service...");
+  logger.info("Initializing database service.");
   await database.initialize(cfg);
 
   // Initialize optional services based on config
   if (cfg.actions.telegramBot) {
-    logger.info("Initializing Telegram bot...");
+    logger.info("Initializing Telegram bot.");
     await telegramBotService.initialize(cfg);
 
     // Add Telegram logging transport after bot is initialized
-    logger.info("Adding Telegram transport to logger...");
+    logger.info("Adding Telegram transport to logger.");
     addTelegramTransport(cfg.telegram.logLevel, cfg.telegram.botLogChatId);
-    logger.info("Telegram transport added to logger.");
   }
 
   if (cfg.actions.generateFeed) {
-    logger.info("Initializing feed service...");
+    logger.info("Initializing feed service.");
     feedService.initialize(cfg);
   }
 
   if (cfg.actions.uploadToFtp) {
-    logger.info("Initializing FTP service...");
+    logger.info("Initializing FTP service.");
     ftpService.initialize(cfg);
   }
 
   // Browser and scraper services are only needed for scraping
   if (cfg.actions.scrapeOffers || cfg.actions.scrapeInfo) {
-    logger.info("Initializing browser service...");
+    logger.info("Initializing browser service.");
     await browser.initialize(cfg);
   }
 
   if (cfg.actions.scrapeOffers) {
-    logger.info("Initializing scraper service...");
+    logger.info("Initializing scraper service.");
     await scraperService.initialize(cfg);
   }
 
   if (cfg.actions.scrapeInfo) {
-    logger.info("Initializing game info service...");
+    logger.info("Initializing game info service.");
     gameInfoService.initialize(cfg);
   }
 }

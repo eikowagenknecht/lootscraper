@@ -1,6 +1,5 @@
 import type { Config } from "@/types/config";
 import { BrowserError } from "@/types/errors";
-import { logger } from "@/utils/logger";
 import type { Browser, BrowserContext } from "playwright";
 import { firefox } from "playwright";
 
@@ -41,8 +40,6 @@ class BrowserService {
       this.loadImages = config.browser.loadImages;
 
       await this.refreshContext();
-
-      logger.info("Browser service initialized");
     } catch (error) {
       throw new BrowserError(
         `Failed to initialize browser: ${error instanceof Error ? error.message : String(error)}`,
