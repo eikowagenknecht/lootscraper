@@ -32,44 +32,36 @@ actions:
 
 scraper:
   # The sources to scrape offers from. Comment out to disable.
-  offerSources:
-    # Amazon Games
-    - AMAZON
-    # Apple App Store
-    - APPLE
-    # Epic Games Store
-    - EPIC
-    # GOG
-    - GOG
-    # Google Play Store
-    - GOOGLE
+  enabledScrapers:
+    # Amazon - Games
+    - AmazonGames
+    # Amazon - Loot
+    - AmazonLoot
+    # Apple
+    - AppleGames
+    # Epic
+    - EpicGames
+    # GOG - Games
+    - GogGames
+    # GOG - Always Free
+    - GogAlwaysFree
+    # Google
+    - GoogleGames
     # Humble Store
-    - HUMBLE
+    - HumbleGames
     # Itch.io
-    - ITCH
-    # Steam
-    - STEAM
+    - ItchGames
+    # Steam - Games
+    - SteamGames
+    # Steam - Loot
+    - SteamLoot
     # Ubisoft Connect
-    - UBISOFT
-  # The types of offers to scrape. Comment out to disable.
-  offerTypes:
-    # Games
-    - GAME
-    # Loot (e.g. DLC, in-game items)
-    - LOOT
-  # The allowed durations of the offers. Comment out to disable.
-  offerDurations:
-    # Always available
-    - ALWAYS
-    # Claimable for a limited time
-    - CLAIMABLE
-    # Temporary free (like Steam free weekends)
-    - TEMPORARY
+    - UbisoftGames
   # The sources to scrape additional information from. Comment out to disable.
   infoSources:
     # Steam
     - STEAM
-    # IGDB (needs credentials, see below)
+    # IGDB
     # - IGDB
 
 igdb:
@@ -103,3 +95,5 @@ telegram:
   # Which errors to send by Telegram notification to the log chat.
   # One of: ERROR, WARN, INFO, HTTP, VERBOSE, DEBUG, SILLY
   logLevel: ERROR
+  # Drop all messages that have been sent while the bot was offline.
+  dropPendingMessages: false
