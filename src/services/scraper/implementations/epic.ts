@@ -2,7 +2,6 @@ import {
   BaseScraper,
   type CronConfig,
   type OfferHandler,
-  type RawOffer,
 } from "@/services/scraper/base/scraper";
 import { OfferDuration, OfferSource, OfferType } from "@/types/basic";
 import type { NewOffer } from "@/types/database";
@@ -13,11 +12,7 @@ import type { Locator, Page } from "playwright";
 const BASE_URL = "https://store.epicgames.com";
 const OFFER_URL = `${BASE_URL}/en-US/`;
 
-interface EpicRawOffer extends RawOffer {
-  validTo: string; // ISO date string
-}
-
-export class EpicGamesScraper extends BaseScraper<EpicRawOffer> {
+export class EpicGamesScraper extends BaseScraper {
   override getSchedule(): CronConfig[] {
     // Epic Games updates their free games every Thursday at 11:00 US/Eastern
     // Check soon after release and a backup check later in the day. Also
@@ -61,23 +56,18 @@ export class EpicGamesScraper extends BaseScraper<EpicRawOffer> {
     await this.scrollPageToBottom(page);
   }
 
-  getOfferHandlers(page: Page): OfferHandler<EpicRawOffer>[] {
+  getOfferHandlers(page: Page): OfferHandler[] {
     return [
       {
         locator: page.locator('//span[text()="Free Now"]//ancestor::a'),
-        readOffer: this.readRawOffer.bind(this),
-        normalizeOffer: (offer: RawOffer): Omit<NewOffer, "category"> => {
-          // Type guard to ensure offer is EpicRawOffer
-          if (!offer.validTo) {
-            throw new Error("Invalid Epic offer: missing validTo");
-          }
-          return this.normalizeOffer(offer as EpicRawOffer);
-        },
+        readOffer: this.readOffer.bind(this),
       },
     ];
   }
 
-  private async readRawOffer(element: Locator): Promise<EpicRawOffer | null> {
+  private async readOffer(
+    element: Locator,
+  ): Promise<Omit<NewOffer, "category"> | null> {
     try {
       // Scroll element into view to load img url
       await element.scrollIntoViewIfNeeded();
@@ -101,11 +91,30 @@ export class EpicGamesScraper extends BaseScraper<EpicRawOffer> {
       const imgUrl = await element.locator("img").getAttribute("src");
       if (!imgUrl) throw new Error(`Couldn't find image for ${title}`);
 
+      let validToAsDate: DateTime | null = null;
+      try {
+        validToAsDate = DateTime.fromISO(validTo);
+      } catch (error) {
+        logger.error(
+          `Failed to parse date ${validTo}: ${error instanceof Error ? error.message : String(error)}`,
+        );
+      }
+
       return {
-        title,
-        validTo,
-        url,
-        imgUrl,
+        source: this.getSource(),
+        duration: this.getDuration(),
+        type: this.getType(),
+        title: title,
+        probable_game_name: title,
+        seen_last: DateTime.now().toISO(),
+        seen_first: DateTime.now().toISO(),
+        valid_to: validToAsDate?.toISO() ?? null,
+        rawtext: JSON.stringify({
+          title: title,
+          enddate: validTo,
+        }),
+        url: url,
+        img_url: imgUrl,
       };
     } catch (error) {
       logger.error(
@@ -113,35 +122,5 @@ export class EpicGamesScraper extends BaseScraper<EpicRawOffer> {
       );
       return null;
     }
-  }
-
-  private normalizeOffer(rawOffer: EpicRawOffer): Omit<NewOffer, "category"> {
-    const rawtext = {
-      title: rawOffer.title,
-      enddate: rawOffer.validTo,
-    };
-
-    let validTo: DateTime | null = null;
-    try {
-      validTo = DateTime.fromISO(rawOffer.validTo);
-    } catch (error) {
-      logger.error(
-        `Failed to parse date ${rawOffer.validTo}: ${error instanceof Error ? error.message : String(error)}`,
-      );
-    }
-
-    return {
-      source: this.getSource(),
-      duration: this.getDuration(),
-      type: this.getType(),
-      title: rawOffer.title,
-      probable_game_name: rawOffer.title,
-      seen_last: DateTime.now().toISO(),
-      seen_first: DateTime.now().toISO(),
-      valid_to: validTo?.toISO() ?? null,
-      rawtext: JSON.stringify(rawtext),
-      url: rawOffer.url ?? null,
-      img_url: rawOffer.imgUrl ?? null,
-    };
   }
 }

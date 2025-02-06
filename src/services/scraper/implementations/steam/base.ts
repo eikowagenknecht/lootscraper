@@ -2,7 +2,6 @@ import {
   BaseScraper,
   type CronConfig,
   type OfferHandler,
-  type RawOffer,
 } from "@/services/scraper/base/scraper";
 import { ScraperError } from "@/types";
 import { OfferDuration, OfferSource, OfferType } from "@/types/basic";
@@ -16,12 +15,7 @@ const BASE_URL = "https://store.steampowered.com";
 const SEARCH_URL = `${BASE_URL}/search/`;
 const DETAILS_URL = `${BASE_URL}/app/`;
 
-interface SteamRawOffer extends RawOffer {
-  appid: number;
-  text: string;
-}
-
-export abstract class SteamBaseScraper extends BaseScraper<SteamRawOffer> {
+export abstract class SteamBaseScraper extends BaseScraper {
   override getSchedule(): CronConfig[] {
     return [
       { schedule: "0 */30 * * * *" }, // Every 30 minutes
@@ -54,17 +48,18 @@ export abstract class SteamBaseScraper extends BaseScraper<SteamRawOffer> {
 
   abstract getValidtextLocator(page: Page): Locator;
 
-  getOfferHandlers(page: Page): OfferHandler<SteamRawOffer>[] {
+  getOfferHandlers(page: Page): OfferHandler[] {
     return [
       {
         locator: page.locator("#search_results a"),
-        readOffer: this.readRawOffer.bind(this),
-        normalizeOffer: this.normalizeOffer.bind(this),
+        readOffer: this.readOffer.bind(this),
       },
     ];
   }
 
-  private async readRawOffer(element: Locator): Promise<SteamRawOffer | null> {
+  private async readOffer(
+    element: Locator,
+  ): Promise<Omit<NewOffer, "category"> | null> {
     if (!this.context) {
       throw new ScraperError(
         "Browser context not initialized. Call initialize() first.",
@@ -115,12 +110,73 @@ export abstract class SteamBaseScraper extends BaseScraper<SteamRawOffer> {
           return null;
         }
 
+        let validTo: DateTime | null = null;
+
+        if (text) {
+          const dateText = text
+            .replace("Free to keep when you get it before ", "")
+            .replace(". Some limitations apply. (?)", "");
+
+          let parsedDate: DateTime | null = null;
+
+          try {
+            logger.debug(`Parsing date in format for this year: ${dateText}`);
+
+            // Parse Steams "D MMM @ HH:mmAM/PM" format
+            parsedDate = DateTime.fromFormat(dateText, "d MMM @ h:mma", {
+              zone: "UTC",
+            });
+            parsedDate = parsedDate.set({ year: DateTime.now().year });
+          } catch {
+            logger.debug(
+              `Couldn't parse date, trying next format: ${dateText}`,
+            );
+          }
+
+          if (!parsedDate) {
+            try {
+              // Maybe it's next year, so parse Steams "D MMM, YYYY @ HH:mmAM/PM" format instead
+              parsedDate = DateTime.fromFormat(
+                dateText,
+                "d MMM, yyyy @ h:mma",
+                {
+                  zone: "UTC",
+                },
+              );
+            } catch {
+              logger.warn(
+                `Couldn't parse date because it's invalid: ${dateText}`,
+              );
+            }
+          }
+
+          if (parsedDate) {
+            logger.debug(`Parsed date: ${parsedDate.toISO()}`);
+            validTo = parsedDate;
+          }
+        }
+
+        const probableGameName =
+          this.getType() === OfferType.GAME
+            ? cleanGameTitle(title)
+            : cleanCombinedTitle(title)[0];
+
         return {
-          title,
-          url,
-          imgUrl,
-          appid: Number.parseInt(appid),
-          text,
+          source: this.getSource(),
+          duration: this.getDuration(),
+          type: this.getType(),
+          title: title,
+          probable_game_name: probableGameName,
+          seen_last: DateTime.now().toISO(),
+          seen_first: DateTime.now().toISO(),
+          ...(validTo && { valid_to: validTo.toISO() }),
+          rawtext: JSON.stringify({
+            title: title,
+            appid: appid,
+            text: text,
+          }),
+          url: url,
+          img_url: imgUrl,
         };
       } finally {
         await page?.close();
@@ -145,73 +201,5 @@ export abstract class SteamBaseScraper extends BaseScraper<SteamRawOffer> {
     } catch {
       logger.debug("No age verification needed or failed to handle it");
     }
-  }
-
-  protected normalizeOffer(
-    rawOffer: SteamRawOffer,
-  ): Omit<NewOffer, "category"> {
-    const rawtext = {
-      title: rawOffer.title,
-      appid: rawOffer.appid,
-      text: rawOffer.text,
-    };
-
-    const now = DateTime.now();
-    let validTo: DateTime | null = null;
-
-    if (rawOffer.text) {
-      const dateText = rawOffer.text
-        .replace("Free to keep when you get it before ", "")
-        .replace(". Some limitations apply. (?)", "");
-
-      let parsedDate: DateTime | null = null;
-
-      try {
-        logger.debug(`Parsing date in format for this year: ${dateText}`);
-
-        // Parse Steams "D MMM @ HH:mmAM/PM" format
-        parsedDate = DateTime.fromFormat(dateText, "d MMM @ h:mma", {
-          zone: "UTC",
-        });
-        parsedDate = parsedDate.set({ year: now.year });
-      } catch {
-        logger.debug(`Couldn't parse date, trying next format: ${dateText}`);
-      }
-
-      if (!parsedDate) {
-        try {
-          // Maybe it's next year, so parse Steams "D MMM, YYYY @ HH:mmAM/PM" format instead
-          parsedDate = DateTime.fromFormat(dateText, "d MMM, yyyy @ h:mma", {
-            zone: "UTC",
-          });
-        } catch {
-          logger.warn(`Couldn't parse date because it's invalid: ${dateText}`);
-        }
-      }
-
-      if (parsedDate) {
-        logger.debug(`Parsed date: ${parsedDate.toISO()}`);
-        validTo = parsedDate;
-      }
-    }
-
-    const probableGameName =
-      this.getType() === OfferType.GAME
-        ? cleanGameTitle(rawOffer.title)
-        : cleanCombinedTitle(rawOffer.title)[0];
-
-    return {
-      source: this.getSource(),
-      duration: this.getDuration(),
-      type: this.getType(),
-      title: rawOffer.title,
-      probable_game_name: probableGameName,
-      seen_last: DateTime.now().toISO(),
-      seen_first: DateTime.now().toISO(),
-      ...(validTo && { valid_to: validTo.toISO() }),
-      rawtext: JSON.stringify(rawtext),
-      url: rawOffer.url ?? null,
-      img_url: rawOffer.imgUrl ?? null,
-    };
   }
 }

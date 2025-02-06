@@ -4,7 +4,7 @@ import type { NewOffer } from "@/types/database";
 import { logger } from "@/utils/logger";
 import { DateTime } from "luxon";
 import type { Locator, Page } from "playwright";
-import { GogBaseScraper, type GogRawOffer } from "./base";
+import { GogBaseScraper } from "./base";
 
 const BASE_URL = "https://www.gog.com";
 const OFFER_URL = `${BASE_URL}/partner/free_games`;
@@ -40,13 +40,14 @@ export class GogGamesAlwaysFreeScraper extends GogBaseScraper {
     return [
       {
         locator: page.locator(".product-row__link"),
-        readOffer: this.readRawOffer.bind(this),
-        normalizeOffer: this.normalizeOffer.bind(this),
+        readOffer: this.readOffer.bind(this),
       },
     ];
   }
 
-  private async readRawOffer(element: Locator): Promise<GogRawOffer | null> {
+  private async readOffer(
+    element: Locator,
+  ): Promise<Omit<NewOffer, "category"> | null> {
     try {
       const title = await element.locator(".product-title__text").textContent();
       if (!title) throw new Error("Couldn't find title");
@@ -63,33 +64,25 @@ export class GogGamesAlwaysFreeScraper extends GogBaseScraper {
       if (!imgUrl) throw new Error(`Couldn't find image for ${title}`);
 
       return {
-        title,
-        url,
-        imgUrl,
+        source: this.getSource(),
+        duration: this.getDuration(),
+        type: this.getType(),
+        title: title,
+        probable_game_name: title,
+        seen_last: DateTime.now().toISO(),
+        seen_first: DateTime.now().toISO(),
+        valid_to: null,
+        rawtext: JSON.stringify({
+          title: title,
+        }),
+        url: url,
+        img_url: imgUrl,
       };
     } catch (error) {
       logger.error(
-        `Failed to read raw offer: ${error instanceof Error ? error.message : String(error)}`,
+        `Failed to read offer: ${error instanceof Error ? error.message : String(error)}`,
       );
       return null;
     }
-  }
-
-  private normalizeOffer(rawOffer: GogRawOffer): Omit<NewOffer, "category"> {
-    return {
-      source: this.getSource(),
-      duration: this.getDuration(),
-      type: this.getType(),
-      title: rawOffer.title,
-      probable_game_name: rawOffer.title,
-      seen_last: DateTime.now().toISO(),
-      seen_first: DateTime.now().toISO(),
-      valid_to: null,
-      rawtext: JSON.stringify({
-        title: rawOffer.title,
-      }),
-      url: rawOffer.url ?? null,
-      img_url: rawOffer.imgUrl ?? null,
-    };
   }
 }

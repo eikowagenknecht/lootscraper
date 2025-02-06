@@ -2,7 +2,6 @@ import {
   BaseScraper,
   type CronConfig,
   type OfferHandler,
-  type RawOffer,
 } from "@/services/scraper/base/scraper";
 import { OfferDuration, OfferSource, OfferType } from "@/types/basic";
 import type { NewOffer } from "@/types/database";
@@ -54,17 +53,18 @@ export class AppleGamesScraper extends BaseScraper {
     return "article.app";
   }
 
-  getOfferHandlers(page: Page): OfferHandler<RawOffer>[] {
+  getOfferHandlers(page: Page): OfferHandler[] {
     return [
       {
         locator: page.locator("article.app"),
-        readOffer: this.readRawOffer.bind(this),
-        normalizeOffer: this.normalizeOffer.bind(this),
+        readOffer: this.readOffer.bind(this),
       },
     ];
   }
 
-  private async readRawOffer(element: Locator): Promise<RawOffer | null> {
+  private async readOffer(
+    element: Locator,
+  ): Promise<Omit<NewOffer, "category"> | null> {
     try {
       const title = await element.locator(".title a").getAttribute("title");
       if (!title) throw new Error("Couldn't find title");
@@ -76,9 +76,19 @@ export class AppleGamesScraper extends BaseScraper {
       if (!imgUrl) throw new Error(`Couldn't find image for ${title}`);
 
       return {
-        title,
-        url,
-        imgUrl,
+        source: this.getSource(),
+        duration: this.getDuration(),
+        type: this.getType(),
+        title: title,
+        probable_game_name: title,
+        seen_last: DateTime.now().toISO(),
+        seen_first: DateTime.now().toISO(),
+        valid_to: null,
+        rawtext: JSON.stringify({
+          title: title,
+        }),
+        url: url,
+        img_url: imgUrl,
       };
     } catch (error) {
       logger.error(
@@ -86,25 +96,5 @@ export class AppleGamesScraper extends BaseScraper {
       );
       return null;
     }
-  }
-
-  private normalizeOffer(rawOffer: RawOffer): Omit<NewOffer, "category"> {
-    const rawtext = {
-      title: rawOffer.title,
-    };
-
-    return {
-      source: this.getSource(),
-      duration: this.getDuration(),
-      type: this.getType(),
-      title: rawOffer.title,
-      probable_game_name: rawOffer.title,
-      seen_last: DateTime.now().toISO(),
-      seen_first: DateTime.now().toISO(),
-      valid_to: null,
-      rawtext: JSON.stringify(rawtext),
-      url: rawOffer.url ?? null,
-      img_url: rawOffer.imgUrl ?? null,
-    };
   }
 }
