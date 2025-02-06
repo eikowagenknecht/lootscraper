@@ -1,5 +1,6 @@
 import { BaseScraper } from "@/services/scraper/base/scraper";
 import { OfferSource, OfferType } from "@/types/basic";
+import { logger } from "@/utils/logger";
 import type { Page } from "playwright";
 
 // Base interface for GOG offers
@@ -34,7 +35,9 @@ export abstract class GogBaseScraper extends BaseScraper {
       .replace(/ 1x$/, "");
 
     if (!sanitized.startsWith("https:")) {
-      // TODO: Check if this is still necessary
+      logger.error(
+        `Found non-HTTPS image URL: ${sanitized}. This should not happen any more, please open an issue.`,
+      );
       sanitized = `https:${sanitized}`;
     }
 
