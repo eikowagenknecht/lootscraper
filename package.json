@@ -1,6 +1,6 @@
 {
   "name": "lootscraper",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "description": "RSS feeds and Telegram bot for free game and loot offers.",
   "author": "Eiko Wagenknecht <git@eiko-wagenknecht.de>",
   "license": "CC-BY-NC-SA-4.0",
@@ -40,7 +40,8 @@
     "upgrade:npm": "pnpm exec rm pnpm-lock.yaml && pnpm up --latest && pnpm i",
     "code:dump": "vite-node tools/codeDump.ts",
     "code:list": "vite-node tools/codeList.ts",
-    "knip": "knip"
+    "knip": "knip",
+    "docker:pub:dev": "docker build . -t eikowagenknecht/lootscraper:develop && docker push eikowagenknecht/lootscraper:develop"
   },
   "dependencies": {
     "@grammyjs/auto-retry": "2.0.2",
