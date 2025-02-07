@@ -3,8 +3,9 @@ import { shutdownApp, startApp } from "@/services/orchestrator";
 import { handleError } from "@/utils/errorHandler";
 import { addFileTransport, logger, updateConsoleLevel } from "@/utils/logger";
 import { Settings as LuxonSettings } from "luxon";
+import { getPackageInfo } from "./utils/version";
 
-function initializeCore() {
+async function initializeCore() {
   // Load config first as other services depend on it
   config.loadConfig();
   const cfg = config.get();
@@ -13,6 +14,10 @@ function initializeCore() {
   const configuredLevel = cfg.common.logLevel;
   updateConsoleLevel(configuredLevel);
   addFileTransport(configuredLevel, cfg.common.logFile);
+
+  // Log version number
+  const appInfo = await getPackageInfo();
+  logger.info(`Starting ${appInfo.name} v${appInfo.version}.`);
 
   // Log debug information
   if (process.env.DEBUG) {
@@ -35,7 +40,7 @@ function initializeCore() {
  * starts application services (database, translation, etc.).
  */
 async function main(): Promise<void> {
-  initializeCore();
+  await initializeCore();
   await startApp();
 }
 

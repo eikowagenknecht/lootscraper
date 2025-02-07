@@ -31,3 +31,17 @@ export function getTemplatesPath(): string {
 
   return resolve(process.cwd(), "templates");
 }
+
+/**
+ * Get the path to package.json
+ * In a Docker container, this is `/app/package.json`.
+ * Otherwise, it is relative to the project root.
+ *
+ * @returns Path to package.json
+ */
+export function getPackageJsonPath(): string {
+  if (process.env.DOCKER_CONTAINER === "true") {
+    return "/app/package.json";
+  }
+  return resolve(process.cwd(), "package.json");
+}
