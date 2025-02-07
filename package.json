@@ -45,6 +45,7 @@
   "dependencies": {
     "@grammyjs/auto-retry": "2.0.2",
     "@grammyjs/commands": "1.0.4",
+    "abort-controller": "3.0.0",
     "basic-ftp": "5.0.5",
     "better-sqlite3": "11.8.1",
     "croner": "9.0.0",

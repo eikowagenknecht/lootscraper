@@ -6,6 +6,7 @@ import {
   escapeText,
 } from "@/services/telegrambot/utils/markdown";
 import type { TelegramLogLevel } from "@/types";
+import { AbortController } from "abort-controller";
 import type { RawApi } from "grammy";
 import type { Format, TransformableInfo } from "logform";
 import { DateTime } from "luxon";
@@ -272,15 +273,29 @@ class TelegramTransport extends Transport {
     message: string,
     options?: Other<RawApi, "sendMessage", "chat_id" | "text">,
   ): Promise<void> {
+    const abortController = new AbortController();
+    let timeoutId: NodeJS.Timeout | undefined;
     const timeoutPromise = new Promise((_, reject) => {
-      setTimeout(() => {
+      timeoutId = setTimeout(() => {
+        abortController.abort();
         reject(new Error("Telegram API timeout"));
       }, 5000);
     });
-    await Promise.race([
-      telegramBotService.getBot().api.sendMessage(chatId, message, options),
-      timeoutPromise,
-    ]);
+    try {
+      await Promise.race([
+        telegramBotService
+          .getBot()
+          .api.sendMessage(chatId, message, options, abortController.signal),
+        timeoutPromise,
+      ]);
+      // Clear timeout so the rejection doesn't silently throw after the message
+      // is sent
+      if (timeoutId) clearTimeout(timeoutId);
+    } catch (error) {
+      // Abort sending so the message doesn't get sent later
+      abortController.abort();
+      throw error;
+    }
   }
 }
 
