@@ -310,6 +310,20 @@ export async function addMissingFieldsToOffer(
   return true;
 }
 
+export async function touchOffer(id: number): Promise<boolean> {
+  try {
+    const res = await getDb()
+      .updateTable("offers")
+      .set({ seen_last: DateTime.now().toISO() })
+      .where("id", "=", id)
+      .executeTakeFirst();
+
+    return res.numUpdatedRows > 0;
+  } catch (error) {
+    handleError("touch offer", error);
+  }
+}
+
 export async function clearGames() {
   try {
     await getDb()
