@@ -6,11 +6,8 @@ import {
   escapeText,
 } from "@/services/telegrambot/utils/markdown";
 import type { TelegramLogLevel } from "@/types";
-import { AbortController } from "abort-controller";
-import type { RawApi } from "grammy";
 import type { Format, TransformableInfo } from "logform";
 import { DateTime } from "luxon";
-import type { Other } from "node_modules/grammy/out/core/api";
 import { type LogEntry, createLogger, format, transports } from "winston";
 import DailyRotateFile from "winston-daily-rotate-file";
 import Transport from "winston-transport";
@@ -204,16 +201,28 @@ class TelegramTransport extends Transport {
     info: LogEntry & { timestamp: string; stack?: string },
   ) {
     const telegramMessage = this.formatTelegramMessage(info);
-    await this.sendMessageInChunks(telegramMessage);
+    try {
+      const chunks = splitIntoChunks(telegramMessage, 4000);
+      for (const chunk of chunks) {
+        await telegramBotService.sendWithTimeout(this.botLogChatId, chunk, {
+          parse_mode: "MarkdownV2",
+        });
+      }
+    } catch (error) {
+      // Log verbose only to avoid infinite loops
+      logger.verbose("Failed to send log message:", error);
+      this.handleTimeout();
+    }
   }
 
-  private async handleTimeout(): Promise<void> {
+  private handleTimeout(): void {
     this.resetTimeoutStateIfNeeded();
 
     if (!this.timeoutState.notifiedTimeout) {
       try {
-        // Send warning without timeout to ensure delivery
-        await telegramBotService
+        // Send warning without timeout to ensure delivery. But don't wait for
+        // the result so we don't block the logger.
+        void telegramBotService
           .getBot()
           .api.sendMessage(
             this.botLogChatId,
@@ -252,49 +261,6 @@ class TelegramTransport extends Transport {
     } catch {
       // If everything fails, return a generic error message
       return escapeText("❌ Error formatting log message");
-    }
-  }
-
-  private async sendMessageInChunks(message: string) {
-    const chunks = splitIntoChunks(message, 4000);
-    for (const chunk of chunks) {
-      try {
-        await this.sendWithTimeout(this.botLogChatId, chunk, {
-          parse_mode: "MarkdownV2",
-        });
-      } catch {
-        await this.handleTimeout();
-      }
-    }
-  }
-
-  private async sendWithTimeout(
-    chatId: number,
-    message: string,
-    options?: Other<RawApi, "sendMessage", "chat_id" | "text">,
-  ): Promise<void> {
-    const abortController = new AbortController();
-    let timeoutId: NodeJS.Timeout | undefined;
-    const timeoutPromise = new Promise((_, reject) => {
-      timeoutId = setTimeout(() => {
-        abortController.abort();
-        reject(new Error("Telegram API timeout"));
-      }, 5000);
-    });
-    try {
-      await Promise.race([
-        telegramBotService
-          .getBot()
-          .api.sendMessage(chatId, message, options, abortController.signal),
-        timeoutPromise,
-      ]);
-      // Clear timeout so the rejection doesn't silently throw after the message
-      // is sent
-      if (timeoutId) clearTimeout(timeoutId);
-    } catch (error) {
-      // Abort sending so the message doesn't get sent later
-      abortController.abort();
-      throw error;
     }
   }
 }
