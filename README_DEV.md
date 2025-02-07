@@ -10,6 +10,19 @@ At all.
 The commands below are for Windows and use `pnpm`.
 If you use Linux or other packet managers, you probably know the right substitutes.
 
+## Version 2.0
+
+In February 2025, I released version 2.0 of this project.
+It is a complete rewrite and uses TypeScript instead of Python.
+The new version runs a lot faster (10min instead of 22min when I compared a complete run over all scrapers), smaller (900MB Docker image instead of 1.8GB) and should be more reliable.
+
+If you want to migrate from the old version (1.x) to the new one (2.x):
+
+- Keep the old database. It will be automatically migrated.
+- Create a new configuration file as its format and options have changed significantly.
+
+You can find the old Python version in the `legacy-python` branch and the new one in `main`.
+
 ## Run this locally
 
 To run this yourself, you first need an installed Node.js 22+ environment.

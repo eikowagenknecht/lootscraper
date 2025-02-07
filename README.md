@@ -9,17 +9,14 @@ You like getting games for free, but you *don't* like having to keep track of th
 Also your F5 key starts to look a bit worn out?
 Then this is for you!
 
-## Version 2.0
+## Current status
 
-In version 2.0, the project has been completely rewritten.
-It now uses TypeScript instead of Python.
-If you want to migrate from the old version to the new one, you can keep the old database.
-But you need to create a new configuration file as it's format and options have changed significantly.
+Version 2.0 of this project is about to be released.
 
-The new version runs a lot faster (10min instead of 22min when I compared a complete run over all scrapers), smaller (900MB Docker image instead of 1.8GB) and should be more reliable.
-But there may still be some bugs, so please report them if you find any.
+Currently (February 2025) the stable instance is still running on version 1.14.3 and the development instance is running on version 2.0.2.
+The next public release will then be version 2.0.x, once the development instance has been running stable for a while.
 
-You can find the old Python version in the `legacy` branch.
+But even after that, there may still be some bugs, so please report them if you find any.
 
 ## Public feeds / channels / bots
 
