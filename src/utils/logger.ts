@@ -6,8 +6,10 @@ import {
   escapeText,
 } from "@/services/telegrambot/utils/markdown";
 import type { TelegramLogLevel } from "@/types";
+import type { RawApi } from "grammy";
 import type { Format, TransformableInfo } from "logform";
 import { DateTime } from "luxon";
+import type { Other } from "node_modules/grammy/out/core/api";
 import { type LogEntry, createLogger, format, transports } from "winston";
 import DailyRotateFile from "winston-daily-rotate-file";
 import Transport from "winston-transport";
@@ -268,7 +270,7 @@ class TelegramTransport extends Transport {
   private async sendWithTimeout(
     chatId: number,
     message: string,
-    options: object = {},
+    options?: Other<RawApi, "sendMessage", "chat_id" | "text">,
   ): Promise<void> {
     const timeoutPromise = new Promise((_, reject) => {
       setTimeout(() => {
