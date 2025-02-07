@@ -13,6 +13,7 @@ import {
   addMissingFieldsToOffer,
   createOffer,
   findOffer,
+  touchOffer,
 } from "./database/offerRepository";
 import {
   cleanQueue,
@@ -264,13 +265,16 @@ class ScraperService {
         if (changed) {
           modifiedOfferIds.push(existingOffer.id);
           logger.verbose(`Updated offer ${existingOffer.id.toFixed()}.`);
+        } else {
+          await touchOffer(existingOffer.id);
         }
 
         continue;
       }
 
       // Create new offer if it doesn't exist
-      newOfferIds.push(await createOffer(newOffer));
+      const newOfferId = await createOffer(newOffer);
+      newOfferIds.push(newOfferId);
     }
 
     logger.info(
