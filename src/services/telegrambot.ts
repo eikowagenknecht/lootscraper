@@ -9,7 +9,15 @@ import { handleError } from "@/utils/errorHandler";
 import { logger } from "@/utils/logger";
 import { autoRetry } from "@grammyjs/auto-retry";
 import { CommandGroup, commandNotFound, commands } from "@grammyjs/commands";
-import { Bot, type BotError, GrammyError, HttpError } from "grammy";
+import { AbortController } from "abort-controller";
+import {
+  Bot,
+  type BotError,
+  GrammyError,
+  HttpError,
+  type RawApi,
+} from "grammy";
+import type { Other } from "node_modules/grammy/out/core/api";
 import { handleCallback } from "./telegrambot/handlers/callbacks/router";
 import {
   handleHelpCommand,
@@ -265,6 +273,36 @@ export class TelegramBotService {
       logger.error("Could not connect to Telegram:", error);
     } else {
       handleError(error);
+    }
+  }
+
+  public async sendWithTimeout(
+    chatId: number,
+    message: string,
+    options?: Other<RawApi, "sendMessage", "chat_id" | "text">,
+  ): Promise<void> {
+    const abortController = new AbortController();
+    let timeoutId: NodeJS.Timeout | undefined;
+    const timeoutPromise = new Promise((_, reject) => {
+      timeoutId = setTimeout(() => {
+        abortController.abort();
+        reject(new Error("Telegram API timeout"));
+      }, 5000);
+    });
+    try {
+      await Promise.race([
+        telegramBotService
+          .getBot()
+          .api.sendMessage(chatId, message, options, abortController.signal),
+        timeoutPromise,
+      ]);
+      // Clear timeout so the rejection doesn't silently throw after the message
+      // is sent
+      if (timeoutId) clearTimeout(timeoutId);
+    } catch (error) {
+      // Abort sending so the message doesn't get sent later
+      abortController.abort();
+      throw error;
     }
   }
 }
