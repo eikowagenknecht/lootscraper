@@ -11,10 +11,10 @@ Then this is for you!
 
 ## Current status
 
-Version 2.0 of this project is about to be released.
+Version 2.0 of this project has been released on 2025-02-07.
 
-Currently (February 2025) the stable instance is still running on version 1.14.3 and the development instance is running on version 2.0.2.
-The next public release will then be version 2.0.x, once the development instance has been running stable for a while.
+Currently the stable instance is still running on version 1.14.3 and only the development instance is running on version 2.0.x.
+Once the development instance has been running stable for a while, the stable instance will be updated as well.
 
 But even after that, there may still be some bugs, so please report them if you find any.
 
