@@ -26,12 +26,26 @@ And that's fine.
 Here's where to find them!
 You have the following options:
 
-- [Telegram channels](#telegram-channels)
 - [Telegram bot](#telegram-bot)
+- [Telegram channels](#telegram-channels)
 - [RSS feeds](#rss-feeds)
 - [E-Mail](#e-mail)
 - [Discord](#discord)
 - [HTML pages](#html-pages)
+
+### Telegram bot
+
+Want to receive only the offers *you* want in a single chat?
+Subscribe directly to the source:
+The [Telegram LootScraperBot](https://t.me/LootScraperBot) will happily send you push notifications for new offers.
+You can choose which categories you want to subscribe to.
+
+If you want, you can even add the bot to your own groups (including threaded groups) and channels.
+Just make sure to give it the neccessary permissions (admin rights work best).
+
+This is what it currently looks like in Telegram:
+
+![image](https://user-images.githubusercontent.com/1475672/166058823-98e2beb9-7eb5-403d-94c7-7e17966fe9b7.png)
 
 ### Telegram channels
 
@@ -50,19 +64,8 @@ For our mobile gamers:
 - [Apple iPhone games](https://t.me/+SOF7VjGTGPw1OTAy)
 - [Google Android games](https://t.me/+Vma9PScf1uY3M2Uy)
 
-### Telegram bot
-
-Want to receive only the offers *you* want in a single chat?
-Subscribe directly to the source:
-The [Telegram LootScraperBot](https://t.me/LootScraperBot) will happily send you push notifications for new offers.
-You can choose which categories you want to subscribe to.
-
-If you want, you can even add the bot to your own groups (including threaded groups) and channels.
-Just make sure to give it the neccessary permissions (admin rights work best).
-
-This is what it currently looks like in Telegram:
-
-![image](https://user-images.githubusercontent.com/1475672/166058823-98e2beb9-7eb5-403d-94c7-7e17966fe9b7.png)
+Epic Mobile Games does not have a channel yet, but you can subscribe to the [bot](https://t.me/LootScraperBot) and select the category there.
+Feel free to open an issue if you want channels for Epic Mobile Games.
 
 ### RSS feeds
 
@@ -73,6 +76,8 @@ These feeds contain all active offers.
 
 - Amazon Prime ([games](https://feed.phenx.de/lootscraper_amazon_game.xml) and [ingame loot](https://feed.phenx.de/lootscraper_amazon_loot.xml))
 - [Epic Games](https://feed.phenx.de/lootscraper_epic_game.xml)
+- [Epic Mobile Games (Android)](https://feed.phenx.de/lootscraper_epic_game_android.xml)
+- [Epic Mobile Games (iOS)](https://feed.phenx.de/lootscraper_epic_game_ios.xml)
 - [Gog games](https://feed.phenx.de/lootscraper_gog_game.xml)
 - [Humble games](https://feed.phenx.de/lootscraper_humble_game.xml)
 - [itch.io games](https://feed.phenx.de/lootscraper_itch_game.xml)
@@ -115,6 +120,8 @@ Here are the latest offers in a nice and clean HTML page:
 
 - Amazon Prime ([games](https://feed.phenx.de/lootscraper_amazon_game.html) and [ingame loot](https://feed.phenx.de/lootscraper_amazon_loot.html))
 - [Epic Games](https://feed.phenx.de/lootscraper_epic_game.html)
+- [Epic Mobile Games (Android)](https://feed.phenx.de/lootscraper_epic_game_android.html)
+- [Epic Mobile Games (iOS)](https://feed.phenx.de/lootscraper_epic_game_ios.html)
 - [Gog games](https://feed.phenx.de/lootscraper_gog_game.html)
 - [Humble games](https://feed.phenx.de/lootscraper_humble_game.html)
 - [itch.io games](https://feed.phenx.de/lootscraper_itch_game.html)
@@ -136,6 +143,8 @@ These contain all offers that have been discovered so far, including expired one
 
 - Amazon Prime ([games](https://feed.phenx.de/lootscraper_amazon_game_all.html) and [ingame loot](https://feed.phenx.de/lootscraper_amazon_loot_all.html))
 - [Epic Games](https://feed.phenx.de/lootscraper_epic_game_all.html)
+- [Epic Mobile Games (Android)](https://feed.phenx.de/lootscraper_epic_game_android_all.html)
+- [Epic Mobile Games (iOS)](https://feed.phenx.de/lootscraper_epic_game_ios_all.html)
 - [Gog games](https://feed.phenx.de/lootscraper_gog_game_all.html)
 - [Humble games](https://feed.phenx.de/lootscraper_humble_game_all.html)
 - [itch.io games](https://feed.phenx.de/lootscraper_itch_game_all.html)
