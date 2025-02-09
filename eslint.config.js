@@ -1,10 +1,12 @@
 import js from "@eslint/js";
 import eslintPluginImportX from "eslint-plugin-import-x";
+import jsdoc from "eslint-plugin-jsdoc";
 import globals from "globals";
 import tseslint from "typescript-eslint";
 
 export default tseslint.config(
   js.configs.recommended,
+  jsdoc.configs["flat/recommended-typescript"],
   eslintPluginImportX.flatConfigs.recommended,
   eslintPluginImportX.flatConfigs.typescript,
   ...tseslint.configs.strictTypeChecked,
@@ -52,6 +54,7 @@ export default tseslint.config(
           ],
         },
       ],
+      "jsdoc/require-jsdoc": "off",
     },
     settings: {},
   },
