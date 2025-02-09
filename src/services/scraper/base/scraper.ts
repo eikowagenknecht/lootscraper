@@ -3,6 +3,7 @@ import { takeScreenshot } from "@/services/browser/utils";
 import {
   OfferCategory,
   OfferDuration,
+  type OfferPlatform,
   type OfferSource,
   type OfferType,
 } from "@/types";
@@ -84,6 +85,12 @@ export abstract class BaseScraper {
    * @returns {OfferDuration} The expected duration of offers
    */
   abstract getDuration(): OfferDuration;
+
+  /**
+   * Returns the platform of the games this scraper is looking for.
+   * @returns {OfferPlatform} The platform of the games to scrape
+   */
+  abstract getPlatform(): OfferPlatform;
 
   // Optional methods that can be overridden
 

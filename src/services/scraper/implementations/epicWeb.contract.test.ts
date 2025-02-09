@@ -1,7 +1,7 @@
 import { browserService } from "@/services/browser";
 import { config } from "@/services/config";
 import { beforeAll, describe, expect, test } from "vitest";
-import { EpicGamesScraper } from "./epicWeb";
+import { EpicGamesWebScraper } from "./epicWeb";
 
 describe("Epic Games Scraper Contract Tests", () => {
   beforeAll(async () => {
@@ -10,7 +10,7 @@ describe("Epic Games Scraper Contract Tests", () => {
   });
 
   test("should scrape free games correctly", async () => {
-    const scraper = new EpicGamesScraper(config.get());
+    const scraper = new EpicGamesWebScraper(config.get());
     const results = await scraper.scrape();
 
     expect(results.length).toBeGreaterThan(0);

@@ -1,5 +1,5 @@
 import { BaseScraper, type CronConfig } from "@/services/scraper/base/scraper";
-import { OfferDuration, OfferSource } from "@/types/basic";
+import { OfferDuration, OfferPlatform, OfferSource } from "@/types/basic";
 import { BrowserError, ScraperError } from "@/types/errors";
 import { logger } from "@/utils/logger";
 import { DateTime } from "luxon";
@@ -28,6 +28,10 @@ export abstract class AmazonBaseScraper extends BaseScraper {
 
   getDuration(): OfferDuration {
     return OfferDuration.CLAIMABLE;
+  }
+
+  override getPlatform(): OfferPlatform {
+    return OfferPlatform.PC;
   }
 
   protected override shouldAlwaysHaveOffers(): boolean {

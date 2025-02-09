@@ -252,8 +252,9 @@ class ScraperService {
       const existingOffer = await findOffer({
         duration: newOffer.duration,
         source: newOffer.source,
-        title: newOffer.title,
         type: newOffer.type,
+        platform: newOffer.platform,
+        title: newOffer.title,
         validTo: newOffer.valid_to ?? null,
       });
 

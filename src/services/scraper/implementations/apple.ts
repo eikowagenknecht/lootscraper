@@ -1,5 +1,10 @@
 import { BaseScraper, type CronConfig } from "@/services/scraper/base/scraper";
-import { OfferDuration, OfferSource, OfferType } from "@/types/basic";
+import {
+  OfferDuration,
+  OfferPlatform,
+  OfferSource,
+  OfferType,
+} from "@/types/basic";
 import type { NewOffer } from "@/types/database";
 import { logger } from "@/utils/logger";
 import { DateTime } from "luxon";
@@ -37,6 +42,10 @@ export class AppleGamesScraper extends BaseScraper {
     return OfferDuration.CLAIMABLE;
   }
 
+  override getPlatform(): OfferPlatform {
+    return OfferPlatform.IOS;
+  }
+
   override readOffers(): Promise<Omit<NewOffer, "category">[]> {
     return super.readWebOffers({
       offersUrl: `${ROOT_URL}?${SEARCH_PARAMS.toString()}`,
@@ -71,6 +80,7 @@ export class AppleGamesScraper extends BaseScraper {
         source: this.getSource(),
         duration: this.getDuration(),
         type: this.getType(),
+        platform: this.getPlatform(),
         title: title,
         probable_game_name: title,
         seen_last: DateTime.now().toISO(),

@@ -6,7 +6,12 @@ import { createTelegramSubscription } from "@/services/database/telegramSubscrip
 import type { BotContext } from "@/services/telegrambot/types/middleware";
 import { bold, escapeText, link } from "@/services/telegrambot/utils/markdown";
 import { ChatType } from "@/types";
-import { OfferDuration, OfferSource, OfferType } from "@/types/basic";
+import {
+  OfferDuration,
+  OfferPlatform,
+  OfferSource,
+  OfferType,
+} from "@/types/basic";
 import type { CommandContext } from "grammy";
 import { DateTime } from "luxon";
 import { getCallerName, getDbChat, logCall, userCanControlBot } from ".";
@@ -116,6 +121,7 @@ ${welcomeTextMd}
       source,
       type: OfferType.GAME,
       duration: OfferDuration.CLAIMABLE,
+      platform: OfferPlatform.PC,
       last_offer_id: 0,
     });
   }

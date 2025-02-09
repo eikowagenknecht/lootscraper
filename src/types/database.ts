@@ -5,7 +5,12 @@ import type {
   Selectable,
   Updateable,
 } from "kysely";
-import type { OfferDuration, OfferSource, OfferType } from "./basic";
+import type {
+  OfferDuration,
+  OfferPlatform,
+  OfferSource,
+  OfferType,
+} from "./basic";
 import type { ChatType } from "./telegram";
 
 export interface Database {
@@ -71,6 +76,7 @@ interface OffersTable {
   source: OfferSource;
   type: OfferType;
   duration: OfferDuration;
+  platform: OfferPlatform;
   title: string;
   probable_game_name: string;
   /** The valid to date as seen on the website. Some websites sometimes remove the offer before this date. */
@@ -139,6 +145,7 @@ interface TelegramSubscriptionsTable {
   source: OfferSource;
   type: OfferType;
   duration: OfferDuration;
+  platform: OfferPlatform;
   last_offer_id: number;
 }
 

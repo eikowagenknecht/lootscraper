@@ -1,6 +1,11 @@
 import { BaseScraper, type CronConfig } from "@/services/scraper/base/scraper";
 import { OfferCategory, ScraperError } from "@/types";
-import { OfferDuration, OfferSource, OfferType } from "@/types/basic";
+import {
+  OfferDuration,
+  OfferPlatform,
+  OfferSource,
+  OfferType,
+} from "@/types/basic";
 import type { NewOffer } from "@/types/database";
 import { logger } from "@/utils/logger";
 import { DateTime } from "luxon";
@@ -34,6 +39,10 @@ export class HumbleGamesScraper extends BaseScraper {
 
   getDuration(): OfferDuration {
     return OfferDuration.CLAIMABLE;
+  }
+
+  override getPlatform(): OfferPlatform {
+    return OfferPlatform.PC;
   }
 
   override readOffers(): Promise<Omit<NewOffer, "category">[]> {
@@ -82,6 +91,7 @@ export class HumbleGamesScraper extends BaseScraper {
         source: this.getSource(),
         duration: this.getDuration(),
         type: this.getType(),
+        platform: this.getPlatform(),
         category,
         title: title,
         probable_game_name: title,

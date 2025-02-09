@@ -1,5 +1,10 @@
 import { getDb } from "@/services/database";
-import type { OfferDuration, OfferSource, OfferType } from "@/types/basic";
+import type {
+  OfferDuration,
+  OfferPlatform,
+  OfferSource,
+  OfferType,
+} from "@/types/basic";
 import type { NewOffer, Offer, OfferUpdate } from "@/types/database";
 import { calculateRealValidTo } from "@/utils";
 import { logger } from "@/utils/logger";
@@ -10,6 +15,7 @@ interface OfferFilters {
   type?: OfferType;
   source?: OfferSource;
   duration?: OfferDuration;
+  platform?: OfferPlatform;
   lastOfferId?: number;
 }
 
@@ -37,6 +43,7 @@ export async function getOfferById(id: number): Promise<Offer | undefined> {
  * @param options.source The source of the offer
  * @param options.type The type of the offer
  * @param options.duration The duration of the offer
+ * @param options.platform The platform of the offer
  * @param options.title The title of the offer
  * @param options.validTo The validTo date of the offer
  * @returns The offer if found, otherwise undefined
@@ -45,12 +52,14 @@ export async function findOffer({
   source,
   type,
   duration,
+  platform,
   title,
   validTo,
 }: {
   source: OfferSource;
   type: OfferType;
   duration: OfferDuration;
+  platform: OfferPlatform;
   title: string;
   validTo: string | null;
 }): Promise<Offer | undefined> {
@@ -61,6 +70,7 @@ export async function findOffer({
       .where("source", "=", source)
       .where("type", "=", type)
       .where("duration", "=", duration)
+      .where("platform", "=", platform)
       .where("title", "=", title);
 
     // If validTo is provided, match offers within ±1 day or those without validTo
@@ -149,7 +159,9 @@ export async function getActiveOffers(
 ): Promise<Offer[]> {
   try {
     const seenCutoff = time.minus({ hours: 24 });
-    logger.debug(`Getting active offers for ${time.toISO()}`);
+    logger.debug(
+      `Getting active offers for ${time.toISO()} with filters: ${JSON.stringify(filters)}`,
+    );
 
     // Do as much filtering as possible in the database query to reduce the
     // amount of data we have to process
@@ -191,9 +203,17 @@ export async function getActiveOffers(
     if (filters?.duration !== undefined) {
       query = query.where("duration", "=", filters.duration);
     }
+    if (filters?.platform !== undefined) {
+      query = query.where("platform", "=", filters.platform);
+    }
     if (filters?.lastOfferId !== undefined) {
       query = query.where("id", ">", filters.lastOfferId);
     }
+
+    const { sql, parameters } = query.compile();
+    logger.debug(
+      `Executing query: ${sql} with parameters: ${String(parameters)}`,
+    );
 
     const offers = await query.selectAll().execute();
 

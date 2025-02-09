@@ -51,6 +51,7 @@ export class AmazonLootScraper extends AmazonBaseScraper {
         source: this.getSource(),
         duration: this.getDuration(),
         type: this.getType(),
+        platform: this.getPlatform(),
         title: `${gameTitle} - ${baseOffer.title}`,
         probable_game_name: gameTitle,
         seen_last: DateTime.now().toISO(),

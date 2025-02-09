@@ -39,8 +39,12 @@ scraper:
     - AmazonLoot
     # Apple
     - AppleGames
-    # Epic
-    - EpicGamesWeb
+    # Epic (Web or API, enable only one)
+    - EpicGamesApi
+    # - EpicGamesWeb
+    # Epic Mobile Game Stores
+    - EpicMobileAndroid
+    - EpicMobileIos
     # GOG - Games
     - GogGames
     # GOG - Always Free

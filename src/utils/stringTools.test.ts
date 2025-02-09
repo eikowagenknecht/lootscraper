@@ -1,5 +1,5 @@
 import { translationService } from "@/services/translation";
-import { OfferDuration, OfferSource, OfferType } from "@/types";
+import { OfferDuration, OfferPlatform, OfferSource, OfferType } from "@/types";
 import { beforeAll, describe, expect, test } from "vitest";
 import {
   cleanCombinedTitle,
@@ -239,6 +239,7 @@ describe("generateFilename", () => {
           source: OfferSource.EPIC,
           type: OfferType.GAME,
           duration: OfferDuration.TEMPORARY,
+          platform: OfferPlatform.PC,
         },
         withHistory: true,
       }),
@@ -257,6 +258,7 @@ describe("generateFeedTitle", () => {
         source: OfferSource.EPIC,
         type: OfferType.GAME,
         duration: OfferDuration.TEMPORARY,
+        platform: OfferPlatform.PC,
       }),
     ).toBe("Free Epic Games Games (Temporary)");
   });

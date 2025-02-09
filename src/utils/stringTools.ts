@@ -3,7 +3,7 @@ import {
   getEnabledFeedCombinations,
 } from "@/services/scraper/utils";
 import { translationService } from "@/services/translation";
-import { OfferDuration } from "@/types";
+import { OfferDuration, OfferPlatform } from "@/types";
 
 const RESULT_MATCH_THRESHOLD = 0.85;
 
@@ -272,6 +272,9 @@ export function generateFilename({
     if (combination.duration !== OfferDuration.CLAIMABLE) {
       parts.push(combination.duration.toLowerCase());
     }
+    if (combination.platform !== OfferPlatform.PC) {
+      parts.push(combination.platform.toLowerCase());
+    }
   }
   if (withHistory) {
     parts.push("all");
@@ -289,6 +292,7 @@ export function generateFeedTitle(combination?: FeedCombination): string {
     combination.source,
     combination.type,
     combination.duration,
+    combination.platform,
   );
 }
 

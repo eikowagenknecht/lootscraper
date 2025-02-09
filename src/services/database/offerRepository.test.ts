@@ -1,6 +1,11 @@
 import { config } from "@/services/config";
 import { databaseService } from "@/services/database";
-import { OfferDuration, OfferSource, OfferType } from "@/types/basic";
+import {
+  OfferDuration,
+  OfferPlatform,
+  OfferSource,
+  OfferType,
+} from "@/types/basic";
 import type { NewOffer } from "@/types/database";
 import { DateTime } from "luxon";
 import { insertTestData } from "tests/testData";
@@ -45,6 +50,7 @@ describe("Offer Repository", () => {
         source: OfferSource.EPIC,
         type: OfferType.GAME,
         duration: OfferDuration.CLAIMABLE,
+        platform: OfferPlatform.PC,
         title: "Expired Game",
         probable_game_name: "Expired Game",
         seen_last: DateTime.now().toISO(),
@@ -72,6 +78,7 @@ describe("Offer Repository", () => {
         source: OfferSource.EPIC,
         type: OfferType.GAME,
         duration: OfferDuration.CLAIMABLE,
+        platform: OfferPlatform.PC,
         title: "New Game",
         probable_game_name: "New Game",
         seen_last: DateTime.now().toISO(),

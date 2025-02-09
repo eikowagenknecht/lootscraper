@@ -1,6 +1,11 @@
 import { BaseScraper, type CronConfig } from "@/services/scraper/base/scraper";
 import { ScraperError } from "@/types";
-import { OfferDuration, OfferSource, OfferType } from "@/types/basic";
+import {
+  OfferDuration,
+  OfferPlatform,
+  OfferSource,
+  OfferType,
+} from "@/types/basic";
 import type { NewOffer } from "@/types/database";
 import { logger } from "@/utils/logger";
 import { cleanCombinedTitle, cleanGameTitle } from "@/utils/stringTools";
@@ -24,6 +29,10 @@ export abstract class SteamBaseScraper extends BaseScraper {
 
   getDuration(): OfferDuration {
     return OfferDuration.CLAIMABLE;
+  }
+
+  override getPlatform(): OfferPlatform {
+    return OfferPlatform.PC;
   }
 
   override readOffers(): Promise<Omit<NewOffer, "category">[]> {
@@ -159,6 +168,7 @@ export abstract class SteamBaseScraper extends BaseScraper {
           source: this.getSource(),
           duration: this.getDuration(),
           type: this.getType(),
+          platform: this.getPlatform(),
           title: title,
           probable_game_name: probableGameName,
           seen_last: DateTime.now().toISO(),

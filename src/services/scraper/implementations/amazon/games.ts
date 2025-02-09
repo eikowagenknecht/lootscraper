@@ -51,6 +51,7 @@ export class AmazonGamesScraper extends AmazonBaseScraper {
         source: this.getSource(),
         duration: this.getDuration(),
         type: this.getType(),
+        platform: this.getPlatform(),
         title: baseOffer.title,
         probable_game_name: baseOffer.title,
         seen_last: DateTime.now().toISO(),

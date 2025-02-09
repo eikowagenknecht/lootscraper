@@ -46,16 +46,17 @@ export async function buildManageKeyboard(chatId: number) {
 
   logger.verbose(`Building manage keyboard for chat ${chatId.toFixed()}`);
 
-  // Add subscription toggle buttons for each source/type/duration combination
+  // Add subscription toggle buttons for each source/type/duration/platform combination
   const combinations = getEnabledFeedCombinations();
 
   for (const combination of combinations) {
-    const { source, type, duration } = combination;
+    const { source, type, duration, platform } = combination;
     const isSubscribed = await hasTelegramSubscription(
       chatId,
       source,
       type,
       duration,
+      platform,
     );
     const buttonText = getButtonText(combination, isSubscribed);
 
@@ -64,6 +65,7 @@ export async function buildManageKeyboard(chatId: number) {
       source,
       type,
       duration,
+      platform,
     };
 
     const packedData = packData(callbackData, toggleSubscriptionSchema);
@@ -87,5 +89,5 @@ function getButtonText(
     combination.duration !== OfferDuration.CLAIMABLE
       ? ` (${translationService.getDurationDisplay(combination.duration)})`
       : "";
-  return `${prefix}${combination.source} ${combination.type}${suffix}`;
+  return `${prefix}${combination.source} ${combination.type} ${combination.platform} ${suffix}`;
 }
