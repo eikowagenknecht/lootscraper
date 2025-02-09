@@ -1,4 +1,9 @@
-import { OfferDuration, OfferSource, OfferType } from "@/types/basic";
+import {
+  OfferDuration,
+  OfferPlatform,
+  OfferSource,
+  OfferType,
+} from "@/types/basic";
 import { z } from "zod";
 
 export const toggleSubscriptionSchema = z.object({
@@ -6,6 +11,7 @@ export const toggleSubscriptionSchema = z.object({
   source: z.nativeEnum(OfferSource),
   type: z.nativeEnum(OfferType),
   duration: z.nativeEnum(OfferDuration),
+  platform: z.nativeEnum(OfferPlatform),
 });
 
 export const timezoneSchema = z.object({

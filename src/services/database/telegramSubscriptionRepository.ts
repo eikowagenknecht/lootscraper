@@ -1,5 +1,10 @@
 import { getDb } from "@/services/database";
-import type { OfferDuration, OfferSource, OfferType } from "@/types/basic";
+import type {
+  OfferDuration,
+  OfferPlatform,
+  OfferSource,
+  OfferType,
+} from "@/types/basic";
 import type {
   NewTelegramSubscription,
   TelegramSubscription,
@@ -26,6 +31,7 @@ export async function hasTelegramSubscription(
   source: OfferSource,
   type: OfferType,
   duration: OfferDuration,
+  platform: OfferPlatform,
 ): Promise<boolean> {
   try {
     const result = await getDb()
@@ -37,6 +43,7 @@ export async function hasTelegramSubscription(
           eb("source", "=", source),
           eb("type", "=", type),
           eb("duration", "=", duration),
+          eb("platform", "=", platform),
         ]),
       )
       .executeTakeFirst();
@@ -80,6 +87,7 @@ export async function removeTelegramSubscription(
   source: OfferSource,
   type: OfferType,
   duration: OfferDuration,
+  platform: OfferPlatform,
 ): Promise<void> {
   try {
     await getDb()
@@ -90,6 +98,7 @@ export async function removeTelegramSubscription(
           eb("source", "=", source),
           eb("type", "=", type),
           eb("duration", "=", duration),
+          eb("platform", "=", platform),
         ]),
       )
       .execute();

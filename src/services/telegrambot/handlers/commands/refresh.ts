@@ -11,6 +11,8 @@ export async function handleRefreshCommand(
   if (!(await userCanControlBot(ctx))) {
     return;
   }
+
+  await refreshOffersForChat(ctx);
 }
 
 export async function refreshOffersForChat(ctx: BotContext): Promise<void> {

@@ -1,6 +1,11 @@
 import { scrollPageToBottom } from "@/services/browser/utils";
 import { BaseScraper, type CronConfig } from "@/services/scraper/base/scraper";
-import { OfferDuration, OfferSource, OfferType } from "@/types/basic";
+import {
+  OfferDuration,
+  OfferPlatform,
+  OfferSource,
+  OfferType,
+} from "@/types/basic";
 import type { NewOffer } from "@/types/database";
 import { logger } from "@/utils/logger";
 import { DateTime } from "luxon";
@@ -9,7 +14,7 @@ import type { Locator, Page } from "playwright";
 const BASE_URL = "https://store.epicgames.com";
 const OFFER_URL = `${BASE_URL}/en-US/`;
 
-export class EpicGamesScraper extends BaseScraper {
+export class EpicGamesWebScraper extends BaseScraper {
   override getSchedule(): CronConfig[] {
     // Epic Games updates their free games every Thursday at 11:00 US/Eastern
     // Check soon after release and a backup check later in the day. Also
@@ -34,6 +39,10 @@ export class EpicGamesScraper extends BaseScraper {
 
   getDuration(): OfferDuration {
     return OfferDuration.CLAIMABLE;
+  }
+
+  override getPlatform(): OfferPlatform {
+    return OfferPlatform.PC;
   }
 
   override readOffers(): Promise<Omit<NewOffer, "category">[]> {
@@ -96,6 +105,7 @@ export class EpicGamesScraper extends BaseScraper {
         source: this.getSource(),
         duration: this.getDuration(),
         type: this.getType(),
+        platform: this.getPlatform(),
         title: title,
         probable_game_name: title,
         seen_last: DateTime.now().toISO(),

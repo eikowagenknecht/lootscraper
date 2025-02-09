@@ -26,7 +26,7 @@ export async function handleToggleCallback(
     toggleSubscriptionSchema,
   );
 
-  const { source, type, duration } = unpackedData;
+  const { source, type, duration, platform } = unpackedData;
 
   const dbChat = await getDbChat(ctx);
 
@@ -42,10 +42,17 @@ export async function handleToggleCallback(
     source,
     type,
     duration,
+    platform,
   );
 
   if (isSubscribed) {
-    await removeTelegramSubscription(dbChat.id, source, type, duration);
+    await removeTelegramSubscription(
+      dbChat.id,
+      source,
+      type,
+      duration,
+      platform,
+    );
     await ctx.answerCallbackQuery({ text: "You are now unsubscribed." });
   } else {
     await createTelegramSubscription({
@@ -53,6 +60,7 @@ export async function handleToggleCallback(
       source: source,
       type: type,
       duration: duration,
+      platform: platform,
       last_offer_id: 0,
     });
     await ctx.answerCallbackQuery({ text: "You are now subscribed." });

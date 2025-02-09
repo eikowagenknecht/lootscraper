@@ -1,12 +1,20 @@
 import { config } from "@/services/config";
-import type { OfferDuration, OfferSource, OfferType } from "@/types/basic";
+import type {
+  OfferDuration,
+  OfferPlatform,
+  OfferSource,
+  OfferType,
+} from "@/types/basic";
 import type { Config } from "@/types/config";
 import type { CronConfig } from "./base/scraper";
 import {
   AmazonGamesScraper,
   AmazonLootScraper,
   AppleGamesScraper,
-  EpicGamesScraper,
+  EpicGamesApiScraper,
+  EpicGamesWebScraper,
+  EpicMobileAndroidSraper,
+  EpicMobileIosSraper,
   GogGamesAlwaysFreeScraper,
   GogGamesScraper,
   GoogleGamesScraper,
@@ -21,6 +29,7 @@ export interface FeedCombination {
   source: OfferSource;
   type: OfferType;
   duration: OfferDuration;
+  platform: OfferPlatform;
 }
 
 interface ScraperSchedule {
@@ -32,7 +41,10 @@ export const allScrapers = [
   AmazonGamesScraper,
   AmazonLootScraper,
   AppleGamesScraper,
-  EpicGamesScraper,
+  EpicGamesWebScraper,
+  EpicGamesApiScraper,
+  EpicMobileAndroidSraper,
+  EpicMobileIosSraper,
   GogGamesScraper,
   GogGamesAlwaysFreeScraper,
   GoogleGamesScraper,
@@ -47,7 +59,10 @@ export type ScraperClass =
   | typeof AmazonGamesScraper
   | typeof AmazonLootScraper
   | typeof AppleGamesScraper
-  | typeof EpicGamesScraper
+  | typeof EpicGamesWebScraper
+  | typeof EpicGamesApiScraper
+  | typeof EpicMobileAndroidSraper
+  | typeof EpicMobileIosSraper
   | typeof GogGamesScraper
   | typeof GogGamesAlwaysFreeScraper
   | typeof GoogleGamesScraper
@@ -87,6 +102,7 @@ export function getEnabledFeedCombinations(): FeedCombination[] {
       source: scraperClass.prototype.getSource(),
       type: scraperClass.prototype.getType(),
       duration: scraperClass.prototype.getDuration(),
+      platform: scraperClass.prototype.getPlatform(),
     });
   }
 

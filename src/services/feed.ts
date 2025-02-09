@@ -71,7 +71,7 @@ class FeedService {
 
     for (const combination of enabledCombinations) {
       logger.info(
-        `Generating feeds for ${combination.source} - ${combination.type} - ${combination.duration}.`,
+        `Generating feeds for ${combination.source} ${combination.type} ${combination.duration} ${combination.platform}.`,
       );
 
       await this.generateSourceFeed(combination, activeOffers, allOffers);

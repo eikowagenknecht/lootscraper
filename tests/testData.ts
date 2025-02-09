@@ -1,4 +1,9 @@
-import { OfferDuration, OfferSource, OfferType } from "@/types/basic";
+import {
+  OfferDuration,
+  OfferPlatform,
+  OfferSource,
+  OfferType,
+} from "@/types/basic";
 import type { Database } from "@/types/database";
 import type { Kysely } from "kysely";
 import { DateTime } from "luxon";
@@ -49,6 +54,7 @@ export async function insertTestData(db: Kysely<Database>) {
         source: OfferSource.EPIC,
         type: OfferType.GAME,
         duration: OfferDuration.CLAIMABLE,
+        platform: OfferPlatform.PC,
         title: "Existing Game 1",
         probable_game_name: "Existing Game 1",
         seen_first: yesterday.toISO(),
@@ -65,6 +71,7 @@ export async function insertTestData(db: Kysely<Database>) {
         source: OfferSource.STEAM,
         type: OfferType.GAME,
         duration: OfferDuration.CLAIMABLE,
+        platform: OfferPlatform.PC,
         title: "Existing Game 2",
         probable_game_name: "Existing Game 2",
         seen_first: twoDaysAgo.toISO(),
@@ -81,6 +88,7 @@ export async function insertTestData(db: Kysely<Database>) {
         source: OfferSource.EPIC,
         type: OfferType.GAME,
         duration: OfferDuration.CLAIMABLE,
+        platform: OfferPlatform.PC,
         title: "Existing Game 3",
         probable_game_name: "Existing Game 3",
         seen_first: yesterday.toISO(),
@@ -98,6 +106,7 @@ export async function insertTestData(db: Kysely<Database>) {
         source: OfferSource.EPIC,
         type: OfferType.GAME,
         duration: OfferDuration.CLAIMABLE,
+        platform: OfferPlatform.PC,
         title: "Existing Game 4",
         probable_game_name: "Existing Game 4",
         seen_first: yesterday.toISO(),
@@ -115,6 +124,7 @@ export async function insertTestData(db: Kysely<Database>) {
         source: OfferSource.EPIC,
         type: OfferType.GAME,
         duration: OfferDuration.CLAIMABLE,
+        platform: OfferPlatform.PC,
         title: "Existing Game 5",
         probable_game_name: "Existing Game 5",
         seen_first: twoDaysAgo.toISO(),

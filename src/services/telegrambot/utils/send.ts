@@ -48,6 +48,7 @@ export async function sendNewOffersToChat(
         type: subscription.type,
         source: subscription.source,
         duration: subscription.duration,
+        platform: subscription.platform,
         lastOfferId: subscription.last_offer_id,
       });
 

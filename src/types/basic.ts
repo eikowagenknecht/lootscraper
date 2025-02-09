@@ -68,3 +68,9 @@ export enum OfferDuration {
   ALWAYS = "ALWAYS",
   TEMPORARY = "TEMPORARY",
 }
+
+export enum OfferPlatform {
+  PC = "PC",
+  ANDROID = "ANDROID",
+  IOS = "IOS",
+}
