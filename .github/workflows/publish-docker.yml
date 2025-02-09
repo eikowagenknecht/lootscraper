@@ -1,15 +1,14 @@
 # Publish to Docker Hub
 
 name: publish-docker
-
 on:
+  # Run on main branch commits
   push:
     branches: [main]
-    # Tags can not be for now because they are set from the semantic-release workflow
-    # and actions run by the GitHub user can not trigger other actions
-    # tags:
-    #   - v*
-  # Allow to run this workflow manually from the Actions tab
+  # Run after a release is created
+  release:
+    types: [published]
+  # Allow manual triggers
   workflow_dispatch:
 
 env:
@@ -25,14 +24,11 @@ jobs:
     permissions:
       contents: read
       packages: write
-
     steps:
       - name: Job information
         run: echo ${{ github.workflow }}-${{ github.ref }}
-
       - name: Check out repository
         uses: actions/checkout@v4
-
       - name: Extract metadata for Docker
         id: meta
         uses: docker/metadata-action@v5
@@ -40,8 +36,6 @@ jobs:
           images: |
             # Docker Hub
             ${{ env.IMAGE_NAME }}
-            # Github Packages
-            # ghcr.io/${{ env.IMAGE_NAME }}
           # Tagged semver releases get a (latest) entry as well
           flavor: |
             latest=auto
@@ -52,26 +46,17 @@ jobs:
           # refs/tags/v1.2.3 -> (1.2)
           # refs/tags/v1.2.3 -> (1), only if greater zero
           tags: |
+            type=raw,value=latest,enable=${{ github.event_name == 'release' }}
             type=ref,event=branch
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
             type=semver,pattern={{major}},enable=${{ !startsWith(github.ref, 'refs/tags/v0.') }}
-
       - name: Log in to Docker Hub
         if: github.event_name != 'pull_request'
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
-
-      - name: Log in to Github Packages
-        if: github.event_name != 'pull_request'
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Build and push Docker image
         uses: docker/build-push-action@v6
         with:
