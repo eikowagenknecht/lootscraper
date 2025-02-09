@@ -6,7 +6,7 @@ import { DateTime } from "luxon";
 import type { Locator, Page } from "playwright";
 
 const BASE_URL = "https://gaming.amazon.com";
-const OFFER_URL = `${BASE_URL}/home`;
+export const OFFER_URL = `${BASE_URL}/home`;
 
 interface AmazonBaseOffer {
   title: string;
@@ -32,14 +32,6 @@ export abstract class AmazonBaseScraper extends BaseScraper {
 
   protected override shouldAlwaysHaveOffers(): boolean {
     return true;
-  }
-
-  getOffersUrl(): string {
-    return OFFER_URL;
-  }
-
-  getPageReadySelector(): string {
-    return ".offer-list__content";
   }
 
   protected override isFakeAlways(): boolean {
@@ -143,9 +135,8 @@ export abstract class AmazonBaseScraper extends BaseScraper {
    * So for now to have something, we will assume that it means
    * "the end of the day in UTC". This is probably up to 1 day wrong,
    * but at least we have a rough indication of when the offer ends.
-   *
-   * @param dateStr
-   * @returns
+   * @param dateStr The date string to parse
+   * @returns The parsed date or null if parsing failed
    */
   protected parseDateString(dateStr: string): DateTime | null {
     try {

@@ -1,5 +1,5 @@
-import { resolve } from "node:path";
 import { browserService } from "@/services/browser";
+import { takeScreenshot } from "@/services/browser/utils";
 import {
   OfferCategory,
   OfferDuration,
@@ -10,7 +10,6 @@ import type { Config } from "@/types/config";
 import type { NewOffer } from "@/types/database";
 import { ScraperError } from "@/types/errors";
 import { logger } from "@/utils/logger";
-import { getDataPath } from "@/utils/path";
 import { DateTime } from "luxon";
 import type { BrowserContext, Locator, Page } from "playwright";
 import { errors } from "playwright";
@@ -25,17 +24,14 @@ export interface CronConfig {
  * @template T - Raw offer data type
  */
 export interface OfferHandler {
-  locator: Locator;
+  locator: string;
   readOffer: (element: Locator) => Promise<Omit<NewOffer, "category"> | null>;
 }
 
 /**
  * Abstract base class for web scrapers that extract offers from various sources.
  * Implements core scraping functionality and offer processing pipeline.
- *
- * @abstract
  * @template T - Type extending RawOffer that represents the structure of raw offer data
- *
  * @example
  * ```typescript
  * class MyScraper extends BaseScraper<MyRawOffer> {
@@ -47,20 +43,13 @@ export interface OfferHandler {
  *   getOfferHandlers(page: Page) { return [new MyOfferHandler(page)]; }
  * }
  * ```
- *
- * @property {BrowserContext} context - Playwright browser context for web scraping
- * @property {Config} config - Configuration settings for the scraper
- *
  * @throws {ScraperError} When scraping operations fail
  * @throws {BrowserError} When browser/page operations fail
- *
  * @see {@link RawOffer}
  * @see {@link NewOffer}
  * @see {@link OfferHandler}
  * @see {@link ScraperError}
  * @see {@link BrowserError}
- *
- * @public
  */
 export abstract class BaseScraper {
   protected context: BrowserContext | undefined;
@@ -96,58 +85,24 @@ export abstract class BaseScraper {
    */
   abstract getDuration(): OfferDuration;
 
-  /**
-   * Returns the URL of the webpage where offers are listed.
-   * This is the entry point for the scraper to begin extracting offers.
-   * @returns {string} The URL to scrape offers from
-   */
-  abstract getOffersUrl(): string;
-
-  /**
-   * Returns a CSS selector that indicates when the page is ready for scraping.
-   * The scraper will wait for this selector to be present before proceeding.
-   * @returns {string} CSS selector string
-   */
-  abstract getPageReadySelector(): string;
-
-  /**
-   * Returns an array of offer handlers that can extract and process offers from the page.
-   * Each handler is responsible for locating and normalizing specific offer elements.
-   * @param {Page} page - The Playwright Page object to extract offers from
-   * @returns {OfferHandler<T>[]} Array of offer handlers
-   */
-  abstract getOfferHandlers(page: Page): OfferHandler[];
-
   // Optional methods that can be overridden
 
   /**
    * Determines if the scraper should always expect to find offers during scraping.
    * This is used as a validation check - if true and no offers are found, it may indicate a problem.
-   * @returns {boolean} Returns true if the scraper should always have offers, false otherwise
+   * @returns true if the scraper should always have offers, false otherwise
    */
   protected shouldAlwaysHaveOffers(): boolean {
     return false;
   }
 
   /**
-   * Get scraper's schedule as cron expressions in UTC
-   * Override this to define when the scraper should run
+   * Get scraper's schedule as cron expressions in UTC.
+   * Override this to define when the scraper should run.
+   * @returns Array of cron expressions.
    */
   getSchedule(): CronConfig[] {
     return [{ schedule: "0 * * * * *" }]; // Default: Every hour
-  }
-
-  /**
-   * Hook method called after the page has been loaded in the browser.
-   * This method can be overridden by subclasses to perform custom initialization after page load.
-   * The default implementation does nothing.
-   *
-   * @param _page - The Puppeteer Page object representing the loaded page
-   * @returns A Promise that resolves when the hook execution is complete
-   */
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  protected async pageLoadedHook(_page: Page): Promise<void> {
-    // Default implementation does nothing
   }
 
   /**
@@ -159,10 +114,8 @@ export abstract class BaseScraper {
    * 3. Removes duplicates
    * 4. Categorizes offers
    * 5. Filters for valid offers
-   *
-   * @returns {Promise<NewOffer[]>} Array of processed and validated offers
+   * @returns Array of processed and validated offers
    * @throws {ScraperError} When an error occurs during scraping
-   *
    * @example
    * const scraper = new Scraper();
    * const offers = await scraper.scrape();
@@ -186,24 +139,7 @@ export abstract class BaseScraper {
     }
   }
 
-  private async takeScreenshot(page: Page, suffix = ""): Promise<void> {
-    try {
-      const filename = resolve(
-        getDataPath(),
-        "screenshots",
-        `${this.getScraperName()}_${DateTime.now().toFormat("yyyyMMdd_HHmmss")}_${suffix}.png`,
-      );
-
-      await page.screenshot({
-        path: filename,
-        fullPage: true,
-      });
-    } catch (error) {
-      logger.error(
-        `Failed to take screenshot: ${error instanceof Error ? error.message : String(error)}`,
-      );
-    }
-  }
+  abstract readOffers(): Promise<Omit<NewOffer, "category">[]>;
 
   /**
    * Reads and processes offers from a web page.
@@ -214,14 +150,38 @@ export abstract class BaseScraper {
    * 3. Waits for the page to be ready for parsing
    * 4. Processes each offer handler to extract offer information
    * 5. Closes the page when done
-   *
-   * @returns {Promise<Omit<NewOffer, "category">[]>} A promise that resolves to an array of offers without category information
-   * @throws {BrowserError} When the page doesn't become ready for parsing within the timeout period
-   * @throws {ScraperError} When no offers can be found on the page
+   * @param options
+   * The options object
+   * @param options.offersUrl
+   * The URL of the page to scrape offers from.
+   * This is the entry point for the scraper to begin extracting offers.
+   * @param options.pageReadySelector
+   * CSS selector indicating when the page is ready for parsing.
+   * The scraper will wait for this selector to be present before proceeding.
+   * @param options.offerHandlers
+   * Array of offer handlers that can extract and process offers from the page.
+   * Each handler is responsible for locating and normalizing specific offer elements.
+   * @param options.pageLoadedHook
+   * Hook method called after the page has been loaded in the browser.
+   * @returns
+   * A promise that resolves to an array of offers without category information.
+   * @throws {BrowserError}
+   * When the page doesn't become ready for parsing within the timeout period.
+   * @throws {ScraperError}
+   * When no offers can be found on the page.
    * @async
-   * @protected
    */
-  protected async readOffers(): Promise<Omit<NewOffer, "category">[]> {
+  protected async readWebOffers({
+    offersUrl,
+    offerHandlers,
+    pageReadySelector,
+    pageLoadedHook,
+  }: {
+    offersUrl: string;
+    offerHandlers: OfferHandler[];
+    pageReadySelector: string;
+    pageLoadedHook?: (page: Page) => Promise<void>;
+  }): Promise<Omit<NewOffer, "category">[]> {
     if (!this.context) {
       throw new ScraperError(
         "Browser context not initialized. Call initialize() first.",
@@ -235,20 +195,23 @@ export abstract class BaseScraper {
     try {
       page = await this.context.newPage();
 
-      await page.goto(this.getOffersUrl(), { timeout: 30000 });
-      await page.waitForSelector(this.getPageReadySelector(), {
+      await page.goto(offersUrl, { timeout: 30000 });
+      await page.waitForSelector(pageReadySelector, {
         timeout: 10000,
       });
-      await this.pageLoadedHook(page);
+      if (pageLoadedHook !== undefined) await pageLoadedHook(page);
 
-      for (const handler of this.getOfferHandlers(page)) {
-        const elements = await handler.locator.all().catch(() => {
-          throw new ScraperError(
-            "Couldn't find any offers",
-            this.getScraperName(),
-            this.getOffersUrl(),
-          );
-        });
+      for (const handler of offerHandlers) {
+        const elements = await page
+          .locator(handler.locator)
+          .all()
+          .catch(() => {
+            throw new ScraperError(
+              "Couldn't find any offers",
+              this.getScraperName(),
+              offersUrl,
+            );
+          });
 
         for (const element of elements) {
           try {
@@ -266,7 +229,7 @@ export abstract class BaseScraper {
 
       if (offers.length === 0) {
         if (this.shouldAlwaysHaveOffers()) {
-          await this.takeScreenshot(page, "no_offers");
+          await takeScreenshot(page, this.getScraperName(), "no_offers");
           logger.warn(
             "Found no offers, even though there should be at least one.",
           );
@@ -288,9 +251,9 @@ export abstract class BaseScraper {
         return [];
       }
       if (error instanceof errors.TimeoutError) {
-        await this.takeScreenshot(page, "browser_error");
+        await takeScreenshot(page, this.getScraperName(), "browser_error");
       } else {
-        await this.takeScreenshot(page, "other_error");
+        await takeScreenshot(page, this.getScraperName(), "other_error");
       }
     } finally {
       await page?.close();
@@ -403,9 +366,8 @@ export abstract class BaseScraper {
 
   /**
    * Categorize offers by title (demo, etc.).
-   *
-   * @param offers
-   * @returns
+   * @param offers The offers to categorize
+   * @returns The categorized offers
    */
   protected categorizeOffers(offers: Omit<NewOffer, "category">[]): NewOffer[] {
     return offers.map((offer) => {
@@ -428,9 +390,8 @@ export abstract class BaseScraper {
 
   /**
    * Only keep offers that are valid.
-   *
-   * @param offers
-   * @returns
+   * @param offers The offers to filter
+   * @returns The valid offers
    */
   protected filterForValidOffers(offers: NewOffer[]): NewOffer[] {
     return offers.filter(
@@ -449,9 +410,8 @@ export abstract class BaseScraper {
    * - "Title Demo (Version)",
    * - "Title Demo (Great game)",
    * - "Title Demo Version"
-   *
-   * @param title
-   * @returns
+   * @param title The title to check
+   * @returns true if the title is a demo, false otherwise
    */
   protected isDemo(title: string): boolean {
     const demoRegex = /^[\W]?demo[\W]|\Wdemo\W?((.*version.*)|(\(.*\)))?$/i;
@@ -470,9 +430,8 @@ export abstract class BaseScraper {
    * - "Title Alpha (Version)",
    * - "Title Alpha (Great game)",
    * - "Title Alpha Version"
-   *
-   * @param title
-   * @returns
+   * @param title The title to check
+   * @returns true if the title is a prerelease, false otherwise
    */
   protected isPrerelease(title: string): boolean {
     const patterns = [
@@ -489,9 +448,8 @@ export abstract class BaseScraper {
   /**
    * Check if the offer is "always" valid. That means the end date is
    * unreasonably far in the future (100 days or more).
-   *
-   * @param validTo
-   * @returns
+   * @param validTo The end date of the offer
+   * @returns true if the offer is always valid, false otherwise
    */
   protected isFakeAlways(validTo: DateTime): boolean {
     const futureDate = DateTime.now().plus({ days: 100 });
@@ -501,9 +459,8 @@ export abstract class BaseScraper {
   /**
    * Scroll down to the bottom of the given element.
    * Useful for pages with infinite scrolling.
-   *
-   * @param page
-   * @param elementId
+   * @param page The Playwright page to scroll
+   * @param elementId The ID of the element to scroll
    */
   protected async scrollElementToBottom(
     page: Page,
@@ -540,43 +497,6 @@ export abstract class BaseScraper {
     }
 
     // Wait 1 second after scrolling to trigger any lazy loading
-    await page.waitForTimeout(1000);
-  }
-
-  /**
-   * Scroll down to the bottom of the current page.
-   * Useful for pages with infinite scrolling.
-   *
-   * @param page
-   */
-  protected async scrollPageToBottom(page: Page): Promise<void> {
-    // Get scroll height
-    let height = await page.evaluate("document.body.scrollHeight");
-    let scrollCount = 0;
-
-    // Scroll for max. 100 times.
-    // If it doesn't reach the bottom befor,e something is wrong.
-    while (scrollCount < 100) {
-      // Wait to load page. We do this first to give the page time for the initial load.
-      await page.waitForTimeout(1000);
-      // Scroll down to bottom
-      await page.evaluate("window.scrollTo(0, document.body.scrollHeight)");
-
-      // Calculate new scroll height and compare with last scroll height
-      const newHeight = await page.evaluate("document.body.scrollHeight");
-      if (newHeight === height) break;
-      height = newHeight;
-      scrollCount++;
-    }
-
-    // Final mouse wheel movements (up and down) to trigger any lazy loading
-    await page.waitForTimeout(1000);
-    await page.mouse.wheel(0, -100);
-
-    await page.waitForTimeout(1000);
-    await page.mouse.wheel(0, 100);
-
-    // One final wait so the content may load
     await page.waitForTimeout(1000);
   }
 }

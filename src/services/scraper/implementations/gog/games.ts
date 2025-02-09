@@ -25,34 +25,31 @@ export class GogGamesScraper extends GogBaseScraper {
     return OfferDuration.CLAIMABLE;
   }
 
-  getOffersUrl(): string {
-    return OFFER_URL;
-  }
-
-  getPageReadySelector(): string {
-    return ".wrapper";
-  }
-
-  getOfferHandlers(page: Page) {
-    return [
-      {
-        // Banner giveaways
-        locator: page.locator("a.giveaway-banner"),
-        readOffer: this.readOfferV1.bind(this),
+  override readOffers(): Promise<Omit<NewOffer, "category">[]> {
+    return super.readWebOffers({
+      offersUrl: OFFER_URL,
+      offerHandlers: [
+        {
+          // Banner giveaways
+          locator: "a.giveaway-banner",
+          readOffer: this.readOfferV1.bind(this),
+        },
+        {
+          // Big spot offers
+          locator: "a.big-spot:has([ng-if='tile.isFreeVisible'])",
+          readOffer: this.readOfferV2.bind(this),
+        },
+        {
+          // Giveaway component offers
+          locator: "giveaway",
+          readOffer: this.readOfferV3.bind(this),
+        },
+      ],
+      pageReadySelector: ".wrapper",
+      pageLoadedHook: async (page: Page) => {
+        await this.switchToEnglish(page);
       },
-      {
-        // Big spot offers
-        locator: page.locator("a.big-spot", {
-          has: page.locator('[ng-if="tile.isFreeVisible"]'),
-        }),
-        readOffer: this.readOfferV2.bind(this),
-      },
-      {
-        // Giveaway component offers
-        locator: page.locator("giveaway"),
-        readOffer: this.readOfferV3.bind(this),
-      },
-    ];
+    });
   }
 
   private async readOfferV1(

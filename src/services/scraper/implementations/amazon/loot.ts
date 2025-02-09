@@ -1,10 +1,9 @@
-import type { OfferHandler } from "@/services/scraper/base/scraper";
 import { OfferType } from "@/types/basic";
 import type { NewOffer } from "@/types/database";
 import { logger } from "@/utils/logger";
 import { DateTime } from "luxon";
 import type { Locator, Page } from "playwright";
-import { AmazonBaseScraper } from "./base";
+import { AmazonBaseScraper, OFFER_URL } from "./base";
 
 export class AmazonLootScraper extends AmazonBaseScraper {
   getScraperName(): string {
@@ -15,19 +14,21 @@ export class AmazonLootScraper extends AmazonBaseScraper {
     return OfferType.LOOT;
   }
 
-  protected override async pageLoadedHook(page: Page): Promise<void> {
-    await this.scrollElementToBottom(page, "root");
-  }
-
-  getOfferHandlers(page: Page): OfferHandler[] {
-    return [
-      {
-        locator: page.locator(
-          '[data-a-target="offer-list-IN_GAME_LOOT"] .item-card__action > a:first-child',
-        ),
-        readOffer: this.readOffer.bind(this),
+  override readOffers(): Promise<Omit<NewOffer, "category">[]> {
+    return super.readWebOffers({
+      offersUrl: OFFER_URL,
+      offerHandlers: [
+        {
+          locator:
+            '[data-a-target="offer-list-IN_GAME_LOOT"] .item-card__action > a:first-child',
+          readOffer: this.readOffer.bind(this),
+        },
+      ],
+      pageReadySelector: ".offer-list__content",
+      pageLoadedHook: async (page: Page) => {
+        await this.scrollElementToBottom(page, "root");
       },
-    ];
+    });
   }
 
   private async readOffer(

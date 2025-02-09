@@ -1,13 +1,9 @@
-import {
-  BaseScraper,
-  type CronConfig,
-  type OfferHandler,
-} from "@/services/scraper/base/scraper";
+import { BaseScraper, type CronConfig } from "@/services/scraper/base/scraper";
 import { OfferDuration, OfferSource, OfferType } from "@/types/basic";
 import type { NewOffer } from "@/types/database";
 import { logger } from "@/utils/logger";
 import { DateTime } from "luxon";
-import type { Locator, Page } from "playwright";
+import type { Locator } from "playwright";
 
 const ROOT_URL = "https://appsliced.co/apps/iphone";
 const SEARCH_PARAMS = new URLSearchParams({
@@ -41,25 +37,21 @@ export class AppleGamesScraper extends BaseScraper {
     return OfferDuration.CLAIMABLE;
   }
 
+  override readOffers(): Promise<Omit<NewOffer, "category">[]> {
+    return super.readWebOffers({
+      offersUrl: `${ROOT_URL}?${SEARCH_PARAMS.toString()}`,
+      offerHandlers: [
+        {
+          locator: "article.app",
+          readOffer: this.readOffer.bind(this),
+        },
+      ],
+      pageReadySelector: "article.app",
+    });
+  }
+
   protected override shouldAlwaysHaveOffers(): boolean {
     return true;
-  }
-
-  getOffersUrl(): string {
-    return `${ROOT_URL}?${SEARCH_PARAMS.toString()}`;
-  }
-
-  getPageReadySelector(): string {
-    return "article.app";
-  }
-
-  getOfferHandlers(page: Page): OfferHandler[] {
-    return [
-      {
-        locator: page.locator("article.app"),
-        readOffer: this.readOffer.bind(this),
-      },
-    ];
   }
 
   private async readOffer(

@@ -1,8 +1,5 @@
-import {
-  BaseScraper,
-  type CronConfig,
-  type OfferHandler,
-} from "@/services/scraper/base/scraper";
+import { scrollPageToBottom } from "@/services/browser/utils";
+import { BaseScraper, type CronConfig } from "@/services/scraper/base/scraper";
 import { OfferDuration, OfferSource, OfferType } from "@/types/basic";
 import type { NewOffer } from "@/types/database";
 import { logger } from "@/utils/logger";
@@ -39,30 +36,25 @@ export class EpicGamesScraper extends BaseScraper {
     return OfferDuration.CLAIMABLE;
   }
 
-  getOffersUrl(): string {
-    return OFFER_URL;
-  }
-
-  getPageReadySelector(): string {
-    return "h1";
+  override readOffers(): Promise<Omit<NewOffer, "category">[]> {
+    return super.readWebOffers({
+      offersUrl: OFFER_URL,
+      offerHandlers: [
+        {
+          locator: '//span[text()="Free Now"]//ancestor::a',
+          readOffer: this.readOffer.bind(this),
+        },
+      ],
+      pageReadySelector: "h1",
+      pageLoadedHook: async (page: Page) => {
+        // Scroll to bottom to make free games section load
+        await scrollPageToBottom(page);
+      },
+    });
   }
 
   protected override shouldAlwaysHaveOffers(): boolean {
     return true;
-  }
-
-  protected override async pageLoadedHook(page: Page): Promise<void> {
-    // Scroll to bottom to make free games section load
-    await this.scrollPageToBottom(page);
-  }
-
-  getOfferHandlers(page: Page): OfferHandler[] {
-    return [
-      {
-        locator: page.locator('//span[text()="Free Now"]//ancestor::a'),
-        readOffer: this.readOffer.bind(this),
-      },
-    ];
   }
 
   private async readOffer(

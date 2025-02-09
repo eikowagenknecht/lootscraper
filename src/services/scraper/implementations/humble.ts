@@ -1,14 +1,10 @@
-import {
-  BaseScraper,
-  type CronConfig,
-  type OfferHandler,
-} from "@/services/scraper/base/scraper";
+import { BaseScraper, type CronConfig } from "@/services/scraper/base/scraper";
 import { OfferCategory, ScraperError } from "@/types";
 import { OfferDuration, OfferSource, OfferType } from "@/types/basic";
 import type { NewOffer } from "@/types/database";
 import { logger } from "@/utils/logger";
 import { DateTime } from "luxon";
-import type { Locator, Page } from "playwright";
+import type { Locator } from "playwright";
 
 const BASE_URL = "https://humblebundle.com";
 const SEARCH_URL = `${BASE_URL}/store/search`;
@@ -40,23 +36,17 @@ export class HumbleGamesScraper extends BaseScraper {
     return OfferDuration.CLAIMABLE;
   }
 
-  getOffersUrl(): string {
-    return `${SEARCH_URL}?${SEARCH_PARAMS.toString()}`;
-  }
-
-  getPageReadySelector(): string {
-    return "li div.discount-amount";
-  }
-
-  getOfferHandlers(page: Page): OfferHandler[] {
-    return [
-      {
-        locator: page.locator("li", {
-          has: page.locator("div.discount-amount", { hasText: "100" }),
-        }),
-        readOffer: this.readOffer.bind(this),
-      },
-    ];
+  override readOffers(): Promise<Omit<NewOffer, "category">[]> {
+    return super.readWebOffers({
+      offersUrl: `${SEARCH_URL}?${SEARCH_PARAMS.toString()}`,
+      offerHandlers: [
+        {
+          locator: "li:has(div.discount-amount:text('100'))",
+          readOffer: this.readOffer.bind(this),
+        },
+      ],
+      pageReadySelector: "li div.discount-amount",
+    });
   }
 
   private async readOffer(element: Locator): Promise<NewOffer | null> {

@@ -1,8 +1,5 @@
-import {
-  BaseScraper,
-  type CronConfig,
-  type OfferHandler,
-} from "@/services/scraper/base/scraper";
+import { scrollPageToBottom } from "@/services/browser/utils";
+import { BaseScraper, type CronConfig } from "@/services/scraper/base/scraper";
 import { OfferDuration, OfferSource, OfferType } from "@/types/basic";
 import type { NewOffer } from "@/types/database";
 import { logger } from "@/utils/logger";
@@ -36,29 +33,25 @@ export class GoogleGamesScraper extends BaseScraper {
     return OfferDuration.CLAIMABLE;
   }
 
+  override readOffers(): Promise<Omit<NewOffer, "category">[]> {
+    return super.readWebOffers({
+      offersUrl: OFFER_URL,
+      offerHandlers: [
+        {
+          locator: "div.short_info",
+          readOffer: this.readOffer.bind(this),
+        },
+      ],
+      pageReadySelector: "div.short_info",
+      pageLoadedHook: async (page: Page) => {
+        // Scroll to bottom to show all games
+        await scrollPageToBottom(page);
+      },
+    });
+  }
+
   protected override shouldAlwaysHaveOffers(): boolean {
     return true;
-  }
-
-  getOffersUrl(): string {
-    return OFFER_URL;
-  }
-
-  getPageReadySelector(): string {
-    return "div.short_info";
-  }
-
-  protected override async pageLoadedHook(page: Page): Promise<void> {
-    await this.scrollPageToBottom(page);
-  }
-
-  getOfferHandlers(page: Page): OfferHandler[] {
-    return [
-      {
-        locator: page.locator("div.short_info"),
-        readOffer: this.readOffer.bind(this),
-      },
-    ];
   }
 
   private async readOffer(

@@ -19,10 +19,6 @@ export abstract class GogBaseScraper extends BaseScraper {
     return OfferType.GAME;
   }
 
-  protected override async pageLoadedHook(page: Page): Promise<void> {
-    await this.switchToEnglish(page);
-  }
-
   protected sanitizeImgUrl(imgUrl: string | null): string | null {
     if (!imgUrl) return null;
 
@@ -41,7 +37,7 @@ export abstract class GogBaseScraper extends BaseScraper {
     return sanitized;
   }
 
-  private async switchToEnglish(page: Page): Promise<void> {
+  protected async switchToEnglish(page: Page): Promise<void> {
     // Check if we're already on English version
     const currentLanguage = await this.getCurrentLanguage(page);
     if (currentLanguage === "English") return;
