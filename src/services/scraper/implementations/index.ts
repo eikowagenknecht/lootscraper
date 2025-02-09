@@ -1,7 +1,7 @@
 export { AmazonGamesScraper } from "./amazon/games";
 export { AmazonLootScraper } from "./amazon/loot";
 export { AppleGamesScraper } from "./apple";
-export { EpicGamesScraper } from "./epic";
+export { EpicGamesScraper } from "./epicWeb";
 export { GogGamesScraper } from "./gog/games";
 export { GogGamesAlwaysFreeScraper } from "./gog/alwaysfree";
 export { GoogleGamesScraper } from "./google";
