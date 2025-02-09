@@ -161,13 +161,11 @@ function serializeValue(value: ValidFieldValue): string {
 
 /**
  * Packs an object into a colon-delimited string
- *
  * @param data - The object to pack
  * @param schema - Optional Zod schema for validation
  * @returns The packed string
  * @throws {Error} If any value is not a valid field value
  * @throws {ZodError} If the data doesn't match the schema
- *
  * @example
  * ```typescript
  * const schema = z.object({
@@ -212,13 +210,11 @@ export function packData<T extends z.ZodObject<z.ZodRawShape>>(
 
 /**
  * Unpacks a colon-delimited string into an object according to the provided schema
- *
  * @param packed - The packed string to unpack
  * @param schema - Zod schema defining the expected structure
  * @returns The unpacked and validated object
  * @throws {Error} If the number of fields doesn't match the schema
  * @throws {ZodError} If the unpacked data doesn't match the schema
- *
  * @example
  * ```typescript
  * const schema = z.object({

@@ -225,6 +225,8 @@ class ScraperService {
 
   /**
    * Run scraping for a single scraper and store results
+   * @param scraper The scraper instance to run
+   * @returns The number of offers found and new offers
    */
   async runSingleScrape(scraper: ScraperInstance): Promise<ScrapeResult> {
     if (!this.config) {

@@ -4,8 +4,8 @@
  * Escaped characters: '_', '*', '[', ']', '(', ')', '~', '`', '>', '#', '+', '-', '=', '|', '{', '}', '.', '!', '\'
  *
  * See https://core.telegram.org/bots/api#markdownv2-style
- * @param text
- * @returns
+ * @param text The text to escape
+ * @returns The escaped text
  */
 export function escapeText(text: string): string {
   return text.replace(/[_*[\]()~`>#+-=|{}.!\\]/g, "\\$&");
@@ -17,8 +17,8 @@ export function escapeText(text: string): string {
  * Escaped characters: '`', '\'
  *
  * See https://core.telegram.org/bots/api#markdownv2-style
- * @param text
- * @returns
+ * @param text The text to escape
+ * @returns The escaped text
  */
 export function escapeCode(text: string): string {
   return text.replace(/[`\\]/g, "\\$&");
@@ -30,8 +30,8 @@ export function escapeCode(text: string): string {
  * Escaped characters: ')', '\'
  *
  * See https://core.telegram.org/bots/api#markdownv2-style
- * @param url
- * @returns
+ * @param url The url to escape
+ * @returns The escaped url
  */
 function escapeUrl(url: string): string {
   return url.replace(/[)\\]/g, "\\$&");

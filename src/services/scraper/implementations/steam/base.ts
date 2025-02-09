@@ -1,8 +1,4 @@
-import {
-  BaseScraper,
-  type CronConfig,
-  type OfferHandler,
-} from "@/services/scraper/base/scraper";
+import { BaseScraper, type CronConfig } from "@/services/scraper/base/scraper";
 import { ScraperError } from "@/types";
 import { OfferDuration, OfferSource, OfferType } from "@/types/basic";
 import type { NewOffer } from "@/types/database";
@@ -30,32 +26,30 @@ export abstract class SteamBaseScraper extends BaseScraper {
     return OfferDuration.CLAIMABLE;
   }
 
-  abstract getSteamCategory(): number; // Games or DLC
-
-  getOffersUrl(): string {
-    const params = new URLSearchParams({
+  override readOffers(): Promise<Omit<NewOffer, "category">[]> {
+    const urlParams = new URLSearchParams({
       maxprice: "free",
       category1: this.getSteamCategory().toString(),
       specials: "1",
     });
 
-    return `${SEARCH_URL}?${params.toString()}`;
+    const url = `${SEARCH_URL}?${urlParams.toString()}`;
+
+    return super.readWebOffers({
+      offersUrl: url,
+      offerHandlers: [
+        {
+          locator: "#search_results a",
+          readOffer: this.readOffer.bind(this),
+        },
+      ],
+      pageReadySelector: "#search_results",
+    });
   }
 
-  getPageReadySelector(): string {
-    return "#search_results";
-  }
+  abstract getSteamCategory(): number; // Games or DLC
 
   abstract getValidtextLocator(page: Page): Locator;
-
-  getOfferHandlers(page: Page): OfferHandler[] {
-    return [
-      {
-        locator: page.locator("#search_results a"),
-        readOffer: this.readOffer.bind(this),
-      },
-    ];
-  }
 
   private async readOffer(
     element: Locator,

@@ -1,13 +1,9 @@
-import {
-  BaseScraper,
-  type CronConfig,
-  type OfferHandler,
-} from "@/services/scraper/base/scraper";
+import { BaseScraper, type CronConfig } from "@/services/scraper/base/scraper";
 import { OfferDuration, OfferSource, OfferType } from "@/types/basic";
 import type { NewOffer } from "@/types/database";
 import { logger } from "@/utils/logger";
 import { DateTime } from "luxon";
-import type { Locator, Page } from "playwright";
+import type { Locator } from "playwright";
 
 const BASE_URL = "https://store.ubi.com";
 const OFFER_URL = `${BASE_URL}/us/`;
@@ -35,25 +31,21 @@ export class UbisoftGamesScraper extends BaseScraper {
     return OfferDuration.CLAIMABLE;
   }
 
+  override readOffers(): Promise<Omit<NewOffer, "category">[]> {
+    return super.readWebOffers({
+      offersUrl: OFFER_URL,
+      offerHandlers: [
+        {
+          locator: ".c-focus-banner__wrapper",
+          readOffer: this.readOffer.bind(this),
+        },
+      ],
+      pageReadySelector: ".wrapper",
+    });
+  }
+
   protected override shouldAlwaysHaveOffers(): boolean {
     return false;
-  }
-
-  getOffersUrl(): string {
-    return OFFER_URL;
-  }
-
-  getPageReadySelector(): string {
-    return ".wrapper";
-  }
-
-  getOfferHandlers(page: Page): OfferHandler[] {
-    return [
-      {
-        locator: page.locator(".c-focus-banner__wrapper"),
-        readOffer: this.readOffer.bind(this),
-      },
-    ];
   }
 
   private async readOffer(

@@ -1,8 +1,5 @@
-import {
-  BaseScraper,
-  type CronConfig,
-  type OfferHandler,
-} from "@/services/scraper/base/scraper";
+import { scrollPageToBottom } from "@/services/browser/utils";
+import { BaseScraper, type CronConfig } from "@/services/scraper/base/scraper";
 import { OfferDuration, OfferSource, OfferType } from "@/types/basic";
 import type { NewOffer } from "@/types/database";
 import { logger } from "@/utils/logger";
@@ -36,31 +33,25 @@ export class ItchGamesScraper extends BaseScraper {
     return OfferDuration.CLAIMABLE;
   }
 
+  override readOffers(): Promise<Omit<NewOffer, "category">[]> {
+    return super.readWebOffers({
+      offersUrl: OFFER_URL,
+      offerHandlers: [
+        {
+          locator: ".game_grid_widget .game_cell:has(.sale_tag:text('100'))",
+          readOffer: this.readOffer.bind(this),
+        },
+      ],
+      pageReadySelector: ".game_grid_widget .game_cell",
+      pageLoadedHook: async (page: Page) => {
+        // Scroll to bottom to make all free games load
+        await scrollPageToBottom(page);
+      },
+    });
+  }
+
   protected override shouldAlwaysHaveOffers(): boolean {
     return true;
-  }
-
-  getOffersUrl(): string {
-    return OFFER_URL;
-  }
-
-  getPageReadySelector(): string {
-    return ".game_grid_widget .game_cell";
-  }
-
-  protected override async pageLoadedHook(page: Page): Promise<void> {
-    await this.scrollPageToBottom(page);
-  }
-
-  getOfferHandlers(page: Page): OfferHandler[] {
-    return [
-      {
-        locator: page.locator(".game_grid_widget .game_cell", {
-          has: page.locator(".sale_tag", { hasText: "100" }),
-        }),
-        readOffer: this.readOffer.bind(this),
-      },
-    ];
   }
 
   private async readOffer(

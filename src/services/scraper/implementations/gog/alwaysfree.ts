@@ -24,25 +24,24 @@ export class GogGamesAlwaysFreeScraper extends GogBaseScraper {
     return OfferDuration.ALWAYS;
   }
 
+  override readOffers(): Promise<Omit<NewOffer, "category">[]> {
+    return super.readWebOffers({
+      offersUrl: OFFER_URL,
+      offerHandlers: [
+        {
+          locator: ".product-row__link",
+          readOffer: this.readOffer.bind(this),
+        },
+      ],
+      pageReadySelector: ".content.cf",
+      pageLoadedHook: async (page: Page) => {
+        await this.switchToEnglish(page);
+      },
+    });
+  }
+
   protected override shouldAlwaysHaveOffers(): boolean {
     return true;
-  }
-
-  getOffersUrl(): string {
-    return OFFER_URL;
-  }
-
-  getPageReadySelector(): string {
-    return ".content.cf";
-  }
-
-  getOfferHandlers(page: Page) {
-    return [
-      {
-        locator: page.locator(".product-row__link"),
-        readOffer: this.readOffer.bind(this),
-      },
-    ];
   }
 
   private async readOffer(
