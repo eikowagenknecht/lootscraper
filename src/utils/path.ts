@@ -5,7 +5,6 @@ import { logger } from "./logger";
  * Get the path to the data directory.
  * In a Docker container, this is `/data`.
  * Otherwise, it is `./data`.
- *
  * @returns Path to the data directory
  */
 export function getDataPath(): string {
@@ -21,7 +20,6 @@ export function getDataPath(): string {
  * Get the path to the templates directory.
  * In a Docker container, this is `/app/templates`.
  * Otherwise, it is `./templates`.
- *
  * @returns Path to the templates directory
  */
 export function getTemplatesPath(): string {
@@ -36,7 +34,6 @@ export function getTemplatesPath(): string {
  * Get the path to package.json
  * In a Docker container, this is `/app/package.json`.
  * Otherwise, it is relative to the project root.
- *
  * @returns Path to package.json
  */
 export function getPackageJsonPath(): string {

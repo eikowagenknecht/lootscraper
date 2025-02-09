@@ -41,8 +41,8 @@ export class IgdbClient {
    * Search IGDB via the APIv4 and return the best match in the results.
    *
    * The comparison is done with difflib, lower cased.
-   * @param searchString
-   * @returns
+   * @param searchString The string to search for
+   * @returns The IGDB ID of the best match, or null if no match was found
    */
   public async searchGame(searchString: string): Promise<number | null> {
     await this.ensureAuth();

@@ -52,10 +52,9 @@ function levenshteinDistance(s1: string, s2: string): number {
  * Warning: This is currently a Claude-generated Levenshtein distance algorithm.
  * The results need to be monitored. If it is not good enough, it should be
  * replaced with e.g. fuse.js. The benchmark is Python's difflib.SequenceMatcher.
- *
- * @param search
- * @param result
- * @returns
+ * @param search The search term
+ * @param result The result to compare
+ * @returns A score between 0 and 1, where 1 is a perfect match
  */
 export function getMatchScore(search: string, result: string): number {
   // Clean strings: keep only alphanumeric and spaces, condense spaces
@@ -106,9 +105,8 @@ export function getMatchScore(search: string, result: string): number {
 /**
  * Replace non-Latin characters with their closest representation and replace
  * the quote sign (") because that would break the query.
- *
- * @param str
- * @returns
+ * @param str The string to normalize
+ * @returns The normalized string
  */
 export function normalizeString(str: string): string {
   // First normalize to decomposed form (NFD), which separates base characters from diacritics
@@ -164,16 +162,16 @@ function cleanLootTitle(title: string): string {
  * manual matching.
  *
  * Most of the time, it is the part before the first ": ", e.g.
- *   "Lords Mobile: Warlord Pack"
- *   -> "Lords Mobile"
+ * "Lords Mobile: Warlord Pack"
+ * -> "Lords Mobile"
  *
  * When the title itself contains a ": ", it can also be the second, e.g.
- *   "Mobile Legends: Bang Bang: Amazon Prime Chest"
- *   -> Mobile Legends: Bang Bang
+ * "Mobile Legends: Bang Bang: Amazon Prime Chest"
+ * -> Mobile Legends: Bang Bang
  *
  * Sometimes it also ist "Get ... in [Game]", e.g.
- *   "Get up to GTA$400,000 this month in GTA Online"
- *   -> GTA Online
+ * "Get up to GTA$400,000 this month in GTA Online"
+ * -> GTA Online
  *
  * We use the same method for Steam loot offers for now as they also seem to
  * be seperated in the same fashion.
@@ -182,15 +180,14 @@ function cleanLootTitle(title: string): string {
  * for the separation of game and loot name and the loot itself also
  * contains a ": ". In this case, we can just use the part before the " — "
  * as the game name, e.g.
- *   "World of Warships — Starter Pack: Dreadnought"
- *   -> World of Warships: Starter Pack
+ * "World of Warships — Starter Pack: Dreadnought"
+ * -> World of Warships: Starter Pack
  *
  * So as a general rule, we try splitting in this order:
  * 1. Special Steam format (TITLE — LOOT: LOOTDETAIL)
  * 2. By the second colon (TITLE: TITLEDETAIL: LOOTDETAIL)
  * 3. By the "Get ... in [Game] pattern" (to catch games with a colon in the name)
  * 4. By the ": " pattern (TITLE: LOOT)
- *
  * @param title The combined title as seen in the offer
  * @returns Both the probable game name and the resulting offer title
  */

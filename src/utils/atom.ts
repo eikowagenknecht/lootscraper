@@ -14,7 +14,8 @@ interface AtomPerson {
 interface AtomLink {
   /** Required. The URI of the referenced resource (typically a Web page)*/
   href: string;
-  /** Optional. Contains a single link relationship type. It can be a full URI or one of the following predefined values (default=alternate).
+  /**
+   * Optional. Contains a single link relationship type. It can be a full URI or one of the following predefined values (default=alternate).
    * alternate: An alternate representation of the entry or feed, for example a permalink to the html version of the entry, or the front page of the weblog.
    * enclosure: A related resource which is potentially large in size and might require special handling, for example an audio or video recording.
    * related: An document related to the entry or feed.

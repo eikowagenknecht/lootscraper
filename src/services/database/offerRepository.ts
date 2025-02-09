@@ -33,6 +33,13 @@ export async function getOfferById(id: number): Promise<Offer | undefined> {
  * Offers that previously had no validTo date but now do have one are considered
  * the same offer because some sites (Steam) add the "valid to" date only when
  * the offer already has been there for a while.
+ * @param options Parameters
+ * @param options.source The source of the offer
+ * @param options.type The type of the offer
+ * @param options.duration The duration of the offer
+ * @param options.title The title of the offer
+ * @param options.validTo The validTo date of the offer
+ * @returns The offer if found, otherwise undefined
  */
 export async function findOffer({
   source,
