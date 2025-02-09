@@ -6,7 +6,6 @@ import {
   OfferType,
 } from "@/types/basic";
 import type { NewOffer } from "@/types/database";
-import { logger } from "@/utils/logger";
 import {
   ApolloClient,
   type DefaultOptions,
@@ -164,21 +163,12 @@ export class EpicGamesApiScraper extends BaseScraper {
 
   override async readOffers(): Promise<Omit<NewOffer, "category">[]> {
     const client = this.createClient();
-    try {
-      const response = await client.query<CatalogData, { count: number }>({
-        query: FREEGAMES_QUERY,
-        variables: { count: 1000 },
-      });
+    const response = await client.query<CatalogData, { count: number }>({
+      query: FREEGAMES_QUERY,
+      variables: { count: 1000 },
+    });
 
-      return this.parseOffers(response.data);
-    } catch (error) {
-      if (error instanceof Error) {
-        logger.error("Error fetching free games:", error.message);
-      } else {
-        logger.error("Unknown error occurred while fetching free games");
-      }
-      return [];
-    }
+    return this.parseOffers(response.data);
   }
 
   protected override shouldAlwaysHaveOffers(): boolean {
