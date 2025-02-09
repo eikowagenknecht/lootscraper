@@ -40,7 +40,7 @@ scraper:
     # Apple
     - AppleGames
     # Epic
-    - EpicGames
+    - EpicGamesWeb
     # GOG - Games
     - GogGames
     # GOG - Always Free

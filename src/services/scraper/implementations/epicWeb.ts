@@ -21,7 +21,7 @@ export class EpicGamesScraper extends BaseScraper {
   }
 
   getScraperName(): string {
-    return "EpicGames";
+    return "EpicGamesWeb";
   }
 
   getSource(): OfferSource {
