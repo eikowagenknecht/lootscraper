@@ -49,8 +49,8 @@ class GameInfoService {
    * Update an offer with game information. If the offer already has some
    * information, just update the missing parts. Otherwise, create a new
    * Game and try to populate it with information.
-   * @param offerId
-   * @returns
+   * @param offerId The ID of the offer to enrich.
+   * @returns A promise that resolves when the enrichment is done.
    */
   public async enrichOffer(offerId: number): Promise<void> {
     if (this.running) {

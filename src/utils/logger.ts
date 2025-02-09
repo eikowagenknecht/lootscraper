@@ -141,13 +141,8 @@ interface TimeoutState {
 /**
  * A Winston transport for sending logs to Telegram.
  * Implements rate limiting and message chunking for better handling of log messages.
- *
- * @class TelegramTransport
- * @extends {Transport}
- *
- * @property {number} maxLogsPerMinute - Maximum number of logs that can be sent per minute (default: 10)
- * @property {LogCounter} counter - Tracks the number of logs sent within the current minute
- *
+ * maxLogsPerMinute - Maximum number of logs that can be sent per minute (default: 10)
+ * counter - Tracks the number of logs sent within the current minute
  * @example
  * ```typescript
  * const telegramTransport = new TelegramTransport(chatId);
@@ -160,7 +155,6 @@ interface TimeoutState {
  * - Stack trace formatting
  * - Markdown support
  * - Timeout handling for API calls
- *
  * @throws {Error} When Telegram API calls timeout (after 5 seconds)
  */
 class TelegramTransport extends Transport {
