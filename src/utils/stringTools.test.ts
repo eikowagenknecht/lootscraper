@@ -260,6 +260,6 @@ describe("generateFeedTitle", () => {
         duration: OfferDuration.TEMPORARY,
         platform: OfferPlatform.PC,
       }),
-    ).toBe("Free Epic Games Games (Temporary)");
+    ).toBe("Free Epic Games Games (PC, Temporary)");
   });
 });
