@@ -128,8 +128,6 @@ export abstract class BaseScraper {
    * const offers = await scraper.scrape();
    */
   public async scrape(): Promise<NewOffer[]> {
-    this.context = browserService.getContext();
-
     try {
       const offers = await this.readOffers();
       const cleanedOffers = this.cleanOffers(offers);
@@ -189,12 +187,7 @@ export abstract class BaseScraper {
     pageReadySelector: string;
     pageLoadedHook?: (page: Page) => Promise<void>;
   }): Promise<Omit<NewOffer, "category">[]> {
-    if (!this.context) {
-      throw new ScraperError(
-        "Browser context not initialized. Call initialize() first.",
-        this.getScraperName(),
-      );
-    }
+    this.context = browserService.getContext();
 
     const offers: Omit<NewOffer, "category">[] = [];
     let page: Page | null = null;
