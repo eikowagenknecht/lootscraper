@@ -105,7 +105,9 @@ export async function sendNewOffersToChat(
     if (
       error instanceof GrammyError &&
       (error.description.includes("chat not found") ||
-        error.description.includes("bot was blocked by the user"))
+        error.description.includes("bot was blocked by the user") ||
+        error.description.includes("user is deactivated") ||
+        error.description.includes("message thread not found"))
     ) {
       logger.info(
         `Chat ${chat.chat_id.toFixed()} is no longer accessible, marking as inactive.`,
