@@ -24,7 +24,7 @@ export interface CronConfig {
  * Handler for processing offers
  * @template T - Raw offer data type
  */
-export interface OfferHandler {
+interface OfferHandler {
   locator: string;
   readOffer: (element: Locator) => Promise<Omit<NewOffer, "category"> | null>;
 }
