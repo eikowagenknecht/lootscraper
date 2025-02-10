@@ -108,7 +108,10 @@ export async function sendNewOffersToChat(
       logger.info(
         `Chat ${chat.chat_id.toFixed()} is no longer accessible, marking as inactive.`,
       );
-      await deactivateTelegramChat(dbChatId, error.description);
+      await deactivateTelegramChat(
+        dbChatId,
+        `${error.error_code.toFixed()}: ${error.description}`,
+      );
       return;
     }
 
@@ -156,7 +159,10 @@ export async function sendNewAnnouncementsToChat(
       logger.info(
         `Chat ${chat.chat_id.toFixed()} is no longer accessible, marking as inactive.`,
       );
-      await deactivateTelegramChat(dbChatId, error.description);
+      await deactivateTelegramChat(
+        dbChatId,
+        `${error.error_code.toFixed()}: ${error.description}`,
+      );
       return;
     }
 
@@ -171,9 +177,12 @@ export async function sendNewAnnouncementsToChat(
 function isPermanentlyBlockedChat(error: Error): boolean {
   return (
     error instanceof GrammyError &&
-    (error.description.includes("chat not found") ||
+    (error.error_code === 403 ||
+      error.description.includes("chat not found") ||
       error.description.includes("bot was blocked by the user") ||
       error.description.includes("user is deactivated") ||
-      error.description.includes("message thread not found"))
+      error.description.includes("message thread not found") ||
+      error.description.includes("bot was kicked from the group chat") ||
+      error.description.includes("the group chat was deleted"))
   );
 }
