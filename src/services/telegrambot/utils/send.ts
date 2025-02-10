@@ -3,13 +3,11 @@ import { getActiveOffers } from "@/services/database/offerRepository";
 import {
   deactivateTelegramChat,
   getTelegramChatById,
+  getTelegramChatWithSubscriptions,
   incrementTelegramChatOffersReceived,
   updateTelegramChatLastAnnouncementId,
 } from "@/services/database/telegramChatRepository";
-import {
-  getTelegramSubscriptions,
-  updateTelegramSubscription,
-} from "@/services/database/telegramSubscriptionRepository";
+import { updateTelegramSubscription } from "@/services/database/telegramSubscriptionRepository";
 import { telegramBotService } from "@/services/telegrambot";
 import { formatOfferMessage } from "@/services/telegrambot/utils/formatters";
 import { createOfferKeyboard } from "@/services/telegrambot/utils/keyboards";
@@ -22,17 +20,16 @@ export async function sendNewOffersToChat(
   dbChatId: number,
   interactive = false,
 ): Promise<void> {
-  const chat = await getTelegramChatById(dbChatId);
-  if (chat === undefined) {
+  const chatData = await getTelegramChatWithSubscriptions(dbChatId);
+  if (!chatData) {
     logger.error(
       `Can't send offer, chat ${dbChatId.toFixed()} not found in database.`,
     );
     return;
   }
+  const { chat, subscriptions } = chatData;
 
   try {
-    const subscriptions = await getTelegramSubscriptions(dbChatId);
-
     if (interactive && !chat.thread_id && subscriptions.length === 0) {
       await telegramBotService
         .getBot()
