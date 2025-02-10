@@ -57,7 +57,7 @@ jobs:
           # refs/tags/v1.2.3 -> (1), only if greater zero
           tags: |
             type=raw,value=latest,enable=${{ github.event.inputs.version != '' }}
-            type=raw,value=${{ github.event.inputs.version }},enable=${{ github.event.inputs.version != '' }}
+            type=ref,event=branch
             type=semver,pattern={{version}},value=${{ github.event.inputs.version }},enable=${{ github.event.inputs.version != '' }}
             type=semver,pattern={{major}}.{{minor}},value=${{ github.event.inputs.version }},enable=${{ github.event.inputs.version != '' }}
             type=semver,pattern={{major}},value=${{ github.event.inputs.version }},enable=${{ github.event.inputs.version != '' && !startsWith(github.event.inputs.version, '0.') }}
