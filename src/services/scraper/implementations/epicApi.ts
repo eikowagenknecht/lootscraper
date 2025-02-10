@@ -229,15 +229,29 @@ export class EpicGamesApiScraper extends BaseScraper {
   }
 
   private getPromotionalDates(offer: RawOffer) {
-    if (!offer.promotions?.promotionalOffers?.[0]?.promotionalOffers?.[0]) {
-      return { startDate: null, endDate: null };
+    const res: { startDate: string | null; endDate: string | null } = {
+      startDate: null,
+      endDate: null,
+    };
+
+    if (!offer.promotions?.promotionalOffers) {
+      return res;
     }
 
-    const promo = offer.promotions.promotionalOffers[0].promotionalOffers[0];
-    return {
-      startDate: promo.startDate,
-      endDate: promo.endDate,
-    };
+    for (const promo of offer.promotions.promotionalOffers) {
+      for (const subPromo of promo.promotionalOffers) {
+        if (
+          subPromo.startDate &&
+          subPromo.endDate &&
+          subPromo.discountSetting.discountPercentage === 0
+        ) {
+          res.startDate = subPromo.startDate;
+          res.endDate = subPromo.endDate;
+        }
+      }
+    }
+
+    return res;
   }
 
   private getMainImage(offer: RawOffer): string {
