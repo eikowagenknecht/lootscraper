@@ -11,12 +11,11 @@ Then this is for you!
 
 ## Current status
 
-Version 2.0 of this project has been released on 2025-02-07.
+**LootScraper 2.0 Released on 2025-02-10**: LootScraper has been completely rewritten in TypeScript for better performance and reliability. The biggest new feature: Epic Mobile Games Store support! You'll now get notifications for free games on iOS and Android through Epic's platform. Everything should run a bit faster now.
 
-Currently the stable instance is still running on version 1.14.3 and only the development instance is running on version 2.0.x.
-Once the development instance has been running stable for a while, the stable instance will be updated as well.
+There may still be some bugs, so please report them if you find any.
 
-But even after that, there may still be some bugs, so please report them if you find any.
+Happy looting! 🎮
 
 ## Public feeds / channels / bots
 
