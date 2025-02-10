@@ -95,14 +95,16 @@ class FeedService {
       (offer) =>
         offer.source === combination.source &&
         offer.type === combination.type &&
-        offer.duration === combination.duration,
+        offer.duration === combination.duration &&
+        offer.platform === combination.platform,
     );
 
     const filteredAllOffers = allOffers.filter(
       (offer) =>
         offer.source === combination.source &&
         offer.type === combination.type &&
-        offer.duration === combination.duration,
+        offer.duration === combination.duration &&
+        offer.platform === combination.platform,
     );
 
     // Generate Atom feed
