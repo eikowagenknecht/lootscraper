@@ -1,4 +1,3 @@
-import { getAllActiveTelegramChats } from "@/services/database/telegramChatRepository";
 import type { BotContext } from "@/services/telegrambot/types/middleware";
 import {
   sendNewAnnouncementsToChat,
@@ -17,7 +16,12 @@ import {
   HttpError,
   type RawApi,
 } from "grammy";
+import { DateTime } from "luxon";
 import type { Other } from "node_modules/grammy/out/core/api";
+import {
+  getChatsNeedingAnnouncements,
+  getChatsNeedingOffers,
+} from "./database/offerRepository";
 import { handleCallback } from "./telegrambot/handlers/callbacks/router";
 import {
   handleHelpCommand,
@@ -246,11 +250,16 @@ export class TelegramBotService {
     }
 
     try {
-      const chats = await getAllActiveTelegramChats();
+      // Get latest offer IDs for all combinations at once
+      const chatsNeedingAnnouncements = await getChatsNeedingAnnouncements();
+      const chatsNeedingUpdates = await getChatsNeedingOffers(DateTime.now());
 
-      for (const chat of chats) {
-        await sendNewAnnouncementsToChat(chat.id);
-        await sendNewOffersToChat(chat.id);
+      for (const chatId of chatsNeedingAnnouncements) {
+        await sendNewAnnouncementsToChat(chatId);
+      }
+
+      for (const chatId of chatsNeedingUpdates) {
+        await sendNewOffersToChat(chatId);
       }
     } catch (error) {
       logger.error(

@@ -6,7 +6,6 @@ import type {
   OfferType,
 } from "@/types/basic";
 import type { NewOffer, Offer, OfferUpdate } from "@/types/database";
-import { calculateRealValidTo } from "@/utils";
 import { logger } from "@/utils/logger";
 import { DateTime } from "luxon";
 import { handleError, handleInsertResult, handleUpdateResult } from "./common";
@@ -163,34 +162,28 @@ export async function getActiveOffers(
       `Getting active offers for ${time.toISO()} with filters: ${JSON.stringify(filters)}`,
     );
 
-    // Do as much filtering as possible in the database query to reduce the
-    // amount of data we have to process
     let query = getDb()
       .selectFrom("offers")
       .where((eb) =>
-        eb.and([
+        eb.not(
           eb.or([
-            // Definitely active offers
-            eb("valid_from", "<=", time.toISO()),
-            // Unknown valid_from (most offers don't explicitly state this)
-            eb("valid_from", "is", null),
-          ]),
-          eb.or([
-            eb.or([
-              // Definitely active offers
-              eb("valid_to", ">=", time.toISO()),
-              // Unknown valid_to
-              eb("valid_to", "is", null),
+            // 1. Skip entries that start in the future
+            eb.and([
+              eb("valid_from", "is not", null),
+              eb("valid_from", ">", time.toISO()),
             ]),
-            // Seen in last 24 hours for offers where we don't know when they
-            // will end
+            // 2. Skip entries that have ended
+            eb.and([
+              eb("valid_to", "is not", null),
+              eb("valid_to", "<", time.toISO()),
+            ]),
+            // 3. Skip entries that have no end date and haven't been seen for more than a day
             eb.and([
               eb("valid_to", "is", null),
-              eb("seen_last", "is not", null),
-              eb("seen_last", ">=", seenCutoff.toISO()),
+              eb("seen_last", "<", seenCutoff.toISO()),
             ]),
           ]),
-        ]),
+        ),
       );
 
     // Apply additional filters
@@ -210,41 +203,17 @@ export async function getActiveOffers(
       query = query.where("id", ">", filters.lastOfferId);
     }
 
-    const { sql, parameters } = query.compile();
-    logger.debug(
-      `Executing query: ${sql} with parameters: ${String(parameters)}`,
-    );
-
     const offers = await query.selectAll().execute();
 
-    logger.debug(
-      `Got ${offers.length.toFixed()} offers: ${offers.map((o) => o.id).join(", ")}`,
-    );
-
-    const filteredOffers = offers.filter((offer) => {
-      // Skip entries that start in the future
-      if (offer.valid_from && DateTime.fromISO(offer.valid_from) > time) {
-        return false;
-      }
-
-      const realValidTo = calculateRealValidTo(
-        DateTime.fromISO(offer.seen_last),
-        offer.valid_to ? DateTime.fromISO(offer.valid_to) : null,
-        time,
+    if (offers.length === 0) {
+      logger.debug("No active offers found.");
+    } else {
+      logger.debug(
+        `Got ${offers.length.toFixed()} active offers: ${offers.map((o) => o.id).join(", ")}`,
       );
+    }
 
-      // Filter out offers that have a real end date that is in the past
-      if (realValidTo && realValidTo <= time) {
-        return false;
-      }
-
-      return true;
-    });
-
-    logger.debug(
-      `Actually active offers: ${filteredOffers.map((o) => o.id).join(", ")}`,
-    );
-    return filteredOffers;
+    return offers;
   } catch (error) {
     handleError("get active offers", error);
   }
@@ -259,6 +228,75 @@ export async function getOffersWithMissingGameInfo(): Promise<Offer[]> {
       .execute();
   } catch (error) {
     handleError("get offers with missing game info", error);
+  }
+}
+
+export async function getChatsNeedingOffers(time: DateTime): Promise<number[]> {
+  try {
+    const seenCutoff = time.minus({ hours: 24 });
+
+    const query = getDb()
+      .selectFrom("telegram_chats as c")
+      .leftJoin("telegram_subscriptions as s", "s.chat_id", "c.id")
+      .leftJoin("offers as o", (join) =>
+        join.on((eb) =>
+          eb.and([
+            // Match subscription criteria
+            eb("o.type", "=", eb.ref("s.type")),
+            eb("o.source", "=", eb.ref("s.source")),
+            eb("o.duration", "=", eb.ref("s.duration")),
+            eb("o.platform", "=", eb.ref("s.platform")),
+            // Only newer offers
+            eb("o.id", ">", eb.ref("s.last_offer_id")),
+            // Validity conditions
+            eb.not(
+              eb.or([
+                // 1. Skip entries that start in the future
+                eb.and([
+                  eb("valid_from", "is not", null),
+                  eb("valid_from", ">", time.toISO()),
+                ]),
+                // 2. Skip entries that have ended
+                eb.and([
+                  eb("valid_to", "is not", null),
+                  eb("valid_to", "<", time.toISO()),
+                ]),
+                // 3. Skip entries that have no end date and haven't been seen for more than a day
+                eb.and([
+                  eb("valid_to", "is", null),
+                  eb("seen_last", "<", seenCutoff.toISO()),
+                ]),
+              ]),
+            ),
+          ]),
+        ),
+      )
+      .select("c.id as id")
+      .where("c.active", "=", 1)
+      .groupBy("c.id")
+      .having((eb) => eb.fn.count("o.id"), ">", 0);
+
+    return (await query.execute()).map((row) => row.id);
+  } catch (error) {
+    handleError("get chats needing offers", error);
+  }
+}
+
+export async function getChatsNeedingAnnouncements(): Promise<number[]> {
+  try {
+    const query = getDb()
+      .selectFrom("telegram_chats as c")
+      .leftJoin("announcements as a", (join) =>
+        join.on((eb) => eb("a.id", ">", eb.ref("c.last_announcement_id"))),
+      )
+      .select("c.id as id")
+      .where("c.active", "=", 1)
+      .groupBy("c.id")
+      .having((eb) => eb.fn.count("a.id"), ">", 0);
+
+    return (await query.execute()).map((row) => row.id);
+  } catch (error) {
+    handleError("get chats needing announcements", error);
   }
 }
 
