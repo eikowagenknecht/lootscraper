@@ -2,12 +2,12 @@
 
 name: publish-docker
 on:
-  # Run on main branch commits
   push:
+    # Run on main branch commits
     branches: [main]
-  # Run after a release is created
-  release:
-    types: [published]
+    # Run after a release is created
+    tags:
+      - "v*"
   # Allow manual triggers
   workflow_dispatch:
 
