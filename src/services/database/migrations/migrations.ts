@@ -10,6 +10,7 @@ import { strictModeMigration } from "./005-strict";
 import { dateFormatMigration } from "./006-dateformat";
 import { scrapingRunsMigration } from "./007-scrapingruns";
 import { platformMigration } from "./008-platform";
+import { fixActiveMigration } from "./009-fixactive";
 
 // Define the migrations type
 const migrations: Record<string, Migration> = {
@@ -21,6 +22,7 @@ const migrations: Record<string, Migration> = {
   "006-dates": dateFormatMigration,
   "007-scrapingruns": scrapingRunsMigration,
   "008-platform": platformMigration,
+  "009-fixactive": fixActiveMigration,
 };
 
 export async function migrateToLatest(db: Kysely<unknown>): Promise<void> {
