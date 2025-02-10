@@ -44,7 +44,7 @@ export async function handleManageCommand(
 export async function buildManageKeyboard(chatId: number) {
   const inlineKeyboard = new InlineKeyboard();
 
-  logger.verbose(`Building manage keyboard for chat ${chatId.toFixed()}`);
+  logger.debug(`Building manage keyboard for chat ${chatId.toFixed()}`);
 
   // Add subscription toggle buttons for each source/type/duration/platform combination
   const combinations = getEnabledFeedCombinations();

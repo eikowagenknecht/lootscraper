@@ -216,9 +216,7 @@ export class TelegramBotService {
   private startBroadcastCheck(): void {
     const checkNewMessages = async () => {
       if (this.sendingBroadcast) {
-        logger.verbose(
-          "Telegram service is already broadcasting messages, skipping check.",
-        );
+        logger.verbose("Telegram service is busy broadcasting messages.");
         return;
       }
       this.sendingBroadcast = true;
