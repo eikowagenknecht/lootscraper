@@ -1,5 +1,9 @@
 import { getDb } from "@/services/database";
-import type { NewTelegramChat, TelegramChat } from "@/types/database";
+import type {
+  NewTelegramChat,
+  TelegramChat,
+  TelegramSubscription,
+} from "@/types/database";
 import { handleError, handleInsertResult } from "./common";
 
 export async function getTelegramChatById(
@@ -153,5 +157,33 @@ export async function deleteTelegramChat(id: number): Promise<boolean> {
     return result.numDeletedRows > 0;
   } catch (error) {
     handleError("delete telegram chat", error);
+  }
+}
+
+export async function getTelegramChatWithSubscriptions(
+  chatId: number,
+): Promise<
+  { chat: TelegramChat; subscriptions: TelegramSubscription[] } | undefined
+> {
+  try {
+    const chat = await getDb()
+      .selectFrom("telegram_chats")
+      .selectAll()
+      .where("id", "=", chatId)
+      .executeTakeFirst();
+
+    if (!chat) {
+      return undefined;
+    }
+
+    const subscriptions = await getDb()
+      .selectFrom("telegram_subscriptions")
+      .selectAll()
+      .where("chat_id", "=", chatId)
+      .execute();
+
+    return { chat, subscriptions };
+  } catch (error) {
+    handleError("get telegram chat with subscriptions", error);
   }
 }
