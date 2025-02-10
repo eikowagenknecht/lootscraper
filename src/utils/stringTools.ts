@@ -140,7 +140,7 @@ export function cleanGameTitle(title: string): string {
     .trim();
 }
 
-function cleanLootTitle(title: string): string {
+export function cleanLootTitle(title: string): string {
   let cleaned = title
     .replace(/\n/g, "")
     .replace(/ - /g, ": ")
@@ -153,6 +153,10 @@ function cleanLootTitle(title: string): string {
     cleaned = cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
   }
   return cleaned;
+}
+
+export function combineTitle(gameTitle: string, lootTitle: string): string {
+  return `${gameTitle} - ${lootTitle}`;
 }
 
 /**
@@ -248,7 +252,7 @@ export function cleanCombinedTitle(title: string): [string, string] {
 
   // Construct final title
   const resultingOfferTitle = probableLootName
-    ? `${probableGameName} - ${probableLootName}`
+    ? combineTitle(probableGameName, probableLootName)
     : probableGameName;
 
   return [probableGameName, resultingOfferTitle];

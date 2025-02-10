@@ -7,6 +7,7 @@ import {
   OfferType,
 } from "@/types/basic";
 import type { NewOffer } from "@/types/database";
+import { cleanGameTitle } from "@/utils";
 import { logger } from "@/utils/logger";
 import { DateTime } from "luxon";
 import type { Locator, Page } from "playwright";
@@ -106,8 +107,8 @@ export class EpicGamesWebScraper extends BaseScraper {
         duration: this.getDuration(),
         type: this.getType(),
         platform: this.getPlatform(),
-        title: title,
-        probable_game_name: title,
+        title: cleanGameTitle(title),
+        probable_game_name: cleanGameTitle(title),
         seen_last: DateTime.now().toISO(),
         seen_first: DateTime.now().toISO(),
         valid_to: validToAsDate?.toISO() ?? null,

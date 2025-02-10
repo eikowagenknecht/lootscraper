@@ -1,5 +1,6 @@
 import { OfferType } from "@/types/basic";
 import type { NewOffer } from "@/types/database";
+import { cleanGameTitle } from "@/utils";
 import { logger } from "@/utils/logger";
 import { DateTime } from "luxon";
 import type { Locator, Page } from "playwright";
@@ -52,8 +53,8 @@ export class AmazonGamesScraper extends AmazonBaseScraper {
         duration: this.getDuration(),
         type: this.getType(),
         platform: this.getPlatform(),
-        title: baseOffer.title,
-        probable_game_name: baseOffer.title,
+        title: cleanGameTitle(baseOffer.title),
+        probable_game_name: cleanGameTitle(baseOffer.title),
         seen_last: DateTime.now().toISO(),
         seen_first: DateTime.now().toISO(),
         valid_to: validTo?.toISO() ?? null,

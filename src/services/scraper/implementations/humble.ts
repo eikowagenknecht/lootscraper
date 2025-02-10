@@ -7,6 +7,7 @@ import {
   OfferType,
 } from "@/types/basic";
 import type { NewOffer } from "@/types/database";
+import { cleanGameTitle } from "@/utils";
 import { logger } from "@/utils/logger";
 import { DateTime } from "luxon";
 import type { Locator } from "playwright";
@@ -93,8 +94,8 @@ export class HumbleGamesScraper extends BaseScraper {
         type: this.getType(),
         platform: this.getPlatform(),
         category,
-        title: title,
-        probable_game_name: title,
+        title: cleanGameTitle(title),
+        probable_game_name: cleanGameTitle(title),
         seen_last: DateTime.now().toISO(),
         seen_first: DateTime.now().toISO(),
         ...(validTo && { valid_to: validTo.toISO() }),
