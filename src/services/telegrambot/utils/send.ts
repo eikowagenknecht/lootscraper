@@ -55,6 +55,10 @@ export async function sendNewOffersToChat(
       });
 
       for (const offer of offers) {
+        logger.verbose(
+          `Sending offer ${offer.id.toFixed()} to chat ${chat.chat_id.toFixed()}`,
+        );
+
         // For channels, groups and supergroups, show no buttons as they would
         // affect all users. Always show details.
         const isMultiUserChat =
@@ -140,6 +144,10 @@ export async function sendNewAnnouncementsToChat(
 
     // Send each announcement
     for (const announcement of announcements) {
+      logger.verbose(
+        `Sending announcement ${announcement.id.toFixed()} to chat ${chat.chat_id.toFixed()}`,
+      );
+
       await telegramBotService
         .getBot()
         .api.sendMessage(chat.chat_id, announcement.text_markdown, {
@@ -148,10 +156,6 @@ export async function sendNewAnnouncementsToChat(
         });
 
       await updateTelegramChatLastAnnouncementId(chat.id, announcement.id);
-
-      logger.verbose(
-        `Sent announcement ${announcement.id.toFixed()} to chat ${chat.chat_id.toFixed()}`,
-      );
     }
   } catch (error) {
     // Check for blocked chat errors
