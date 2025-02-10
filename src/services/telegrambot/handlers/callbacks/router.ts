@@ -46,9 +46,9 @@ export async function handleCallback(
         await handleDismissCallback(ctx);
         break;
       default:
-        logger.error(`Unknown callback action: ${action}}`);
+        logger.error(`Unknown callback action: ${action}`);
         await ctx.answerCallbackQuery({
-          text: "Unknown callback action",
+          text: "Unknown callback action. This might happen when the bot was updated.",
           show_alert: true,
         });
     }
