@@ -41,9 +41,4 @@ jobs:
         run: pnpm dlx semantic-release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: Trigger Docker build
-        run: |
-          VERSION=$(git describe --tags --abbrev=0)
-          gh workflow run publish-docker --ref main -f version=$VERSION
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
