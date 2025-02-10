@@ -6,6 +6,7 @@ import {
   OfferType,
 } from "@/types/basic";
 import type { NewOffer } from "@/types/database";
+import { cleanGameTitle } from "@/utils";
 import { logger } from "@/utils/logger";
 
 import { DateTime } from "luxon";
@@ -131,8 +132,8 @@ export abstract class EpicMobileSraper extends BaseScraper {
           duration: this.getDuration(),
           type: this.getType(),
           platform: this.getPlatform(),
-          title: offer.content.title,
-          probable_game_name: offer.content.title,
+          title: cleanGameTitle(offer.content.title),
+          probable_game_name: cleanGameTitle(offer.content.title),
           seen_last: DateTime.now().toISO(),
           seen_first: DateTime.now().toISO(),
           valid_to: DateTime.fromISO(

@@ -159,6 +159,11 @@ export abstract class SteamBaseScraper extends BaseScraper {
           }
         }
 
+        const cleanedTitle =
+          this.getType() === OfferType.GAME
+            ? cleanGameTitle(title)
+            : cleanCombinedTitle(title)[1];
+
         const probableGameName =
           this.getType() === OfferType.GAME
             ? cleanGameTitle(title)
@@ -169,7 +174,7 @@ export abstract class SteamBaseScraper extends BaseScraper {
           duration: this.getDuration(),
           type: this.getType(),
           platform: this.getPlatform(),
-          title: title,
+          title: cleanedTitle,
           probable_game_name: probableGameName,
           seen_last: DateTime.now().toISO(),
           seen_first: DateTime.now().toISO(),

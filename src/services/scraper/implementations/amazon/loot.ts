@@ -1,6 +1,8 @@
 import { OfferType } from "@/types/basic";
 import type { NewOffer } from "@/types/database";
+import { cleanGameTitle } from "@/utils";
 import { logger } from "@/utils/logger";
+import { cleanLootTitle, combineTitle } from "@/utils/stringTools";
 import { DateTime } from "luxon";
 import type { Locator, Page } from "playwright";
 import { AmazonBaseScraper, OFFER_URL } from "./base";
@@ -47,12 +49,15 @@ export class AmazonLootScraper extends AmazonBaseScraper {
         ? this.parseDateString(baseOffer.validTo)?.toISO()
         : undefined;
 
+      const cleanedGameTitle = cleanGameTitle(gameTitle);
+      const cleanedLootTitle = cleanLootTitle(baseOffer.title);
+
       return {
         source: this.getSource(),
         duration: this.getDuration(),
         type: this.getType(),
         platform: this.getPlatform(),
-        title: `${gameTitle} - ${baseOffer.title}`,
+        title: combineTitle(cleanedGameTitle, cleanedLootTitle),
         probable_game_name: gameTitle,
         seen_last: DateTime.now().toISO(),
         seen_first: DateTime.now().toISO(),

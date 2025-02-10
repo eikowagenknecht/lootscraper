@@ -6,6 +6,7 @@ import {
   OfferType,
 } from "@/types/basic";
 import type { NewOffer } from "@/types/database";
+import { cleanGameTitle } from "@/utils";
 import {
   ApolloClient,
   type DefaultOptions,
@@ -210,8 +211,8 @@ export class EpicGamesApiScraper extends BaseScraper {
           duration: this.getDuration(),
           type: this.getType(),
           platform: this.getPlatform(),
-          title: offer.title,
-          probable_game_name: offer.title,
+          title: cleanGameTitle(offer.title),
+          probable_game_name: cleanGameTitle(offer.title),
           seen_last: DateTime.now().toISO(),
           seen_first: DateTime.now().toISO(),
           rawtext: JSON.stringify({
