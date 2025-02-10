@@ -23,8 +23,10 @@ export async function sendNewOffersToChat(
   interactive = false,
 ): Promise<void> {
   const chat = await getTelegramChatById(dbChatId);
-  if (!chat) {
-    logger.error(`Chat ${dbChatId.toFixed()} not found.`);
+  if (chat === undefined) {
+    logger.error(
+      `Can't send offer, chat ${dbChatId.toFixed()} not found in database.`,
+    );
     return;
   }
 
@@ -102,13 +104,7 @@ export async function sendNewOffersToChat(
     }
   } catch (error) {
     // Check for blocked chat errors
-    if (
-      error instanceof GrammyError &&
-      (error.description.includes("chat not found") ||
-        error.description.includes("bot was blocked by the user") ||
-        error.description.includes("user is deactivated") ||
-        error.description.includes("message thread not found"))
-    ) {
+    if (error instanceof GrammyError && isPermanentlyBlockedChat(error)) {
       logger.info(
         `Chat ${chat.chat_id.toFixed()} is no longer accessible, marking as inactive.`,
       );
@@ -128,8 +124,10 @@ export async function sendNewAnnouncementsToChat(
   dbChatId: number,
 ): Promise<void> {
   const chat = await getTelegramChatById(dbChatId);
-  if (!chat) {
-    logger.error(`Chat ${dbChatId.toFixed()} not found`);
+  if (chat === undefined) {
+    logger.error(
+      `Can't send announcement, chat ${dbChatId.toFixed()} not found in database.`,
+    );
     return;
   }
 
@@ -154,11 +152,7 @@ export async function sendNewAnnouncementsToChat(
     }
   } catch (error) {
     // Check for blocked chat errors
-    if (
-      error instanceof GrammyError &&
-      (error.description.includes("chat not found") ||
-        error.description.includes("bot was blocked by the user"))
-    ) {
+    if (error instanceof GrammyError && isPermanentlyBlockedChat(error)) {
       logger.info(
         `Chat ${chat.chat_id.toFixed()} is no longer accessible, marking as inactive.`,
       );
@@ -172,4 +166,14 @@ export async function sendNewAnnouncementsToChat(
       }`,
     );
   }
+}
+
+function isPermanentlyBlockedChat(error: Error): boolean {
+  return (
+    error instanceof GrammyError &&
+    (error.description.includes("chat not found") ||
+      error.description.includes("bot was blocked by the user") ||
+      error.description.includes("user is deactivated") ||
+      error.description.includes("message thread not found"))
+  );
 }

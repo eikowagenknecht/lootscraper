@@ -4,19 +4,13 @@ import { handleError, handleInsertResult } from "./common";
 
 export async function getTelegramChatById(
   chatId: number,
-  threadId?: number | null,
 ): Promise<TelegramChat | undefined> {
   try {
-    let query = getDb()
+    return await getDb()
       .selectFrom("telegram_chats")
       .selectAll()
-      .where("id", "=", chatId);
-
-    if (threadId !== undefined) {
-      query = query.where("thread_id", "=", threadId);
-    }
-
-    return await query.executeTakeFirst();
+      .where("id", "=", chatId)
+      .executeTakeFirst();
   } catch (error) {
     handleError("get telegram chat", error);
   }
@@ -51,7 +45,6 @@ export async function getAllActiveTelegramChats(): Promise<TelegramChat[]> {
       .execute();
   } catch (error) {
     handleError("get all active telegram chats", error);
-    return [];
   }
 }
 
