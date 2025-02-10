@@ -4,6 +4,7 @@ import {
 } from "@/services/scraper/utils";
 import type { Config } from "@/types/config";
 import type { Offer } from "@/types/database";
+import { calculateRealValidTo } from "@/utils";
 import { logger } from "@/utils/logger";
 import { DateTime } from "luxon";
 import { getActiveOffers, getAllOffers } from "./database/offerRepository";
@@ -44,12 +45,22 @@ class FeedService {
 
     logger.info("Regenerating feeds.");
     const activeOffers = await getActiveOffers(DateTime.now());
-    const allOffers = (await getAllOffers()).filter(
-      (offer) =>
-        // Skip entries without dates or entries that start in the future
-        (offer.valid_from ?? offer.seen_last) &&
-        (!offer.valid_from || offer.valid_from > offer.seen_last),
-    );
+    const allOffers = (await getAllOffers())
+      // Skip entries without dates or entries that start in the future
+      .filter(
+        (offer) =>
+          (offer.valid_from ?? offer.seen_last) &&
+          (!offer.valid_from || offer.valid_from > offer.seen_last),
+      )
+      // Calculate real end dates for offers that have ended
+      .map((offer) => {
+        const realValidTo = calculateRealValidTo(
+          DateTime.fromISO(offer.seen_last),
+          offer.valid_to ? DateTime.fromISO(offer.valid_to) : null,
+          DateTime.now(),
+        );
+        return { ...offer, valid_to: realValidTo ? realValidTo.toISO() : null };
+      });
 
     await this.generateFeeds(activeOffers, allOffers);
   }
@@ -106,8 +117,7 @@ class FeedService {
         offer.duration === combination.duration &&
         offer.platform === combination.platform,
     );
-
-    // Generate Atom feed
+    // Generate RSS feed
     const feedGen = new RssGenerator(this.config, combination);
     await feedGen.generateFeed(filteredActiveOffers);
 
@@ -131,7 +141,7 @@ class FeedService {
       throw new Error("Feed service not initialized");
     }
 
-    // Generate main Atom feed
+    // Generate main RSS feed
     const feedGen = new RssGenerator(this.config);
     await feedGen.generateFeed(activeOffers);
 
