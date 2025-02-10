@@ -7,7 +7,7 @@ export function logCall(ctx: Context): void {
     ? `command "${ctx.message.text}"`
     : "unknown command";
 
-  logger.debug(`Received ${commandName} from ${getCallerName(ctx)}.`);
+  logger.verbose(`Received ${commandName} from ${getCallerName(ctx)}.`);
 }
 
 export function getCallerName(ctx: Context): string {
