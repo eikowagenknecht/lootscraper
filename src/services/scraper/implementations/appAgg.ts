@@ -1,3 +1,4 @@
+import { scrollPageToBottom } from "@/services/browser/utils";
 import { BaseScraper, type CronConfig } from "@/services/scraper/base/scraper";
 import {
   OfferDuration,
@@ -9,17 +10,12 @@ import type { NewOffer } from "@/types/database";
 import { cleanGameTitle } from "@/utils";
 import { logger } from "@/utils/logger";
 import { DateTime } from "luxon";
-import type { Locator } from "playwright";
+import type { Locator, Page } from "playwright";
 
-const ROOT_URL = "https://appsliced.co/apps/iphone";
-const SEARCH_PARAMS = new URLSearchParams({
-  sort: "latest",
-  price: "free",
-  "cat[]": "6014",
-  page: "1",
-});
+const BASE_URL = "https://appagg.com";
+const OFFER_URL = `${BASE_URL}/sale/android-games/free/?hl=en`;
 
-export class AppleGamesScraper extends BaseScraper {
+export class AppAggGamesScraper extends BaseScraper {
   override getSchedule(): CronConfig[] {
     // Run once a day only to avoid being blocked
     return [
@@ -28,11 +24,11 @@ export class AppleGamesScraper extends BaseScraper {
   }
 
   getScraperName(): string {
-    return "AppleGames";
+    return "AppAggGames";
   }
 
   getSource(): OfferSource {
-    return OfferSource.APPLE;
+    return OfferSource.GOOGLE;
   }
 
   getType(): OfferType {
@@ -44,19 +40,23 @@ export class AppleGamesScraper extends BaseScraper {
   }
 
   override getPlatform(): OfferPlatform {
-    return OfferPlatform.IOS;
+    return OfferPlatform.ANDROID;
   }
 
   override readOffers(): Promise<Omit<NewOffer, "category">[]> {
     return super.readWebOffers({
-      offersUrl: `${ROOT_URL}?${SEARCH_PARAMS.toString()}`,
+      offersUrl: OFFER_URL,
       offerHandlers: [
         {
-          locator: "article.app",
+          locator: "div.short_info",
           readOffer: this.readOffer.bind(this),
         },
       ],
-      pageReadySelector: "article.app",
+      pageReadySelector: "div.short_info",
+      pageLoadedHook: async (page: Page) => {
+        // Scroll to bottom to show all games
+        await scrollPageToBottom(page);
+      },
     });
   }
 
@@ -68,14 +68,35 @@ export class AppleGamesScraper extends BaseScraper {
     element: Locator,
   ): Promise<Omit<NewOffer, "category"> | null> {
     try {
-      const title = await element.locator(".title a").getAttribute("title");
+      // Scroll into view for images to load
+      await element.scrollIntoViewIfNeeded();
+
+      const title = await element.locator("li.si_tit a").textContent();
       if (!title) throw new Error("Couldn't find title");
 
-      const url = await element.locator(".title a").getAttribute("href");
+      let url = await element.locator("li.si_tit a").getAttribute("href");
       if (!url) throw new Error(`Couldn't find url for ${title}`);
+      if (!url.startsWith("http")) {
+        url = BASE_URL + url;
+      }
 
-      const imgUrl = await element.locator(".icon img").getAttribute("src");
-      if (!imgUrl) throw new Error(`Couldn't find image for ${title}`);
+      // Try to get img from data attribute.
+      let imgUrl = await element
+        .locator("span.pic_div")
+        .getAttribute("data-ico");
+
+      // Fallback to style (it's moved here when the image is loaded)
+      if (!imgUrl) {
+        const style = await element
+          .locator("span.pic_div")
+          .getAttribute("style");
+        if (style) {
+          // Extract URL from background-image style
+          imgUrl = style
+            .replace('background-image: url("', "")
+            .replace('");', "");
+        }
+      }
 
       return {
         source: this.getSource(),
@@ -85,13 +106,13 @@ export class AppleGamesScraper extends BaseScraper {
         title: cleanGameTitle(title),
         probable_game_name: cleanGameTitle(title),
         seen_last: DateTime.now().toISO(),
-        seen_first: DateTime.now().toISO(),
+        seen_first: DateTime.now().toISO(), // Added seen_first property
         valid_to: null,
         rawtext: JSON.stringify({
           title: title,
         }),
         url: url,
-        img_url: imgUrl,
+        img_url: imgUrl ?? null,
       };
     } catch (error) {
       logger.error(
