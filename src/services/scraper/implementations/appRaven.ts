@@ -89,10 +89,9 @@ const QUERY = gql`
 
 export class AppRavenGamesScraper extends BaseScraper {
   override getSchedule(): CronConfig[] {
+    // Run once a day only to avoid causing too much load on the server
     return [
-      // TODO: Add a schedule
-      { schedule: "0 5 11 * * *", timezone: "US/Eastern" }, // 17:05 UTC Daily (check soon after release)
-      { schedule: "0 5 13 * * *", timezone: "US/Eastern" }, // 19:05 UTC Daily (backup check)
+      { schedule: "0 0 12 * * *" }, // 12:00 UTC Daily
     ];
   }
 
