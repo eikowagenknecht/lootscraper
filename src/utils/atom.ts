@@ -244,7 +244,9 @@ const feedTemplate = Handlebars.compile(`<?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom"{{#if language}} xml:lang="{{language}}"{{/if}}>
   <id>{{id}}</id>
   <title>{{{escapeXml title}}}</title>
+  {{#if updated}}
   <updated>{{isoDate updated}}</updated>
+  {{/if}}
 
   {{#each author}}
   <author>
@@ -333,11 +335,6 @@ class AtomFeed {
         const entryUpdated = entry.options.updated;
         return entryUpdated > acc ? entryUpdated : acc;
       }, this.entries[0].options.updated);
-    }
-
-    // If no updated date is set or can be determined, use the current date
-    if (!updated) {
-      updated = new Date();
     }
 
     return cleanHtml(
