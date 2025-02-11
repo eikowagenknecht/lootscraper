@@ -22,8 +22,8 @@ export async function handleCloseCallback(
       "Thank you for choosing your timezone. " +
       "If you live in a place with daylight saving time, please remember to do this " +
       "again at the appropriate time of year.";
-    await ctx.editMessageText(message);
     await ctx.answerCallbackQuery();
+    await ctx.editMessageText(message);
     return;
   }
 
@@ -32,6 +32,7 @@ export async function handleCloseCallback(
     "Thank you for managing your subscriptions. " +
     "Forgot something? " +
     "You can continue any time with /manage.";
+  await ctx.answerCallbackQuery();
   await ctx.editMessageText(message);
   await refreshOffersForChat(ctx);
 }
