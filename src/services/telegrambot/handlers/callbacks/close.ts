@@ -1,4 +1,3 @@
-import { refreshOffersForChat } from "@/services/telegrambot/handlers/commands/refresh";
 import { closeSchema } from "@/services/telegrambot/types/callbacks";
 import type { BotContext } from "@/services/telegrambot/types/middleware";
 import { unpackData } from "@/services/telegrambot/utils/callbackPack";
@@ -34,5 +33,4 @@ export async function handleCloseCallback(
     "You can continue any time with /manage.";
   await ctx.answerCallbackQuery();
   await ctx.editMessageText(message);
-  await refreshOffersForChat(ctx);
 }
