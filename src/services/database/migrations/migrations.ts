@@ -7,10 +7,11 @@ import { dropAlembicMigration } from "./002-alembic";
 import { indicesMigration } from "./003-indices";
 import { nullabilityMigration } from "./004-nullability";
 import { strictModeMigration } from "./005-strict";
-import { dateFormatMigration } from "./006-dateformat";
+import { dateFormatMigration as datesMigration } from "./006-dateformat";
 import { scrapingRunsMigration } from "./007-scrapingruns";
 import { platformMigration } from "./008-platform";
 import { fixActiveMigration } from "./009-fixactive";
+import { hashesMigration } from "./010-hashes";
 
 // Define the migrations type
 const migrations: Record<string, Migration> = {
@@ -19,10 +20,11 @@ const migrations: Record<string, Migration> = {
   "003-indices": indicesMigration,
   "004-nullability": nullabilityMigration,
   "005-strict": strictModeMigration,
-  "006-dates": dateFormatMigration,
+  "006-dates": datesMigration,
   "007-scrapingruns": scrapingRunsMigration,
   "008-platform": platformMigration,
   "009-fixactive": fixActiveMigration,
+  "010-hashes": hashesMigration,
 };
 
 export async function migrateToLatest(db: Kysely<unknown>): Promise<void> {

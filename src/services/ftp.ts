@@ -1,9 +1,12 @@
 import { basename, resolve } from "node:path";
 import type { Config } from "@/types";
+import { generateFileHash } from "@/utils/hash";
 import { logger } from "@/utils/logger";
 import { getDataPath } from "@/utils/path";
 import { getAllEnabledFeedFilenames } from "@/utils/stringTools";
 import { Client } from "basic-ftp";
+import { DateTime } from "luxon";
+import { createHash, getHashByResourceName } from "./database/hashRepository";
 
 interface FTPUploadOptions {
   reuseConnection?: boolean;
@@ -135,6 +138,24 @@ class FTPService {
 
     try {
       const absolutePath = resolve(getDataPath(), file);
+
+      const hash = await generateFileHash(absolutePath);
+      const existingHash = await getHashByResourceName(file);
+
+      if (existingHash && existingHash.hash_value === hash) {
+        logger.verbose(`File ${fileName} already up to date, skipping upload.`);
+        return {
+          fileName,
+          success: true,
+        };
+      }
+
+      await createHash({
+        resource_name: file,
+        hash_value: hash,
+        last_updated: DateTime.now().toISO(),
+      });
+
       await client.uploadFrom(absolutePath, fileName);
       logger.verbose(`Uploaded ${fileName}.`);
       return {

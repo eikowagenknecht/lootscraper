@@ -23,6 +23,7 @@ export interface Database {
   telegram_chats: TelegramChatsTable;
   telegram_subscriptions: TelegramSubscriptionsTable;
   scraping_runs: ScrapingRunsTable;
+  hashes: HashesTable;
 }
 
 /** Legacy table from LootScraper <2.0.0 */
@@ -168,3 +169,14 @@ interface ScrapingRunsTable {
 export type ScrapingRun = Selectable<ScrapingRunsTable>;
 export type NewScrapingRun = Insertable<ScrapingRunsTable>;
 export type ScrapingRunUpdate = Updateable<ScrapingRunsTable>;
+
+interface HashesTable {
+  id: Generated<number>;
+  resource_name: string;
+  hash_value: string;
+  last_updated: string;
+}
+
+export type Hash = Selectable<HashesTable>;
+export type NewHash = Insertable<HashesTable>;
+export type HashUpdate = Updateable<HashesTable>;
