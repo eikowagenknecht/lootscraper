@@ -100,13 +100,19 @@ export function getEnabledFeedCombinations(): FeedCombination[] {
   const combinations: FeedCombination[] = [];
   const enabledScraperClasses = getEnabledScraperClasses();
 
+  const seen = new Set<string>();
   for (const scraperClass of enabledScraperClasses) {
-    combinations.push({
+    const combination = {
       source: scraperClass.prototype.getSource(),
       type: scraperClass.prototype.getType(),
       duration: scraperClass.prototype.getDuration(),
       platform: scraperClass.prototype.getPlatform(),
-    });
+    };
+    const key = `${combination.source}-${combination.type}-${combination.duration}-${combination.platform}`;
+    if (!seen.has(key)) {
+      seen.add(key);
+      combinations.push(combination);
+    }
   }
 
   return combinations;
