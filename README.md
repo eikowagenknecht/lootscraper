@@ -49,7 +49,7 @@ The [Telegram LootScraperBot](https://t.me/LootScraperBot) offers:
 - Group and channel support (including threaded groups)
 - Instant notifications
 
-![image](https://user-images.githubusercontent.com/1475672/166058823-98e2beb9-7eb5-403d-94c7-7e17966fe9b7.png)
+![image](https://github.com/user-attachments/assets/d7b0436b-b3b1-4693-aaa3-be9a477d98e3)
 
 ### Telegram channels
 
