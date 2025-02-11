@@ -38,7 +38,8 @@ scraper:
     # Amazon - Loot
     - AmazonLoot
     # Apple
-    - AppleGames
+    - AppSlicedGames
+    - AppRavenGames
     # Epic (Web or API, enable only one)
     - EpicGamesApi
     # - EpicGamesWeb
@@ -50,7 +51,7 @@ scraper:
     # GOG - Always Free
     - GogAlwaysFree
     # Google
-    - GoogleGames
+    - AppAggGames
     # Humble Store
     - HumbleGames
     # Itch.io

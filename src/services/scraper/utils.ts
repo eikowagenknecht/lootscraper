@@ -10,14 +10,15 @@ import type { CronConfig } from "./base/scraper";
 import {
   AmazonGamesScraper,
   AmazonLootScraper,
-  AppleGamesScraper,
+  AppAggGamesScraper,
+  AppRavenGamesScraper,
+  AppSlicedGamesScraper,
   EpicGamesApiScraper,
   EpicGamesWebScraper,
   EpicMobileAndroidSraper,
   EpicMobileIosSraper,
   GogGamesAlwaysFreeScraper,
   GogGamesScraper,
-  GoogleGamesScraper,
   HumbleGamesScraper,
   ItchGamesScraper,
   SteamGamesScraper,
@@ -40,14 +41,15 @@ interface ScraperSchedule {
 export const allScrapers = [
   AmazonGamesScraper,
   AmazonLootScraper,
-  AppleGamesScraper,
+  AppSlicedGamesScraper,
+  AppRavenGamesScraper,
   EpicGamesWebScraper,
   EpicGamesApiScraper,
   EpicMobileAndroidSraper,
   EpicMobileIosSraper,
   GogGamesScraper,
   GogGamesAlwaysFreeScraper,
-  GoogleGamesScraper,
+  AppAggGamesScraper,
   HumbleGamesScraper,
   ItchGamesScraper,
   SteamGamesScraper,
@@ -58,14 +60,15 @@ export const allScrapers = [
 export type ScraperClass =
   | typeof AmazonGamesScraper
   | typeof AmazonLootScraper
-  | typeof AppleGamesScraper
+  | typeof AppSlicedGamesScraper
+  | typeof AppRavenGamesScraper
   | typeof EpicGamesWebScraper
   | typeof EpicGamesApiScraper
   | typeof EpicMobileAndroidSraper
   | typeof EpicMobileIosSraper
   | typeof GogGamesScraper
   | typeof GogGamesAlwaysFreeScraper
-  | typeof GoogleGamesScraper
+  | typeof AppAggGamesScraper
   | typeof HumbleGamesScraper
   | typeof ItchGamesScraper
   | typeof SteamGamesScraper

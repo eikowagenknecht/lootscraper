@@ -1,0 +1,163 @@
+import { BaseScraper, type CronConfig } from "@/services/scraper/base/scraper";
+import {
+  OfferDuration,
+  OfferPlatform,
+  OfferSource,
+  OfferType,
+} from "@/types/basic";
+import type { NewOffer } from "@/types/database";
+import { cleanGameTitle } from "@/utils";
+import { ApolloClient, InMemoryCache, gql } from "@apollo/client/core";
+import { DateTime } from "luxon";
+
+const BASE_URL = "https://appraven.net/appraven/graphql";
+
+export type Device = "IPHONE" | "IPAD" | "APPLE_TV";
+
+interface App {
+  __typename: "App";
+  id: string;
+  title: string;
+  artworkUrl: string;
+  priceTier: number;
+  rating: number;
+  ratingCount: number;
+  game: boolean;
+  arcade: boolean;
+  onStore: boolean;
+  hasInAppPurchases: boolean;
+  devices: Device[];
+}
+
+interface AppActivityPriceChange {
+  __typename: "AppActivityPriceChange";
+  id: string;
+  timestamp: string;
+  app: App;
+}
+
+interface AppsOnSaleData {
+  appsOnSale: {
+    __typename: "Slice_AppActivity";
+    hasNext: boolean;
+    content: AppActivityPriceChange[];
+  };
+}
+
+const VARIABLES = {
+  miniFilter: {
+    genreId: 6014,
+    price: "FREE",
+    ratingCount: 10,
+  },
+  page: 0,
+  rareOnly: false,
+};
+
+const QUERY = gql`
+  query GetAppsOnSale(
+    $rareOnly: Boolean!
+    $miniFilter: MiniFilterInput!
+    $page: Int!
+  ) {
+    appsOnSale(rareOnly: $rareOnly, miniFilter: $miniFilter, page: $page) {
+      __typename
+      hasNext
+      content {
+        __typename
+        id
+        timestamp
+        ... on AppActivityPriceChange {
+          app {
+            id
+            title
+            artworkUrl
+            priceTier
+            rating
+            ratingCount
+            game
+            arcade
+            onStore
+            hasInAppPurchases
+            devices
+          }
+        }
+      }
+    }
+  }
+`;
+
+export class AppRavenGamesScraper extends BaseScraper {
+  override getSchedule(): CronConfig[] {
+    return [
+      // TODO: Add a schedule
+      { schedule: "0 5 11 * * *", timezone: "US/Eastern" }, // 17:05 UTC Daily (check soon after release)
+      { schedule: "0 5 13 * * *", timezone: "US/Eastern" }, // 19:05 UTC Daily (backup check)
+    ];
+  }
+
+  getScraperName(): string {
+    return "AppRavenGames";
+  }
+
+  getSource(): OfferSource {
+    return OfferSource.APPLE;
+  }
+
+  getType(): OfferType {
+    return OfferType.GAME;
+  }
+
+  getDuration(): OfferDuration {
+    return OfferDuration.CLAIMABLE;
+  }
+
+  override getPlatform(): OfferPlatform {
+    return OfferPlatform.IOS;
+  }
+
+  override async readOffers(): Promise<Omit<NewOffer, "category">[]> {
+    const client = this.createClient();
+    const response = await client.query<AppsOnSaleData>({
+      query: QUERY,
+      variables: VARIABLES,
+    });
+
+    return this.parseOffers(response.data);
+  }
+
+  protected override shouldAlwaysHaveOffers(): boolean {
+    return true;
+  }
+
+  private createClient() {
+    const client = new ApolloClient({
+      uri: BASE_URL,
+      cache: new InMemoryCache(),
+    });
+    return client;
+  }
+
+  private parseOffers(data: AppsOnSaleData): Omit<NewOffer, "category">[] {
+    const rawOffers = data.appsOnSale.content;
+
+    return rawOffers.map((offer) => {
+      const app = offer.app;
+      return {
+        source: this.getSource(),
+        type: this.getType(),
+        duration: this.getDuration(),
+        platform: this.getPlatform(),
+        title: cleanGameTitle(app.title),
+        probable_game_name: cleanGameTitle(app.title),
+        seen_last: DateTime.now().toISO(),
+        seen_first: DateTime.now().toISO(),
+        rawtext: JSON.stringify(offer),
+        url: `https://appraven.net/app/${app.id}`,
+        valid_from: DateTime.fromISO(offer.timestamp).toISO(),
+        valid_to: null,
+        img_url: app.artworkUrl.replace("{w}x{h}{c}.{f}", "256x256.png"),
+      };
+    });
+  }
+}
