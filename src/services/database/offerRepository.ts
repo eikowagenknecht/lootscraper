@@ -158,6 +158,8 @@ export async function getActiveOffers(
 ): Promise<Offer[]> {
   try {
     const seenCutoff = time.minus({ hours: 24 });
+    const validFromCutOff = time.minus({ months: 3 });
+
     logger.debug(
       `Getting active offers for ${time.toISO()} with filters: ${JSON.stringify(filters)}`,
     );
@@ -182,6 +184,9 @@ export async function getActiveOffers(
               eb("valid_to", "is", null),
               eb("seen_last", "<", seenCutoff.toISO()),
             ]),
+            // 4. Skip entries that have been seen for the first time more than 3 months ago.
+            // Those are probably not "real" offers.
+            eb("seen_first", "<", validFromCutOff.toISO()),
           ]),
         ),
       );
@@ -234,6 +239,7 @@ export async function getOffersWithMissingGameInfo(): Promise<Offer[]> {
 export async function getChatsNeedingOffers(time: DateTime): Promise<number[]> {
   try {
     const seenCutoff = time.minus({ hours: 24 });
+    const validFromCutOff = time.minus({ months: 3 });
 
     const query = getDb()
       .selectFrom("telegram_chats as c")
@@ -266,6 +272,9 @@ export async function getChatsNeedingOffers(time: DateTime): Promise<number[]> {
                   eb("valid_to", "is", null),
                   eb("seen_last", "<", seenCutoff.toISO()),
                 ]),
+                // 4. Skip entries that have been seen for the first time more than 3 months ago.
+                // Those are probably not "real" offers.
+                eb("seen_first", "<", validFromCutOff.toISO()),
               ]),
             ),
           ]),
