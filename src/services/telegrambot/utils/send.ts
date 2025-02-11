@@ -93,15 +93,15 @@ export async function sendNewOffersToChat(
         });
         offersSent++;
       }
+    }
 
-      if (interactive && chat.thread_id && offersSent === 0) {
-        await telegramBotService
-          .getBot()
-          .api.sendMessage(
-            chat.chat_id,
-            "No new offers found for your subscriptions.",
-          );
-      }
+    if (interactive && !chat.thread_id && offersSent === 0) {
+      await telegramBotService
+        .getBot()
+        .api.sendMessage(
+          chat.chat_id,
+          "There are no new offers for your subscriptions. You'll be notified when new offers are available.",
+        );
     }
   } catch (error) {
     // Check for blocked chat errors
