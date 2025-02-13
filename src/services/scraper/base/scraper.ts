@@ -130,6 +130,7 @@ export abstract class BaseScraper {
   public async scrape(): Promise<NewOffer[]> {
     try {
       const offers = await this.readOffers();
+      this.logFoundOffers(offers);
       const cleanedOffers = this.cleanOffers(offers);
       const uniqueOffers = this.deduplicateOffers(cleanedOffers);
       const categorizedOffers = this.categorizeOffers(uniqueOffers);
@@ -146,6 +147,24 @@ export abstract class BaseScraper {
 
   abstract readOffers(): Promise<Omit<NewOffer, "category">[]>;
 
+  private logFoundOffers(offers: Omit<NewOffer, "category">[]): void {
+    if (offers.length === 0) {
+      if (this.shouldAlwaysHaveOffers()) {
+        logger.warn(
+          "Found no offers, even though there should be at least one.",
+        );
+      } else {
+        logger.info("No offers found. Probably there are none.");
+      }
+
+      return;
+    }
+
+    const titles = offers.map((o) => o.title).join(", ");
+    logger.debug(
+      `Found ${offers.length.toFixed()} offers (raw titles): ${titles}`,
+    );
+  }
   /**
    * Reads and processes offers from a web page.
    *
@@ -225,25 +244,6 @@ export abstract class BaseScraper {
             );
           }
         }
-      }
-
-      if (offers.length === 0) {
-        if (this.shouldAlwaysHaveOffers()) {
-          await takeScreenshot(page, this.getScraperName(), "no_offers");
-          logger.warn(
-            "Found no offers, even though there should be at least one.",
-          );
-        } else {
-          logger.info("No offers found. Probably there are none.");
-        }
-        return [];
-      }
-
-      const titles = offers.map((o) => o.title).join(", ");
-      if (offers.length > 0) {
-        logger.debug(
-          `Found ${offers.length.toFixed()} offers (raw titles): ${titles}`,
-        );
       }
     } catch (error) {
       if (page === null) {
