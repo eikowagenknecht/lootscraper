@@ -30,7 +30,7 @@ interface CatalogData {
 interface RawOffer {
   __typename: string;
   title: string;
-  productSlug: string;
+  productSlug: string | null;
   effectiveDate: string;
   expiryDate: string | null;
   keyImages: {
@@ -65,6 +65,13 @@ interface RawOffer {
         }[]
       | null;
   } | null;
+  offerMappings:
+    | {
+        __typename: string;
+        pageSlug: string;
+        pageType: string;
+      }[]
+    | null;
 }
 
 // This seems to be indirectly queried by
@@ -93,7 +100,6 @@ const FREEGAMES_QUERY = gql`
       ) {
         elements {
           title
-          productSlug
           effectiveDate
           expiryDate
           viewableDate
@@ -107,6 +113,16 @@ const FREEGAMES_QUERY = gql`
               originalPrice
               currencyCode
             }
+          }
+          catalogNs {
+            mappings(pageType: "productHome") {
+              pageSlug
+              pageType
+            }
+          }
+          offerMappings {
+            pageSlug
+            pageType
           }
           promotions @include(if: true) {
             promotionalOffers {
@@ -167,6 +183,7 @@ export class EpicGamesApiScraper extends BaseScraper {
     const response = await client.query<CatalogData, { count: number }>({
       query: FREEGAMES_QUERY,
       variables: { count: 1000 },
+      errorPolicy: "all",
     });
 
     return this.parseOffers(response.data);
@@ -196,16 +213,24 @@ export class EpicGamesApiScraper extends BaseScraper {
 
     return rawOffers
       .filter((offer) => {
-        const isFree =
-          offer.price.totalPrice.discountPrice === 0 &&
-          offer.price.totalPrice.originalPrice > 0;
+        const isFree = offer.price.totalPrice.discountPrice === 0;
         const hasRequiredData =
-          offer.title && offer.productSlug && offer.keyImages.length > 0;
+          offer.title &&
+          (offer.productSlug ??
+            (offer.offerMappings &&
+              offer.offerMappings.length > 0 &&
+              offer.offerMappings[0]?.pageSlug)) &&
+          offer.keyImages.length > 0;
         return isFree && hasRequiredData;
       })
       .map((offer) => {
         const { startDate, endDate } = this.getPromotionalDates(offer);
 
+        let slug =
+          offer.productSlug ?? offer.offerMappings?.[0]?.pageSlug ?? "";
+        if (slug !== "") {
+          slug = `p/${slug}`;
+        }
         const res: Omit<NewOffer, "category"> = {
           source: this.getSource(),
           duration: this.getDuration(),
@@ -220,7 +245,7 @@ export class EpicGamesApiScraper extends BaseScraper {
           }),
           valid_from: startDate ? DateTime.fromISO(startDate).toISO() : null,
           valid_to: endDate ? DateTime.fromISO(endDate).toISO() : null,
-          url: `https://store.epicgames.com/en-US/p/${offer.productSlug}`,
+          url: `https://store.epicgames.com/en-US/${slug}`,
           img_url: this.getMainImage(offer),
         };
 
