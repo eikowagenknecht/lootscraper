@@ -120,6 +120,9 @@ importers:
       globals:
         specifier: 15.15.0
         version: 15.15.0
+      jiti:
+        specifier: 2.4.2
+        version: 2.4.2
       knip:
         specifier: 5.44.1
         version: 5.44.1(@types/node@22.13.4)(typescript@5.7.3)
