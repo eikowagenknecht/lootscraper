@@ -101,7 +101,7 @@ export class GogGamesScraper extends GogBaseScraper {
       });
     } catch (error) {
       logger.error(
-        `Failed to read raw offer v1: ${error instanceof Error ? error.message : String(error)}`,
+        `${this.getScraperName()}: Failed to read raw offer v1: ${error instanceof Error ? error.message : String(error)}`,
       );
       return null;
     }
@@ -127,7 +127,7 @@ export class GogGamesScraper extends GogBaseScraper {
       return this.normalizeOffer(await this.readOfferFromDetailsPage(url));
     } catch (error) {
       logger.error(
-        `Failed to read raw offer v2: ${error instanceof Error ? error.message : String(error)}`,
+        `${this.getScraperName()}: Failed to read raw offer v2: ${error instanceof Error ? error.message : String(error)}`,
       );
       return null;
     }
@@ -145,7 +145,7 @@ export class GogGamesScraper extends GogBaseScraper {
       return this.normalizeOffer(await this.readOfferFromDetailsPage(url));
     } catch (error) {
       logger.error(
-        `Failed to read raw offer v3: ${error instanceof Error ? error.message : String(error)}`,
+        `${this.getScraperName()}: Failed to read raw offer v3: ${error instanceof Error ? error.message : String(error)}`,
       );
       return null;
     }
@@ -206,7 +206,7 @@ export class GogGamesScraper extends GogBaseScraper {
         validTo = DateTime.fromMillis(validToUnix);
       } catch (error) {
         logger.error(
-          `Failed to parse date: ${error instanceof Error ? error.message : String(error)}`,
+          `${this.getScraperName()}: Failed to parse date: ${error instanceof Error ? error.message : String(error)}`,
         );
       }
     }

@@ -110,7 +110,7 @@ export class ItchGamesScraper extends BaseScraper {
       };
     } catch (error) {
       logger.error(
-        `Failed to read raw offer: ${error instanceof Error ? error.message : String(error)}`,
+        `${this.getScraperName()}: Failed to read raw offer: ${error instanceof Error ? error.message : String(error)}`,
       );
       return null;
     }

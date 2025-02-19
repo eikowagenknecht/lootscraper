@@ -72,7 +72,7 @@ export class AmazonLootScraper extends AmazonBaseScraper {
       };
     } catch (error) {
       logger.error(
-        `Failed to read offer: ${error instanceof Error ? error.message : String(error)}`,
+        `${this.getScraperName()}: Failed to read offer: ${error instanceof Error ? error.message : String(error)}`,
       );
       return null;
     }

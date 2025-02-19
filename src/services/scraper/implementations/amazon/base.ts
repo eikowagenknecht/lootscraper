@@ -160,7 +160,7 @@ export abstract class AmazonBaseScraper extends BaseScraper {
       });
     } catch (error) {
       logger.error(
-        `Date parsing failed: ${error instanceof Error ? error.message : String(error)}`,
+        `${this.getScraperName()}: Date parsing failed: ${error instanceof Error ? error.message : String(error)}`,
       );
       return null;
     }
