@@ -54,6 +54,13 @@ export async function handleCallback(
         });
     }
   } catch (error) {
+    if (
+      error instanceof Error &&
+      error.message.includes("message is not modified")
+    ) {
+      // Ignore this error, it happens when the message doesn't need to be updated
+      return;
+    }
     logger.warn(
       `Error handling callback: ${error instanceof Error ? error.message : String(error)}`,
     );
