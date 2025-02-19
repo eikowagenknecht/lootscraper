@@ -103,12 +103,14 @@ export abstract class SteamBaseScraper extends BaseScraper {
           if (!text) {
             // Sometimes this does not exist, when a game is not free any more
             // or only some DLCs of the game are free.
-            logger.warn(`Offer for ${title} seems to be broken, skipping it.`);
+            logger.warn(
+              `${this.getScraperName()}: Offer for ${title} seems to be broken, skipping it.`,
+            );
             return null;
           }
         } catch {
           logger.warn(
-            `Offer for ${title} doesn't contain any free items, skipping it.`,
+            `${this.getScraperName()}: Offer for ${title} doesn't contain any free items, skipping it.`,
           );
           return null;
         }
@@ -148,7 +150,7 @@ export abstract class SteamBaseScraper extends BaseScraper {
               );
             } catch {
               logger.warn(
-                `Couldn't parse date because it's invalid: ${dateText}`,
+                `${this.getScraperName()}: Couldn't parse date because it's invalid: ${dateText}`,
               );
             }
           }
@@ -192,7 +194,7 @@ export abstract class SteamBaseScraper extends BaseScraper {
       }
     } catch (error) {
       logger.error(
-        `Failed to read raw offer: ${error instanceof Error ? error.message : String(error)}`,
+        `${this.getScraperName()}: Failed to read raw offer: ${error instanceof Error ? error.message : String(error)}`,
       );
       return null;
     }

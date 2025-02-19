@@ -151,7 +151,7 @@ export abstract class BaseScraper {
     if (offers.length === 0) {
       if (this.shouldAlwaysHaveOffers()) {
         logger.warn(
-          "Found no offers, even though there should be at least one.",
+          `${this.getScraperName()}: Found no offers, even though there should be at least one.`,
         );
       } else {
         logger.info("No offers found. Probably there are none.");
