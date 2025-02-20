@@ -33,6 +33,13 @@ interface RawOffer {
   productSlug: string | null;
   effectiveDate: string;
   expiryDate: string | null;
+  customAttributes:
+    | {
+        __typename: string;
+        key: string;
+        value: string;
+      }[]
+    | null;
   keyImages: {
     __typename: string;
     type: string;
@@ -103,9 +110,14 @@ const FREEGAMES_QUERY = gql`
           effectiveDate
           expiryDate
           viewableDate
+          productSlug
           keyImages {
             type
             url
+          }
+          customAttributes {
+            key
+            value
           }
           price(country: $country) @include(if: true) {
             totalPrice {
