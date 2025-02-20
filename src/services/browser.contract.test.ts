@@ -2,7 +2,11 @@ import { browserService } from "@/services/browser";
 import { config } from "@/services/config";
 import { beforeAll, describe, expect, it } from "vitest";
 
-describe("Browser Contract Tests", () => {
+const runThis =
+  process.env.VSCODE_PID !== undefined ||
+  process.env.VITEST_MODE === "contract";
+
+describe.skipIf(!runThis)("Browser Contract Tests", () => {
   beforeAll(async () => {
     config.loadConfig();
     await browserService.initialize(config.get());

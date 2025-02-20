@@ -1,7 +1,7 @@
 import { resolve } from "node:path";
 import { defineConfig } from "vitest/config";
 
-export default defineConfig(({ mode }) => ({
+export default defineConfig({
   resolve: {
     alias: {
       "@": resolve(__dirname, "./src"),
@@ -22,16 +22,13 @@ export default defineConfig(({ mode }) => ({
     globals: true,
     environment: "node",
     setupFiles: ["./vitest-setup.ts"],
-    include:
-      mode === "contract"
-        ? ["src/**/*.contract.test.{ts,tsx}"] // Only contract tests
-        : ["src/**/*.{test,spec}.{ts,tsx}", "!src/**/*.contract.test.{ts,tsx}"],
+    include: ["src/**/*.contract.test.{ts,tsx}"],
     exclude: ["node_modules/**", "dist/**", "**/types/**", "data/**"],
-    testTimeout: mode === "contract" ? 10000 : 5000,
+    testTimeout: 5000,
     coverage: {
       provider: "v8",
       reporter: ["text", "html"],
       exclude: ["node_modules/**", "dist/**", "**/types/**"],
     },
   },
-}));
+});

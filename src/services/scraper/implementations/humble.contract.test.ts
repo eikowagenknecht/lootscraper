@@ -3,7 +3,11 @@ import { config } from "@/services/config";
 import { beforeAll, describe, expect, test } from "vitest";
 import { HumbleGamesScraper } from "./humble";
 
-describe("Humble Games Scraper Contract Tests", () => {
+const runThis =
+  process.env.VSCODE_PID !== undefined ||
+  process.env.VITEST_MODE === "contract";
+
+describe.skipIf(!runThis)("Humble Games Scraper Contract Tests", () => {
   beforeAll(async () => {
     config.loadConfig();
     await browserService.initialize(config.get());
