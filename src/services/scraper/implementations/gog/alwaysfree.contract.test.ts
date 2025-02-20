@@ -3,25 +3,32 @@ import { config } from "@/services/config";
 import { beforeAll, describe, expect, test } from "vitest";
 import { GogGamesAlwaysFreeScraper } from "./alwaysfree";
 
-describe("GOG Always Free Games Scraper Contract Tests", () => {
-  beforeAll(async () => {
-    config.loadConfig();
-    await browserService.initialize(config.get());
-  });
+const runThis =
+  process.env.VSCODE_PID !== undefined ||
+  process.env.VITEST_MODE === "contract";
 
-  test("should scrape always-free games correctly", async () => {
-    const scraper = new GogGamesAlwaysFreeScraper(config.get());
-    const results = await scraper.scrape();
+describe.skipIf(!runThis)(
+  "GOG Always Free Games Scraper Contract Tests",
+  () => {
+    beforeAll(async () => {
+      config.loadConfig();
+      await browserService.initialize(config.get());
+    });
 
-    expect(results.length).toBeGreaterThan(40);
+    test("should scrape always-free games correctly", async () => {
+      const scraper = new GogGamesAlwaysFreeScraper(config.get());
+      const results = await scraper.scrape();
 
-    for (const result of results) {
-      expect(result.title).toBeDefined();
-      expect(result.url).toBeDefined();
-      expect(result.url).toMatch(/^https:\/\/www\.gog\.com\//);
-      expect(result.img_url).toBeDefined();
-      expect(result.img_url).toMatch(/^https:\/\//);
-      expect(result.valid_to).toBeNull();
-    }
-  });
-});
+      expect(results.length).toBeGreaterThan(40);
+
+      for (const result of results) {
+        expect(result.title).toBeDefined();
+        expect(result.url).toBeDefined();
+        expect(result.url).toMatch(/^https:\/\/www\.gog\.com\//);
+        expect(result.img_url).toBeDefined();
+        expect(result.img_url).toMatch(/^https:\/\//);
+        expect(result.valid_to).toBeNull();
+      }
+    });
+  },
+);

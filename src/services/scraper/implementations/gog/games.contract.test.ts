@@ -4,7 +4,11 @@ import { DateTime } from "luxon";
 import { beforeAll, describe, expect, test } from "vitest";
 import { GogGamesScraper } from "./games";
 
-describe("GOG Games Scraper Contract Tests", () => {
+const runThis =
+  process.env.VSCODE_PID !== undefined ||
+  process.env.VITEST_MODE === "contract";
+
+describe.skipIf(!runThis)("GOG Games Scraper Contract Tests", () => {
   beforeAll(async () => {
     config.loadConfig();
     await browserService.initialize(config.get());

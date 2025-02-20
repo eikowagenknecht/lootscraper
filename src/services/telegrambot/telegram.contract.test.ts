@@ -4,7 +4,11 @@ import { telegramBotService } from "@/services/telegrambot";
 import { DateTime } from "luxon";
 import { afterAll, beforeAll, describe, expect, test } from "vitest";
 
-describe("Telegram Message Length", () => {
+const runThis =
+  process.env.VSCODE_PID !== undefined ||
+  process.env.VITEST_MODE === "contract";
+
+describe.skipIf(!runThis)("Telegram Message Length", () => {
   beforeAll(async () => {
     // Load config and initialize bot
     config.loadConfig();
@@ -38,7 +42,7 @@ describe("Telegram Message Length", () => {
   });
 });
 
-describe("Telegram Rate Limits", () => {
+describe.skipIf(!runThis)("Telegram Rate Limits", () => {
   beforeAll(async () => {
     config.loadConfig();
     await telegramBotService.initialize(config.get());

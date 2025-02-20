@@ -4,7 +4,11 @@ import { DateTime } from "luxon";
 import { beforeEach, describe, expect, test } from "vitest";
 import { IgdbClient } from "./igdb";
 
-describe("IgdbClient", () => {
+const runThis =
+  process.env.VSCODE_PID !== undefined ||
+  process.env.VITEST_MODE === "contract";
+
+describe.skipIf(!runThis)("IgdbClient", () => {
   let client: IgdbClient;
 
   beforeEach(() => {

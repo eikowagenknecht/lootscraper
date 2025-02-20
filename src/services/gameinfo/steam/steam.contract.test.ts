@@ -3,7 +3,11 @@ import { config } from "@/services/config";
 import { beforeAll, beforeEach, describe, expect, test } from "vitest";
 import { SteamClient } from "./steam";
 
-describe("Steam Game Info Contract Tests", () => {
+const runThis =
+  process.env.VSCODE_PID !== undefined ||
+  process.env.VITEST_MODE === "contract";
+
+describe.skipIf(!runThis)("Steam Game Info Contract Tests", () => {
   beforeAll(async () => {
     config.loadConfig();
     await browserService.initialize(config.get());
