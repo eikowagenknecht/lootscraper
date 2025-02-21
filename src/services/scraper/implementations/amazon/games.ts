@@ -15,6 +15,10 @@ export class AmazonGamesScraper extends AmazonBaseScraper {
     return OfferType.GAME;
   }
 
+  override shouldAlwaysHaveOffers(): boolean {
+    return true;
+  }
+
   override readOffers(): Promise<Omit<NewOffer, "category">[]> {
     return super.readWebOffers({
       offersUrl: OFFER_URL,
