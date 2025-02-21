@@ -34,10 +34,6 @@ export abstract class AmazonBaseScraper extends BaseScraper {
     return OfferPlatform.PC;
   }
 
-  protected override shouldAlwaysHaveOffers(): boolean {
-    return true;
-  }
-
   protected override isFakeAlways(): boolean {
     // Offers on Amazon are never valid forever
     return false;
