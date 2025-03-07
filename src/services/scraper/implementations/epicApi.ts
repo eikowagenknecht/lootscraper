@@ -239,7 +239,7 @@ export class EpicGamesApiScraper extends BaseScraper {
         const { startDate, endDate } = this.getPromotionalDates(offer);
 
         let slug =
-          offer.productSlug ?? offer.offerMappings?.[0]?.pageSlug ?? "";
+          offer.offerMappings?.[0]?.pageSlug ?? offer.productSlug ?? "";
         if (slug !== "") {
           slug = `p/${slug}`;
         }
