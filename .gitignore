@@ -34,3 +34,4 @@ coverage/
 # Cache
 .eslintcache
 .prettier-cache
+.qodo
