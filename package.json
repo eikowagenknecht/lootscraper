@@ -83,7 +83,7 @@
     "@types/node": "22.13.10",
     "@vitest/coverage-v8": "3.0.8",
     "eslint": "9.22.0",
-    "eslint-import-resolver-typescript": "3.8.3",
+    "eslint-import-resolver-typescript": "4.0.0",
     "eslint-plugin-import-x": "4.8.0",
     "eslint-plugin-jsdoc": "50.6.6",
     "globals": "16.0.0",
