@@ -154,7 +154,9 @@ export abstract class BaseScraper {
           `${this.getScraperName()}: Found no offers, even though there should be at least one.`,
         );
       } else {
-        logger.info("No offers found. Probably there are none.");
+        logger.info(
+          `${this.getScraperName()}: No offers found. Probably there are none.`,
+        );
       }
 
       return;
@@ -162,7 +164,7 @@ export abstract class BaseScraper {
 
     const titles = offers.map((o) => o.title).join(", ");
     logger.debug(
-      `Found ${offers.length.toFixed()} offers (raw titles): ${titles}`,
+      `${this.getScraperName()}: Found ${offers.length.toFixed()} offers (raw titles): ${titles}`,
     );
   }
   /**
@@ -240,19 +242,27 @@ export abstract class BaseScraper {
           } catch (error) {
             // Log and skip offer if processing fails
             logger.error(
-              `Failed to process offer: ${error instanceof Error ? error.message : String(error)}`,
+              `${this.getScraperName()}: Failed to process offer: ${error instanceof Error ? error.message : String(error)}`,
             );
           }
         }
       }
     } catch (error) {
       if (page === null) {
-        logger.error("Failed to create a new page. Can't take a screenshot.");
+        logger.error(
+          `${this.getScraperName()}: Failed to create a new page. Can't take a screenshot.`,
+        );
         return [];
       }
       if (error instanceof errors.TimeoutError) {
+        logger.error(
+          `${this.getScraperName()}: Page didn't become ready for parsing within the timeout period.`,
+        );
         await takeScreenshot(page, this.getScraperName(), "browser_error");
       } else {
+        logger.error(
+          `${this.getScraperName()}: Error reading offers: ${error instanceof Error ? error.message : String(error)}`,
+        );
         await takeScreenshot(page, this.getScraperName(), "other_error");
       }
     } finally {
@@ -356,7 +366,9 @@ export abstract class BaseScraper {
     const titles = new Set<string>();
     return offers.filter((offer) => {
       if (titles.has(offer.title)) {
-        logger.debug(`Duplicate offer: ${offer.title}`);
+        logger.debug(
+          `${this.getScraperName()}: Duplicate offer: ${offer.title}`,
+        );
         return false;
       }
       titles.add(offer.title);
