@@ -45,13 +45,8 @@ class FeedService {
 
     logger.info("Regenerating feeds.");
     const activeOffers = await getActiveOffers(DateTime.now());
-    const allOffers = (await getAllOffers())
-      // Skip entries without dates or entries that start in the future
-      .filter(
-        (offer) =>
-          (offer.valid_from ?? offer.seen_last) &&
-          (!offer.valid_from || offer.valid_from > offer.seen_last),
-      )
+    const allOffers = await getAllOffers();
+    const filteredAllOffers = allOffers
       // Calculate real end dates for offers that have ended
       .map((offer) => {
         const realValidTo = calculateRealValidTo(
@@ -62,7 +57,7 @@ class FeedService {
         return { ...offer, valid_to: realValidTo ? realValidTo.toISO() : null };
       });
 
-    await this.generateFeeds(activeOffers, allOffers);
+    await this.generateFeeds(activeOffers, filteredAllOffers);
   }
 
   public async generateFeeds(
