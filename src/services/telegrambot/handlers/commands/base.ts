@@ -22,13 +22,13 @@ export function getCallerName(ctx: Context): string {
 
 export async function userCanControlBot(ctx: Context): Promise<boolean> {
   if (!ctx.chat) {
-    logger.warning("Cannot control bot: Unknown chat.");
+    logger.warn("Cannot control bot: Unknown chat.");
     return false;
   }
 
   if (ctx.chat.type === "group" || ctx.chat.type === "supergroup") {
     if (!ctx.from) {
-      logger.warning(
+      logger.warn(
         `Cannot control bot: Unknown user in group with id ${ctx.chat.id.toFixed()}`,
       );
       return false;
