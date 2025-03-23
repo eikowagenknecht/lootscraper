@@ -23,7 +23,6 @@ Choose your preferred way to get notifications:
 - Steam (Games & In-game Loot)
 - Humble Bundle
 - itch.io
-- Ubisoft
 - Apple App Store
 - Google Play Store
 
@@ -78,7 +77,6 @@ Subscribe to individual platform feeds or get all offers in [one feed](https://f
 - [Humble games](https://feed.phenx.de/lootscraper_humble_game.xml)
 - [itch.io games](https://feed.phenx.de/lootscraper_itch_game.xml)
 - Steam ([games](https://feed.phenx.de/lootscraper_steam_game.xml) and [ingame loot](https://feed.phenx.de/lootscraper_steam_loot.xml))
-- [Ubisoft games](https://feed.phenx.de/lootscraper_ubisoft_game.xml)
 - [Apple iPhone games](https://feed.phenx.de/lootscraper_apple_game.xml)
 - [Google Android games](https://feed.phenx.de/lootscraper_google_game.xml)
 
@@ -95,7 +93,6 @@ Here are the latest offers in a nice and clean HTML page:
 - [Humble games](https://feed.phenx.de/lootscraper_humble_game.html)
 - [itch.io games](https://feed.phenx.de/lootscraper_itch_game.html)
 - Steam ([games](https://feed.phenx.de/lootscraper_steam_game.html) and [ingame loot](https://feed.phenx.de/lootscraper_steam_loot.html))
-- [Ubisoft games](https://feed.phenx.de/lootscraper_ubisoft_game.html)
 - [Apple iPhone games](https://feed.phenx.de/lootscraper_apple_game.html)
 - [Google Android games](https://feed.phenx.de/lootscraper_google_game.html)
 
@@ -115,7 +112,6 @@ Warning: These pages are quite large and may take a while to load.
 - [Humble games](https://feed.phenx.de/lootscraper_humble_game_all.html)
 - [itch.io games](https://feed.phenx.de/lootscraper_itch_game_all.html)
 - Steam ([games](https://feed.phenx.de/lootscraper_steam_game_all.html) and [ingame loot](https://feed.phenx.de/lootscraper_steam_loot_all.html))
-- [Ubisoft games](https://feed.phenx.de/lootscraper_ubisoft_game_all.html)
 - [Apple iPhone games](https://feed.phenx.de/lootscraper_apple_game_all.html)
 - [Google Android games](https://feed.phenx.de/lootscraper_google_game_all.html)
 
