@@ -16,7 +16,6 @@ export default tseslint.config(
     ignores: [
       "node_modules/",
       "dist/",
-      "tools/",
       "coverage/",
       "vitest-setup.ts",
       "*.config.js",
