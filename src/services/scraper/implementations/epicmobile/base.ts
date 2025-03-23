@@ -151,7 +151,7 @@ export abstract class EpicMobileSraper extends BaseScraper {
           img_url: this.getMainImage(offer),
         };
 
-        console.log(res);
+        logger.verbose(res);
         return res;
       });
   }

@@ -224,6 +224,7 @@ class TelegramTransport extends Transport {
           );
         this.timeoutState.notifiedTimeout = true;
       } catch (error) {
+        // Log error to console since we can't log to Telegram
         console.error("Failed to send timeout warning message:", error);
       }
     }
