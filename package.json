@@ -38,8 +38,6 @@
     "clean:npm": "pnpm exec rm -rf node_modules",
     "sync:npm": "pnpm i --frozen-lockfile",
     "upgrade:npm": "pnpm exec rm pnpm-lock.yaml && pnpm up --latest && pnpm i",
-    "code:dump": "vite-node tools/codeDump.ts",
-    "code:list": "vite-node tools/codeList.ts",
     "knip": "knip",
     "docker:pub:dev": "docker build . -t eikowagenknecht/lootscraper:develop && docker push eikowagenknecht/lootscraper:develop"
   },

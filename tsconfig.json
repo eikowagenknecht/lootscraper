@@ -26,12 +26,6 @@
     "noImplicitOverride": true,
     "skipLibCheck": true
   },
-  "include": [
-    "src/**/*",
-    "tests/**/*",
-    "utils/**/*",
-    "tools/**/*",
-    "global.d.ts"
-  ],
+  "include": ["src/**/*", "tests/**/*", "utils/**/*", "global.d.ts"],
   "exclude": ["node_modules", "dist"]
 }
