@@ -113,7 +113,7 @@ export async function findOffer({
     // If multiple close matches exist, return the newest one.
     // This should rarely happen and is a fallback in case the exact match
     // wasn't found.
-    logger.warning(
+    logger.warn(
       `Found ${results.length.toFixed()} offers for "${title}" that are close to ${
         validTo ?? "null"
       }. Returning the newest one.`,
