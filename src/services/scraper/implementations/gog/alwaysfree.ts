@@ -1,6 +1,7 @@
 import type { CronConfig } from "@/services/scraper/base/scraper";
 import { OfferDuration, OfferPlatform } from "@/types/basic";
 import type { NewOffer } from "@/types/database";
+import { cleanGameTitle } from "@/utils";
 import { logger } from "@/utils/logger";
 import { DateTime } from "luxon";
 import type { Locator, Page } from "playwright";
@@ -71,8 +72,8 @@ export class GogGamesAlwaysFreeScraper extends GogBaseScraper {
         duration: this.getDuration(),
         type: this.getType(),
         platform: this.getPlatform(),
-        title: title,
-        probable_game_name: title,
+        title: cleanGameTitle(title),
+        probable_game_name: cleanGameTitle(title),
         seen_last: DateTime.now().toISO(),
         seen_first: DateTime.now().toISO(),
         valid_to: null,
