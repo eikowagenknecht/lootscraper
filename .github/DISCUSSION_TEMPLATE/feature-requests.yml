@@ -1,8 +1,5 @@
-name: Feature Request
-description: Suggest an idea for this project
+title: "[Feature Request] "
 labels: ["enhancement"]
-assignees:
-  - eikowagenknecht
 body:
   - type: markdown
     attributes:
