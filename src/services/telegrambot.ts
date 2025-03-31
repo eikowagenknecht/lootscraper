@@ -60,9 +60,7 @@ export class TelegramBotService {
   }
 
   public static getInstance(): TelegramBotService {
-    if (!TelegramBotService.instance) {
-      TelegramBotService.instance = new TelegramBotService();
-    }
+    TelegramBotService.instance ??= new TelegramBotService();
     return TelegramBotService.instance;
   }
 
