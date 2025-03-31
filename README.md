@@ -161,8 +161,8 @@ If you want to do this or even contribute, please see the [README for developers
 ## 📝 Feedback
 
 If you encounter any problems feel free to open an issue here and I'll do my best to help.
-I'd also love to hear your feature requests!
-This is also tracked in the GitHub issues.
+
+I'd also love to hear your feature requests! They are tracked as [GitHub discussions](https://github.com/eikowagenknecht/lootscraper/discussions/categories/feature-requests).
 
 ## 🔄 Alternative Projects
 
