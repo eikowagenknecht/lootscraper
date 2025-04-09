@@ -226,13 +226,17 @@ export class EpicGamesApiScraper extends BaseScraper {
     return rawOffers
       .filter((offer) => {
         const isFree = offer.price.totalPrice.discountPrice === 0;
+        const { startDate, endDate } = this.getPromotionalDates(offer);
         const hasRequiredData =
           offer.title &&
           (offer.productSlug ??
             (offer.offerMappings &&
               offer.offerMappings.length > 0 &&
               offer.offerMappings[0]?.pageSlug)) &&
-          offer.keyImages.length > 0;
+          offer.keyImages.length > 0 &&
+          startDate !== null &&
+          endDate !== null;
+
         return isFree && hasRequiredData;
       })
       .map((offer) => {
