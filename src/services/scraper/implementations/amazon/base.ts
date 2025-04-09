@@ -52,7 +52,7 @@ export abstract class AmazonBaseScraper extends BaseScraper {
 
     let url = BASE_URL;
     try {
-      const path = await element.getAttribute("href", { timeout: 500 });
+      const path = await element.getAttribute("href", { timeout: 5000 });
       if (path) {
         url += path.startsWith("http") ? "" : path;
       }
