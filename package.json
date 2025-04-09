@@ -1,6 +1,6 @@
 {
   "name": "lootscraper",
-  "version": "2.9.1",
+  "version": "2.9.2",
   "description": "RSS feeds and Telegram bot for free game and loot offers.",
   "author": "Eiko Wagenknecht <git@eiko-wagenknecht.de>",
   "license": "CC-BY-NC-SA-4.0",
@@ -15,7 +15,11 @@
     "pnpm": ">=10.0.0"
   },
   "pnpm": {
-    "onlyBuiltDependencies": ["better-sqlite3", "@biomejs/biome", "esbuild"]
+    "onlyBuiltDependencies": [
+      "better-sqlite3",
+      "@biomejs/biome",
+      "esbuild"
+    ]
   },
   "scripts": {
     "dev": "cross-env DEBUG=\"grammy*\" vite-node src/main.ts",
