@@ -244,9 +244,7 @@ const feedTemplate = Handlebars.compile(`<?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom"{{#if language}} xml:lang="{{language}}"{{/if}}>
   <id>{{id}}</id>
   <title>{{{escapeXml title}}}</title>
-  {{#if updated}}
   <updated>{{isoDate updated}}</updated>
-  {{/if}}
 
   {{#each author}}
   <author>
@@ -336,6 +334,9 @@ class AtomFeed {
         return entryUpdated > acc ? entryUpdated : acc;
       }, this.entries[0].options.updated);
     }
+
+    // Fallback to epoch if no updated date is found because it's a required field and not having it trips some RSS readers
+    updated = updated ?? new Date(0);
 
     return cleanHtml(
       feedTemplate({
