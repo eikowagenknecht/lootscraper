@@ -201,16 +201,26 @@ export abstract class SteamBaseScraper extends BaseScraper {
   }
 
   private async skipAgeVerification(page: Page): Promise<void> {
-    try {
-      // Check if age verification is present
-      const ageCheck = await page.$("#agecheck_form");
-      if (ageCheck) {
-        await page.selectOption("#ageYear", "1990");
-        await page.click("#view_product_page_btn");
-        await page.waitForLoadState("networkidle");
+    const ageSelectors = ["#agecheck_form", "#app_agegate"];
+
+    for (const selector of ageSelectors) {
+      try {
+        // Check if this age verification form is present
+        const ageElement = await page.$(selector);
+        if (ageElement) {
+          // Select the birth year and click the button
+          await page.selectOption("#ageYear", "1990");
+          await page.click("#view_product_page_btn");
+          await page.waitForLoadState("networkidle");
+
+          // If we successfully handled the age gate, exit the function
+          return;
+        }
+      } catch {
+        logger.debug(
+          `Age verification element ${selector} not found or failed to handle it`,
+        );
       }
-    } catch {
-      logger.debug("No age verification needed or failed to handle it");
     }
   }
 }
