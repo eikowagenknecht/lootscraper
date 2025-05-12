@@ -1,5 +1,5 @@
 ########## Build stage
-FROM node:22-slim AS builder
+FROM node:24-slim AS builder
 WORKDIR /app
 
 # Set CI var to skip lefthook prepare script
@@ -19,7 +19,7 @@ COPY tsconfig.json vite.config.ts package.json pnpm-lock.yaml global.d.ts ./
 RUN pnpm build
 
 ########## Production stage
-FROM node:22-slim
+FROM node:24-slim
 WORKDIR /app
 
 # Set environment variables
