@@ -5,6 +5,9 @@ WORKDIR /app
 # Set CI var to skip lefthook prepare script
 ENV CI=true
 
+# Install Python and build tools needed for node-gyp
+RUN apt-get update && apt-get install -y python3 make g++ && rm -rf /var/lib/apt/lists/*
+
 # Install pnpm by package.json config
 RUN npm i -g corepack@latest
 RUN corepack enable
@@ -55,12 +58,20 @@ COPY --from=builder /app/package.json /app/pnpm-lock.yaml ./
 
 # Install dependencies
 RUN \
+# Install build tools needed for node-gyp / better-sqlite
+apt-get update && apt-get install -y python3 make g++ && \
+# Install production dependencies
 pnpm install --frozen-lockfile --prod && \
 # Install playwright browsers into the user's home directory
 pnpm playwright install firefox --with-deps && \
 # Remove pnpm cache and other unnecessary files
 pnpm store prune && \
-rm -rf /root/.cache/node /root/.cache/pnpm /root/.npm /root/.pnpm-store /root/.local
+# Remove build tools
+apt-get purge -y python3 make g++ && \
+apt-get autoremove -y && \
+apt-get clean && \
+# Remove unnecessary files
+rm -rf /root/.cache/node /root/.cache/pnpm /root/.npm /root/.pnpm-store /root/.local /var/lib/apt/lists/*
 
 # Copy built files and templates
 COPY --from=builder /app/dist ./dist
