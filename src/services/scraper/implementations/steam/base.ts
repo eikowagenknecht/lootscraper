@@ -216,9 +216,9 @@ export abstract class SteamBaseScraper extends BaseScraper {
           // If we successfully handled the age gate, exit the function
           return;
         }
-      } catch {
+      } catch (err) {
         logger.debug(
-          `Age verification element ${selector} not found or failed to handle it`,
+          `Age verification element ${selector} not found or failed to handle it: ${err instanceof Error ? err.message : String(err)}`,
         );
       }
     }
