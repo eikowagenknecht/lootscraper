@@ -6,7 +6,7 @@ import { DateTime, type Duration } from "luxon";
 import { bold, escapeText, italic, link } from "./markdown";
 
 export const DATE_FORMATS = {
-  READABLE_WITH_HOUR: "yyyy-MM-dd - HH:mm",
+  READABLE_WITH_HOUR_TZ: "yyyy-MM-dd - HH:mm ZZZZ",
   SHORT: "yyyy-MM-dd",
 } as const;
 
@@ -57,10 +57,8 @@ export async function formatOfferMessage(
     const validToFormatted = tzOffset
       ? validTo
           .setZone(`UTC${tzOffset >= 0 ? "+" : ""}${tzOffset.toFixed()}`)
-          .toFormat(
-            `${DATE_FORMATS.READABLE_WITH_HOUR} UTC${tzOffset >= 0 ? "+" : "-"}${tzOffset.toFixed()}`,
-          )
-      : validTo.toUTC().toFormat(`${DATE_FORMATS.READABLE_WITH_HOUR} UTC`);
+          .toFormat(DATE_FORMATS.READABLE_WITH_HOUR_TZ)
+      : validTo.toUTC().toFormat(DATE_FORMATS.READABLE_WITH_HOUR_TZ);
 
     const now = DateTime.now();
     let diff: Duration;
@@ -72,7 +70,7 @@ export async function formatOfferMessage(
       // Expired offer needs to show how long ago it expired
       diff = now.diff(validTo, ["days", "hours"]);
     }
-    const diffHuman = diff.toHuman({ maximumFractionDigits: 0 });
+    const diffHuman = diff.normalize().toHuman({ maximumFractionDigits: 0 });
 
     if (now > validTo) {
       content += escapeText(

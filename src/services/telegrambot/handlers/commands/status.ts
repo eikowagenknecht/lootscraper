@@ -62,7 +62,7 @@ But I'd be happy to see you register any time with the /start command!`);
       );
 
   const registrationDate = DateTime.fromISO(dbChat.registration_date).toFormat(
-    DATE_FORMATS.READABLE_WITH_HOUR,
+    DATE_FORMATS.READABLE_WITH_HOUR_TZ,
   );
 
   const message =
