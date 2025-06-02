@@ -116,6 +116,7 @@ export async function sendNewOffersToChat(
       return;
     }
 
+    // This only happens if the error is not recognized as permanent.
     logger.error(
       `Failed to process offers for chat ${chat.chat_id.toFixed()}: ${
         error instanceof Error ? error.message : String(error)
@@ -184,6 +185,9 @@ function isPermanentlyBlockedChat(error: Error): boolean {
       error.description.includes("user is deactivated") ||
       error.description.includes("message thread not found") ||
       error.description.includes("bot was kicked from the group chat") ||
+      error.description.includes(
+        "group chat was upgraded to a supergroup chat",
+      ) ||
       error.description.includes("the group chat was deleted"))
   );
 }
