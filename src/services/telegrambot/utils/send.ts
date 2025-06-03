@@ -31,12 +31,16 @@ export async function sendNewOffersToChat(
 
   try {
     if (interactive && !chat.thread_id && subscriptions.length === 0) {
+      const messageText =
+        "You have no subscriptions. Change that with /manage.";
+
+      logger.verbose(
+        `Sending message to chat ${chat.chat_id.toFixed()}: ${messageText}`,
+      );
+
       await telegramBotService
         .getBot()
-        .api.sendMessage(
-          chat.chat_id,
-          "You have no subscriptions. Change that with /manage.",
-        );
+        .api.sendMessage(chat.chat_id, messageText);
     }
 
     let offersSent = 0;
@@ -52,10 +56,6 @@ export async function sendNewOffersToChat(
       });
 
       for (const offer of offers) {
-        logger.verbose(
-          `Sending offer ${offer.id.toFixed()} to chat ${chat.chat_id.toFixed()}`,
-        );
-
         // For channels, groups and supergroups, show no buttons as they would
         // affect all users. Always show details.
         const isMultiUserChat =
@@ -75,6 +75,10 @@ export async function sendNewOffersToChat(
               detailsHideButton: false,
               dismissButton: true,
             });
+
+        logger.verbose(
+          `Sending message to chat ${chat.chat_id.toFixed()}: ${message}`,
+        );
 
         await telegramBotService
           .getBot()
@@ -96,6 +100,10 @@ export async function sendNewOffersToChat(
     }
 
     if (interactive && !chat.thread_id && offersSent === 0) {
+      logger.verbose(
+        `Sending message to chat ${chat.chat_id.toFixed()}: There are no new offers for your subscriptions.`,
+      );
+
       await telegramBotService
         .getBot()
         .api.sendMessage(
@@ -118,7 +126,7 @@ export async function sendNewOffersToChat(
 
     // This only happens if the error is not recognized as permanent.
     logger.error(
-      `Failed to process offers for chat ${chat.chat_id.toFixed()}: ${
+      `Temporarily failed to process offers for chat ${chat.chat_id.toFixed()}: ${
         error instanceof Error ? error.message : String(error)
       }`,
     );
