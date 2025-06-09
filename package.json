@@ -9,7 +9,7 @@
   "bin": {
     "lootscraper": "./dist/main.js"
   },
-  "packageManager": "pnpm@10.11.0",
+  "packageManager": "pnpm@10.12.1",
   "engines": {
     "node": ">=22.0.0",
     "pnpm": ">=10.0.0"
@@ -21,9 +21,7 @@
       "esbuild",
       "unrs-resolver"
     ],
-    "ignoredBuiltDependencies": [
-      "lefthook"
-    ]
+    "ignoredBuiltDependencies": ["lefthook"]
   },
   "scripts": {
     "dev": "cross-env DEBUG=\"grammy*\" vite-node src/main.ts",
@@ -43,9 +41,9 @@
     "type-check": "tsc --noEmit",
     "check": "pnpm run lint && pnpm run type-check",
     "prepare": "node -e \"process.env.CI || process.env.DOCKER_CONTAINER || process.exit(1)\" || lefthook install",
-    "clean:npm": "pnpm exec rm -rf node_modules",
+    "clean:npm": "pnpm dlx rimraf -rf node_modules",
     "sync:npm": "pnpm i --frozen-lockfile",
-    "upgrade:npm": "pnpm exec rm pnpm-lock.yaml && pnpm up --latest && pnpm i",
+    "upgrade:npm": "pnpm dlx rimraf pnpm-lock.yaml && pnpm up --latest && pnpm i",
     "knip": "knip",
     "docker:pub:dev": "docker build . -t eikowagenknecht/lootscraper:develop && docker push eikowagenknecht/lootscraper:develop"
   },
@@ -70,7 +68,7 @@
     "winston-daily-rotate-file": "5.0.0",
     "winston-transport": "4.9.0",
     "yaml": "2.8.0",
-    "zod": "3.25.47"
+    "zod": "3.25.56"
   },
   "devDependencies": {
     "@biomejs/biome": "1.9.4",
@@ -82,22 +80,22 @@
     "@testing-library/jest-dom": "6.6.3",
     "@types/better-sqlite3": "7.6.13",
     "@types/luxon": "3.6.2",
-    "@types/node": "22.15.29",
-    "@vitest/coverage-v8": "3.1.4",
+    "@types/node": "22.15.30",
+    "@vitest/coverage-v8": "3.2.3",
     "eslint": "9.28.0",
-    "eslint-import-resolver-typescript": "4.4.2",
-    "eslint-plugin-import-x": "4.15.0",
+    "eslint-import-resolver-typescript": "4.4.3",
+    "eslint-plugin-import-x": "4.15.1",
     "eslint-plugin-jsdoc": "50.7.1",
     "globals": "16.2.0",
     "jiti": "2.4.2",
-    "knip": "5.59.1",
+    "knip": "5.60.2",
     "lefthook": "1.11.13",
     "prettier": "3.5.3",
     "semantic-release": "24.2.5",
     "typescript": "5.8.3",
-    "typescript-eslint": "8.33.0",
+    "typescript-eslint": "8.33.1",
     "vite": "6.3.5",
-    "vite-node": "3.1.4",
-    "vitest": "3.1.4"
+    "vite-node": "3.2.3",
+    "vitest": "3.2.3"
   }
 }
