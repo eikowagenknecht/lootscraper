@@ -79,6 +79,15 @@ interface RawOffer {
         pageType: string;
       }[]
     | null;
+  catalogNs: {
+    mappings:
+      | {
+          __typename: string;
+          pageSlug: string;
+          pageType: string;
+        }[]
+      | null;
+  } | null;
 }
 
 // This seems to be indirectly queried by
@@ -227,12 +236,19 @@ export class EpicGamesApiScraper extends BaseScraper {
       .filter((offer) => {
         const isFree = offer.price.totalPrice.discountPrice === 0;
         const { startDate, endDate } = this.getPromotionalDates(offer);
+        const productSlug = offer.productSlug;
+        const offerMappingSlug =
+          offer.offerMappings && offer.offerMappings.length > 0
+            ? offer.offerMappings[0]?.pageSlug
+            : null;
+        const catalogSlug =
+          offer.catalogNs?.mappings && offer.catalogNs.mappings.length > 0
+            ? offer.catalogNs.mappings[0]?.pageSlug
+            : null;
+
         const hasRequiredData =
           offer.title &&
-          (offer.productSlug ??
-            (offer.offerMappings &&
-              offer.offerMappings.length > 0 &&
-              offer.offerMappings[0]?.pageSlug)) &&
+          (productSlug ?? offerMappingSlug ?? catalogSlug) &&
           offer.keyImages.length > 0 &&
           startDate !== null &&
           endDate !== null;
@@ -243,7 +259,10 @@ export class EpicGamesApiScraper extends BaseScraper {
         const { startDate, endDate } = this.getPromotionalDates(offer);
 
         let slug =
-          offer.offerMappings?.[0]?.pageSlug ?? offer.productSlug ?? "";
+          offer.offerMappings?.[0]?.pageSlug ??
+          offer.productSlug ??
+          offer.catalogNs?.mappings?.[0]?.pageSlug ??
+          "";
         if (slug !== "") {
           slug = `p/${slug}`;
         }
