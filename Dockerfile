@@ -14,6 +14,11 @@ RUN corepack enable
 
 # Install dependencies
 COPY package.json pnpm-lock.yaml ./
+# Set timeouts for GH Actions and other CI environments
+RUN \
+pnpm config set fetch-retry-mintimeout 20000 && \
+pnpm config set fetch-retry-maxtimeout 120000 && \
+pnpm config set fetch-retries 5
 RUN pnpm install --frozen-lockfile 
 
 # Copy source and build
@@ -60,6 +65,10 @@ COPY --from=builder /app/package.json /app/pnpm-lock.yaml ./
 RUN \
 # Install build tools needed for node-gyp / better-sqlite
 apt-get update && apt-get install -y python3 make g++ && \
+# Set timeouts for GH Actions and other CI environments
+pnpm config set fetch-retry-mintimeout 20000 && \
+pnpm config set fetch-retry-maxtimeout 120000 && \
+pnpm config set fetch-retries 5 && \
 # Install production dependencies
 pnpm install --frozen-lockfile --prod && \
 # Install playwright browsers into the user's home directory
