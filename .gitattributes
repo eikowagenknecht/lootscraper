@@ -1,3 +1,6 @@
+# auto-detect text, use LF endings
+* text=auto eol=lf
+
 *.js diff
 *.ts diff
 *.json diff
