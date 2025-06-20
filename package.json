@@ -21,7 +21,9 @@
       "esbuild",
       "unrs-resolver"
     ],
-    "ignoredBuiltDependencies": ["lefthook"]
+    "ignoredBuiltDependencies": [
+      "lefthook"
+    ]
   },
   "scripts": {
     "dev": "cross-env DEBUG=\"grammy*\" vite-node src/main.ts",
@@ -71,7 +73,7 @@
     "zod": "3.25.64"
   },
   "devDependencies": {
-    "@biomejs/biome": "1.9.4",
+    "@biomejs/biome": "2.0.0",
     "@commitlint/cli": "19.8.1",
     "@commitlint/config-conventional": "19.8.1",
     "@commitlint/types": "19.8.1",
