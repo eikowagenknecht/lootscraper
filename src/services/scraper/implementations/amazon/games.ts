@@ -1,9 +1,9 @@
+import { DateTime } from "luxon";
+import type { Locator, Page } from "playwright";
 import { OfferType } from "@/types/basic";
 import type { NewOffer } from "@/types/database";
 import { cleanGameTitle } from "@/utils";
 import { logger } from "@/utils/logger";
-import { DateTime } from "luxon";
-import type { Locator, Page } from "playwright";
 import { AmazonBaseScraper, OFFER_URL } from "./base";
 
 export class AmazonGamesScraper extends AmazonBaseScraper {

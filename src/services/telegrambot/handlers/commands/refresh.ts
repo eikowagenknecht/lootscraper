@@ -1,6 +1,6 @@
+import type { CommandContext } from "grammy";
 import type { BotContext } from "@/services/telegrambot/types/middleware";
 import { sendNewOffersToChat } from "@/services/telegrambot/utils/send";
-import type { CommandContext } from "grammy";
 import { getDbChat, logCall, userCanControlBot } from ".";
 
 export async function handleRefreshCommand(

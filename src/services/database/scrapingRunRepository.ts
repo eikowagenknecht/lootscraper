@@ -1,11 +1,11 @@
+import type { UpdateResult } from "kysely";
+import { DateTime } from "luxon";
 import { getDb } from "@/services/database";
 import type {
   NewScrapingRun,
   ScrapingRun,
   ScrapingRunUpdate,
 } from "@/types/database";
-import type { UpdateResult } from "kysely";
-import { DateTime } from "luxon";
 import { handleError, handleInsertResult, handleUpdateResult } from "./common";
 
 async function getScheduledRuns(scraper: string): Promise<ScrapingRun[]> {

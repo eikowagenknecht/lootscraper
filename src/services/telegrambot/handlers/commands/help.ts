@@ -1,6 +1,6 @@
+import type { CommandContext } from "grammy";
 import type { BotContext } from "@/services/telegrambot/types/middleware";
 import { bold, escapeText } from "@/services/telegrambot/utils/markdown";
-import type { CommandContext } from "grammy";
 import { logCall, userCanControlBot } from ".";
 export async function handleHelpCommand(
   ctx: CommandContext<BotContext>,

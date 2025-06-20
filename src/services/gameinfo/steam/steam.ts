@@ -1,9 +1,9 @@
+import { DateTime } from "luxon";
+import { errors } from "playwright";
 import { browserService } from "@/services/browser";
 import type { NewSteamInfo } from "@/types/database";
 import { getMatchScore } from "@/utils";
 import { logger } from "@/utils/logger";
-import { DateTime } from "luxon";
-import { errors } from "playwright";
 
 type SteamApiResponse = Record<
   string,

@@ -1,6 +1,6 @@
+import { beforeAll, describe, expect, it } from "vitest";
 import { browserService } from "@/services/browser";
 import { config } from "@/services/config";
-import { beforeAll, describe, expect, it } from "vitest";
 
 const runThis =
   process.env.VSCODE_PID !== undefined ||

@@ -1,5 +1,7 @@
 import { writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
+import Handlebars from "handlebars";
+import { DateTime } from "luxon";
 import { getGameWithInfo } from "@/services/database/gameRepository";
 import type { FeedCombination } from "@/services/scraper/utils";
 import { translationService } from "@/services/translation";
@@ -11,8 +13,6 @@ import {
   generateFeedTitle,
   generateFilename,
 } from "@/utils/stringTools";
-import Handlebars from "handlebars";
-import { DateTime } from "luxon";
 
 // The latest static URL for the Tailwind CSS stylesheet.
 const CSS_URL =

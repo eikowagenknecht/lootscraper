@@ -1,7 +1,7 @@
+import type { CommandContext } from "grammy";
 import { config } from "@/services/config";
 import type { BotContext } from "@/services/telegrambot/types/middleware";
 import { formatJsonForMarkdown } from "@/services/telegrambot/utils/markdown";
-import type { CommandContext } from "grammy";
 import { logCall } from "..";
 
 export async function handleDebugCommand(

@@ -1,5 +1,6 @@
 import { writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
+import { DateTime } from "luxon";
 import { getGameWithInfo } from "@/services/database/gameRepository";
 import type { FeedCombination } from "@/services/scraper/utils";
 import { translationService } from "@/services/translation";
@@ -10,7 +11,6 @@ import { FeedError } from "@/types/errors";
 import { AtomFeed } from "@/utils/atom";
 import { getDataPath } from "@/utils/path";
 import { generateFeedTitle, generateFilename } from "@/utils/stringTools";
-import { DateTime } from "luxon";
 
 export class RssGenerator {
   private readonly feedGenerator: AtomFeed;

@@ -1,8 +1,8 @@
+import { Settings as LuxonSettings } from "luxon";
 import { config } from "@/services/config";
 import { shutdownApp, startApp } from "@/services/orchestrator";
 import { handleError } from "@/utils/errorHandler";
 import { addFileTransport, logger, updateConsoleLevel } from "@/utils/logger";
-import { Settings as LuxonSettings } from "luxon";
 import { getPackageInfo } from "./utils/version";
 
 async function initializeCore() {

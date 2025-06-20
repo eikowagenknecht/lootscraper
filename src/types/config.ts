@@ -11,7 +11,6 @@ const LogLevel = z.enum([
   "DEBUG",
   "SILLY",
 ]);
-type LogLevel = z.infer<typeof LogLevel>;
 
 export const TelegramLogLevel = LogLevel;
 export type TelegramLogLevel = z.infer<typeof TelegramLogLevel>;

@@ -1,5 +1,5 @@
-import { OfferType } from "@/types/basic";
 import type { Locator, Page } from "playwright";
+import { OfferType } from "@/types/basic";
 import { SteamBaseScraper } from "./base";
 
 export class SteamLootScraper extends SteamBaseScraper {

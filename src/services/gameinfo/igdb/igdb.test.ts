@@ -1,5 +1,5 @@
-import { config } from "@/services/config";
 import { beforeEach, describe, expect, test, vi } from "vitest";
+import { config } from "@/services/config";
 import { IgdbClient } from "./igdb";
 
 describe("IgdbClient", () => {

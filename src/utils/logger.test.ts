@@ -1,8 +1,8 @@
 import { mkdirSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { resolve } from "node:path";
-import { logger } from "@/utils/logger";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
+import { logger } from "@/utils/logger";
 
 describe("logger", () => {
   const tempDir = resolve(tmpdir(), "lootscraper-tests");

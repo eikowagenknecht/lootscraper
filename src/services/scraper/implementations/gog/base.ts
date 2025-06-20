@@ -1,7 +1,7 @@
+import type { Page } from "playwright";
 import { BaseScraper } from "@/services/scraper/base/scraper";
 import { OfferSource, OfferType } from "@/types/basic";
 import { logger } from "@/utils/logger";
-import type { Page } from "playwright";
 
 // Base interface for GOG offers
 export interface GogRawOffer {

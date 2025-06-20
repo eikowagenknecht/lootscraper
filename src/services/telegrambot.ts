@@ -1,11 +1,3 @@
-import type { BotContext } from "@/services/telegrambot/types/middleware";
-import {
-  sendNewAnnouncementsToChat,
-  sendNewOffersToChat,
-} from "@/services/telegrambot/utils/send";
-import type { Config, TelegramLogLevel } from "@/types/config";
-import { handleError } from "@/utils/errorHandler";
-import { logger } from "@/utils/logger";
 import { autoRetry } from "@grammyjs/auto-retry";
 import { CommandGroup, commandNotFound, commands } from "@grammyjs/commands";
 import { AbortController } from "abort-controller";
@@ -18,6 +10,14 @@ import {
 } from "grammy";
 import { DateTime } from "luxon";
 import type { Other } from "node_modules/grammy/out/core/api";
+import type { BotContext } from "@/services/telegrambot/types/middleware";
+import {
+  sendNewAnnouncementsToChat,
+  sendNewOffersToChat,
+} from "@/services/telegrambot/utils/send";
+import type { Config, TelegramLogLevel } from "@/types/config";
+import { handleError } from "@/utils/errorHandler";
+import { logger } from "@/utils/logger";
 import {
   getChatsNeedingAnnouncements,
   getChatsNeedingOffers,

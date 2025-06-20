@@ -1,3 +1,6 @@
+import { DateTime } from "luxon";
+import type { BrowserContext, Locator, Page } from "playwright";
+import { errors } from "playwright";
 import { browserService } from "@/services/browser";
 import { takeScreenshot } from "@/services/browser/utils";
 import {
@@ -11,9 +14,6 @@ import type { Config } from "@/types/config";
 import type { NewOffer } from "@/types/database";
 import { ScraperError } from "@/types/errors";
 import { logger } from "@/utils/logger";
-import { DateTime } from "luxon";
-import type { BrowserContext, Locator, Page } from "playwright";
-import { errors } from "playwright";
 
 export interface CronConfig {
   schedule: string;

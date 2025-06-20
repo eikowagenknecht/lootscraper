@@ -1,5 +1,5 @@
-import { logger } from "@/utils/logger";
 import type { Kysely } from "kysely";
+import { logger } from "@/utils/logger";
 
 export const initialMigration = {
   async up(db: Kysely<unknown>): Promise<void> {

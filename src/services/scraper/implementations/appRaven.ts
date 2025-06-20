@@ -1,3 +1,5 @@
+import { ApolloClient, gql, InMemoryCache } from "@apollo/client/core";
+import { DateTime } from "luxon";
 import { BaseScraper, type CronConfig } from "@/services/scraper/base/scraper";
 import {
   OfferDuration,
@@ -7,8 +9,6 @@ import {
 } from "@/types/basic";
 import type { NewOffer } from "@/types/database";
 import { cleanGameTitle } from "@/utils";
-import { ApolloClient, InMemoryCache, gql } from "@apollo/client/core";
-import { DateTime } from "luxon";
 
 const BASE_URL = "https://appraven.net/appraven/graphql";
 

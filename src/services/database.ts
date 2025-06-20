@@ -1,11 +1,11 @@
 import { resolve } from "node:path";
+import SQLite from "better-sqlite3";
+import { Kysely, SqliteDialect } from "kysely";
 import type { Config } from "@/types/config";
 import type { Database as DatabaseType } from "@/types/database";
 import { DatabaseError } from "@/types/errors";
 import { logger } from "@/utils/logger";
 import { getDataPath } from "@/utils/path";
-import SQLite from "better-sqlite3";
-import { Kysely, SqliteDialect } from "kysely";
 import { migrateToLatest } from "./database/migrations/migrations";
 
 class DatabaseService {
