@@ -1,13 +1,13 @@
+import { Cron } from "croner";
+import { DateTime } from "luxon";
 import {
-  type ScraperClass,
-  type ScraperInstance,
   getEnabledScraperClasses,
   getScraperSchedule,
+  type ScraperClass,
+  type ScraperInstance,
 } from "@/services/scraper/utils";
 import type { Config, NewOffer } from "@/types";
 import { logger } from "@/utils/logger";
-import { Cron } from "croner";
-import { DateTime } from "luxon";
 import { browserService } from "./browser";
 import {
   addMissingFieldsToOffer,
@@ -94,7 +94,7 @@ class ScraperService {
   ): Promise<DateTime> {
     const schedule = getScraperSchedule(scraperClass);
 
-    let nextRun: DateTime | undefined = undefined;
+    let nextRun: DateTime | undefined;
     for (const cron of schedule.schedule) {
       const nextExecution = new Cron(cron.schedule, {
         timezone: cron.timezone ?? "UTC",

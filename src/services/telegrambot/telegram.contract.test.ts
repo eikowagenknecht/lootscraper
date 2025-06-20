@@ -1,8 +1,8 @@
 import { fail } from "node:assert";
-import { config } from "@/services/config";
-import { telegramBotService } from "@/services/telegrambot";
 import { DateTime } from "luxon";
 import { afterAll, beforeAll, describe, expect, test } from "vitest";
+import { config } from "@/services/config";
+import { telegramBotService } from "@/services/telegrambot";
 
 const runThis =
   process.env.VSCODE_PID !== undefined ||

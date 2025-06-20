@@ -1,3 +1,5 @@
+import { DateTime } from "luxon";
+import type { Locator } from "playwright";
 import { BaseScraper, type CronConfig } from "@/services/scraper/base/scraper";
 import { OfferCategory, ScraperError } from "@/types";
 import {
@@ -9,8 +11,6 @@ import {
 import type { NewOffer } from "@/types/database";
 import { cleanGameTitle } from "@/utils";
 import { logger } from "@/utils/logger";
-import { DateTime } from "luxon";
-import type { Locator } from "playwright";
 
 const BASE_URL = "https://humblebundle.com";
 const SEARCH_URL = `${BASE_URL}/store/search`;

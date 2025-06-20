@@ -1,7 +1,7 @@
-import { browserService } from "@/services/browser";
-import { config } from "@/services/config";
 import { DateTime } from "luxon";
 import { beforeAll, describe, expect, test } from "vitest";
+import { browserService } from "@/services/browser";
+import { config } from "@/services/config";
 import { AmazonLootScraper } from "./loot";
 
 const runThis =

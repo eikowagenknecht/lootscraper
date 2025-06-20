@@ -1,6 +1,6 @@
-import { logger } from "@/utils/logger";
-import { sql } from "kysely";
 import type { Kysely } from "kysely";
+import { sql } from "kysely";
+import { logger } from "@/utils/logger";
 
 export const nullabilityMigration = {
   async up(db: Kysely<unknown>): Promise<void> {

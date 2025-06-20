@@ -1,7 +1,7 @@
-import { DatabaseError } from "@/types/errors";
-import { logger } from "@/utils/logger";
 import { type Kysely, type Migration, Migrator } from "kysely";
 import { DateTime } from "luxon";
+import { DatabaseError } from "@/types/errors";
+import { logger } from "@/utils/logger";
 import { initialMigration } from "./001-initial";
 import { dropAlembicMigration } from "./002-alembic";
 import { indicesMigration } from "./003-indices";

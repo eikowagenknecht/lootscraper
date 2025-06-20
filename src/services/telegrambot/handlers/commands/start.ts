@@ -1,3 +1,5 @@
+import type { CommandContext } from "grammy";
+import { DateTime } from "luxon";
 import {
   activateTelegramChat,
   createTelegramChat,
@@ -12,8 +14,6 @@ import {
   OfferSource,
   OfferType,
 } from "@/types/basic";
-import type { CommandContext } from "grammy";
-import { DateTime } from "luxon";
 import { getCallerName, getDbChat, logCall, userCanControlBot } from ".";
 
 export async function handleStartCommand(

@@ -1,3 +1,5 @@
+import { type CommandContext, InlineKeyboard } from "grammy";
+import type { z } from "zod";
 import { hasTelegramSubscription } from "@/services/database/telegramSubscriptionRepository";
 import {
   type FeedCombination,
@@ -12,8 +14,6 @@ import { packData } from "@/services/telegrambot/utils/callbackPack";
 import { translationService } from "@/services/translation";
 import { OfferDuration } from "@/types/basic";
 import { logger } from "@/utils/logger";
-import { type CommandContext, InlineKeyboard } from "grammy";
-import type { z } from "zod";
 import { getDbChat, logCall, userCanControlBot } from ".";
 
 export async function handleManageCommand(

@@ -6,10 +6,10 @@ import {
   writeFileSync,
 } from "node:fs";
 import { resolve } from "node:path";
+import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import { config } from "@/services/config";
 import { ConfigError } from "@/types";
 import { getDataPath } from "@/utils/path";
-import { afterEach, beforeEach, describe, expect, test } from "vitest";
 
 describe("ConfigService", () => {
   const tempDir = resolve(getDataPath(), "test");

@@ -1,3 +1,4 @@
+import { DateTime } from "luxon";
 import {
   type FeedCombination,
   getEnabledFeedCombinations,
@@ -6,7 +7,6 @@ import type { Config } from "@/types/config";
 import type { Offer } from "@/types/database";
 import { calculateRealValidTo } from "@/utils";
 import { logger } from "@/utils/logger";
-import { DateTime } from "luxon";
 import { getActiveOffers, getAllOffers } from "./database/offerRepository";
 import { HtmlGenerator } from "./generators/html";
 import { RssGenerator } from "./generators/rss";

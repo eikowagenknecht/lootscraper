@@ -1,3 +1,5 @@
+import { GrammyError } from "grammy";
+import { DateTime } from "luxon";
 import { getNewAnnouncements } from "@/services/database/announcementRepository";
 import { getActiveOffers } from "@/services/database/offerRepository";
 import {
@@ -13,8 +15,6 @@ import { formatOfferMessage } from "@/services/telegrambot/utils/formatters";
 import { createOfferKeyboard } from "@/services/telegrambot/utils/keyboards";
 import { ChatType } from "@/types";
 import { logger } from "@/utils/logger";
-import { GrammyError } from "grammy";
-import { DateTime } from "luxon";
 
 export async function sendNewOffersToChat(
   dbChatId: number,

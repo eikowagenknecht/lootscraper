@@ -1,3 +1,5 @@
+import type { Filter } from "grammy";
+import type { z } from "zod";
 import {
   createTelegramSubscription,
   hasTelegramSubscription,
@@ -9,8 +11,6 @@ import { toggleSubscriptionSchema } from "@/services/telegrambot/types/callbacks
 import type { BotContext } from "@/services/telegrambot/types/middleware";
 import { unpackData } from "@/services/telegrambot/utils/callbackPack";
 import { logger } from "@/utils/logger";
-import type { Filter } from "grammy";
-import type { z } from "zod";
 
 export async function handleToggleCallback(
   ctx: Filter<BotContext, "callback_query:data">,

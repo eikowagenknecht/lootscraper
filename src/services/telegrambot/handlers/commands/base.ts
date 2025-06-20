@@ -1,6 +1,6 @@
+import type { Context } from "grammy";
 import { getTelegramChatByChatId } from "@/services/database/telegramChatRepository";
 import { logger } from "@/utils/logger";
-import type { Context } from "grammy";
 
 export function logCall(ctx: Context): void {
   const commandName = ctx.message?.text

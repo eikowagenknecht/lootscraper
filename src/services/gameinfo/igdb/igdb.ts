@@ -1,7 +1,7 @@
+import { DateTime } from "luxon";
 import type { NewIgdbInfo } from "@/types/database";
 import { getMatchScore, normalizeString } from "@/utils";
 import { logger } from "@/utils/logger";
-import { DateTime } from "luxon";
 
 interface IgdbAuth {
   accessToken: string;

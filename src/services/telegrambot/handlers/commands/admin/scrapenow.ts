@@ -1,7 +1,7 @@
+import type { CommandContext } from "grammy";
 import { config } from "@/services/config";
 import { scraperService } from "@/services/scraper";
 import type { BotContext } from "@/services/telegrambot/types/middleware";
-import type { CommandContext } from "grammy";
 import { logCall } from "..";
 
 export async function handleScrapeNowCommand(

@@ -1,9 +1,9 @@
+import { DateTime } from "luxon";
+import type { Locator, Page } from "playwright";
 import { BaseScraper, type CronConfig } from "@/services/scraper/base/scraper";
 import { OfferDuration, OfferPlatform, OfferSource } from "@/types/basic";
 import { BrowserError, ScraperError } from "@/types/errors";
 import { logger } from "@/utils/logger";
-import { DateTime } from "luxon";
-import type { Locator, Page } from "playwright";
 
 const BASE_URL = "https://gaming.amazon.com";
 export const OFFER_URL = `${BASE_URL}/home`;

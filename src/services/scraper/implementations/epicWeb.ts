@@ -1,3 +1,5 @@
+import { DateTime } from "luxon";
+import type { Locator, Page } from "playwright";
 import { scrollPageToBottom } from "@/services/browser/utils";
 import { BaseScraper, type CronConfig } from "@/services/scraper/base/scraper";
 import {
@@ -9,8 +11,6 @@ import {
 import type { NewOffer } from "@/types/database";
 import { cleanGameTitle } from "@/utils";
 import { logger } from "@/utils/logger";
-import { DateTime } from "luxon";
-import type { Locator, Page } from "playwright";
 
 const BASE_URL = "https://store.epicgames.com";
 const OFFER_URL = `${BASE_URL}/en-US/`;

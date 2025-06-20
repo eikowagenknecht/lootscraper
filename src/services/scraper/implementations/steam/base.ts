@@ -1,3 +1,5 @@
+import { DateTime } from "luxon";
+import type { Locator, Page } from "playwright";
 import { BaseScraper, type CronConfig } from "@/services/scraper/base/scraper";
 import { ScraperError } from "@/types";
 import {
@@ -9,8 +11,6 @@ import {
 import type { NewOffer } from "@/types/database";
 import { logger } from "@/utils/logger";
 import { cleanCombinedTitle, cleanGameTitle } from "@/utils/stringTools";
-import { DateTime } from "luxon";
-import type { Locator, Page } from "playwright";
 
 const BASE_URL = "https://store.steampowered.com";
 const SEARCH_URL = `${BASE_URL}/search/`;

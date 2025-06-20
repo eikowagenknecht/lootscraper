@@ -1,3 +1,4 @@
+import type { Filter } from "grammy";
 import { getOfferById } from "@/services/database/offerRepository";
 import { getTelegramChatByChatId } from "@/services/database/telegramChatRepository";
 import { offerSchema } from "@/services/telegrambot/types/callbacks";
@@ -6,7 +7,6 @@ import { unpackData } from "@/services/telegrambot/utils/callbackPack";
 import { formatOfferMessage } from "@/services/telegrambot/utils/formatters";
 import { createOfferKeyboard } from "@/services/telegrambot/utils/keyboards";
 import { logger } from "@/utils/logger";
-import type { Filter } from "grammy";
 
 export async function handleOfferDetailsCallback(
   ctx: Filter<BotContext, "callback_query:data">,

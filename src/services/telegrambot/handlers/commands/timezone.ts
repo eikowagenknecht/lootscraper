@@ -1,12 +1,12 @@
+import type { CommandContext } from "grammy";
+import type { InlineKeyboardButton } from "grammy/types";
+import type { z } from "zod";
 import {
   closeSchema,
   timezoneSchema,
 } from "@/services/telegrambot/types/callbacks";
 import type { BotContext } from "@/services/telegrambot/types/middleware";
 import { packData } from "@/services/telegrambot/utils/callbackPack";
-import type { CommandContext } from "grammy";
-import type { InlineKeyboardButton } from "grammy/types";
-import type { z } from "zod";
 import { logCall, userCanControlBot } from ".";
 
 export async function handleTimezoneCommand(

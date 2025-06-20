@@ -1,8 +1,8 @@
 import { resolve } from "node:path";
-import { logger } from "@/utils/logger";
-import { getDataPath } from "@/utils/path";
 import { DateTime } from "luxon";
 import type { Page } from "playwright";
+import { logger } from "@/utils/logger";
+import { getDataPath } from "@/utils/path";
 
 /**
  * Scroll down to the bottom of the current page.

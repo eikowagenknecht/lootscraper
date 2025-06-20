@@ -1,7 +1,7 @@
-import { logger } from "@/utils/logger";
-import { sql } from "kysely";
 import type { Kysely } from "kysely";
+import { sql } from "kysely";
 import { DateTime } from "luxon";
+import { logger } from "@/utils/logger";
 
 interface Row {
   id: number;

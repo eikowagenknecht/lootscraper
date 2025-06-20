@@ -1,3 +1,4 @@
+import { DateTime } from "luxon";
 import { BaseScraper, type CronConfig } from "@/services/scraper/base/scraper";
 import {
   OfferDuration,
@@ -8,8 +9,6 @@ import {
 import type { NewOffer } from "@/types/database";
 import { cleanGameTitle } from "@/utils";
 import { logger } from "@/utils/logger";
-
-import { DateTime } from "luxon";
 
 const BASE_URL =
   "https://egs-platform-service.store.epicgames.com/api/v2/public/discover/home";

@@ -1,10 +1,10 @@
+import { init, t } from "i18next";
 import {
   OfferDuration,
   type OfferPlatform,
   type OfferSource,
   type OfferType,
 } from "@/types/basic";
-import { init, t } from "i18next";
 
 const resources = {
   en: {

@@ -1,6 +1,6 @@
+import { beforeAll, beforeEach, describe, expect, test } from "vitest";
 import { browserService } from "@/services/browser";
 import { config } from "@/services/config";
-import { beforeAll, beforeEach, describe, expect, test } from "vitest";
 import { SteamClient } from "./steam";
 
 const runThis =

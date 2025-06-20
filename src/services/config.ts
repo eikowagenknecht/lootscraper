@@ -1,12 +1,12 @@
 import { copyFileSync, mkdirSync, readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
-import { type ScraperClass, allScrapers } from "@/services/scraper/utils";
+import { parse } from "yaml";
+import { ZodError } from "zod";
+import { allScrapers, type ScraperClass } from "@/services/scraper/utils";
 import { ConfigError, InfoSource } from "@/types";
 import { type Config, ConfigSchema } from "@/types/config";
 import { logger } from "@/utils/logger";
 import { getDataPath, getTemplatesPath } from "@/utils/path";
-import { parse } from "yaml";
-import { ZodError } from "zod";
 
 class ConfigValidationError extends ConfigError {
   constructor(

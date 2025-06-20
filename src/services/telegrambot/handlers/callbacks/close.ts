@@ -1,8 +1,8 @@
+import type { Filter } from "grammy";
 import { closeSchema } from "@/services/telegrambot/types/callbacks";
 import type { BotContext } from "@/services/telegrambot/types/middleware";
 import { unpackData } from "@/services/telegrambot/utils/callbackPack";
 import { logger } from "@/utils/logger";
-import type { Filter } from "grammy";
 
 export async function handleCloseCallback(
   ctx: Filter<BotContext, "callback_query:data">,

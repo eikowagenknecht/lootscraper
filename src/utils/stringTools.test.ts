@@ -1,6 +1,6 @@
+import { beforeAll, describe, expect, test } from "vitest";
 import { translationService } from "@/services/translation";
 import { OfferDuration, OfferPlatform, OfferSource, OfferType } from "@/types";
-import { beforeAll, describe, expect, test } from "vitest";
 import {
   cleanCombinedTitle,
   cleanGameTitle,
