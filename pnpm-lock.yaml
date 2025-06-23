@@ -24,8 +24,8 @@ importers:
         specifier: 5.0.5
         version: 5.0.5
       better-sqlite3:
-        specifier: 11.10.0
-        version: 11.10.0
+        specifier: 12.0.0
+        version: 12.0.0
       croner:
         specifier: 9.0.0
         version: 9.0.0
@@ -1351,8 +1351,9 @@ packages:
   before-after-hook@4.0.0:
     resolution: {integrity: sha512-q6tR3RPqIB1pMiTRMFcZwuG5T8vwp+vUvEG0vuI6B+Rikh5BfPp2fQ82c925FOs+b0lcFQ8CFrL+KbilfZFhOQ==}
 
-  better-sqlite3@11.10.0:
-    resolution: {integrity: sha512-EwhOpyXiOEL/lKzHz9AW1msWFNzGc/z+LzeB3/jnFJpxu+th2yqvzsSWas1v9jgs9+xiXJcD5A8CJxAG2TaghQ==}
+  better-sqlite3@12.0.0:
+    resolution: {integrity: sha512-ElLgwbEth4MHBrDXEqzkE7Hm2+ACw5+KKBhkLArcjJrVFJyOXvzcE/if2dx7/m5pXTc8vqJjsCQUt1AFQY+TTQ==}
+    engines: {node: 20.x || 22.x || 23.x || 24.x}
 
   bindings@1.5.0:
     resolution: {integrity: sha512-p2q/t/mhvuOj/UeLlV6566GD/guowlr0hHxClI0W9m7MWYkL1F0hLo+0Aexs9HSPCtR1SXQ0TD3MMKrXZajbiQ==}
@@ -1618,8 +1619,8 @@ packages:
   enabled@2.0.0:
     resolution: {integrity: sha512-AKrN98kuwOzMIdAizXGI86UFBoo26CL21UM763y1h/GMSJ4/OHU9k2YlsmBpyScFo/wbLzWQJBMCW4+IO3/+OQ==}
 
-  end-of-stream@1.4.4:
-    resolution: {integrity: sha512-+uw1inIHVPQoaVuHzRyXd21icM+cnt4CzD5rW+NC1wjOUSTOs+Te7FOv7AhN7vS9x/oIyhLP5PR1H+phQAHu5Q==}
+  end-of-stream@1.4.5:
+    resolution: {integrity: sha512-ooEGc6HP26xXq/N+GCGOT0JKCLDGrq2bQUZrQ7gyrJiZANJ/8YDTxTpQBXGMn+WbIQXNVpyWymm7KYVICQnyOg==}
 
   env-ci@11.1.1:
     resolution: {integrity: sha512-mT3ks8F0kwpo7SYNds6nWj0PaRh+qJxIeBVBXAKTN9hphAzZv7s0QAZQbqnB1fAv/r4pJUGE15BV9UrS31FP2w==}
@@ -2839,8 +2840,8 @@ packages:
   proto-list@1.2.4:
     resolution: {integrity: sha512-vtK/94akxsTMhe0/cbfpR+syPuszcuwhqVjJq26CuNDgFGj682oRBXOP5MJpv2r7JtE8MsiepGIqvvOTBwn2vA==}
 
-  pump@3.0.2:
-    resolution: {integrity: sha512-tUPXtzlGM8FE3P0ZL6DVs/3P58k9nk8/jZeQCurTJylQA8qFYzHFfhBJkuqyE0FifOsQ0uKWekiZ5g8wtr28cw==}
+  pump@3.0.3:
+    resolution: {integrity: sha512-todwxLMY7/heScKmntwQG8CXVkWUOdYxIvY2s0VWAAMh/nd8SoYiRaKjlr7+iCs984f2P8zvrfWcDDYVb73NfA==}
 
   punycode@2.3.1:
     resolution: {integrity: sha512-vYt7UD1U9Wg6138shLtLOvdAu+8DsC/ilFtEVHcH+wydcSpNE20AfSOduf6MkRFahL5FY7X1oU7nKVZFtfq8Fg==}
@@ -4607,7 +4608,7 @@ snapshots:
 
   before-after-hook@4.0.0: {}
 
-  better-sqlite3@11.10.0:
+  better-sqlite3@12.0.0:
     dependencies:
       bindings: 1.5.0
       prebuild-install: 7.1.3
@@ -4869,7 +4870,7 @@ snapshots:
 
   enabled@2.0.0: {}
 
-  end-of-stream@1.4.4:
+  end-of-stream@1.4.5:
     dependencies:
       once: 1.4.0
 
@@ -6003,7 +6004,7 @@ snapshots:
       mkdirp-classic: 0.5.3
       napi-build-utils: 2.0.0
       node-abi: 3.75.0
-      pump: 3.0.2
+      pump: 3.0.3
       rc: 1.2.8
       simple-get: 4.0.1
       tar-fs: 2.1.3
@@ -6027,9 +6028,9 @@ snapshots:
 
   proto-list@1.2.4: {}
 
-  pump@3.0.2:
+  pump@3.0.3:
     dependencies:
-      end-of-stream: 1.4.4
+      end-of-stream: 1.4.5
       once: 1.4.0
 
   punycode@2.3.1: {}
@@ -6343,13 +6344,13 @@ snapshots:
     dependencies:
       chownr: 1.1.4
       mkdirp-classic: 0.5.3
-      pump: 3.0.2
+      pump: 3.0.3
       tar-stream: 2.2.0
 
   tar-stream@2.2.0:
     dependencies:
       bl: 4.1.0
-      end-of-stream: 1.4.4
+      end-of-stream: 1.4.5
       fs-constants: 1.0.0
       inherits: 2.0.4
       readable-stream: 3.6.2
