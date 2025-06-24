@@ -24,7 +24,7 @@ Choose your preferred way to get notifications:
 - Humble Bundle
 - itch.io
 - Apple App Store
-- Google Play Store
+- Google Play
 
 ## 📢 News
 
