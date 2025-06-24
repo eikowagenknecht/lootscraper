@@ -14,7 +14,7 @@ const resources = {
         AMAZON: "Amazon Prime",
         EPIC: "Epic Games",
         GOG: "GOG",
-        GOOGLE: "Google Play Store",
+        GOOGLE: "Google Play",
         HUMBLE: "Humble Bundle",
         ITCH: "itch.io",
         STEAM: "Steam",
