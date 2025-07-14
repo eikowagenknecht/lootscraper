@@ -1,7 +1,7 @@
 import { copyFileSync, mkdirSync, readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { parse } from "yaml";
-import { ZodError } from "zod";
+import * as z from "zod";
 import { allScrapers, type ScraperClass } from "@/services/scraper/utils";
 import { ConfigError, InfoSource } from "@/types";
 import { type Config, ConfigSchema } from "@/types/config";
@@ -11,7 +11,7 @@ import { getDataPath, getTemplatesPath } from "@/utils/path";
 class ConfigValidationError extends ConfigError {
   constructor(
     message: string,
-    public readonly validationErrors: ZodError[],
+    public readonly validationErrors: z.ZodError[],
   ) {
     super(`${message}: ${validationErrors.map((e) => e.message).join(", ")}`);
   }
@@ -86,7 +86,7 @@ class ConfigService {
 
       if (unknownFieldErrors.length > 0) {
         throw new ConfigValidationError("Unknown fields in config", [
-          new ZodError(unknownFieldErrors),
+          new z.ZodError(unknownFieldErrors),
         ]);
       }
     }
@@ -99,165 +99,175 @@ class ConfigService {
   }
 
   private validateConfigConsistency(config: Config): void {
-    const errors: ZodError[] = [];
+    const configConsistencySchema = z
+      .object({
+        actions: z.object({
+          uploadToFtp: z.boolean(),
+          telegramBot: z.boolean(),
+          generateFeed: z.boolean(),
+          scrapeOffers: z.boolean(),
+        }),
+        ftp: z.object({
+          host: z.string().optional(),
+          user: z.string().optional(),
+          password: z.string().optional(),
+        }),
+        telegram: z.object({
+          accessToken: z.string().optional(),
+          botOwnerUserId: z.string().optional(),
+        }),
+        feed: z.object({
+          urlPrefix: z.string(),
+          urlAlternate: z.string(),
+        }),
+        igdb: z.object({
+          clientId: z.string().optional(),
+          clientSecret: z.string().optional(),
+        }),
+        scraper: z.object({
+          infoSources: z.array(z.enum(InfoSource)),
+          enabledScrapers: z.array(z.string()),
+        }),
+      })
+      .check((ctx) => {
+        const config = ctx.value;
 
-    // Validate that actions have required configurations
-    if (config.actions.uploadToFtp && !config.ftp.host) {
-      errors.push(
-        new ZodError([
-          {
-            code: "custom",
-            path: ["ftp", "host"],
-            message: "FTP host is required when uploadToFtp is enabled",
-          },
-        ]),
-      );
-    }
-
-    if (config.actions.uploadToFtp && !config.ftp.user) {
-      errors.push(
-        new ZodError([
-          {
-            code: "custom",
-            path: ["ftp", "user"],
-            message: "FTP user is required when uploadToFtp is enabled",
-          },
-        ]),
-      );
-    }
-
-    if (config.actions.uploadToFtp && !config.ftp.password) {
-      errors.push(
-        new ZodError([
-          {
-            code: "custom",
-            path: ["ftp", "password"],
-            message: "FTP password is required when uploadToFtp is enabled",
-          },
-        ]),
-      );
-    }
-
-    if (config.actions.telegramBot && !config.telegram.accessToken) {
-      errors.push(
-        new ZodError([
-          {
-            code: "custom",
-            path: ["telegram", "accessToken"],
-            message:
-              "Telegram access token is required when telegramBot is enabled",
-          },
-        ]),
-      );
-    }
-
-    if (config.actions.telegramBot && !config.telegram.botOwnerUserId) {
-      errors.push(
-        new ZodError([
-          {
-            code: "custom",
-            path: ["telegram", "botOwnerUserId"],
-            message:
-              "Bot owner user ID is required when telegramBot is enabled",
-          },
-        ]),
-      );
-    }
-
-    // Validate that feed URLs are valid when feed generation is enabled
-    if (config.actions.generateFeed) {
-      try {
-        new URL(config.feed.urlPrefix);
-        new URL(config.feed.urlAlternate);
-      } catch {
-        errors.push(
-          new ZodError([
-            {
+        // Validate FTP configuration when uploadToFtp is enabled
+        if (config.actions.uploadToFtp) {
+          if (!config.ftp.host) {
+            ctx.issues.push({
               code: "custom",
-              path: ["feed"],
-              message: "Invalid feed URLs provided",
-            },
-          ]),
-        );
-      }
-    }
-
-    // Validate that igdb credentials are provided when using the igdb scraper
-    if (
-      config.scraper.infoSources.includes(InfoSource.IGDB) &&
-      !config.igdb.clientId
-    ) {
-      errors.push(
-        new ZodError([
-          {
-            code: "custom",
-            path: ["igdb", "clientId"],
-            message:
-              "IGDB client ID is required when IGDB is used as an info source",
-          },
-        ]),
-      );
-    }
-
-    if (
-      config.scraper.infoSources.includes(InfoSource.IGDB) &&
-      !config.igdb.clientSecret
-    ) {
-      errors.push(
-        new ZodError([
-          {
-            code: "custom",
-            path: ["igdb", "clientSecret"],
-            message:
-              "IGDB client secret is required when IGDB is used as an info source",
-          },
-        ]),
-      );
-    }
-
-    // Validate that scrapers are defined when scraping is enabled
-    if (
-      config.actions.scrapeOffers &&
-      config.scraper.enabledScrapers.length === 0
-    ) {
-      errors.push(
-        new ZodError([
-          {
-            code: "custom",
-            path: ["scraper", "enabledScrapers"],
-            message:
-              "At least one scraper must be defined when scraping is enabled",
-          },
-        ]),
-      );
-    }
-
-    // Validate that only valid scrapers are enabled
-    if (config.actions.scrapeOffers) {
-      for (const scraper of config.scraper.enabledScrapers) {
-        const scraperList = allScrapers.map((s: ScraperClass) =>
-          s.prototype.getScraperName(),
-        );
-
-        if (!scraperList.includes(scraper)) {
-          errors.push(
-            new ZodError([
-              {
-                code: "custom",
-                path: ["scraper", "enabledScrapers"],
-                message: `Invalid scraper enabled: ${scraper}`,
-              },
-            ]),
-          );
+              path: ["ftp", "host"],
+              message: "FTP host is required when uploadToFtp is enabled",
+              input: config.ftp.host,
+            });
+          }
+          if (!config.ftp.user) {
+            ctx.issues.push({
+              code: "custom",
+              path: ["ftp", "user"],
+              message: "FTP user is required when uploadToFtp is enabled",
+              input: config.ftp.user,
+            });
+          }
+          if (!config.ftp.password) {
+            ctx.issues.push({
+              code: "custom",
+              path: ["ftp", "password"],
+              message: "FTP password is required when uploadToFtp is enabled",
+              input: config.ftp.password,
+            });
+          }
         }
-      }
-    }
 
-    if (errors.length > 0) {
-      throw new ConfigValidationError(
-        "Config consistency validation failed",
-        errors,
-      );
+        // Validate Telegram configuration when telegramBot is enabled
+        if (config.actions.telegramBot) {
+          if (!config.telegram.accessToken) {
+            ctx.issues.push({
+              code: "custom",
+              path: ["telegram", "accessToken"],
+              message:
+                "Telegram access token is required when telegramBot is enabled",
+              input: config.telegram.accessToken,
+            });
+          }
+          if (!config.telegram.botOwnerUserId) {
+            ctx.issues.push({
+              code: "custom",
+              path: ["telegram", "botOwnerUserId"],
+              message:
+                "Bot owner user ID is required when telegramBot is enabled",
+              input: config.telegram.botOwnerUserId,
+            });
+          }
+        }
+
+        // Validate feed URLs when feed generation is enabled
+        if (config.actions.generateFeed) {
+          try {
+            new URL(config.feed.urlPrefix);
+          } catch {
+            ctx.issues.push({
+              code: "custom",
+              path: ["feed", "urlPrefix"],
+              message: "Invalid feed URL prefix provided",
+              input: config.feed.urlPrefix,
+            });
+          }
+
+          try {
+            new URL(config.feed.urlAlternate);
+          } catch {
+            ctx.issues.push({
+              code: "custom",
+              path: ["feed", "urlAlternate"],
+              message: "Invalid feed alternate URL provided",
+              input: config.feed.urlAlternate,
+            });
+          }
+        }
+
+        // Validate IGDB credentials when IGDB is used as info source
+        if (config.scraper.infoSources.includes(InfoSource.IGDB)) {
+          if (!config.igdb.clientId) {
+            ctx.issues.push({
+              code: "custom",
+              path: ["igdb", "clientId"],
+              message:
+                "IGDB client ID is required when IGDB is used as an info source",
+              input: config.igdb.clientId,
+            });
+          }
+          if (!config.igdb.clientSecret) {
+            ctx.issues.push({
+              code: "custom",
+              path: ["igdb", "clientSecret"],
+              message:
+                "IGDB client secret is required when IGDB is used as an info source",
+              input: config.igdb.clientSecret,
+            });
+          }
+        }
+
+        // Validate scrapers configuration when scraping is enabled
+        if (config.actions.scrapeOffers) {
+          if (config.scraper.enabledScrapers.length === 0) {
+            ctx.issues.push({
+              code: "custom",
+              path: ["scraper", "enabledScrapers"],
+              message:
+                "At least one scraper must be defined when scraping is enabled",
+              input: config.scraper.enabledScrapers,
+            });
+          }
+
+          // Validate that only valid scrapers are enabled
+          const scraperList = allScrapers.map((s: ScraperClass) =>
+            s.prototype.getScraperName(),
+          );
+
+          for (const [
+            index,
+            scraper,
+          ] of config.scraper.enabledScrapers.entries()) {
+            if (!scraperList.includes(scraper)) {
+              ctx.issues.push({
+                code: "custom",
+                path: ["scraper", "enabledScrapers", index],
+                message: `Invalid scraper enabled: ${scraper}`,
+                input: scraper,
+              });
+            }
+          }
+        }
+      });
+
+    const result = configConsistencySchema.safeParse(config);
+
+    if (!result.success) {
+      throw new ConfigValidationError("Config consistency validation failed", [
+        result.error,
+      ]);
     }
   }
 

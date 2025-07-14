@@ -30,7 +30,7 @@ export const ConfigSchema = z.object({
   }),
   scraper: z.object({
     enabledScrapers: z.array(z.string()).default([]),
-    infoSources: z.array(z.nativeEnum(InfoSource)).default([]),
+    infoSources: z.array(z.enum(InfoSource)).default([]),
   }),
   actions: z.object({
     scrapeOffers: z.boolean().default(false),

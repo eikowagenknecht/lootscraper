@@ -8,10 +8,10 @@ import {
 
 export const toggleSubscriptionSchema = z.object({
   action: z.literal("toggle"),
-  source: z.nativeEnum(OfferSource),
-  type: z.nativeEnum(OfferType),
-  duration: z.nativeEnum(OfferDuration),
-  platform: z.nativeEnum(OfferPlatform),
+  source: z.enum(OfferSource),
+  type: z.enum(OfferType),
+  duration: z.enum(OfferDuration),
+  platform: z.enum(OfferPlatform),
 });
 
 export const timezoneSchema = z.object({
