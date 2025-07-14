@@ -9,7 +9,7 @@
   "bin": {
     "lootscraper": "./dist/main.js"
   },
-  "packageManager": "pnpm@10.12.1",
+  "packageManager": "pnpm@10.13.1",
   "engines": {
     "node": ">=22.0.0",
     "pnpm": ">=10.0.0"
@@ -19,6 +19,7 @@
       "@biomejs/biome",
       "better-sqlite3",
       "esbuild",
+      "oxc-resolver",
       "unrs-resolver"
     ],
     "ignoredBuiltDependencies": [
@@ -70,7 +71,7 @@
     "winston-daily-rotate-file": "5.0.0",
     "winston-transport": "4.9.0",
     "yaml": "2.8.0",
-    "zod": "3.25.74"
+    "zod": "4.0.5"
   },
   "devDependencies": {
     "@biomejs/biome": "2.1.1",

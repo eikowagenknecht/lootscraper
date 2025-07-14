@@ -246,23 +246,27 @@ export function unpackData<T extends z.ZodObject<z.ZodRawShape>>(
   const data = Object.fromEntries(
     keys.map((field, index) => {
       const value = values[index] ?? "";
-      const fieldSchema = (
-        schema.shape as Record<keyof z.infer<T>, z.ZodTypeAny>
-      )[field];
+      const fieldSchema = (schema.shape as Record<keyof z.infer<T>, z.ZodType>)[
+        field
+      ];
 
       // Check if the field schema expects a number (handles nullable/optional)
-      if (fieldSchema.isNullable() && value === SPECIAL_NULL)
+      // Formerly was isNullable() and isOptional()
+      if (fieldSchema.safeParse(null).success && value === SPECIAL_NULL)
         return [field, null];
-      if (fieldSchema.isOptional() && value === SPECIAL_UNDEFINED)
+      if (
+        fieldSchema.safeParse(undefined).success &&
+        value === SPECIAL_UNDEFINED
+      )
         return [field, undefined];
 
       // Get the innermost schema type (unwraps nullable/optional)
-      function unwrapSchema(schema: z.ZodTypeAny): z.ZodTypeAny {
+      function unwrapSchema(schema: z.ZodType): z.ZodType {
         if (schema instanceof z.ZodNullable) {
-          return unwrapSchema(schema.unwrap() as z.ZodTypeAny);
+          return unwrapSchema(schema.unwrap() as z.ZodType);
         }
         if (schema instanceof z.ZodOptional)
-          return unwrapSchema(schema.unwrap() as z.ZodTypeAny);
+          return unwrapSchema(schema.unwrap() as z.ZodType);
         return schema;
       }
 

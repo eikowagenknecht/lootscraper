@@ -163,7 +163,7 @@ describe("Callback Pack", () => {
     }
 
     const EnumSchema = z.object({
-      enumValue: z.nativeEnum(TestEnum),
+      enumValue: z.enum(TestEnum),
     });
 
     test("should handle enum values", () => {
@@ -254,7 +254,7 @@ describe("Callback Pack", () => {
   describe("Schema Validation", () => {
     const ValidationSchema = z.object({
       id: z.number().positive(),
-      email: z.string().email(),
+      email: z.email(),
       status: z.enum(["active", "inactive"]),
     });
 
@@ -460,7 +460,7 @@ describe("Callback Pack", () => {
 
       const ExtendedSchema = BaseSchema.extend({
         age: z.number(),
-        email: z.string().email(),
+        email: z.email(),
       });
 
       test("should handle extended schemas", () => {
@@ -489,7 +489,7 @@ describe("Callback Pack", () => {
 
       test("should preserve original error messages from Zod", () => {
         const ValidationSchema = z.object({
-          email: z.string().email(),
+          email: z.email(),
           age: z.number().min(18),
         });
 
