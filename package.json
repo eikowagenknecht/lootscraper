@@ -70,7 +70,7 @@
     "winston-daily-rotate-file": "5.0.0",
     "winston-transport": "4.9.0",
     "yaml": "2.8.0",
-    "zod": "3.25.74"
+    "zod": "4.0.5"
   },
   "devDependencies": {
     "@biomejs/biome": "2.1.1",
