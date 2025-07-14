@@ -141,8 +141,7 @@ I suggest the following settings:
 ## Automatically Claim Free Games
 
 Now that you get notified about all the free games, you might want to make the process of claiming them even easier.
-For this, I created some userscripts that can be used with Tampermonkey / Greasemonkey / Violentmonkey.
-You can find them [here](https://eikowagenknecht.de/posts/userscripts-to-claim-free-games/).
+For this, I created some [userscripts](https://eikowagenknecht.de/posts/userscripts-to-claim-free-games/) that can be used with Tampermonkey / Greasemonkey / Violentmonkey.
 
 ## 🚀 Power Users and Developers
 
