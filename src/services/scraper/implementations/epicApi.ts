@@ -1,5 +1,6 @@
 import {
   ApolloClient,
+  createHttpLink,
   type DefaultOptions,
   gql,
   InMemoryCache,
@@ -15,7 +16,7 @@ import {
 import type { NewOffer } from "@/types/database";
 import { cleanGameTitle } from "@/utils";
 
-const BASE_URL = "https://graphql.epicgames.com/graphql";
+const BASE_URL = "https://store.epicgames.com/graphql";
 
 interface CatalogData {
   Catalog: {
@@ -221,8 +222,21 @@ export class EpicGamesApiScraper extends BaseScraper {
       },
     };
 
-    const client = new ApolloClient({
+    const httpLink = createHttpLink({
       uri: BASE_URL,
+      fetch: async (uri, options) => {
+        return fetch(uri, {
+          ...options,
+          headers: {
+            ...(options?.headers as Record<string, string>),
+            Accept: "application/json",
+          },
+        });
+      },
+    });
+
+    const client = new ApolloClient({
+      link: httpLink,
       cache: new InMemoryCache(),
       defaultOptions: defaultClientOptions,
     });
