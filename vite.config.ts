@@ -28,7 +28,20 @@ export default defineConfig({
     coverage: {
       provider: "v8",
       reporter: ["text", "html"],
-      exclude: ["node_modules/**", "dist/**", "**/types/**"],
+      exclude: [
+        "node_modules/**",
+        "dist/**",
+        "**/types/**",
+        "**/*.test.ts",
+        "**/*.contract.test.ts",
+        "tests/**",
+        "vitest-setup.ts",
+        "vite.config.ts",
+        "eslint.config.ts",
+        "commitlint.config.ts",
+        "global.d.ts",
+        "src/services/database/migrations/**",
+      ],
     },
   },
 });
