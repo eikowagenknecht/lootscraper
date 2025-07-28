@@ -58,7 +58,7 @@
     "basic-ftp": "5.0.5",
     "better-sqlite3": "12.2.0",
     "croner": "9.1.0",
-    "cross-env": "7.0.3",
+    "cross-env": "10.0.0",
     "grammy": "1.37.0",
     "graphql": "16.11.0",
     "handlebars": "4.7.8",
