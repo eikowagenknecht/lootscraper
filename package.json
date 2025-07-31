@@ -9,7 +9,7 @@
   "bin": {
     "lootscraper": "./dist/main.js"
   },
-  "packageManager": "pnpm@10.13.1",
+  "packageManager": "pnpm@10.14.0",
   "engines": {
     "node": ">=22.0.0",
     "pnpm": ">=10.0.0"
