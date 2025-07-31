@@ -150,12 +150,14 @@ If you want to do this or even contribute, please see the [README for developers
 
 ## 📊 Project Stats
 
-- More than 500 active Telegram bot users
-- Over 100 GitHub stars
+- 800+ active Telegram bot users
+- 200+ GitHub stars
 - ~2M monthly RSS feed hits
 - Most popular platform: Epic
 
 [![Star History Chart](https://api.star-history.com/svg?repos=eikowagenknecht/lootscraper&type=Date)](https://star-history.com/#eikowagenknecht/lootscraper&Date)
+
+🎉 This must be the hockey stick curve the VCs are always talking about!
 
 ## 📝 Feedback
 
