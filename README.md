@@ -174,7 +174,7 @@ Looking for different approaches to tracking free games? Check out these other g
 
 ## License
 
-[![CC BY-NC-SA 4.0][cc-by-nc-sa-image]][cc-by-nc-sa]
+[![MIT License][mit-image]][mit]
 
-[cc-by-nc-sa]: http://creativecommons.org/licenses/by-nc-sa/4.0/
-[cc-by-nc-sa-image]: https://licensebuttons.net/l/by-nc-sa/4.0/88x31.png
+[mit]: https://opensource.org/licenses/MIT
+[mit-image]: https://img.shields.io/badge/License-MIT-yellow.svg
