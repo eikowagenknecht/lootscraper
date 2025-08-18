@@ -163,7 +163,4 @@ Looking for different approaches to tracking free games? Check out these other g
 
 ## License
 
-[![MIT License][mit-image]][mit]
-
-[mit]: https://opensource.org/licenses/MIT
-[mit-image]: https://img.shields.io/badge/License-MIT-yellow.svg
+![GitHub License](https://img.shields.io/github/license/eikowagenknecht/lootscraper)
