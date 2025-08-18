@@ -26,17 +26,6 @@ Choose your preferred way to get notifications:
 - Apple App Store
 - Google Play
 
-## 📢 News
-
-### LootScraper 2.0 is live (2025-02-10)
-
-- This is a complete TypeScript rewrite for better speed and reliability.
-- New: Epic Mobile Games Store support (iOS/Android)
-
-There may still be some bugs, so please report them if you find any.
-
-Happy looting! 🎮
-
 ## 📋 Detailed Instructions
 
 ### Telegram bot
