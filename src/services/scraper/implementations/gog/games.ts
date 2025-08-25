@@ -202,7 +202,7 @@ export class GogGamesScraper extends GogBaseScraper {
     let validTo: DateTime | null = null;
     if (rawOffer.validTo) {
       try {
-        const validToUnix = Number.parseInt(rawOffer.validTo);
+        const validToUnix = Number.parseInt(rawOffer.validTo, 10);
         validTo = DateTime.fromMillis(validToUnix);
       } catch (error) {
         logger.error(
