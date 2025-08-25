@@ -34,4 +34,6 @@ coverage/
 # Cache
 .eslintcache
 .prettier-cache
-.qodo
+
+# Local files
+*.local.*
