@@ -1,6 +1,6 @@
 # LootScraper
 
-![image](images/ls_2880x1024.png)
+![image](https://github.com/user-attachments/assets/e33cb0f0-d64b-4d11-9f86-5d8db22f9f87)
 
 Never miss a free game again!
 LootScraper automatically tracks and notifies you about free games from multiple platforms like Amazon Prime, Epic Games (PC and Mobile), Steam, and more.
