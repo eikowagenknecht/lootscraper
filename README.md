@@ -2,14 +2,18 @@
 
 ![image](https://github.com/user-attachments/assets/e33cb0f0-d64b-4d11-9f86-5d8db22f9f87)
 
+A tool to automatically find and notify you about free games and loot across multiple platforms.
+
 Never miss a free game again!
-LootScraper automatically tracks and notifies you about free games from multiple platforms like Amazon Prime, Epic Games (PC and Mobile), Steam, and more.
+
+LootScraper automatically notifies you about new free games from platforms like Amazon Prime, Epic Games (PC and Mobile), Steam, and more.
 
 ## 🎮 Quick Start
 
 Choose your preferred way to get notifications:
 
-- [Telegram bot](#telegram-bot) - Customizable notifications for specific platforms
+- [Telegram bot](#telegram-bot) - Customizable notifications for specific platforms (recommended)
+- [Telegram channels](#telegram-channels) - Pre-filtered channels for most platforms
 - [RSS feeds](#rss-feeds) - Subscribe using your favorite RSS reader
 - [E-Mail Notifications](#e-mail) - Get offers directly in your inbox
 - [Discord Integration](#discord) -  Post offers to your Discord server
@@ -26,22 +30,24 @@ Choose your preferred way to get notifications:
 - Apple App Store
 - Google Play
 
-## 📋 Detailed Instructions
+## 📬 Notification Methods
 
 ### Telegram bot
 
-The [Telegram LootScraperBot](https://t.me/LootScraperBot) offers:
+The easiest way to get notifications is through the Telegram bot.
 
-- All offers in one chat
-- Customizable platform subscriptions
-- Group and channel support (including threaded groups)
-- Instant notifications
+1. Open Telegram and search for [@LootScraperBot](https://t.me/LootScraperBot)
+2. Start the bot with `/start`
+3. Use `/manage` to choose your platforms
+4. Use `/help` to see all available commands
 
-![image](https://github.com/user-attachments/assets/d7b0436b-b3b1-4693-aaa3-be9a477d98e3)
+It will send you a message whenever a new free game or loot is available on your selected platforms.
+You can also add it to your groups and channels if you want.
 
 ### Telegram channels
 
-There are pre-filtered channels for most platforms:
+There are pre-filtered channels for most platforms.
+Just join the ones you are interested in:
 
 - Amazon Prime ([games](https://t.me/free_amazon_games_ls) and [ingame loot](https://t.me/free_amazon_loot_ls))
 - [Epic Games](https://t.me/free_epic_games_ls)
@@ -56,7 +62,7 @@ If you miss any, please let me know and I'll add them.
 
 ### RSS feeds
 
-Subscribe to individual platform feeds or get all offers in [one feed](https://feed.phenx.de/lootscraper.xml):
+If you prefer good old newsreaders, you can subscribe to the individual platform feeds below or get all offers in [one huge feed](https://feed.phenx.de/lootscraper.xml):
 
 - Amazon Prime ([games](https://feed.phenx.de/lootscraper_amazon_game.xml) and [ingame loot](https://feed.phenx.de/lootscraper_amazon_loot.xml))
 - [Epic Games](https://feed.phenx.de/lootscraper_epic_game.xml)
@@ -112,7 +118,8 @@ If you want to get the offers by email, you can use free services like [Blogtrot
 
 ### Discord
 
-If you want to get the offers in a Discord channel, you can use the free [MonitoRSS](https://monitorss.xyz/) bot to post them there for you.
+Prefer to get the offers in a Discord channel?
+You can use the free [MonitoRSS](https://monitorss.xyz/) bot to post them there for you.
 I suggest the following settings:
 
 - **Feed URL**: Use the RSS feed links above
@@ -130,7 +137,7 @@ I suggest the following settings:
 ## Automatically Claim Free Games
 
 Now that you get notified about all the free games, you might want to make the process of claiming them even easier.
-For this, I created some [userscripts](https://eikowagenknecht.de/posts/userscripts-to-claim-free-games/) that can be used with Tampermonkey / Greasemonkey / Violentmonkey.
+For this, I created some [userscripts](https://eikowagenknecht.com/posts/userscripts-to-claim-free-games/) that can be used with Tampermonkey / Greasemonkey / Violentmonkey.
 
 ## 🚀 Power Users and Developers
 
