@@ -27,13 +27,13 @@ export async function handleStartCommand(
 
   const welcomeTextMd = `\
 ${escapeText("I am part of the ")}\
-${link("https://github.com/eikowagenknecht/lootscraper", "LootScraper")}\
+${link("https://eikowagenknecht.com/lootscraper/", "LootScraper")}\
 ${escapeText(` project. \
 If you have any problems or feature request, please use the `)}\
 ${link("https://github.com/eikowagenknecht/lootscraper/issues", "GitHub issues")}\
 ${escapeText(` to report them. \
 And if you like it, please consider `)}\
-${link("https://github.com/eikowagenknecht/lootscraper/stargazers", "starring it ⭐")} \
+${link("https://github.com/eikowagenknecht/lootscraper/stargazers", "starring it on GitHub ⭐")} \
 ${escapeText(". Thanks a lot!")};
 
 ${bold("How it works")}

@@ -62,36 +62,36 @@ If you miss any, please let me know and I'll add them.
 
 ### RSS feeds
 
-If you prefer good old newsreaders, you can subscribe to the individual platform feeds below or get all offers in [one huge feed](https://feed.phenx.de/lootscraper.xml):
+If you prefer good old newsreaders, you can subscribe to the individual platform feeds below or get all offers in [one huge feed](https://feed.eikowagenknecht.com/lootscraper.xml):
 
-- Amazon Prime ([games](https://feed.phenx.de/lootscraper_amazon_game.xml) and [ingame loot](https://feed.phenx.de/lootscraper_amazon_loot.xml))
-- [Epic Games](https://feed.phenx.de/lootscraper_epic_game.xml)
-- [Epic Mobile Games (Android)](https://feed.phenx.de/lootscraper_epic_game_android.xml)
-- [Epic Mobile Games (iOS)](https://feed.phenx.de/lootscraper_epic_game_ios.xml)
-- [Gog games](https://feed.phenx.de/lootscraper_gog_game.xml)
-- [Humble games](https://feed.phenx.de/lootscraper_humble_game.xml)
-- [itch.io games](https://feed.phenx.de/lootscraper_itch_game.xml)
-- Steam ([games](https://feed.phenx.de/lootscraper_steam_game.xml) and [ingame loot](https://feed.phenx.de/lootscraper_steam_loot.xml))
-- [Apple iPhone games](https://feed.phenx.de/lootscraper_apple_game.xml)
-- [Google Android games](https://feed.phenx.de/lootscraper_google_game.xml)
+- Amazon Prime ([games](https://feed.eikowagenknecht.com/lootscraper_amazon_game.xml) and [ingame loot](https://feed.eikowagenknecht.com/lootscraper_amazon_loot.xml))
+- [Epic Games](https://feed.eikowagenknecht.com/lootscraper_epic_game.xml)
+- [Epic Mobile Games (Android)](https://feed.eikowagenknecht.com/lootscraper_epic_game_android.xml)
+- [Epic Mobile Games (iOS)](https://feed.eikowagenknecht.com/lootscraper_epic_game_ios.xml)
+- [Gog games](https://feed.eikowagenknecht.com/lootscraper_gog_game.xml)
+- [Humble games](https://feed.eikowagenknecht.com/lootscraper_humble_game.xml)
+- [itch.io games](https://feed.eikowagenknecht.com/lootscraper_itch_game.xml)
+- Steam ([games](https://feed.eikowagenknecht.com/lootscraper_steam_game.xml) and [ingame loot](https://feed.eikowagenknecht.com/lootscraper_steam_loot.xml))
+- [Apple iPhone games](https://feed.eikowagenknecht.com/lootscraper_apple_game.xml)
+- [Google Android games](https://feed.eikowagenknecht.com/lootscraper_google_game.xml)
 
 ### Web Interface
 
 Want to check a website for new deals once in a while, but not be bothered by push notifications?
 Here are the latest offers in a nice and clean HTML page:
 
-- Amazon Prime ([games](https://feed.phenx.de/lootscraper_amazon_game.html) and [ingame loot](https://feed.phenx.de/lootscraper_amazon_loot.html))
-- [Epic Games](https://feed.phenx.de/lootscraper_epic_game.html)
-- [Epic Mobile Games (Android)](https://feed.phenx.de/lootscraper_epic_game_android.html)
-- [Epic Mobile Games (iOS)](https://feed.phenx.de/lootscraper_epic_game_ios.html)
-- [Gog games](https://feed.phenx.de/lootscraper_gog_game.html)
-- [Humble games](https://feed.phenx.de/lootscraper_humble_game.html)
-- [itch.io games](https://feed.phenx.de/lootscraper_itch_game.html)
-- Steam ([games](https://feed.phenx.de/lootscraper_steam_game.html) and [ingame loot](https://feed.phenx.de/lootscraper_steam_loot.html))
-- [Apple iPhone games](https://feed.phenx.de/lootscraper_apple_game.html)
-- [Google Android games](https://feed.phenx.de/lootscraper_google_game.html)
+- Amazon Prime ([games](https://feed.eikowagenknecht.com/lootscraper_amazon_game.html) and [ingame loot](https://feed.eikowagenknecht.com/lootscraper_amazon_loot.html))
+- [Epic Games](https://feed.eikowagenknecht.com/lootscraper_epic_game.html)
+- [Epic Mobile Games (Android)](https://feed.eikowagenknecht.com/lootscraper_epic_game_android.html)
+- [Epic Mobile Games (iOS)](https://feed.eikowagenknecht.com/lootscraper_epic_game_ios.html)
+- [Gog games](https://feed.eikowagenknecht.com/lootscraper_gog_game.html)
+- [Humble games](https://feed.eikowagenknecht.com/lootscraper_humble_game.html)
+- [itch.io games](https://feed.eikowagenknecht.com/lootscraper_itch_game.html)
+- Steam ([games](https://feed.eikowagenknecht.com/lootscraper_steam_game.html) and [ingame loot](https://feed.eikowagenknecht.com/lootscraper_steam_loot.html))
+- [Apple iPhone games](https://feed.eikowagenknecht.com/lootscraper_apple_game.html)
+- [Google Android games](https://feed.eikowagenknecht.com/lootscraper_google_game.html)
 
-You can also have *all sources* on [one page](https://feed.phenx.de/lootscraper.html).
+You can also have *all sources* on [one page](https://feed.eikowagenknecht.com/lootscraper.html).
 
 #### Web Archive
 
@@ -99,18 +99,18 @@ There is also an archive version of the HTML pages.
 These contain all offers that have been discovered so far, including expired ones.
 Warning: These pages are quite large and may take a while to load.
 
-- Amazon Prime ([games](https://feed.phenx.de/lootscraper_amazon_game_all.html) and [ingame loot](https://feed.phenx.de/lootscraper_amazon_loot_all.html))
-- [Epic Games](https://feed.phenx.de/lootscraper_epic_game_all.html)
-- [Epic Mobile Games (Android)](https://feed.phenx.de/lootscraper_epic_game_android_all.html)
-- [Epic Mobile Games (iOS)](https://feed.phenx.de/lootscraper_epic_game_ios_all.html)
-- [Gog games](https://feed.phenx.de/lootscraper_gog_game_all.html)
-- [Humble games](https://feed.phenx.de/lootscraper_humble_game_all.html)
-- [itch.io games](https://feed.phenx.de/lootscraper_itch_game_all.html)
-- Steam ([games](https://feed.phenx.de/lootscraper_steam_game_all.html) and [ingame loot](https://feed.phenx.de/lootscraper_steam_loot_all.html))
-- [Apple iPhone games](https://feed.phenx.de/lootscraper_apple_game_all.html)
-- [Google Android games](https://feed.phenx.de/lootscraper_google_game_all.html)
+- Amazon Prime ([games](https://feed.eikowagenknecht.com/lootscraper_amazon_game_all.html) and [ingame loot](https://feed.eikowagenknecht.com/lootscraper_amazon_loot_all.html))
+- [Epic Games](https://feed.eikowagenknecht.com/lootscraper_epic_game_all.html)
+- [Epic Mobile Games (Android)](https://feed.eikowagenknecht.com/lootscraper_epic_game_android_all.html)
+- [Epic Mobile Games (iOS)](https://feed.eikowagenknecht.com/lootscraper_epic_game_ios_all.html)
+- [Gog games](https://feed.eikowagenknecht.com/lootscraper_gog_game_all.html)
+- [Humble games](https://feed.eikowagenknecht.com/lootscraper_humble_game_all.html)
+- [itch.io games](https://feed.eikowagenknecht.com/lootscraper_itch_game_all.html)
+- Steam ([games](https://feed.eikowagenknecht.com/lootscraper_steam_game_all.html) and [ingame loot](https://feed.eikowagenknecht.com/lootscraper_steam_loot_all.html))
+- [Apple iPhone games](https://feed.eikowagenknecht.com/lootscraper_apple_game_all.html)
+- [Google Android games](https://feed.eikowagenknecht.com/lootscraper_google_game_all.html)
 
-You can also have *all sources* on [one page](https://feed.phenx.de/lootscraper_all.html).
+You can also have *all sources* on [one page](https://feed.eikowagenknecht.com/lootscraper_all.html).
 
 ### E-Mail
 

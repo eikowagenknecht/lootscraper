@@ -24,7 +24,7 @@ export class RssGenerator {
       title: generateFeedTitle(this.combination),
       generator: {
         content: "LootScraper",
-        uri: "https://github.com/eikowagenknecht/lootscraper",
+        uri: "https://eikowagenknecht.com/lootscraper/",
       },
       language: "en",
       link: [
