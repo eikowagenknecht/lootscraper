@@ -51,7 +51,7 @@
     "docker:pub:dev": "docker build . -t eikowagenknecht/lootscraper:develop && docker push eikowagenknecht/lootscraper:develop"
   },
   "dependencies": {
-    "@apollo/client": "3.13.9",
+    "@apollo/client": "4.0.5",
     "@grammyjs/auto-retry": "2.0.2",
     "@grammyjs/commands": "1.2.0",
     "abort-controller": "3.0.0",
