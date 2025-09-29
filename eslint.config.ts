@@ -1,6 +1,7 @@
 import js from "@eslint/js";
+import type { Linter } from "eslint";
 import { defineConfig } from "eslint/config";
-import eslintPluginImportX from "eslint-plugin-import-x";
+import { importX } from "eslint-plugin-import-x";
 import { jsdoc } from "eslint-plugin-jsdoc";
 import globals from "globals";
 import tseslint from "typescript-eslint";
@@ -10,8 +11,8 @@ export default defineConfig(
   jsdoc({
     config: "flat/recommended-typescript",
   }),
-  eslintPluginImportX.flatConfigs.recommended,
-  eslintPluginImportX.flatConfigs.typescript,
+  importX.flatConfigs.recommended as Linter.Config, // see https://github.com/typescript-eslint/typescript-eslint/issues/11543
+  importX.flatConfigs.typescript as Linter.Config, // see https://github.com/typescript-eslint/typescript-eslint/issues/11543
   ...tseslint.configs.strictTypeChecked,
   ...tseslint.configs.stylisticTypeChecked,
   {
