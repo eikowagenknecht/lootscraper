@@ -76,7 +76,7 @@
   "devDependencies": {
     "@biomejs/biome": "2.2.4",
     "@commitlint/cli": "19.8.1",
-    "@commitlint/config-conventional": "19.8.1",
+    "@commitlint/config-conventional": "20.0.0",
     "@commitlint/types": "20.0.0",
     "@eslint/js": "9.36.0",
     "@semantic-release/git": "10.0.1",
