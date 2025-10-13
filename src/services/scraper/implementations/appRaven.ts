@@ -1,4 +1,5 @@
 import { ApolloClient, gql, InMemoryCache } from "@apollo/client/core";
+import { HttpLink } from "@apollo/client/link/http";
 import { DateTime } from "luxon";
 import { BaseScraper, type CronConfig } from "@/services/scraper/base/scraper";
 import {
@@ -122,6 +123,10 @@ export class AppRavenGamesScraper extends BaseScraper {
       variables: VARIABLES,
     });
 
+    if (!response.data) {
+      throw new Error("No data returned from AppRaven API");
+    }
+
     return this.parseOffers(response.data);
   }
 
@@ -131,7 +136,9 @@ export class AppRavenGamesScraper extends BaseScraper {
 
   private createClient() {
     const client = new ApolloClient({
-      uri: BASE_URL,
+      link: new HttpLink({
+        uri: BASE_URL,
+      }),
       cache: new InMemoryCache(),
     });
     return client;
