@@ -1,10 +1,5 @@
-import {
-  ApolloClient,
-  createHttpLink,
-  type DefaultOptions,
-  gql,
-  InMemoryCache,
-} from "@apollo/client/core";
+import { ApolloClient, gql, InMemoryCache } from "@apollo/client/core";
+import { HttpLink } from "@apollo/client/link/http";
 import { DateTime } from "luxon";
 import { BaseScraper, type CronConfig } from "@/services/scraper/base/scraper";
 import {
@@ -208,6 +203,10 @@ export class EpicGamesApiScraper extends BaseScraper {
       errorPolicy: "all",
     });
 
+    if (!response.data) {
+      throw new Error("No data returned from Epic Games API");
+    }
+
     return this.parseOffers(response.data);
   }
 
@@ -216,13 +215,13 @@ export class EpicGamesApiScraper extends BaseScraper {
   }
 
   private createClient() {
-    const defaultClientOptions: DefaultOptions = {
+    const defaultClientOptions: ApolloClient.DefaultOptions = {
       query: {
         variables: languageDefaults,
       },
     };
 
-    const httpLink = createHttpLink({
+    const httpLink = new HttpLink({
       uri: BASE_URL,
       fetch: async (uri, options) => {
         return fetch(uri, {
