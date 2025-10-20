@@ -94,7 +94,7 @@
     "knip": "5.64.3",
     "lefthook": "1.13.6",
     "prettier": "3.6.2",
-    "semantic-release": "24.2.9",
+    "semantic-release": "25.0.1",
     "typescript": "5.9.3",
     "typescript-eslint": "8.46.0",
     "vite": "7.1.9",
