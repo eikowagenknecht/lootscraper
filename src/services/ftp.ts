@@ -142,7 +142,7 @@ class FTPService {
       const hash = await generateFileHash(absolutePath);
       const existingHash = await getHashByResourceName(file);
 
-      if (existingHash && existingHash.hash_value === hash) {
+      if (existingHash?.hash_value === hash) {
         logger.verbose(`File ${fileName} already up to date, skipping upload.`);
         return {
           fileName,
