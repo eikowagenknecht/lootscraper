@@ -92,7 +92,7 @@
     "globals": "16.4.0",
     "jiti": "2.6.1",
     "knip": "5.66.1",
-    "lefthook": "1.13.6",
+    "lefthook": "2.0.1",
     "prettier": "3.6.2",
     "semantic-release": "25.0.1",
     "typescript": "5.9.3",
