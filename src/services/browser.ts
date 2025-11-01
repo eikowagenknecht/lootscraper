@@ -16,6 +16,13 @@ class BrowserService {
   private context: BrowserContext | null = null;
   private timeoutSeconds: number | null = null;
   private loadImages: boolean | null = null;
+  private browserStartTime: Date | null = null;
+  private scrapeCount = 0;
+
+  // Restart browser after this many scrapes to prevent memory accumulation
+  private readonly MAX_SCRAPES_BEFORE_RESTART = 50;
+  // Or restart after this many hours
+  private readonly MAX_HOURS_BEFORE_RESTART = 24;
 
   private constructor() {
     // Private constructor to prevent instantiation
@@ -38,6 +45,10 @@ class BrowserService {
       // Set default timeout from config
       this.timeoutSeconds = config.browser.timeoutSeconds;
       this.loadImages = config.browser.loadImages;
+
+      // Track when browser was started
+      this.browserStartTime = new Date();
+      this.scrapeCount = 0;
 
       await this.refreshContext();
     } catch (error) {
@@ -127,6 +138,53 @@ class BrowserService {
       await this.browser.close();
       this.browser = null;
     }
+    this.browserStartTime = null;
+    this.scrapeCount = 0;
+  }
+
+  /**
+   * Check if browser should be restarted to prevent memory accumulation.
+   * @returns true if browser has been running too long or processed too many scrapes.
+   */
+  public shouldRestartBrowser(): boolean {
+    if (!this.browserStartTime) {
+      return false;
+    }
+
+    // Check scrape count
+    if (this.scrapeCount >= this.MAX_SCRAPES_BEFORE_RESTART) {
+      return true;
+    }
+
+    // Check uptime
+    const uptimeHours =
+      (Date.now() - this.browserStartTime.getTime()) / (1000 * 60 * 60);
+    if (uptimeHours >= this.MAX_HOURS_BEFORE_RESTART) {
+      return true;
+    }
+
+    return false;
+  }
+
+  /**
+   * Increment the scrape counter. Should be called after each scrape.
+   */
+  public incrementScrapeCount(): void {
+    this.scrapeCount++;
+  }
+
+  /**
+   * Get browser uptime statistics for logging
+   * @returns Object containing scrape count and uptime in hours
+   */
+  public getStats(): { scrapeCount: number; uptimeHours: number } {
+    const uptimeHours = this.browserStartTime
+      ? (Date.now() - this.browserStartTime.getTime()) / (1000 * 60 * 60)
+      : 0;
+    return {
+      scrapeCount: this.scrapeCount,
+      uptimeHours: Math.round(uptimeHours * 100) / 100,
+    };
   }
 }
 

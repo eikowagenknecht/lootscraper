@@ -255,8 +255,21 @@ class ScraperService {
     try {
       offers = await scraper.scrape();
     } finally {
-      // Refresh the context after each scrape to prevent memory leaks
-      await browserService.refreshContext();
+      // Increment scrape counter
+      browserService.incrementScrapeCount();
+
+      // Check if browser needs to be restarted to prevent memory accumulation
+      if (browserService.shouldRestartBrowser()) {
+        const stats = browserService.getStats();
+        logger.info(
+          `Browser has processed ${stats.scrapeCount.toFixed()} scrapes over ${stats.uptimeHours.toFixed(2)} hours. Restarting to prevent memory accumulation.`,
+        );
+        await browserService.destroy();
+        await browserService.initialize(this.config);
+      } else {
+        // Just refresh the context if not restarting
+        await browserService.refreshContext();
+      }
     }
 
     // Store offers and track if we found any new ones
