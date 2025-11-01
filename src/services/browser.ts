@@ -2,6 +2,7 @@ import type { Browser, BrowserContext } from "playwright";
 import { firefox } from "playwright";
 import type { Config } from "@/types/config";
 import { BrowserError } from "@/types/errors";
+import { logger } from "@/utils/logger";
 
 const CONTEXT_OPTIONS = {
   // Use Reykjavik timezone (=UTC) because UTC is not supported directly
@@ -51,6 +52,9 @@ class BrowserService {
       this.scrapeCount = 0;
 
       await this.refreshContext();
+
+      // Log memory after initialization
+      this.logMemoryUsage("Browser Initialized");
     } catch (error) {
       throw new BrowserError(
         `Failed to initialize browser: ${error instanceof Error ? error.message : String(error)}`,
@@ -130,6 +134,11 @@ class BrowserService {
   }
 
   public async destroy(): Promise<void> {
+    // Log memory before destroying
+    if (this.browser) {
+      this.logMemoryUsage("Browser Destroying");
+    }
+
     if (this.context) {
       await this.context.close();
       this.context = null;
@@ -185,6 +194,37 @@ class BrowserService {
       scrapeCount: this.scrapeCount,
       uptimeHours: Math.round(uptimeHours * 100) / 100,
     };
+  }
+
+  /**
+   * Get current memory usage statistics
+   * @returns Object containing memory usage in MB
+   */
+  private getMemoryUsage(): {
+    rss: number;
+    heapUsed: number;
+    heapTotal: number;
+    external: number;
+  } {
+    const mem = process.memoryUsage();
+    return {
+      rss: Math.round(mem.rss / 1024 / 1024),
+      heapUsed: Math.round(mem.heapUsed / 1024 / 1024),
+      heapTotal: Math.round(mem.heapTotal / 1024 / 1024),
+      external: Math.round(mem.external / 1024 / 1024),
+    };
+  }
+
+  /**
+   * Log current memory usage with context
+   * @param context - Description of when/why memory is being logged
+   */
+  public logMemoryUsage(context: string): void {
+    const mem = this.getMemoryUsage();
+    const stats = this.getStats();
+    logger.info(
+      `[${context}] Memory: RSS=${mem.rss.toString()}MB, Heap=${mem.heapUsed.toString()}/${mem.heapTotal.toString()}MB, External=${mem.external.toString()}MB | Scrapes: ${stats.scrapeCount.toFixed()}, Uptime: ${stats.uptimeHours.toFixed(2)}h`,
+    );
   }
 }
 

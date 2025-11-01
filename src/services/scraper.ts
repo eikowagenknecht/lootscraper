@@ -233,6 +233,7 @@ class ScraperService {
           `Next run is in more than 3 minutes (${nextDueRunDate.toISO()}), spinning down browser to save resources.`,
         );
         await browserService.destroy();
+        logger.info("Browser destroyed due to 3+ minute gap between runs.");
       }
     }
 
@@ -257,6 +258,11 @@ class ScraperService {
     } finally {
       // Increment scrape counter
       browserService.incrementScrapeCount();
+
+      // Log memory usage after scrape
+      browserService.logMemoryUsage(
+        `After Scrape (${scraper.getScraperName()})`,
+      );
 
       // Check if browser needs to be restarted to prevent memory accumulation
       if (browserService.shouldRestartBrowser()) {
