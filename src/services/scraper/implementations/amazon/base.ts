@@ -104,7 +104,16 @@ export abstract class AmazonBaseScraper extends BaseScraper {
         url,
       );
     } finally {
-      await page?.close();
+      // Ensure page is closed even if there's an error
+      if (page) {
+        try {
+          await page.close();
+        } catch (error) {
+          logger.error(
+            `${this.getScraperName()}: Failed to close detail page: ${error instanceof Error ? error.message : String(error)}`,
+          );
+        }
+      }
     }
   }
 

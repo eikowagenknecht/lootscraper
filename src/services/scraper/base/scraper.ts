@@ -266,7 +266,16 @@ export abstract class BaseScraper {
         await takeScreenshot(page, this.getScraperName(), "other_error");
       }
     } finally {
-      await page?.close();
+      // Ensure page is closed even if there's an error
+      if (page) {
+        try {
+          await page.close();
+        } catch (error) {
+          logger.error(
+            `${this.getScraperName()}: Failed to close page: ${error instanceof Error ? error.message : String(error)}`,
+          );
+        }
+      }
     }
 
     return offers;

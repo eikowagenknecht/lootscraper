@@ -48,7 +48,7 @@ class BrowserService {
   }
 
   public isInitialized(): boolean {
-    return this.browser !== null;
+    return this.browser?.isConnected() ?? false;
   }
 
   public getContext(): BrowserContext {
@@ -71,9 +71,26 @@ class BrowserService {
       );
     }
 
+    // Check if browser is still connected (not crashed or terminated)
+    if (!this.browser.isConnected()) {
+      // Clear the reference to the dead browser
+      this.browser = null;
+      this.context = null;
+      throw new BrowserError(
+        "Browser has been disconnected or terminated. Please reinitialize.",
+      );
+    }
+
     // Close the current context if it exists
     if (this.context) {
-      await this.context.close();
+      try {
+        await this.context.close();
+      } catch (error) {
+        // Log but don't fail if context close fails
+        throw new BrowserError(
+          `Failed to close browser context: ${error instanceof Error ? error.message : String(error)}`,
+        );
+      }
     }
 
     const newContext = await this.browser.newContext(CONTEXT_OPTIONS);

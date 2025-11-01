@@ -190,11 +190,28 @@ class ScraperService {
         offers_modified: scrapeResults.modifiedOffers,
       });
     } catch (error) {
-      logger.error(
-        `Failed to run scraper ${nextRun.scraper}: ${
-          error instanceof Error ? error.message : String(error)
-        }`,
-      );
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      logger.error(`Failed to run scraper ${nextRun.scraper}: ${errorMessage}`);
+
+      // If browser was disconnected, destroy it so it gets reinitialized on next run
+      if (
+        errorMessage.includes("disconnected") ||
+        errorMessage.includes("closed") ||
+        errorMessage.includes("terminated")
+      ) {
+        logger.warn(
+          "Browser appears to be in a bad state. Destroying it for reinitialization.",
+        );
+        try {
+          await browserService.destroy();
+        } catch (destroyError) {
+          logger.error(
+            `Failed to destroy browser: ${destroyError instanceof Error ? destroyError.message : String(destroyError)}`,
+          );
+        }
+      }
+
       // In case of error mark as finished anyways, so we can continue with the next run
       await updateScrapingRun(nextRun.id, {
         finished_date: DateTime.now().toISO(),
