@@ -7,6 +7,7 @@ import { addTelegramTransport, logger } from "@/utils/logger";
 import { feedService } from "./feed";
 import { ftpService } from "./ftp";
 import { gameInfoService } from "./gameinfo";
+import { memoryMonitorService } from "./memoryMonitor";
 import { scraperService } from "./scraper";
 import { translationService } from "./translation";
 
@@ -57,6 +58,13 @@ export async function startApp(): Promise<void> {
 }
 
 async function initializeServices(cfg: Config): Promise<void> {
+  // Initialize memory monitoring early
+  logger.info("Initializing memory monitor service.");
+  memoryMonitorService.initialize({
+    enabled: cfg.memoryMonitor.enabled,
+    intervalMs: cfg.memoryMonitor.intervalSeconds * 1000,
+  });
+
   // Initialize core services
   logger.info("Initializing translation service.");
   await translationService.initialize();
@@ -104,6 +112,9 @@ async function initializeServices(cfg: Config): Promise<void> {
 async function startServices() {
   const cfg = config.get();
 
+  // Start memory monitoring
+  memoryMonitorService.start();
+
   // Start Telegram bot if enabled
   if (cfg.actions.telegramBot) {
     // This starts the bot in the background until stopped
@@ -125,6 +136,7 @@ export async function shutdownApp(): Promise<void> {
   logger.info("Stopping services...");
   await telegramBotService.stop();
   await scraperService.stop();
+  memoryMonitorService.stop();
 
   // Destroy services in reverse order of initialization
   logger.info("Destroying services...");
@@ -135,6 +147,7 @@ export async function shutdownApp(): Promise<void> {
   await browserService.destroy();
   //await telegramBotService.destroy();
   await database.destroy();
+  memoryMonitorService.destroy();
 
   state.isRunning = false;
   logger.info("Services shutdown complete");

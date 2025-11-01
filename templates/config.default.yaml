@@ -100,3 +100,9 @@ telegram:
   logLevel: ERROR
   # Drop all messages that have been sent while the bot was offline.
   dropPendingMessages: false
+
+memoryMonitor:
+  # Enable memory monitoring to track container memory usage over time
+  enabled: true
+  # Interval in seconds between memory measurements
+  intervalSeconds: 60

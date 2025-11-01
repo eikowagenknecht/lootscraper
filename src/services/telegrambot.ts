@@ -31,6 +31,7 @@ import {
   handleAnnounceCommand,
   handleDebugCommand,
   handleErrorCommand,
+  handleMemoryCommand,
   handleRefreshInfoCommand,
   handleScrapeNowCommand,
 } from "./telegrambot/handlers/commands/admin";
@@ -119,6 +120,11 @@ export class TelegramBotService {
         handleAnnounceCommand,
       );
       adminCommands.command("debug", "Show chat IDs", handleDebugCommand);
+      adminCommands.command(
+        "memory",
+        "Show memory metrics",
+        handleMemoryCommand,
+      );
       adminCommands.command("scrapenow", "Scrape now", handleScrapeNowCommand);
       adminCommands.command(
         "refreshinfo",

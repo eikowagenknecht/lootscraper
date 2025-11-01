@@ -63,6 +63,10 @@ export const ConfigSchema = z.object({
     urlAlternate: z.string().default("https://example.com/loot"),
     idPrefix: z.string().default("https://example.com/loot/"),
   }),
+  memoryMonitor: z.object({
+    enabled: z.boolean().default(true),
+    intervalSeconds: z.number().default(60),
+  }),
 });
 
 export type Config = z.infer<typeof ConfigSchema>;
