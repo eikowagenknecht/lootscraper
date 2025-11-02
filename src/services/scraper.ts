@@ -204,19 +204,14 @@ class ScraperService {
     // Step 7 - Queue the next run for this scraper
     await this.queueScraper(scraperClass);
 
-    // Step 8 - Check if we have a pause of more than 3min between runs and spin
-    // down the browser to save resources
+    // Step 8 - Check if we have a queued run. If not, we can spin down the
+    // browser to save resources
 
-    const nextDueRun = await getNextDueRun();
-
-    if (nextDueRun) {
-      const nextDueRunDate = DateTime.fromISO(nextDueRun.scheduled_date);
-      if (nextDueRunDate > DateTime.now().plus({ minutes: 3 })) {
-        logger.info(
-          `Next run is in more than 3 minutes (${nextDueRunDate.toISO()}), spinning down browser to save resources.`,
-        );
-        await browserService.destroy();
-      }
+    if ((await getNextDueRun()) == null) {
+      logger.info(
+        "No run directly in queue, spinning down browser to save resources.",
+      );
+      await browserService.destroy();
     }
 
     // Step 8 - Done, ready for the next run
