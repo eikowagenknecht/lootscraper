@@ -9,7 +9,7 @@
   "bin": {
     "lootscraper": "./dist/main.js"
   },
-  "packageManager": "pnpm@10.19.0",
+  "packageManager": "pnpm@10.20.0",
   "engines": {
     "node": ">=22.0.0",
     "pnpm": ">=10.0.0"
@@ -51,7 +51,7 @@
     "docker:pub:dev": "docker build . -t eikowagenknecht/lootscraper:develop && docker push eikowagenknecht/lootscraper:develop"
   },
   "dependencies": {
-    "@apollo/client": "4.0.7",
+    "@apollo/client": "4.0.9",
     "@grammyjs/auto-retry": "2.0.2",
     "@grammyjs/commands": "1.2.0",
     "abort-controller": "3.0.0",
@@ -60,7 +60,7 @@
     "croner": "9.1.0",
     "cross-env": "10.1.0",
     "grammy": "1.38.3",
-    "graphql": "16.11.0",
+    "graphql": "16.12.0",
     "handlebars": "4.7.8",
     "i18next": "25.6.0",
     "kysely": "0.28.8",
@@ -74,31 +74,31 @@
     "zod": "4.1.12"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.3.1",
+    "@biomejs/biome": "2.3.2",
     "@commitlint/cli": "20.1.0",
     "@commitlint/config-conventional": "20.0.0",
     "@commitlint/types": "20.0.0",
-    "@eslint/js": "9.38.0",
+    "@eslint/js": "9.39.0",
     "@semantic-release/git": "10.0.1",
     "@testing-library/jest-dom": "6.9.1",
     "@types/better-sqlite3": "7.6.13",
     "@types/luxon": "3.7.1",
-    "@types/node": "24.9.1",
-    "@vitest/coverage-v8": "4.0.3",
-    "eslint": "9.38.0",
+    "@types/node": "24.9.2",
+    "@vitest/coverage-v8": "4.0.6",
+    "eslint": "9.39.0",
     "eslint-import-resolver-typescript": "4.4.4",
     "eslint-plugin-import-x": "4.16.1",
-    "eslint-plugin-jsdoc": "61.1.9",
-    "globals": "16.4.0",
+    "eslint-plugin-jsdoc": "61.1.11",
+    "globals": "16.5.0",
     "jiti": "2.6.1",
-    "knip": "5.66.3",
-    "lefthook": "2.0.1",
+    "knip": "5.66.4",
+    "lefthook": "2.0.2",
     "prettier": "3.6.2",
     "semantic-release": "25.0.1",
     "typescript": "5.9.3",
     "typescript-eslint": "8.46.2",
     "vite": "7.1.12",
     "vite-node": "3.2.4",
-    "vitest": "4.0.3"
+    "vitest": "4.0.6"
   }
 }
