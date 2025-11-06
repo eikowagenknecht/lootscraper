@@ -26,7 +26,7 @@ Choose your preferred way to get notifications:
 - GOG
 - Steam (Games & In-game Loot)
 - Humble Bundle
-- itch.io
+- itch.io (:warning: currently disabled due to anti-bot measures)
 - Apple App Store
 - Google Play
 
