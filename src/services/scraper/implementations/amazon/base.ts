@@ -5,8 +5,8 @@ import { OfferDuration, OfferPlatform, OfferSource } from "@/types/basic";
 import { BrowserError, ScraperError } from "@/types/errors";
 import { logger } from "@/utils/logger";
 
-const BASE_URL = "https://gaming.amazon.com";
-export const OFFER_URL = `${BASE_URL}/home`;
+const BASE_URL = "https://luna.amazon.com";
+export const OFFER_URL = `${BASE_URL}/claims/home`;
 
 interface AmazonBaseOffer {
   title: string;
