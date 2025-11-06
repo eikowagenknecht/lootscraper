@@ -38,7 +38,6 @@ scraper:
     # Amazon - Loot
     - AmazonLoot
     # Apple
-    - AppSlicedGames
     - AppRavenGames
     # Epic (Web or API, enable only one)
     - EpicGamesApi

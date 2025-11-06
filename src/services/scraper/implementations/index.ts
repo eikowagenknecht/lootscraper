@@ -2,7 +2,6 @@ export { AmazonGamesScraper } from "./amazon/games";
 export { AmazonLootScraper } from "./amazon/loot";
 export { AppAggGamesScraper } from "./appAgg";
 export { AppRavenGamesScraper } from "./appRaven";
-export { AppSlicedGamesScraper } from "./appSliced";
 export { EpicGamesApiScraper } from "./epicApi";
 export { EpicMobileAndroidSraper } from "./epicmobile/android";
 export { EpicMobileIosSraper } from "./epicmobile/ios";

@@ -12,7 +12,6 @@ import {
   AmazonLootScraper,
   AppAggGamesScraper,
   AppRavenGamesScraper,
-  AppSlicedGamesScraper,
   EpicGamesApiScraper,
   EpicGamesWebScraper,
   EpicMobileAndroidSraper,
@@ -41,7 +40,6 @@ interface ScraperSchedule {
 export const allScrapers = [
   AmazonGamesScraper,
   AmazonLootScraper,
-  AppSlicedGamesScraper,
   AppRavenGamesScraper,
   EpicGamesWebScraper,
   EpicGamesApiScraper,
@@ -60,7 +58,6 @@ export const allScrapers = [
 export type ScraperClass =
   | typeof AmazonGamesScraper
   | typeof AmazonLootScraper
-  | typeof AppSlicedGamesScraper
   | typeof AppRavenGamesScraper
   | typeof EpicGamesWebScraper
   | typeof EpicGamesApiScraper
