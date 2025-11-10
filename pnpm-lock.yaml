@@ -145,8 +145,8 @@ importers:
         specifier: 7.2.2
         version: 7.2.2(@types/node@24.10.0)(jiti@2.6.1)(yaml@2.8.1)
       vite-node:
-        specifier: 3.2.4
-        version: 3.2.4(@types/node@24.10.0)(jiti@2.6.1)(yaml@2.8.1)
+        specifier: 5.0.0
+        version: 5.0.0(@types/node@24.10.0)(jiti@2.6.1)(yaml@2.8.1)
       vitest:
         specifier: 4.0.8
         version: 4.0.8(@types/node@24.10.0)(jiti@2.6.1)(yaml@2.8.1)
@@ -3197,8 +3197,8 @@ packages:
   validate-npm-package-license@3.0.4:
     resolution: {integrity: sha512-DpKm2Ui/xN7/HQKCtpZxoRWBhZ9Z0kqtygG8XCgNQ8ZlDnxuQmWhj566j8fN4Cu3/JmbhsDo7fcAJq4s9h27Ew==}
 
-  vite-node@3.2.4:
-    resolution: {integrity: sha512-EbKSKh+bh1E1IFxeO0pg1n4dvoOTt0UDiXMd/qn++r98+jPO1xtJilvXldeuQ8giIB5IkpjCgMleHMNEsGH6pg==}
+  vite-node@5.0.0:
+    resolution: {integrity: sha512-nJINVH7lHBKoyDFYnwrXbNUrmTJ2ssBHTd/mXVZfLq/O5K7ksv4CayQOA5KkbOSrsgSQg8antcVPgQmzBWWn/w==}
     engines: {node: ^18.0.0 || ^20.0.0 || >=22.0.0}
     hasBin: true
 
@@ -6308,7 +6308,7 @@ snapshots:
       spdx-correct: 3.2.0
       spdx-expression-parse: 3.0.1
 
-  vite-node@3.2.4(@types/node@24.10.0)(jiti@2.6.1)(yaml@2.8.1):
+  vite-node@5.0.0(@types/node@24.10.0)(jiti@2.6.1)(yaml@2.8.1):
     dependencies:
       cac: 6.7.14
       debug: 4.4.3
