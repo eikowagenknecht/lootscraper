@@ -27,7 +27,7 @@
     ]
   },
   "scripts": {
-    "dev": "cross-env DEBUG=\"grammy*\" vite-node src/main.ts",
+    "dev": "cross-env DEBUG=\"grammy*\" tsx src/main.ts",
     "build": "vite build",
     "start": "node dist/main.js",
     "test": "vitest",
@@ -95,10 +95,10 @@
     "lefthook": "2.0.2",
     "prettier": "3.6.2",
     "semantic-release": "25.0.2",
+    "tsx": "4.20.6",
     "typescript": "5.9.3",
     "typescript-eslint": "8.46.3",
     "vite": "7.2.2",
-    "vite-node": "3.2.4",
     "vitest": "4.0.8"
   }
 }
