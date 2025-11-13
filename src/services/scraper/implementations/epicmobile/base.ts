@@ -77,6 +77,16 @@ export abstract class EpicMobileSraper extends BaseScraper {
     try {
       const response = await fetch(
         `${BASE_URL}?count=10&country=${languageDefaults.country}&locale=${languageDefaults.locale}&platform=${platform}&start=0&store=EGS`,
+        {
+          headers: {
+            Accept: "application/json",
+            "Accept-Language": "en-US,en;q=0.9",
+            "User-Agent":
+              platform === "ios"
+                ? "EpicGamesApp/13.6.0 iOS/17.0"
+                : "EpicGamesApp/13.6.0 Android/13",
+          },
+        },
       );
 
       if (!response.ok) {
@@ -88,12 +98,12 @@ export abstract class EpicMobileSraper extends BaseScraper {
     } catch (error) {
       if (error instanceof Error) {
         logger.error(
-          `${this.getScraperName()}: Error fetching free games:`,
-          error.message,
+          `${this.getScraperName()}: Error fetching free games: ${error.name}: ${error.message}`,
         );
       } else {
         logger.error(
           `${this.getScraperName()}: Unknown error occurred while fetching free games`,
+          error,
         );
       }
       return [];
