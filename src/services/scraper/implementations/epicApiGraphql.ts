@@ -1,14 +1,5 @@
-/**
- * Epic Games API Scraper (REST endpoint)
- *
- * This scraper uses the simpler REST endpoint at store-site-backend-static.ak.epicgames.com
- * which has less strict Cloudflare protection and works more reliably with plain fetch().
- *
- * Previous implementation used the GraphQL endpoint at store.epicgames.com/graphql with
- * Apollo Client, but that endpoint started returning 403 errors due to Cloudflare's
- * bot protection. The old GraphQL-based implementation is preserved in epicApiGraphql.ts
- * for reference.
- */
+import { ApolloClient, gql, InMemoryCache } from "@apollo/client/core";
+import { HttpLink } from "@apollo/client/link/http";
 import { DateTime } from "luxon";
 import { BaseScraper, type CronConfig } from "@/services/scraper/base/scraper";
 import {
@@ -19,14 +10,15 @@ import {
 } from "@/types/basic";
 import type { NewOffer } from "@/types/database";
 import { cleanGameTitle } from "@/utils";
-import { logger } from "@/utils/logger";
 
-interface FreeGamesResponse {
-  data: {
-    Catalog: {
-      searchStore: {
-        elements: RawOffer[];
-      };
+const BASE_URL = "https://store.epicgames.com/graphql";
+
+interface CatalogData {
+  Catalog: {
+    __typename: string;
+    searchStore: {
+      __typename: string;
+      elements: RawOffer[];
     };
   };
 }
@@ -94,7 +86,85 @@ interface RawOffer {
   } | null;
 }
 
-export class EpicGamesApiScraper extends BaseScraper {
+// This seems to be indirectly queried by
+// https://store-site-backend-static.ak.epicgames.com/freeGamesPromotions?locale=en-US&country=US&allowCountries=US
+// More queries can be found on https://github.com/SD4RK/epicstore_api/blob/master/epicstore_api/queries.py
+const FREEGAMES_QUERY = gql`
+  query freeGamesQuery(
+    $count: Int
+    $country: String!
+    $locale: String
+    $itemNs: String
+    $start: Int
+    $tag: String
+  ) {
+    Catalog {
+      searchStore(
+        category: "freegames"
+        count: $count
+        country: $country
+        locale: $locale
+        itemNs: $itemNs
+        sortBy: "title"
+        sortDir: "asc"
+        start: $start
+        tag: $tag
+      ) {
+        elements {
+          title
+          effectiveDate
+          expiryDate
+          viewableDate
+          productSlug
+          keyImages {
+            type
+            url
+          }
+          customAttributes {
+            key
+            value
+          }
+          price(country: $country) @include(if: true) {
+            totalPrice {
+              discountPrice
+              originalPrice
+              currencyCode
+            }
+          }
+          catalogNs {
+            mappings(pageType: "productHome") {
+              pageSlug
+              pageType
+            }
+          }
+          offerMappings {
+            pageSlug
+            pageType
+          }
+          promotions @include(if: true) {
+            promotionalOffers {
+              promotionalOffers {
+                startDate
+                endDate
+                discountSetting {
+                  discountType
+                  discountPercentage
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+`;
+
+const languageDefaults = {
+  locale: "en-US",
+  country: "US",
+};
+
+export class EpicGamesApiGraphqlScraper extends BaseScraper {
   override getSchedule(): CronConfig[] {
     // Epic Games updates their free games every Thursday at 11:00 US/Eastern
     // Check soon after release and a backup check later in the day. Also
@@ -106,7 +176,7 @@ export class EpicGamesApiScraper extends BaseScraper {
   }
 
   getScraperName(): string {
-    return "EpicGamesApi";
+    return "EpicGamesApiGraphql";
   }
 
   getSource(): OfferSource {
@@ -126,52 +196,53 @@ export class EpicGamesApiScraper extends BaseScraper {
   }
 
   override async readOffers(): Promise<Omit<NewOffer, "category">[]> {
-    // Use the simpler REST endpoint which has less Cloudflare protection
-    const response = await fetch(
-      "https://store-site-backend-static.ak.epicgames.com/freeGamesPromotions?locale=en-US&country=US&allowCountries=US",
-      {
-        headers: {
-          Accept: "application/json",
-          "Accept-Language": "en-US,en;q=0.9",
-          "User-Agent":
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
-        },
-      },
-    );
+    const client = this.createClient();
+    const response = await client.query<CatalogData, { count: number }>({
+      query: FREEGAMES_QUERY,
+      variables: { count: 1000 },
+      errorPolicy: "all",
+    });
 
-    if (!response.ok) {
-      logger.error(
-        `Epic API returned ${response.status.toString()}: ${response.statusText}`,
-      );
-      throw new Error(`Epic API returned ${response.status.toString()}`);
-    }
-
-    const apiResponse = (await response.json()) as unknown;
-
-    if (
-      !apiResponse ||
-      typeof apiResponse !== "object" ||
-      !("data" in apiResponse) ||
-      !apiResponse.data
-    ) {
-      logger.error(
-        `No data returned from Epic Games API. Response: ${JSON.stringify(apiResponse)}`,
-      );
+    if (!response.data) {
       throw new Error("No data returned from Epic Games API");
     }
 
-    const typedResponse = apiResponse as FreeGamesResponse;
-
-    return this.parseOffers(typedResponse.data);
+    return this.parseOffers(response.data);
   }
 
   protected override shouldAlwaysHaveOffers(): boolean {
     return true;
   }
 
-  private parseOffers(
-    data: FreeGamesResponse["data"],
-  ): Omit<NewOffer, "category">[] {
+  private createClient() {
+    const defaultClientOptions: ApolloClient.DefaultOptions = {
+      query: {
+        variables: languageDefaults,
+      },
+    };
+
+    const httpLink = new HttpLink({
+      uri: BASE_URL,
+      fetch: async (uri, options) => {
+        return fetch(uri, {
+          ...options,
+          headers: {
+            ...(options?.headers as Record<string, string>),
+            Accept: "application/json",
+          },
+        });
+      },
+    });
+
+    const client = new ApolloClient({
+      link: httpLink,
+      cache: new InMemoryCache(),
+      defaultOptions: defaultClientOptions,
+    });
+    return client;
+  }
+
+  private parseOffers(data: CatalogData): Omit<NewOffer, "category">[] {
     const rawOffers: RawOffer[] = data.Catalog.searchStore.elements;
 
     return rawOffers
