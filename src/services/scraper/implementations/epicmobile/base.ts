@@ -8,6 +8,7 @@ import {
 } from "@/types/basic";
 import type { NewOffer } from "@/types/database";
 import { cleanGameTitle } from "@/utils";
+import { fetchWithBrowserTls } from "@/utils/fetch";
 import { logger } from "@/utils/logger";
 
 const BASE_URL =
@@ -75,7 +76,8 @@ export abstract class EpicMobileSraper extends BaseScraper {
       this.getPlatform() === OfferPlatform.ANDROID ? "android" : "ios";
 
     try {
-      const response = await fetch(
+      // Use fetchWithBrowserTls to bypass TLS fingerprinting that blocks Node 24+
+      const response = await fetchWithBrowserTls(
         `${BASE_URL}?count=10&country=${languageDefaults.country}&locale=${languageDefaults.locale}&platform=${platform}&start=0&store=EGS`,
         {
           headers: {
@@ -93,7 +95,7 @@ export abstract class EpicMobileSraper extends BaseScraper {
         throw new Error(`HTTP error! status: ${response.status.toFixed()}`);
       }
 
-      const data = (await response.json()) as MobileDiscoverData;
+      const data = await response.json<MobileDiscoverData>();
       return this.parseOffers(data);
     } catch (error) {
       if (error instanceof Error) {
