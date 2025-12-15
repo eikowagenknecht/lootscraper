@@ -83,7 +83,7 @@
     "@testing-library/jest-dom": "6.9.1",
     "@types/better-sqlite3": "7.6.13",
     "@types/luxon": "3.7.1",
-    "@types/node": "24.10.1",
+    "@types/node": "25.0.2",
     "@vitest/coverage-v8": "4.0.15",
     "eslint": "9.39.1",
     "eslint-import-resolver-typescript": "4.4.4",
