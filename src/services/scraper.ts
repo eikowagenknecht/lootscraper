@@ -2,6 +2,7 @@ import { Cron } from "croner";
 import { DateTime } from "luxon";
 import {
   getEnabledScraperClasses,
+  getScraperClassByName,
   getScraperSchedule,
   type ScraperClass,
   type ScraperInstance,
@@ -86,6 +87,25 @@ class ScraperService {
     for (const scraperClass of enabledScrapers) {
       await this.queueScraper(scraperClass, forceNow);
     }
+  }
+
+  /**
+   * Queue a specific scraper by name (case-insensitive)
+   * @param name The scraper name (e.g., "AmazonGames", "steamloot")
+   * @param forceNow If true, queue to run immediately
+   * @returns The scraper name if found and queued, null if not found
+   */
+  async queueScraperByName(
+    name: string,
+    forceNow = false,
+  ): Promise<string | null> {
+    const scraperClass = getScraperClassByName(name);
+    if (!scraperClass) {
+      return null;
+    }
+
+    await this.queueScraper(scraperClass, forceNow);
+    return scraperClass.prototype.getScraperName();
   }
 
   async queueScraper(

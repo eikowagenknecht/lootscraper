@@ -1,4 +1,5 @@
 import {
+  type AutocompleteInteraction,
   type ChatInputCommandInteraction,
   type Interaction,
   PermissionFlagsBits,
@@ -16,14 +17,24 @@ import {
 import { type DiscordConfig, discordBotService } from "@/services/discordbot";
 import { getFeedChannelName } from "@/services/discordbot/utils/channels";
 import { scraperService } from "@/services/scraper";
-import { getEnabledFeedCombinations } from "@/services/scraper/utils";
+import {
+  getEnabledFeedCombinations,
+  getEnabledScraperNames,
+} from "@/services/scraper/utils";
 import { logger } from "@/utils/logger";
 
 // Command definitions
 const scrapenowCommand = new SlashCommandBuilder()
   .setName("scrapenow")
   .setDescription("Trigger an immediate scrape (Admin only)")
-  .setDefaultMemberPermissions(PermissionFlagsBits.Administrator);
+  .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
+  .addStringOption((option) =>
+    option
+      .setName("scraper")
+      .setDescription("Specific scraper to run (leave empty for all)")
+      .setRequired(false)
+      .setAutocomplete(true),
+  );
 
 const statusCommand = new SlashCommandBuilder()
   .setName("status")
@@ -78,15 +89,50 @@ async function handleScrapenowCommand(
 
   await interaction.deferReply({ ephemeral: true });
 
+  const scraperName = interaction.options.getString("scraper");
+
   try {
-    // Queue all enabled scrapers to run immediately
-    await scraperService.queueEnabledScrapers(true);
-    await interaction.editReply("Scrape queued! This may take a few minutes.");
+    if (scraperName) {
+      // Queue specific scraper
+      const queuedName = await scraperService.queueScraperByName(
+        scraperName,
+        true,
+      );
+      if (queuedName) {
+        await interaction.editReply(
+          `Scrape queued for ${queuedName}! This may take a few minutes.`,
+        );
+      } else {
+        const enabledNames = getEnabledScraperNames().join(", ");
+        await interaction.editReply(
+          `Unknown scraper "${scraperName}". Available scrapers: ${enabledNames}`,
+        );
+      }
+    } else {
+      // Queue all enabled scrapers
+      await scraperService.queueEnabledScrapers(true);
+      await interaction.editReply(
+        "Scrape queued for all enabled scrapers! This may take a few minutes.",
+      );
+    }
   } catch (error) {
     await interaction.editReply(
       `Failed to start scrape: ${error instanceof Error ? error.message : String(error)}`,
     );
   }
+}
+
+async function handleScraperAutocomplete(
+  interaction: AutocompleteInteraction,
+): Promise<void> {
+  const focusedValue = interaction.options.getFocused().toLowerCase();
+  const scraperNames = getEnabledScraperNames();
+
+  const filtered = scraperNames
+    .filter((name) => name.toLowerCase().includes(focusedValue))
+    .slice(0, 25); // Discord limits to 25 choices
+
+  await interaction.respond(filtered.map((name) => ({ name, value: name })));
 }
 
 async function handleStatusCommand(
@@ -194,6 +240,23 @@ export async function handleInteraction(
   interaction: Interaction,
   config: DiscordConfig,
 ): Promise<void> {
+  // Handle autocomplete interactions
+  if (interaction.isAutocomplete()) {
+    const { commandName } = interaction;
+    try {
+      if (commandName === "scrapenow") {
+        await handleScraperAutocomplete(interaction);
+      }
+    } catch (error) {
+      logger.error(
+        `Error handling Discord autocomplete for ${commandName}: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
+    }
+    return;
+  }
+
   if (!interaction.isChatInputCommand()) return;
 
   const { commandName } = interaction;

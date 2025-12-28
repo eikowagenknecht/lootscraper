@@ -93,6 +93,19 @@ export function getEnabledScraperClasses(): ScraperClass[] {
   );
 }
 
+export function getEnabledScraperNames(): string[] {
+  return getEnabledScraperClasses().map((Scraper) =>
+    Scraper.prototype.getScraperName(),
+  );
+}
+
+export function getScraperClassByName(name: string): ScraperClass | undefined {
+  const lowerName = name.toLowerCase();
+  return getEnabledScraperClasses().find(
+    (Scraper) => Scraper.prototype.getScraperName().toLowerCase() === lowerName,
+  );
+}
+
 export function getEnabledFeedCombinations(): FeedCombination[] {
   const combinations: FeedCombination[] = [];
   const enabledScraperClasses = getEnabledScraperClasses();
