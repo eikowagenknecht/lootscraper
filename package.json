@@ -59,6 +59,7 @@
     "better-sqlite3": "12.5.0",
     "croner": "9.1.0",
     "cross-env": "10.1.0",
+    "discord.js": "14.25.1",
     "grammy": "1.38.4",
     "graphql": "16.12.0",
     "handlebars": "4.7.8",
