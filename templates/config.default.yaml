@@ -29,6 +29,8 @@ actions:
   uploadToFtp: false
   # Enable the Telegram bot. Needs credentials, see below.
   telegramBot: false
+  # Enable the Discord bot. Needs credentials, see below.
+  discordBot: false
 
 scraper:
   # The sources to scrape offers from. Comment out to disable.
@@ -99,3 +101,15 @@ telegram:
   logLevel: ERROR
   # Drop all messages that have been sent while the bot was offline.
   dropPendingMessages: false
+
+discord:
+  # Discord bot token (from Discord Developer Portal)
+  botToken: ""
+  # The server (guild) ID where the bot will operate
+  guildId: ""
+  # Role ID for users who can run admin commands (leave empty to only allow server owner)
+  adminRoleId: ""
+  # Optional prefix for channel names (e.g., "loot-" results in "loot-steam-games")
+  channelPrefix: ""
+  # Category name for organizing the feed channels
+  categoryName: "Free Games"

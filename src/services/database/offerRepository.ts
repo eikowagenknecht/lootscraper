@@ -30,6 +30,29 @@ export async function getOfferById(id: number): Promise<Offer | undefined> {
   }
 }
 
+export async function countOffers(): Promise<number> {
+  try {
+    const result = await getDb()
+      .selectFrom("offers")
+      .select((eb) => eb.fn.countAll<number>().as("count"))
+      .executeTakeFirst();
+    return result?.count ?? 0;
+  } catch (error) {
+    handleError("count offers", error);
+  }
+}
+
+/**
+ * Counts active offers. Fetches all offers into memory rather than using
+ * COUNT(*) for simplicity - acceptable since the dataset is small (typically
+ * under 100 active offers).
+ * @param now
+ */
+export async function countActiveOffers(now: DateTime): Promise<number> {
+  const offers = await getActiveOffers(now);
+  return offers.length;
+}
+
 /**
  * Find an offer by its title and validTo date. validTo is interpreted as "at
  * most 1 day older or 1 day newer" to avoid getting duplicates for offers where

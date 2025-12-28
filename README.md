@@ -14,9 +14,9 @@ Choose your preferred way to get notifications:
 
 - [Telegram bot](#telegram-bot) - Customizable notifications for specific platforms (recommended)
 - [Telegram channels](#telegram-channels) - Pre-filtered channels for most platforms
+- [Discord server](#discord) - Join the official Discord for notifications
 - [RSS feeds](#rss-feeds) - Subscribe using your favorite RSS reader
 - [E-Mail Notifications](#e-mail) - Get offers directly in your inbox
-- [Discord Integration](#discord) -  Post offers to your Discord server
 - [Web Interface](#web-interface) - Browse all current offers on a clean webpage
 
 ## 📱 Supported Platforms
@@ -59,6 +59,36 @@ Just join the ones you are interested in:
 - [Google Android games](https://t.me/+Vma9PScf1uY3M2Uy)
 
 If you miss any, please let me know and I'll add them.
+
+### Discord
+
+If you're a Discord type of person, you can join the official LootScraper server: to get notifications about free games (and chat, if that's your thing):
+
+[![Discord](https://img.shields.io/badge/Discord-Join%20Server-5865F2?logo=discord&logoColor=white)](https://discord.gg/DbNh8wBZdf)
+
+The server has dedicated channels for each platform (e.g., `#steam`, `#epic`, `#steam-loot` etc.).
+
+#### Run Your Own Discord Bot
+
+If you're running your own instance of LootScraper, you can enable the native Discord bot to post offers directly to your server.
+See the [developer README](README_DEV.md#discord-bot) for setup instructions.
+
+##### Alternative: RSS to Discord
+
+If you just want to follow the public RSS feeds in Discord without running your own instance, you can use the free [MonitoRSS](https://monitorss.xyz/) bot.
+I suggest the following settings:
+
+- **Feed URL**: Use the RSS feed links above
+- **Content**:
+
+    ```md
+    **{{title}}**
+
+    {{description}}
+    ```
+
+- **Button**: Label: `Claim`, URL: `{{link}}`
+- **Embed**: Just select `Image URL` with the `{{extracted::atom:content__#::image1}}` variable
 
 ### RSS feeds
 
@@ -116,23 +146,6 @@ You can also have *all sources* on [one page](https://feed.eikowagenknecht.com/l
 
 If you want to get the offers by email, you can use free services like [Blogtrottr](https://blogtrottr.com/) or [Feedsub](https://feedsub.com/) to convert from RSS to email.
 
-### Discord
-
-Prefer to get the offers in a Discord channel?
-You can use the free [MonitoRSS](https://monitorss.xyz/) bot to post them there for you.
-I suggest the following settings:
-
-- **Feed URL**: Use the RSS feed links above
-- **Content**:
-
-    ```md
-    **{{title}}**
-
-    {{description}}
-    ```
-
-- **Button**: Label: `Claim`, URL: `{{link}}`
-- **Embed**: Just select `Image URL` with the `{{extracted::atom:content__#::image1}}` variable
 
 ## Automatically Claim Free Games
 

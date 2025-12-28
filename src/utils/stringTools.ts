@@ -391,7 +391,7 @@ export function getAllEnabledFeedFilenames(prefix: string) {
  * @param input The string to split into chunks
  * @param maxChunkSize The maximum size of each chunk
  * @returns An array of string chunks
- * @throws If maxChunkSize is less than 1
+ * @throws {Error} If maxChunkSize is less than 1
  */
 export function splitIntoChunks(input: string, maxChunkSize: number): string[] {
   if (maxChunkSize < 1) {

@@ -38,7 +38,6 @@ interface FetchResponse {
  * A fetch-like function that uses Chrome-like TLS settings to bypass
  * TLS fingerprinting. Use this when the standard fetch() gets blocked
  * with 403 errors due to TLS fingerprinting.
- *
  * @param url - The URL to fetch (must be HTTPS)
  * @param options - Fetch options (method, headers)
  * @returns A response object with ok, status, json(), and text() methods

@@ -42,14 +42,15 @@ docker run --volume "${PWD}/data:/data" --name lootscraper eikowagenknecht/loots
 
 ## Architecture Overview
 
-LootScraper is a TypeScript application that scrapes free game offers from multiple platforms (Steam, Epic Games, GOG, etc.) and provides notifications via Telegram bot and RSS feeds.
+LootScraper is a TypeScript application that scrapes free game offers from multiple platforms (Steam, Epic Games, GOG, etc.) and provides notifications via Telegram bot, Discord bot, and RSS feeds.
 
 ### Core Architecture
 
 **Service-Oriented Design:** The application follows a service-oriented architecture with distinct services initialized through `src/services/orchestrator.ts`:
 - `database` - SQLite database with Kysely ORM
 - `scraperService` - Orchestrates all platform scrapers
-- `telegramBotService` - Handles Telegram bot interactions  
+- `telegramBotService` - Handles Telegram bot interactions
+- `discordBotService` - Handles Discord bot interactions
 - `feedService` - Generates RSS/HTML feeds
 - `ftpService` - Uploads feeds to FTP server
 - `browserService` - Manages Playwright browser instances
@@ -78,10 +79,16 @@ LootScraper is a TypeScript application that scrapes free game offers from multi
 **Structure:** Commands in `src/services/telegrambot/handlers/commands/`, callbacks in `handlers/callbacks/`
 **Features:** User subscriptions, platform filtering, admin commands, timezone support
 
+### Discord Bot
+
+**Framework:** Built with discord.js
+**Structure:** Commands in `src/services/discordbot/handlers/commands/`, utilities in `utils/`
+**Features:** Auto-channel creation per feed combination, rich embeds with game info, slash commands, admin commands
+
 ### Data Flow
 
 1. **Scraping:** Scrapers fetch offers → Store in database → Update feeds
-2. **Notifications:** New offers trigger Telegram notifications to subscribers
+2. **Notifications:** New offers trigger Telegram/Discord notifications to subscribers
 3. **Feeds:** Generated RSS/HTML feeds uploaded to FTP server
 4. **Game Info:** IGDB/Steam APIs enrich game metadata asynchronously
 
@@ -90,7 +97,7 @@ LootScraper is a TypeScript application that scrapes free game offers from multi
 - **Runtime:** Node.js 22+ with ESM modules
 - **Database:** SQLite with Kysely ORM
 - **Web Scraping:** Playwright browser automation
-- **Bot Framework:** Grammy for Telegram
+- **Bot Frameworks:** Grammy for Telegram, discord.js for Discord
 - **Validation:** Zod schemas throughout
 - **Build:** Vite for building and testing
 - **Logging:** Winston with file rotation and Telegram transport

@@ -213,20 +213,19 @@ class TelegramTransport extends Transport {
     this.resetTimeoutStateIfNeeded();
 
     if (!this.timeoutState.notifiedTimeout) {
-      try {
-        // Send warning without timeout to ensure delivery. But don't wait for
-        // the result so we don't block the logger.
-        void telegramBotService
-          .getBot()
-          .api.sendMessage(
-            this.botLogChatId,
-            "⚠️ Message delivery is taking longer than expected. Some log messages may be delayed or missing. Please check the log file for complete information.",
-          );
-        this.timeoutState.notifiedTimeout = true;
-      } catch (error) {
-        // Log error to console since we can't log to Telegram
-        console.error("Failed to send timeout warning message:", error);
-      }
+      // Send warning without timeout to ensure delivery. But don't wait for
+      // the result so we don't block the logger. Errors are silently ignored
+      // since we can't reliably log them (we're already in a timeout state).
+      void telegramBotService
+        .getBot()
+        .api.sendMessage(
+          this.botLogChatId,
+          "⚠️ Message delivery is taking longer than expected. Some log messages may be delayed or missing. Please check the log file for complete information.",
+        )
+        .catch(() => {
+          // Silently ignore - we can't log to Telegram in a timeout state
+        });
+      this.timeoutState.notifiedTimeout = true;
     }
   }
 

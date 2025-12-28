@@ -118,3 +118,32 @@ export async function cleanQueue(): Promise<void> {
     handleError("clear scraping queue", error);
   }
 }
+
+export async function getLastCompletedRun(): Promise<ScrapingRun | null> {
+  try {
+    const run = await getDb()
+      .selectFrom("scraping_runs")
+      .where("finished_date", "is not", null)
+      .selectAll()
+      .orderBy("finished_date", "desc")
+      .limit(1)
+      .executeTakeFirst();
+    return run ?? null;
+  } catch (error) {
+    handleError("get last completed run", error);
+  }
+}
+
+export async function getUpcomingRuns(limit = 5): Promise<ScrapingRun[]> {
+  try {
+    return await getDb()
+      .selectFrom("scraping_runs")
+      .where("started_date", "is", null)
+      .selectAll()
+      .orderBy("scheduled_date", "asc")
+      .limit(limit)
+      .execute();
+  } catch (error) {
+    handleError("get upcoming runs", error);
+  }
+}

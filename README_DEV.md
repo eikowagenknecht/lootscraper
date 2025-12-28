@@ -88,6 +88,60 @@ To get your user ID or the id of the group chat you are in, just send `/debug` t
 You can put that into "DeveloperChatId" config entry.
 Telegram related errors will be sent there.
 
+### Discord Bot
+
+The Discord bot posts offers to dedicated channels in your server, with rich embeds showing game info, ratings, and claim buttons.
+
+#### Setup
+
+1. **Create a Test Server (Recommended)**
+   - Create a new Discord server for testing purposes to avoid affecting your main server during development.
+   - Click "+" in the Discord app sidebar and select "Create My Own" to set up a new server.
+   - Choose "For a club or community"
+   - Name your server (e.g., "LootScraper Test Server") and click "Create"
+
+2. **Create a Discord Application**
+   - Go to the [Discord Developer Portal](https://discord.com/developers/applications)
+   - Click "New Application" and give it a name (e.g., "LootScraper")
+   - Go to the "Bot" section and click "Reset Token"
+   - Copy the bot token for your config file
+
+3. **Configure Bot Permissions**
+   - Privileged Gateway Intents: None required (the bot uses slash commands only)
+   - In OAuth2 → URL Generator:
+     - Scopes: `bot`, `applications.commands`
+     - Bot Permissions: `Manage Channels`, `View Channels`, `Send Messages`, `Embed Links`
+   - Use the generated URL to invite the bot to your server
+
+4. **Get Server and Role IDs**
+   - Enable Developer Mode in Discord (User Settings → Advanced → Developer Mode)
+   - Right-click your server → "Copy Server ID" for `guildId`
+   - Right-click an admin role → "Copy Role ID" for `adminRoleId` (optional)
+
+5. **Configure LootScraper**
+
+   ```yaml
+   actions:
+     discordBot: true
+
+   discord:
+     botToken: "your-bot-token-here"
+     guildId: "your-server-id"
+     adminRoleId: ""  # Optional: role that can use admin commands
+     channelPrefix: ""  # Optional: prefix for channel names (e.g., "loot-")
+     categoryName: "Free Games"  # Category to organize channels under
+   ```
+
+#### Features
+
+- **Auto-channel creation**: The bot creates channels like `#epic-ios` under a category
+- **Rich embeds**: Offers include thumbnails, ratings, expiry info, and "Claim Now" buttons
+- **Slash commands**:
+  - `/status` - Show bot stats, feed channels, and upcoming scrapes
+  - `/scrapenow` - Trigger the scraper (admin only)
+  - `/populate` - Backfill all channels with current active offers (admin only)
+
+
 ## Contribute
 
 - If you want to contribute, please open an issue first to discuss the changes.

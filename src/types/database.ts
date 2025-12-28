@@ -24,6 +24,7 @@ export interface Database {
   telegram_subscriptions: TelegramSubscriptionsTable;
   scraping_runs: ScrapingRunsTable;
   hashes: HashesTable;
+  discord_channels: DiscordChannelsTable;
 }
 
 /** Legacy table from LootScraper <2.0.0 */
@@ -180,3 +181,19 @@ interface HashesTable {
 export type Hash = Selectable<HashesTable>;
 export type NewHash = Insertable<HashesTable>;
 export type HashUpdate = Updateable<HashesTable>;
+
+/** A Discord channel configured for a specific offer combination. */
+interface DiscordChannelsTable {
+  id: Generated<number>;
+  channel_id: string;
+  source: OfferSource;
+  type: OfferType;
+  duration: OfferDuration;
+  platform: OfferPlatform;
+  last_offer_id: number;
+  created_at: string;
+}
+
+export type DiscordChannel = Selectable<DiscordChannelsTable>;
+export type NewDiscordChannel = Insertable<DiscordChannelsTable>;
+export type DiscordChannelUpdate = Updateable<DiscordChannelsTable>;

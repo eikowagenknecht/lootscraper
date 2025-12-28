@@ -12,6 +12,7 @@ import { scrapingRunsMigration } from "./007-scrapingruns";
 import { platformMigration } from "./008-platform";
 import { fixActiveMigration } from "./009-fixactive";
 import { hashesMigration } from "./010-hashes";
+import { discordMigration } from "./011-discord";
 
 // Define the migrations type
 const migrations: Record<string, Migration> = {
@@ -25,6 +26,7 @@ const migrations: Record<string, Migration> = {
   "008-platform": platformMigration,
   "009-fixactive": fixActiveMigration,
   "010-hashes": hashesMigration,
+  "011-discord": discordMigration,
 };
 
 export async function migrateToLatest(db: Kysely<unknown>): Promise<void> {

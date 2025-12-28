@@ -172,19 +172,14 @@ export class TelegramBotService {
       throw new Error("Bot not initialized. Call initialize() first.");
     }
 
-    try {
-      // This never resolves as long as the bot is running, so we don't await it
-      void this.bot.start({
-        onStart: () => {
-          logger.info("Telegram bot listening to messages.");
-        },
-        drop_pending_updates: this.botConfig.dropPendingUpdates,
-      });
-    } catch (error) {
-      throw new Error(
-        `Failed to start Telegram bot: ${error instanceof Error ? error.message : String(error)}`,
-      );
-    }
+    // This never resolves as long as the bot is running, so we don't await it.
+    // Errors are handled by the global unhandledRejection handler.
+    void this.bot.start({
+      onStart: () => {
+        logger.info("Telegram bot listening to messages.");
+      },
+      drop_pending_updates: this.botConfig.dropPendingUpdates,
+    });
 
     // Start periodic announcement check
     this.startBroadcastCheck();

@@ -1,6 +1,7 @@
 import { browserService } from "@/services/browser";
 import { config } from "@/services/config";
 import { database } from "@/services/database";
+import { discordBotService } from "@/services/discordbot";
 import { telegramBotService } from "@/services/telegrambot";
 import type { Config } from "@/types";
 import { addTelegramTransport, logger } from "@/utils/logger";
@@ -74,6 +75,11 @@ async function initializeServices(cfg: Config): Promise<void> {
     addTelegramTransport(cfg.telegram.logLevel, cfg.telegram.botLogChatId);
   }
 
+  if (cfg.actions.discordBot) {
+    logger.info("Initializing Discord bot.");
+    await discordBotService.initialize(cfg);
+  }
+
   if (cfg.actions.generateFeed) {
     logger.info("Initializing feed service.");
     feedService.initialize(cfg);
@@ -110,6 +116,12 @@ async function startServices() {
     telegramBotService.start();
   }
 
+  // Start Discord bot if enabled
+  if (cfg.actions.discordBot) {
+    // This starts the bot in the background until stopped
+    discordBotService.start();
+  }
+
   // Start scraper service if enabled
   if (cfg.actions.scrapeOffers) {
     // This starts the scraper service in the background until stopped
@@ -124,6 +136,7 @@ export async function shutdownApp(): Promise<void> {
   // Stop services in reverse order of starting
   logger.info("Stopping services...");
   await telegramBotService.stop();
+  await discordBotService.stop();
   await scraperService.stop();
 
   // Destroy services in reverse order of initialization

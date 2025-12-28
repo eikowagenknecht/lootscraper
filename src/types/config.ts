@@ -38,6 +38,7 @@ export const ConfigSchema = z.object({
     generateFeed: z.boolean().default(false),
     uploadToFtp: z.boolean().default(false),
     telegramBot: z.boolean().default(false),
+    discordBot: z.boolean().default(false),
   }),
   telegram: z.object({
     logLevel: TelegramLogLevel.default("ERROR"),
@@ -62,6 +63,13 @@ export const ConfigSchema = z.object({
     urlPrefix: z.string().default("https://feed.example.com/"),
     urlAlternate: z.string().default("https://example.com/loot"),
     idPrefix: z.string().default("https://example.com/loot/"),
+  }),
+  discord: z.object({
+    botToken: z.string().default(""),
+    guildId: z.string().default(""),
+    adminRoleId: z.string().default(""),
+    channelPrefix: z.string().default(""),
+    categoryName: z.string().default("Free Games"),
   }),
 });
 
