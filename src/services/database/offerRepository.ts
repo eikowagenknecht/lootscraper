@@ -46,7 +46,8 @@ export async function countOffers(): Promise<number> {
  * Counts active offers. Fetches all offers into memory rather than using
  * COUNT(*) for simplicity - acceptable since the dataset is small (typically
  * under 100 active offers).
- * @param now
+ * @param now The current time to check offer validity against
+ * @returns The number of currently active offers
  */
 export async function countActiveOffers(now: DateTime): Promise<number> {
   const offers = await getActiveOffers(now);
