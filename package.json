@@ -51,7 +51,7 @@
     "docker:pub:dev": "docker build . -t eikowagenknecht/lootscraper:develop && docker push eikowagenknecht/lootscraper:develop"
   },
   "dependencies": {
-    "@apollo/client": "4.1.0",
+    "@apollo/client": "4.1.2",
     "@grammyjs/auto-retry": "2.0.2",
     "@grammyjs/commands": "1.2.0",
     "abort-controller": "3.0.0",
@@ -63,19 +63,19 @@
     "grammy": "1.39.3",
     "graphql": "16.12.0",
     "handlebars": "4.7.8",
-    "i18next": "25.7.4",
+    "i18next": "25.8.0",
     "kysely": "0.28.10",
     "logform": "2.7.0",
     "luxon": "3.7.2",
-    "playwright": "1.57.0",
+    "playwright": "1.58.0",
     "winston": "3.19.0",
     "winston-daily-rotate-file": "5.0.0",
     "winston-transport": "4.9.0",
     "yaml": "2.8.2",
-    "zod": "4.3.5"
+    "zod": "4.3.6"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.3.11",
+    "@biomejs/biome": "2.3.12",
     "@commitlint/cli": "20.3.1",
     "@commitlint/config-conventional": "20.3.1",
     "@commitlint/types": "20.3.1",
@@ -85,21 +85,21 @@
     "@types/better-sqlite3": "7.6.13",
     "@types/luxon": "3.7.1",
     "@types/node": "24.10.9",
-    "@vitest/coverage-v8": "4.0.17",
+    "@vitest/coverage-v8": "4.0.18",
     "eslint": "9.39.2",
     "eslint-import-resolver-typescript": "4.4.4",
     "eslint-plugin-import-x": "4.16.1",
-    "eslint-plugin-jsdoc": "62.1.0",
-    "globals": "17.0.0",
+    "eslint-plugin-jsdoc": "62.4.1",
+    "globals": "17.1.0",
     "jiti": "2.6.1",
-    "knip": "5.82.0",
+    "knip": "5.82.1",
     "lefthook": "2.0.15",
-    "prettier": "3.8.0",
+    "prettier": "3.8.1",
     "semantic-release": "25.0.2",
     "tsx": "4.21.0",
     "typescript": "5.9.3",
-    "typescript-eslint": "8.53.0",
+    "typescript-eslint": "8.53.1",
     "vite": "7.3.1",
-    "vitest": "4.0.17"
+    "vitest": "4.0.18"
   }
 }
