@@ -269,7 +269,8 @@ export async function getChatsNeedingOffers(time: DateTime): Promise<number[]> {
       .groupBy("c.id")
       .having((eb) => eb.fn.count("o.id"), ">", 0);
 
-    return (await query.execute()).map((row) => row.id);
+    const result = await query.execute();
+    return result.map((row) => row.id);
   } catch (error) {
     handleError("get chats needing offers", error);
   }
@@ -287,7 +288,8 @@ export async function getChatsNeedingAnnouncements(): Promise<number[]> {
       .groupBy("c.id")
       .having((eb) => eb.fn.count("a.id"), ">", 0);
 
-    return (await query.execute()).map((row) => row.id);
+    const result = await query.execute();
+    return result.map((row) => row.id);
   } catch (error) {
     handleError("get chats needing announcements", error);
   }
