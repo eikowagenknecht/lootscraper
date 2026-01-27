@@ -31,9 +31,9 @@ export async function formatOfferMessage(
 
   // Basic offer info
   const additionalInfo =
-    offer.duration !== OfferDuration.CLAIMABLE
-      ? `${translationService.getTypeDisplay(offer.type)}, ${translationService.getPlatformDisplay(offer.platform)} ${translationService.getDurationDisplay(offer.duration)}`
-      : `${translationService.getTypeDisplay(offer.type)}, ${translationService.getPlatformDisplay(offer.platform)}`;
+    offer.duration === OfferDuration.CLAIMABLE
+      ? `${translationService.getTypeDisplay(offer.type)}, ${translationService.getPlatformDisplay(offer.platform)}`
+      : `${translationService.getTypeDisplay(offer.type)}, ${translationService.getPlatformDisplay(offer.platform)} ${translationService.getDurationDisplay(offer.duration)}`;
 
   content += bold(
     `${offer.title} - ${translationService.getSourceDisplay(offer.source)} (${additionalInfo})`,
