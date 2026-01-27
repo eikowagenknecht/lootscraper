@@ -55,7 +55,7 @@ export abstract class GogBaseScraper extends BaseScraper {
     });
   }
 
-  private async getCurrentLanguage(page: Page): Promise<string | null> {
+  private getCurrentLanguage(page: Page): Promise<string | null> {
     return page.locator("li.footer-microservice-language__item.is-selected").textContent();
   }
 
