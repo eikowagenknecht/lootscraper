@@ -71,8 +71,8 @@ export async function buildManageKeyboard(chatId: number) {
 function getButtonText(combination: FeedCombination, isSubscribed: boolean): string {
   const prefix = isSubscribed ? "[x] " : "";
   const suffix =
-    combination.duration !== OfferDuration.CLAIMABLE
-      ? ` (${translationService.getDurationDisplay(combination.duration)})`
-      : "";
+    combination.duration === OfferDuration.CLAIMABLE
+      ? ""
+      : ` (${translationService.getDurationDisplay(combination.duration)})`;
   return `${prefix}${combination.source} ${combination.type} ${combination.platform} ${suffix}`;
 }

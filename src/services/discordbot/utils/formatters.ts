@@ -43,9 +43,9 @@ export async function formatOfferEmbed(offer: Offer): Promise<OfferEmbedResult> 
 
   // Add offer type info
   const additionalInfo =
-    offer.duration !== OfferDuration.CLAIMABLE
-      ? `${translationService.getTypeDisplay(offer.type)} | ${translationService.getPlatformDisplay(offer.platform)} | ${translationService.getDurationDisplay(offer.duration)}`
-      : `${translationService.getTypeDisplay(offer.type)} | ${translationService.getPlatformDisplay(offer.platform)}`;
+    offer.duration === OfferDuration.CLAIMABLE
+      ? `${translationService.getTypeDisplay(offer.type)} | ${translationService.getPlatformDisplay(offer.platform)}`
+      : `${translationService.getTypeDisplay(offer.type)} | ${translationService.getPlatformDisplay(offer.platform)} | ${translationService.getDurationDisplay(offer.duration)}`;
 
   embed.setDescription(additionalInfo);
 
