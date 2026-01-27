@@ -1,3 +1,4 @@
+// oxlint-disable-next-line import/no-unassigned-import -- Side-effect import for test matchers
 import "@testing-library/jest-dom/vitest";
 import { DateTime, Settings as LuxonSettings } from "luxon";
 
