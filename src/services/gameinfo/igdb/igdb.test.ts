@@ -21,11 +21,11 @@ describe("IgdbClient", () => {
 
     // Mock successful auth by default
     vi.mocked(fetch).mockResolvedValueOnce(
-      new Response(
-        JSON.stringify({
+      Response.json(
+        {
           access_token: "mock_token",
           expires_in: 3600,
-        }),
+        },
         {
           status: 200,
           headers: { "Content-Type": "application/json" },
@@ -37,7 +37,7 @@ describe("IgdbClient", () => {
   test("searchGame resolves Rainbow Six Siege correctly", async () => {
     // Second fetch call is the actual API request
     vi.mocked(fetch).mockResolvedValueOnce(
-      new Response(JSON.stringify([{ id: 7360, name: "Rainbow Six Siege" }]), {
+      Response.json([{ id: 7360, name: "Rainbow Six Siege" }], {
         status: 200,
         headers: { "Content-Type": "application/json" },
       }),
@@ -81,7 +81,7 @@ limit 50;
     };
 
     vi.mocked(fetch).mockResolvedValueOnce(
-      new Response(JSON.stringify([mockGameDetails]), {
+      Response.json([mockGameDetails], {
         status: 200,
         headers: { "Content-Type": "application/json" },
       }),
@@ -104,13 +104,13 @@ limit 50;
 
   test("searchGame handles special characters", async () => {
     vi.mocked(fetch).mockResolvedValueOnce(
-      new Response(
-        JSON.stringify([
+      Response.json(
+        [
           {
             id: 66,
             name: "Monkey Island 2 Special Edition: LeChuck's Revenge",
           },
-        ]),
+        ],
         {
           status: 200,
           headers: { "Content-Type": "application/json" },
@@ -124,7 +124,7 @@ limit 50;
 
   test("searchGame returns null for no matches", async () => {
     vi.mocked(fetch).mockResolvedValueOnce(
-      new Response(JSON.stringify([]), {
+      Response.json([], {
         status: 200,
         headers: { "Content-Type": "application/json" },
       }),
@@ -136,7 +136,7 @@ limit 50;
 
   test("getDetails returns null for invalid game ID", async () => {
     vi.mocked(fetch).mockResolvedValueOnce(
-      new Response(JSON.stringify([]), {
+      Response.json([], {
         status: 200,
         headers: { "Content-Type": "application/json" },
       }),
@@ -150,10 +150,13 @@ limit 50;
     vi.resetAllMocks(); // Reset to remove default auth mock
 
     vi.mocked(fetch).mockResolvedValueOnce(
-      new Response(JSON.stringify({ error: "Invalid client" }), {
-        status: 401,
-        headers: { "Content-Type": "application/json" },
-      }),
+      Response.json(
+        { error: "Invalid client" },
+        {
+          status: 401,
+          headers: { "Content-Type": "application/json" },
+        },
+      ),
     );
 
     await expect(client.searchGame("Counter-Strike")).rejects.toThrow("IGDB auth failed");
@@ -161,10 +164,13 @@ limit 50;
 
   test("handles API errors", async () => {
     vi.mocked(fetch).mockResolvedValueOnce(
-      new Response(JSON.stringify({ error: "Rate limit exceeded" }), {
-        status: 429,
-        headers: { "Content-Type": "application/json" },
-      }),
+      Response.json(
+        { error: "Rate limit exceeded" },
+        {
+          status: 429,
+          headers: { "Content-Type": "application/json" },
+        },
+      ),
     );
 
     await expect(client.searchGame("Counter-Strike")).rejects.toThrow("IGDB API error");
@@ -173,7 +179,7 @@ limit 50;
   test("reuses auth token when not expired", async () => {
     // First call succeeds
     vi.mocked(fetch).mockResolvedValueOnce(
-      new Response(JSON.stringify([{ id: 241, name: "Counter-Strike" }]), {
+      Response.json([{ id: 241, name: "Counter-Strike" }], {
         status: 200,
         headers: { "Content-Type": "application/json" },
       }),
@@ -183,7 +189,7 @@ limit 50;
 
     // Second call should reuse token
     vi.mocked(fetch).mockResolvedValueOnce(
-      new Response(JSON.stringify([{ id: 7360, name: "Rainbow Six Siege" }]), {
+      Response.json([{ id: 7360, name: "Rainbow Six Siege" }], {
         status: 200,
         headers: { "Content-Type": "application/json" },
       }),
@@ -215,11 +221,11 @@ limit 50;
 
     // First auth token
     vi.mocked(fetch).mockResolvedValueOnce(
-      new Response(
-        JSON.stringify({
+      Response.json(
+        {
           access_token: "token1",
           expires_in: 3600,
-        }),
+        },
         {
           status: 200,
           headers: { "Content-Type": "application/json" },
@@ -229,7 +235,7 @@ limit 50;
 
     // First API call
     vi.mocked(fetch).mockResolvedValueOnce(
-      new Response(JSON.stringify([{ id: 241, name: "Counter-Strike" }]), {
+      Response.json([{ id: 241, name: "Counter-Strike" }], {
         status: 200,
         headers: { "Content-Type": "application/json" },
       }),
@@ -242,11 +248,11 @@ limit 50;
 
     // Second auth token
     vi.mocked(fetch).mockResolvedValueOnce(
-      new Response(
-        JSON.stringify({
+      Response.json(
+        {
           access_token: "token2",
           expires_in: 3600,
-        }),
+        },
         {
           status: 200,
           headers: { "Content-Type": "application/json" },
@@ -256,7 +262,7 @@ limit 50;
 
     // Second API call
     vi.mocked(fetch).mockResolvedValueOnce(
-      new Response(JSON.stringify([{ id: 7360, name: "Rainbow Six Siege" }]), {
+      Response.json([{ id: 7360, name: "Rainbow Six Siege" }], {
         status: 200,
         headers: { "Content-Type": "application/json" },
       }),
