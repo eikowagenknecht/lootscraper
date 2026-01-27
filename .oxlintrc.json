@@ -27,8 +27,8 @@
     "unicorn/no-array-sort": "off",
 
     // Style Overwrites
-    "unicorn/filename-case": "off", // Project uses camelCase for filenames
-    "no-new": "off", // Used for URL validation
+    "unicorn/filename-case": "off", // Migrations use numbered prefixes (001-initial.ts)
+    "no-new": "warn",
     "max-statements": "off",
     "max-params": "off",
     "capitalized-comments": "off",
