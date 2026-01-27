@@ -88,11 +88,11 @@
     // Restriction Overwrites
     "no-empty": "error",
     "no-regex-spaces": "error",
-    "no-empty-function": "off", // Some empty functions are intentional (e.g., SSL bypass)
-    "no-promise-executor-return": "off", // Common pattern for setTimeout delays
+    "no-empty-function": "error",
+    "no-promise-executor-return": "error",
     "unicorn/no-immediate-mutation": "off", // Building arrays incrementally is fine
-    "unicorn/no-empty-file": "off", // Some files are placeholders
-    "import/no-unassigned-import": "off", // Side-effect imports are intentional
+    "unicorn/no-empty-file": "error",
+    "import/no-unassigned-import": "off", // Side-effect imports are intentional (vitest-setup.ts)
     "jsdoc/check-access": "warn",
     "typescript/no-dynamic-delete": "error",
     "typescript/no-empty-object-type": "error",
