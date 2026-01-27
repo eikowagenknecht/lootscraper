@@ -17,7 +17,7 @@ describe("IgdbClient", () => {
     vi.resetAllMocks();
 
     // Mock fetch globally
-    global.fetch = vi.fn();
+    globalThis.fetch = vi.fn();
 
     // Mock successful auth by default
     vi.mocked(fetch).mockResolvedValueOnce(
@@ -211,7 +211,7 @@ limit 50;
     // Mock Date.now() to control token expiration
     const realDateNow = Date.now;
     let currentTime = 1_000_000;
-    global.Date.now = vi.fn(() => currentTime);
+    globalThis.Date.now = vi.fn(() => currentTime);
 
     // First auth token
     vi.mocked(fetch).mockResolvedValueOnce(
@@ -265,7 +265,7 @@ limit 50;
     await client.searchGame("Rainbow Six Siege");
 
     // Restore Date.now
-    global.Date.now = realDateNow;
+    globalThis.Date.now = realDateNow;
 
     // Should see 4 calls total: 2 auth + 2 API requests
     expect(fetch).toHaveBeenCalledTimes(4);
