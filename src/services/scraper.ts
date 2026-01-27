@@ -115,7 +115,7 @@ class ScraperService {
       const nextExecution = new Cron(cron.schedule, {
         timezone: cron.timezone ?? "UTC",
       }).nextRun();
-      if (nextExecution == null) {
+      if (nextExecution === null) {
         logger.error(`Failed to calculate next execution for ${schedule.name}`);
         continue;
       }
@@ -217,7 +217,7 @@ class ScraperService {
     // Step 8 - Check if we have a queued run. If not, we can spin down the
     // browser to save resources
 
-    if ((await getNextDueRun()) == null) {
+    if ((await getNextDueRun()) === null) {
       logger.info("No run directly in queue, spinning down browser to save resources.");
       await browserService.destroy();
     }
