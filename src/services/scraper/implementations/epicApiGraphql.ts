@@ -221,7 +221,7 @@ export class EpicGamesApiGraphqlScraper extends BaseScraper {
 
     const httpLink = new HttpLink({
       uri: BASE_URL,
-      fetch: async (uri, options) =>
+      fetch: (uri, options) =>
         fetch(uri, {
           ...options,
           headers: {
