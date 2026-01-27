@@ -64,7 +64,7 @@
     "no-lonely-if": "off",
     "jsdoc/require-param-type": "off",
     "jsdoc/require-returns-type": "off",
-    "jsdoc/require-returns": "off", // False positive - @returns tags already present
+    "jsdoc/require-returns": "off", // False positive - tags already present but not recognized
     "jsdoc/require-param": "off",
     "typescript/restrict-plus-operands": [
       "warn",
@@ -76,21 +76,21 @@
         "allowRegExp": false
       }
     ],
-    "unicorn/number-literal-case": "off", // Conflicts with oxfmt
-    "unicorn/no-nested-ternary": "off", // Conflicts with oxfmt
+    "unicorn/number-literal-case": "off", // Conflicts with oxfmt (formats to lowercase)
+    "unicorn/no-nested-ternary": "off", // Conflicts with oxfmt (removes parentheses)
     "unicorn/no-object-as-default-parameter": "off",
-    "unicorn/prefer-at": "off", // Changes semantics (array[n] to array.at(n))
-    "unicorn/prefer-text-content": "off", // Changes semantics (innerText to textContent)
-    "unicorn/prefer-dom-node-text-content": "off", // Changes semantics (innerText to textContent)
-    "unicorn/no-useless-undefined": "off", // Changes semantics (fn(undefined) to fn())
-    "arrow-body-style": "off", // Changes semantics (arrow function returns)
+    "unicorn/prefer-at": "off", // Changes TypeScript types (.at() returns T | undefined)
+    "unicorn/prefer-text-content": "warn",
+    "unicorn/prefer-dom-node-text-content": "off", // innerText intentionally used (see comment in steam/base.ts:99)
+    "unicorn/no-useless-undefined": "off", // TypeScript requires explicit undefined returns
+    "arrow-body-style": "warn",
 
     // Restriction Overwrites
     "no-empty": "error",
     "no-regex-spaces": "error",
     "no-empty-function": "error",
     "no-promise-executor-return": "error",
-    "unicorn/no-immediate-mutation": "off", // Building arrays incrementally is fine
+    "unicorn/no-immediate-mutation": "off", // Incremental array building is intentional for clarity
     "unicorn/no-empty-file": "error",
     "import/no-unassigned-import": "error",
     "jsdoc/check-access": "warn",
