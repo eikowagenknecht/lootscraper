@@ -92,7 +92,7 @@
     "no-promise-executor-return": "error",
     "unicorn/no-immediate-mutation": "off", // Building arrays incrementally is fine
     "unicorn/no-empty-file": "error",
-    "import/no-unassigned-import": "off", // Side-effect imports are intentional (vitest-setup.ts)
+    "import/no-unassigned-import": "error",
     "jsdoc/check-access": "warn",
     "typescript/no-dynamic-delete": "error",
     "typescript/no-empty-object-type": "error",
