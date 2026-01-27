@@ -413,13 +413,14 @@ export function splitIntoChunks(input: string, maxChunkSize: number): string[] {
     let cutPosition = currentPosition + maxChunkSize;
 
     // Look for natural break points
+    const threshold = currentPosition;
     const naturalBreaks = [
       input.lastIndexOf(" ", cutPosition),
       input.lastIndexOf("-", cutPosition),
       input.lastIndexOf(",", cutPosition),
       input.lastIndexOf(";", cutPosition),
       input.lastIndexOf(".", cutPosition),
-    ].filter((pos): pos is number => pos > currentPosition);
+    ].filter((pos): pos is number => pos > threshold);
 
     // If we found any natural break points, use the latest one
     if (naturalBreaks.length > 0) {
