@@ -154,9 +154,7 @@ class ConfigService {
 
       // Validate feed URLs when feed generation is enabled
       if (config.actions.generateFeed) {
-        try {
-          new URL(config.feed.urlPrefix);
-        } catch {
+        if (!URL.canParse(config.feed.urlPrefix)) {
           ctx.issues.push({
             code: "custom",
             path: ["feed", "urlPrefix"],
@@ -165,9 +163,7 @@ class ConfigService {
           });
         }
 
-        try {
-          new URL(config.feed.urlAlternate);
-        } catch {
+        if (!URL.canParse(config.feed.urlAlternate)) {
           ctx.issues.push({
             code: "custom",
             path: ["feed", "urlAlternate"],
