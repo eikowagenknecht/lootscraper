@@ -4,6 +4,7 @@ import { afterAll, beforeAll, describe, expect, test } from "vitest";
 
 import { config } from "@/services/config";
 import { telegramBotService } from "@/services/telegrambot";
+import { delay } from "@/utils";
 
 const runThis = process.env.VSCODE_PID !== undefined || process.env.VITEST_MODE === "contract";
 
@@ -66,7 +67,7 @@ describe.skipIf(!runThis)("Telegram Rate Limits", () => {
         await telegramBotService.getBot().api.sendMessage(TEST_CHAT_ID, msg);
         console.log(`Message ${(i + 1).toFixed(0)} sent successfully`);
         // Add a small delay between messages
-        await new Promise((resolve) => setTimeout(resolve, 500));
+        await delay(500);
       } catch (error) {
         console.log(
           `Message ${(i + 1).toFixed(0)} failed: ${error instanceof Error ? error.message : String(error)}`,

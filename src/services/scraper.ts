@@ -9,6 +9,7 @@ import {
   getScraperClassByName,
   getScraperSchedule,
 } from "@/services/scraper/utils";
+import { delay } from "@/utils";
 import { logger } from "@/utils/logger";
 
 import { browserService } from "./browser";
@@ -76,7 +77,7 @@ class ScraperService {
 
     // Wait for the current scraping run to finish
     while (this.isScraping) {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      await delay(1000);
       // TODO: Add a timeout here in case the scraper gets stuck
     }
   }
