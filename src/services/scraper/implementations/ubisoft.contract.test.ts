@@ -1,11 +1,11 @@
 import { beforeAll, describe, expect, test } from "vitest";
+
 import { browserService } from "@/services/browser";
 import { config } from "@/services/config";
+
 import { UbisoftGamesScraper } from "./ubisoft";
 
-const runThis =
-  process.env.VSCODE_PID !== undefined ||
-  process.env.VITEST_MODE === "contract";
+const runThis = process.env.VSCODE_PID !== undefined || process.env.VITEST_MODE === "contract";
 
 describe.skipIf(!runThis)("Ubisoft Games Scraper Contract Tests", () => {
   beforeAll(async () => {

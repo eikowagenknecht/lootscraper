@@ -1,26 +1,16 @@
-import {
-  type AutocompleteInteraction,
-  type ChatInputCommandInteraction,
-  type Interaction,
-  PermissionFlagsBits,
-  SlashCommandBuilder,
-} from "discord.js";
+import type { AutocompleteInteraction, ChatInputCommandInteraction, Interaction } from "discord.js";
+
+import { PermissionFlagsBits, SlashCommandBuilder } from "discord.js";
 import { DateTime } from "luxon";
-import {
-  countActiveOffers,
-  countOffers,
-} from "@/services/database/offerRepository";
-import {
-  getLastCompletedRun,
-  getUpcomingRuns,
-} from "@/services/database/scrapingRunRepository";
-import { type DiscordConfig, discordBotService } from "@/services/discordbot";
+
+import type { DiscordConfig } from "@/services/discordbot";
+
+import { countActiveOffers, countOffers } from "@/services/database/offerRepository";
+import { getLastCompletedRun, getUpcomingRuns } from "@/services/database/scrapingRunRepository";
+import { discordBotService } from "@/services/discordbot";
 import { getFeedChannelName } from "@/services/discordbot/utils/channels";
 import { scraperService } from "@/services/scraper";
-import {
-  getEnabledFeedCombinations,
-  getEnabledScraperNames,
-} from "@/services/scraper/utils";
+import { getEnabledFeedCombinations, getEnabledScraperNames } from "@/services/scraper/utils";
 import { logger } from "@/utils/logger";
 
 // Command definitions
@@ -42,23 +32,14 @@ const statusCommand = new SlashCommandBuilder()
 
 const populateCommand = new SlashCommandBuilder()
   .setName("populate")
-  .setDescription(
-    "Populate all channels with current active offers (Admin only)",
-  )
+  .setDescription("Populate all channels with current active offers (Admin only)")
   .setDefaultMemberPermissions(PermissionFlagsBits.Administrator);
 
 export function getCommands() {
-  return [
-    scrapenowCommand.toJSON(),
-    statusCommand.toJSON(),
-    populateCommand.toJSON(),
-  ];
+  return [scrapenowCommand.toJSON(), statusCommand.toJSON(), populateCommand.toJSON()];
 }
 
-function isAdmin(
-  interaction: ChatInputCommandInteraction,
-  config: DiscordConfig,
-): boolean {
+function isAdmin(interaction: ChatInputCommandInteraction, config: DiscordConfig): boolean {
   // Server owner is always admin
   if (interaction.guild?.ownerId === interaction.user.id) {
     return true;
@@ -68,7 +49,7 @@ function isAdmin(
   if (config.adminRoleId && interaction.member) {
     const roles = Array.isArray(interaction.member.roles)
       ? interaction.member.roles
-      : Array.from(interaction.member.roles.cache.keys());
+      : [...interaction.member.roles.cache.keys()];
     return roles.includes(config.adminRoleId);
   }
 
@@ -94,10 +75,7 @@ async function handleScrapenowCommand(
   try {
     if (scraperName) {
       // Queue specific scraper
-      const queuedName = await scraperService.queueScraperByName(
-        scraperName,
-        true,
-      );
+      const queuedName = await scraperService.queueScraperByName(scraperName, true);
       if (queuedName) {
         await interaction.editReply(
           `Scrape queued for ${queuedName}! This may take a few minutes.`,
@@ -122,9 +100,7 @@ async function handleScrapenowCommand(
   }
 }
 
-async function handleScraperAutocomplete(
-  interaction: AutocompleteInteraction,
-): Promise<void> {
+async function handleScraperAutocomplete(interaction: AutocompleteInteraction): Promise<void> {
   const focusedValue = interaction.options.getFocused().toLowerCase();
   const scraperNames = getEnabledScraperNames();
 
@@ -135,9 +111,7 @@ async function handleScraperAutocomplete(
   await interaction.respond(filtered.map((name) => ({ name, value: name })));
 }
 
-async function handleStatusCommand(
-  interaction: ChatInputCommandInteraction,
-): Promise<void> {
+async function handleStatusCommand(interaction: ChatInputCommandInteraction): Promise<void> {
   const client = discordBotService.getClient();
   const combinations = getEnabledFeedCombinations();
 
@@ -157,9 +131,7 @@ async function handleStatusCommand(
     const hours = Math.floor(diff.hours);
     const minutes = Math.floor(diff.minutes);
     const timeAgo =
-      hours > 0
-        ? `${hours.toFixed()}h ${minutes.toFixed()}m ago`
-        : `${minutes.toFixed()}m ago`;
+      hours > 0 ? `${hours.toFixed(0)}h ${minutes.toFixed(0)}m ago` : `${minutes.toFixed(0)}m ago`;
     lastScrapeText = `${lastRun.scraper} (${timeAgo})`;
   }
 
@@ -182,23 +154,22 @@ async function handleStatusCommand(
           diff.as("minutes") <= 0
             ? "now"
             : hours > 0
-              ? `in ${hours.toFixed()}h ${minutes.toFixed()}m`
-              : `in ${minutes.toFixed()}m`;
+              ? `in ${hours.toFixed(0)}h ${minutes.toFixed(0)}m`
+              : `in ${minutes.toFixed(0)}m`;
         return `• ${run.scraper} (${timeText})`;
       })
       .join("\n");
   }
 
-  const latencyText =
-    client.ws.ping > 0 ? `\n**Latency:** ${client.ws.ping.toFixed()}ms` : "";
+  const latencyText = client.ws.ping > 0 ? `\n**Latency:** ${client.ws.ping.toFixed(0)}ms` : "";
 
   const statusText = `
 **LootScraper Bot Status**
 
-**Active Offers:** ${activeOffers.toFixed()}
-**Total Offers Tracked:** ${totalOffers.toFixed()}
+**Active Offers:** ${activeOffers.toFixed(0)}
+**Total Offers Tracked:** ${totalOffers.toFixed(0)}
 **Last Scrape:** ${lastScrapeText}
-**Bot Uptime:** ${uptime.toFixed()} minutes${latencyText}
+**Bot Uptime:** ${uptime.toFixed(0)} minutes${latencyText}
 
 **Feed Channels:**
 ${channelList}
@@ -227,7 +198,7 @@ async function handlePopulateCommand(
   try {
     const result = await discordBotService.populateChannels();
     await interaction.editReply(
-      `Populated channels with ${result.sent.toFixed()} offers across ${result.channels.toFixed()} channels.`,
+      `Populated channels with ${result.sent.toFixed(0)} offers across ${result.channels.toFixed(0)} channels.`,
     );
   } catch (error) {
     await interaction.editReply(
@@ -257,26 +228,32 @@ export async function handleInteraction(
     return;
   }
 
-  if (!interaction.isChatInputCommand()) return;
+  if (!interaction.isChatInputCommand()) {
+    return;
+  }
 
   const { commandName } = interaction;
 
   try {
     switch (commandName) {
-      case "scrapenow":
+      case "scrapenow": {
         await handleScrapenowCommand(interaction, config);
         break;
-      case "status":
+      }
+      case "status": {
         await handleStatusCommand(interaction);
         break;
-      case "populate":
+      }
+      case "populate": {
         await handlePopulateCommand(interaction, config);
         break;
-      default:
+      }
+      default: {
         await interaction.reply({
           content: "Unknown command",
           ephemeral: true,
         });
+      }
     }
   } catch (error) {
     logger.error(

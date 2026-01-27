@@ -1,5 +1,6 @@
 import { GrammyError } from "grammy";
 import { DateTime } from "luxon";
+
 import { getNewAnnouncements } from "@/services/database/announcementRepository";
 import { getActiveOffers } from "@/services/database/offerRepository";
 import {
@@ -16,31 +17,21 @@ import { createOfferKeyboard } from "@/services/telegrambot/utils/keyboards";
 import { ChatType } from "@/types";
 import { logger } from "@/utils/logger";
 
-export async function sendNewOffersToChat(
-  dbChatId: number,
-  interactive = false,
-): Promise<void> {
+export async function sendNewOffersToChat(dbChatId: number, interactive = false): Promise<void> {
   const chatData = await getTelegramChatWithSubscriptions(dbChatId);
   if (!chatData) {
-    logger.error(
-      `Can't send offer, chat ${dbChatId.toFixed()} not found in database.`,
-    );
+    logger.error(`Can't send offer, chat ${dbChatId.toFixed(0)} not found in database.`);
     return;
   }
   const { chat, subscriptions } = chatData;
 
   try {
     if (interactive && !chat.thread_id && subscriptions.length === 0) {
-      const messageText =
-        "You have no subscriptions. Change that with /manage.";
+      const messageText = "You have no subscriptions. Change that with /manage.";
 
-      logger.verbose(
-        `Sending message to chat ${chat.chat_id.toFixed()}: ${messageText}`,
-      );
+      logger.verbose(`Sending message to chat ${chat.chat_id.toFixed(0)}: ${messageText}`);
 
-      await telegramBotService
-        .getBot()
-        .api.sendMessage(chat.chat_id, messageText);
+      await telegramBotService.getBot().api.sendMessage(chat.chat_id, messageText);
     }
 
     let offersSent = 0;
@@ -76,17 +67,13 @@ export async function sendNewOffersToChat(
               dismissButton: true,
             });
 
-        logger.verbose(
-          `Sending message to chat ${chat.chat_id.toFixed()}: ${message}`,
-        );
+        logger.verbose(`Sending message to chat ${chat.chat_id.toFixed(0)}: ${message}`);
 
-        await telegramBotService
-          .getBot()
-          .api.sendMessage(chat.chat_id, message, {
-            parse_mode: "MarkdownV2",
-            reply_markup: keyboard,
-            ...(chat.thread_id && { message_thread_id: chat.thread_id }),
-          });
+        await telegramBotService.getBot().api.sendMessage(chat.chat_id, message, {
+          parse_mode: "MarkdownV2",
+          reply_markup: keyboard,
+          ...(chat.thread_id && { message_thread_id: chat.thread_id }),
+        });
 
         // After sending the offer, increment the counter and update the subscription
         // to reflect the latest sent offer.
@@ -101,7 +88,7 @@ export async function sendNewOffersToChat(
 
     if (interactive && !chat.thread_id && offersSent === 0) {
       logger.verbose(
-        `Sending message to chat ${chat.chat_id.toFixed()}: There are no new offers for your subscriptions.`,
+        `Sending message to chat ${chat.chat_id.toFixed(0)}: There are no new offers for your subscriptions.`,
       );
 
       await telegramBotService
@@ -114,33 +101,27 @@ export async function sendNewOffersToChat(
   } catch (error) {
     // Check for blocked chat errors
     if (error instanceof GrammyError && isPermanentlyBlockedChat(error)) {
-      logger.info(
-        `Chat ${chat.chat_id.toFixed()} is no longer accessible, marking as inactive.`,
-      );
+      logger.info(`Chat ${chat.chat_id.toFixed(0)} is no longer accessible, marking as inactive.`);
       await deactivateTelegramChat(
         dbChatId,
-        `${error.error_code.toFixed()}: ${error.description}`,
+        `${error.error_code.toFixed(0)}: ${error.description}`,
       );
       return;
     }
 
     // This only happens if the error is not recognized as permanent.
     logger.error(
-      `Temporarily failed to process offers for chat ${chat.chat_id.toFixed()}: ${
+      `Temporarily failed to process offers for chat ${chat.chat_id.toFixed(0)}: ${
         error instanceof Error ? error.message : String(error)
       }`,
     );
   }
 }
 
-export async function sendNewAnnouncementsToChat(
-  dbChatId: number,
-): Promise<void> {
+export async function sendNewAnnouncementsToChat(dbChatId: number): Promise<void> {
   const chat = await getTelegramChatById(dbChatId);
   if (chat === undefined) {
-    logger.error(
-      `Can't send announcement, chat ${dbChatId.toFixed()} not found in database.`,
-    );
+    logger.error(`Can't send announcement, chat ${dbChatId.toFixed(0)} not found in database.`);
     return;
   }
 
@@ -151,33 +132,29 @@ export async function sendNewAnnouncementsToChat(
     // Send each announcement
     for (const announcement of announcements) {
       logger.verbose(
-        `Sending announcement ${announcement.id.toFixed()} to chat ${chat.chat_id.toFixed()}`,
+        `Sending announcement ${announcement.id.toFixed(0)} to chat ${chat.chat_id.toFixed(0)}`,
       );
 
-      await telegramBotService
-        .getBot()
-        .api.sendMessage(chat.chat_id, announcement.text_markdown, {
-          parse_mode: "MarkdownV2",
-          ...(chat.thread_id && { message_thread_id: chat.thread_id }),
-        });
+      await telegramBotService.getBot().api.sendMessage(chat.chat_id, announcement.text_markdown, {
+        parse_mode: "MarkdownV2",
+        ...(chat.thread_id && { message_thread_id: chat.thread_id }),
+      });
 
       await updateTelegramChatLastAnnouncementId(chat.id, announcement.id);
     }
   } catch (error) {
     // Check for blocked chat errors
     if (error instanceof GrammyError && isPermanentlyBlockedChat(error)) {
-      logger.info(
-        `Chat ${chat.chat_id.toFixed()} is no longer accessible, marking as inactive.`,
-      );
+      logger.info(`Chat ${chat.chat_id.toFixed(0)} is no longer accessible, marking as inactive.`);
       await deactivateTelegramChat(
         dbChatId,
-        `${error.error_code.toFixed()}: ${error.description}`,
+        `${error.error_code.toFixed(0)}: ${error.description}`,
       );
       return;
     }
 
     logger.error(
-      `Failed to process announcements for chat ${chat.chat_id.toFixed()}: ${
+      `Failed to process announcements for chat ${chat.chat_id.toFixed(0)}: ${
         error instanceof Error ? error.message : String(error)
       }`,
     );
@@ -193,9 +170,7 @@ function isPermanentlyBlockedChat(error: Error): boolean {
       error.description.includes("user is deactivated") ||
       error.description.includes("message thread not found") ||
       error.description.includes("bot was kicked from the group chat") ||
-      error.description.includes(
-        "group chat was upgraded to a supergroup chat",
-      ) ||
+      error.description.includes("group chat was upgraded to a supergroup chat") ||
       error.description.includes("the group chat was deleted"))
   );
 }

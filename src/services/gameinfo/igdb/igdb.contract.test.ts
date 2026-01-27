@@ -1,12 +1,13 @@
 import { DateTime } from "luxon";
 import { beforeEach, describe, expect, test } from "vitest";
-import { config } from "@/services/config";
+
 import type { NewIgdbInfo } from "@/types/database";
+
+import { config } from "@/services/config";
+
 import { IgdbClient } from "./igdb";
 
-const runThis =
-  process.env.VSCODE_PID !== undefined ||
-  process.env.VITEST_MODE === "contract";
+const runThis = process.env.VSCODE_PID !== undefined || process.env.VITEST_MODE === "contract";
 
 describe.skipIf(!runThis)("IgdbClient", () => {
   let client: IgdbClient;
@@ -15,10 +16,7 @@ describe.skipIf(!runThis)("IgdbClient", () => {
     // Load the configuration
     config.loadConfig();
     const testConfig = config.get();
-    client = new IgdbClient(
-      testConfig.igdb.clientId,
-      testConfig.igdb.clientSecret,
-    );
+    client = new IgdbClient(testConfig.igdb.clientId, testConfig.igdb.clientSecret);
   });
 
   test("searchGame resolves Rainbow Six Siege correctly", async () => {
@@ -49,15 +47,11 @@ describe.skipIf(!runThis)("IgdbClient", () => {
     expect(details?.url).toBe("https://www.igdb.com/games/counter-strike");
     expect(details?.user_score).toBeGreaterThan(50);
     expect(details?.user_ratings).toBeGreaterThan(600);
-    expect(details?.release_date).toBe(
-      DateTime.fromISO("2000-11-09T00:00:00.000Z").toISO(),
-    );
+    expect(details?.release_date).toBe(DateTime.fromISO("2000-11-09T00:00:00.000Z").toISO());
   });
 
   test("searchGame handles special characters", async () => {
-    const result = await client.searchGame(
-      "Monkey Island 2 Special Edition: LeChuck's Revenge",
-    );
+    const result = await client.searchGame("Monkey Island 2 Special Edition: LeChuck's Revenge");
     expect(result).toBe(66);
   });
 
@@ -67,7 +61,7 @@ describe.skipIf(!runThis)("IgdbClient", () => {
   });
 
   test("getDetails returns null for invalid game ID", async () => {
-    const result = await client.getDetails(99999999);
+    const result = await client.getDetails(99_999_999);
     expect(result).toBeNull();
   });
 });

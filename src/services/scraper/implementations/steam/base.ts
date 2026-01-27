@@ -1,14 +1,13 @@
-import { DateTime } from "luxon";
 import type { Locator, Page } from "playwright";
-import { BaseScraper, type CronConfig } from "@/services/scraper/base/scraper";
-import { ScraperError } from "@/types";
-import {
-  OfferDuration,
-  OfferPlatform,
-  OfferSource,
-  OfferType,
-} from "@/types/basic";
+
+import { DateTime } from "luxon";
+
+import type { CronConfig } from "@/services/scraper/base/scraper";
 import type { NewOffer } from "@/types/database";
+
+import { BaseScraper } from "@/services/scraper/base/scraper";
+import { ScraperError } from "@/types";
+import { OfferDuration, OfferPlatform, OfferSource, OfferType } from "@/types/basic";
 import { logger } from "@/utils/logger";
 import { cleanCombinedTitle, cleanGameTitle } from "@/utils/stringTools";
 
@@ -60,9 +59,7 @@ export abstract class SteamBaseScraper extends BaseScraper {
 
   abstract getValidtextLocator(page: Page): Locator;
 
-  private async readOffer(
-    element: Locator,
-  ): Promise<Omit<NewOffer, "category"> | null> {
+  private async readOffer(element: Locator): Promise<Omit<NewOffer, "category"> | null> {
     if (!this.context) {
       throw new ScraperError(
         "Browser context not initialized. Call initialize() first.",
@@ -72,10 +69,14 @@ export abstract class SteamBaseScraper extends BaseScraper {
 
     try {
       const title = await element.locator(".title").textContent();
-      if (!title) throw new Error("Couldn't find title");
+      if (!title) {
+        throw new Error("Couldn't find title");
+      }
 
       const appid = await element.getAttribute("data-ds-appid");
-      if (!appid) throw new Error(`Couldn't find appid for ${title}`);
+      if (!appid) {
+        throw new Error(`Couldn't find appid for ${title}`);
+      }
 
       const url = `${DETAILS_URL}${appid}`;
 
@@ -88,18 +89,16 @@ export abstract class SteamBaseScraper extends BaseScraper {
         await this.skipAgeVerification(page);
         await page.waitForSelector(".game_area_purchase");
 
-        const imgUrl = await page
-          .locator(".game_header_image_full")
-          .getAttribute("src");
-        if (!imgUrl) throw new Error(`Couldn't find image for ${title}`);
+        const imgUrl = await page.locator(".game_header_image_full").getAttribute("src");
+        if (!imgUrl) {
+          throw new Error(`Couldn't find image for ${title}`);
+        }
 
         let text: string;
         try {
           // Get the resolved text here because the text_content() contains
           // special characters.
-          text = await page
-            .locator(".game_purchase_discount_quantity")
-            .innerText();
+          text = await page.locator(".game_purchase_discount_quantity").innerText();
           if (!text) {
             // Sometimes this does not exist, when a game is not free any more
             // or only some DLCs of the game are free.
@@ -133,21 +132,15 @@ export abstract class SteamBaseScraper extends BaseScraper {
             });
             parsedDate = parsedDate.set({ year: DateTime.now().year });
           } catch {
-            logger.debug(
-              `Couldn't parse date, trying next format: ${dateText}`,
-            );
+            logger.debug(`Couldn't parse date, trying next format: ${dateText}`);
           }
 
           if (!parsedDate) {
             try {
               // Maybe it's next year, so parse Steams "D MMM, YYYY @ HH:mmAM/PM" format instead
-              parsedDate = DateTime.fromFormat(
-                dateText,
-                "d MMM, yyyy @ h:mma",
-                {
-                  zone: "UTC",
-                },
-              );
+              parsedDate = DateTime.fromFormat(dateText, "d MMM, yyyy @ h:mma", {
+                zone: "UTC",
+              });
             } catch {
               logger.warn(
                 `${this.getScraperName()}: Couldn't parse date because it's invalid: ${dateText}`,
@@ -162,14 +155,10 @@ export abstract class SteamBaseScraper extends BaseScraper {
         }
 
         const cleanedTitle =
-          this.getType() === OfferType.GAME
-            ? cleanGameTitle(title)
-            : cleanCombinedTitle(title)[1];
+          this.getType() === OfferType.GAME ? cleanGameTitle(title) : cleanCombinedTitle(title)[1];
 
         const probableGameName =
-          this.getType() === OfferType.GAME
-            ? cleanGameTitle(title)
-            : cleanCombinedTitle(title)[0];
+          this.getType() === OfferType.GAME ? cleanGameTitle(title) : cleanCombinedTitle(title)[0];
 
         return {
           source: this.getSource(),
@@ -216,9 +205,9 @@ export abstract class SteamBaseScraper extends BaseScraper {
           // If we successfully handled the age gate, exit the function
           return;
         }
-      } catch (err) {
+      } catch (error) {
         logger.debug(
-          `Age verification element ${selector} not found or failed to handle it: ${err instanceof Error ? err.message : String(err)}`,
+          `Age verification element ${selector} not found or failed to handle it: ${error instanceof Error ? error.message : String(error)}`,
         );
       }
     }

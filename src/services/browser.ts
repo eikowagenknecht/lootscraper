@@ -1,6 +1,9 @@
 import type { Browser, BrowserContext } from "playwright";
+
 import { firefox } from "playwright";
+
 import type { Config } from "@/types/config";
+
 import { BrowserError } from "@/types/errors";
 
 const CONTEXT_OPTIONS = {
@@ -53,22 +56,14 @@ class BrowserService {
 
   public getContext(): BrowserContext {
     if (!this.context) {
-      throw new BrowserError(
-        "Browser context not initialized. Call initialize() first.",
-      );
+      throw new BrowserError("Browser context not initialized. Call initialize() first.");
     }
     return this.context;
   }
 
   public async refreshContext(): Promise<void> {
-    if (
-      !this.browser ||
-      this.timeoutSeconds === null ||
-      this.loadImages === null
-    ) {
-      throw new BrowserError(
-        "Browser not initialized. Call initialize() first.",
-      );
+    if (!this.browser || this.timeoutSeconds === null || this.loadImages === null) {
+      throw new BrowserError("Browser not initialized. Call initialize() first.");
     }
 
     // Close the current context if it exists
@@ -82,9 +77,7 @@ class BrowserService {
       // Skip images
       await newContext.route("**/*", (route) => {
         const url = route.request().url();
-        const isImageExtension = /\.(png|jpg|jpeg|gif|webp|svg|ico)$/i.test(
-          url,
-        );
+        const isImageExtension = /\.(png|jpg|jpeg|gif|webp|svg|ico)$/i.test(url);
         const isImageResource = route.request().resourceType() === "image";
 
         // Block if either condition is true

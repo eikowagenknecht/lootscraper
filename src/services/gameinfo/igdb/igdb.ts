@@ -1,5 +1,7 @@
 import { DateTime } from "luxon";
+
 import type { NewIgdbInfo } from "@/types/database";
+
 import { getMatchScore, normalizeString } from "@/utils";
 import { logger } from "@/utils/logger";
 
@@ -57,22 +59,19 @@ limit 50;
 
     const results = await this.apiRequest<IgdbSearchResult[]>("games", query);
 
-    if (!results.length) return null;
+    if (results.length === 0) {
+      return null;
+    }
 
     let bestMatch: { id: number; score: number; title: string } | null = null;
     for (const game of results) {
       const score = getMatchScore(searchString, game.name);
-      if (
-        score >= IgdbClient.MINIMUM_ACCEPTABLE_SCORE &&
-        (!bestMatch || score > bestMatch.score)
-      ) {
+      if (score >= IgdbClient.MINIMUM_ACCEPTABLE_SCORE && (!bestMatch || score > bestMatch.score)) {
         bestMatch = { id: game.id, score, title: game.name };
-        logger.debug(
-          `Found match ${game.name} with score ${(score * 100).toFixed()}%`,
-        );
+        logger.debug(`Found match ${game.name} with score ${(score * 100).toFixed(0)}%`);
       } else {
         logger.debug(
-          `Rejected match ${game.name} as it's score of ${(score * 100).toFixed()}% is too low.`,
+          `Rejected match ${game.name} as it's score of ${(score * 100).toFixed(0)}% is too low.`,
         );
       }
     }
@@ -83,7 +82,7 @@ limit 50;
     }
 
     logger.debug(
-      `Best match for ${searchString} is ${bestMatch.title} with score ${(bestMatch.score * 100).toFixed()}%.`,
+      `Best match for ${searchString} is ${bestMatch.title} with score ${(bestMatch.score * 100).toFixed(0)}%.`,
     );
     return bestMatch.id;
   }
@@ -93,12 +92,14 @@ limit 50;
 
     const query = `
       fields *;
-      where id = ${gameId.toFixed()};
+      where id = ${gameId.toFixed(0)};
     `;
 
     const results = await this.apiRequest<IgdbGameResult[]>("games", query);
 
-    if (!results.length) return null;
+    if (results.length === 0) {
+      return null;
+    }
 
     // We're searching by ID, so we only get one result
     const [game] = results;
@@ -113,9 +114,7 @@ limit 50;
         : null,
       user_score: game.rating ? Math.round(game.rating) : null,
       user_ratings: game.rating_count ?? null,
-      meta_score: game.aggregated_rating
-        ? Math.round(game.aggregated_rating)
-        : null,
+      meta_score: game.aggregated_rating ? Math.round(game.aggregated_rating) : null,
       meta_ratings: game.aggregated_rating_count ?? null,
     };
   }
@@ -123,9 +122,10 @@ limit 50;
   private async ensureAuth(): Promise<void> {
     if (this.auth) {
       const expiresSoon =
-        DateTime.now() <
-        DateTime.fromMillis(this.auth.expiresAt).minus({ minutes: 1 });
-      if (expiresSoon) return;
+        DateTime.now() < DateTime.fromMillis(this.auth.expiresAt).minus({ minutes: 1 });
+      if (expiresSoon) {
+        return;
+      }
     }
 
     const params = new URLSearchParams({
@@ -155,7 +155,9 @@ limit 50;
   }
 
   private async apiRequest<T>(endpoint: string, query: string): Promise<T> {
-    if (!this.auth) throw new Error("Not authenticated");
+    if (!this.auth) {
+      throw new Error("Not authenticated");
+    }
 
     const response = await fetch(`${IgdbClient.API_URL}/${endpoint}`, {
       method: "POST",
@@ -167,7 +169,7 @@ limit 50;
     });
 
     logger.http(
-      `IGDB API request to ${endpoint} returned status ${response.status.toFixed()} (ok: ${response.ok ? "yes" : "no"}).`,
+      `IGDB API request to ${endpoint} returned status ${response.status.toFixed(0)} (ok: ${response.ok ? "yes" : "no"}).`,
     );
     if (!response.ok) {
       throw new Error(`IGDB API error: ${response.statusText}`);

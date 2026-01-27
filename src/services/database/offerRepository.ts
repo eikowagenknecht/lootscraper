@@ -1,13 +1,11 @@
 import { DateTime } from "luxon";
-import { getDb } from "@/services/database";
-import type {
-  OfferDuration,
-  OfferPlatform,
-  OfferSource,
-  OfferType,
-} from "@/types/basic";
+
+import type { OfferDuration, OfferPlatform, OfferSource, OfferType } from "@/types/basic";
 import type { NewOffer, Offer, OfferUpdate } from "@/types/database";
+
+import { getDb } from "@/services/database";
 import { logger } from "@/utils/logger";
+
 import { handleError, handleInsertResult, handleUpdateResult } from "./common";
 
 interface OfferFilters {
@@ -20,11 +18,7 @@ interface OfferFilters {
 
 export async function getOfferById(id: number): Promise<Offer | undefined> {
   try {
-    return await getDb()
-      .selectFrom("offers")
-      .selectAll()
-      .where("id", "=", id)
-      .executeTakeFirst();
+    return await getDb().selectFrom("offers").selectAll().where("id", "=", id).executeTakeFirst();
   } catch (error) {
     handleError("get offer", error);
   }
@@ -104,10 +98,7 @@ export async function findOffer({
 
       query = query.where((eb) =>
         eb.or([
-          eb.and([
-            eb("valid_to", ">=", earliestDate),
-            eb("valid_to", "<=", latestDate),
-          ]),
+          eb.and([eb("valid_to", ">=", earliestDate), eb("valid_to", "<=", latestDate)]),
           eb("valid_to", "is", null),
         ]),
       );
@@ -138,21 +129,19 @@ export async function findOffer({
     // This should rarely happen and is a fallback in case the exact match
     // wasn't found.
     logger.warn(
-      `Found ${results.length.toFixed()} offers for "${title}" that are close to ${
+      `Found ${results.length.toFixed(0)} offers for "${title}" that are close to ${
         validTo ?? "null"
       }. Returning the newest one.`,
     );
 
     // Return the last result (newest one based on ID)
-    return results[results.length - 1];
+    return results.at(-1);
   } catch (error) {
     handleError("find offer", error);
   }
 }
 
-export async function getOfferByTitle(
-  title: string,
-): Promise<Offer | undefined> {
+export async function getOfferByTitle(title: string): Promise<Offer | undefined> {
   try {
     return await getDb()
       .selectFrom("offers")
@@ -166,20 +155,13 @@ export async function getOfferByTitle(
 
 export async function getAllOffers(): Promise<Offer[]> {
   try {
-    return await getDb()
-      .selectFrom("offers")
-      .selectAll()
-      .orderBy("seen_first", "desc")
-      .execute();
+    return await getDb().selectFrom("offers").selectAll().orderBy("seen_first", "desc").execute();
   } catch (error) {
     handleError("get all offers", error);
   }
 }
 
-export async function getActiveOffers(
-  time: DateTime,
-  filters?: OfferFilters,
-): Promise<Offer[]> {
+export async function getActiveOffers(time: DateTime, filters?: OfferFilters): Promise<Offer[]> {
   try {
     const seenCutoff = time.minus({ hours: 24 });
     const validFromCutOff = time.minus({ months: 3 });
@@ -194,20 +176,11 @@ export async function getActiveOffers(
         eb.not(
           eb.or([
             // 1. Skip entries that start in the future
-            eb.and([
-              eb("valid_from", "is not", null),
-              eb("valid_from", ">", time.toISO()),
-            ]),
+            eb.and([eb("valid_from", "is not", null), eb("valid_from", ">", time.toISO())]),
             // 2. Skip entries that have ended
-            eb.and([
-              eb("valid_to", "is not", null),
-              eb("valid_to", "<", time.toISO()),
-            ]),
+            eb.and([eb("valid_to", "is not", null), eb("valid_to", "<", time.toISO())]),
             // 3. Skip entries that have no end date and haven't been seen for more than a day
-            eb.and([
-              eb("valid_to", "is", null),
-              eb("seen_last", "<", seenCutoff.toISO()),
-            ]),
+            eb.and([eb("valid_to", "is", null), eb("seen_last", "<", seenCutoff.toISO())]),
             // 4. Skip entries that have been seen for the first time more than 3 months ago.
             // Those are probably not "real" offers.
             eb("seen_first", "<", validFromCutOff.toISO()),
@@ -238,7 +211,7 @@ export async function getActiveOffers(
       logger.debug("No active offers found.");
     } else {
       logger.debug(
-        `Got ${offers.length.toFixed()} active offers: ${offers.map((o) => o.id).join(", ")}`,
+        `Got ${offers.length.toFixed(0)} active offers: ${offers.map((o) => o.id).join(", ")}`,
       );
     }
 
@@ -250,11 +223,7 @@ export async function getActiveOffers(
 
 export async function getOffersWithMissingGameInfo(): Promise<Offer[]> {
   try {
-    return await getDb()
-      .selectFrom("offers")
-      .selectAll()
-      .where("game_id", "is", null)
-      .execute();
+    return await getDb().selectFrom("offers").selectAll().where("game_id", "is", null).execute();
   } catch (error) {
     handleError("get offers with missing game info", error);
   }
@@ -282,20 +251,11 @@ export async function getChatsNeedingOffers(time: DateTime): Promise<number[]> {
             eb.not(
               eb.or([
                 // 1. Skip entries that start in the future
-                eb.and([
-                  eb("valid_from", "is not", null),
-                  eb("valid_from", ">", time.toISO()),
-                ]),
+                eb.and([eb("valid_from", "is not", null), eb("valid_from", ">", time.toISO())]),
                 // 2. Skip entries that have ended
-                eb.and([
-                  eb("valid_to", "is not", null),
-                  eb("valid_to", "<", time.toISO()),
-                ]),
+                eb.and([eb("valid_to", "is not", null), eb("valid_to", "<", time.toISO())]),
                 // 3. Skip entries that have no end date and haven't been seen for more than a day
-                eb.and([
-                  eb("valid_to", "is", null),
-                  eb("seen_last", "<", seenCutoff.toISO()),
-                ]),
+                eb.and([eb("valid_to", "is", null), eb("seen_last", "<", seenCutoff.toISO())]),
                 // 4. Skip entries that have been seen for the first time more than 3 months ago.
                 // Those are probably not "real" offers.
                 eb("seen_first", "<", validFromCutOff.toISO()),
@@ -335,10 +295,7 @@ export async function getChatsNeedingAnnouncements(): Promise<number[]> {
 
 export async function createOffer(offer: NewOffer): Promise<number> {
   try {
-    const result = await getDb()
-      .insertInto("offers")
-      .values(offer)
-      .executeTakeFirstOrThrow();
+    const result = await getDb().insertInto("offers").values(offer).executeTakeFirstOrThrow();
     return handleInsertResult(result);
   } catch (error) {
     handleError("create offer", error);
@@ -359,13 +316,10 @@ export async function updateOffer(id: number, offer: OfferUpdate) {
   }
 }
 
-export async function addMissingFieldsToOffer(
-  id: number,
-  newOffer: NewOffer,
-): Promise<boolean> {
+export async function addMissingFieldsToOffer(id: number, newOffer: NewOffer): Promise<boolean> {
   const previousOffer = await getOfferById(id);
   if (!previousOffer) {
-    logger.error(`Offer with ID ${id.toFixed()} not found. Can't update.`);
+    logger.error(`Offer with ID ${id.toFixed(0)} not found. Can't update.`);
     return false;
   }
 

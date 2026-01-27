@@ -1,11 +1,14 @@
-import { basename, resolve } from "node:path";
 import { Client } from "basic-ftp";
 import { DateTime } from "luxon";
+import { basename, resolve } from "node:path";
+
 import type { Config } from "@/types";
+
 import { generateFileHash } from "@/utils/hash";
 import { logger } from "@/utils/logger";
 import { getDataPath } from "@/utils/path";
 import { getAllEnabledFeedFilenames } from "@/utils/stringTools";
+
 import { createHash, getHashByResourceName } from "./database/hashRepository";
 
 interface FTPUploadOptions {
@@ -51,9 +54,7 @@ class FTPService {
     }
 
     try {
-      const feedFiles = getAllEnabledFeedFilenames(
-        this.config.common.feedFilePrefix,
-      );
+      const feedFiles = getAllEnabledFeedFilenames(this.config.common.feedFilePrefix);
       await this.uploadMultipleFiles(feedFiles);
     } catch (error) {
       logger.error(
@@ -73,11 +74,7 @@ class FTPService {
       return undefined;
     }
 
-    if (
-      !this.config.ftp.host ||
-      !this.config.ftp.user ||
-      !this.config.ftp.password
-    ) {
+    if (!this.config.ftp.host || !this.config.ftp.user || !this.config.ftp.password) {
       logger.error("FTP configuration missing.");
       return undefined;
     }
@@ -97,9 +94,9 @@ class FTPService {
       });
       logger.debug(`Connected to FTP server ${this.config.ftp.host}`);
       return client;
-    } catch (err) {
+    } catch (error) {
       logger.error(
-        `Failed to connect to FTP server: ${err instanceof Error ? err.message : String(err)}`,
+        `Failed to connect to FTP server: ${error instanceof Error ? error.message : String(error)}`,
       );
       logger.debug("Closing FTP client");
       client.close();
@@ -107,10 +104,7 @@ class FTPService {
     }
   }
 
-  async uploadFile(
-    file: string,
-    options: FTPUploadOptions = {},
-  ): Promise<FTPUploadResult> {
+  async uploadFile(file: string, options: FTPUploadOptions = {}): Promise<FTPUploadResult> {
     const fileName = basename(file);
 
     logger.verbose(`Uploading ${fileName}.`);
@@ -162,8 +156,8 @@ class FTPService {
         fileName,
         success: true,
       };
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : String(err);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
       logger.error(`Failed to upload ${fileName}: ${errorMessage}.`);
       return {
         fileName,

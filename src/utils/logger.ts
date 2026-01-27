@@ -1,16 +1,17 @@
-import { resolve } from "node:path";
 import type { Format, TransformableInfo } from "logform";
+import type { LogEntry } from "winston";
+
 import { DateTime } from "luxon";
-import { createLogger, format, type LogEntry, transports } from "winston";
+import { resolve } from "node:path";
+import { createLogger, format, transports } from "winston";
 import DailyRotateFile from "winston-daily-rotate-file";
 import Transport from "winston-transport";
-import { telegramBotService } from "@/services/telegrambot";
-import {
-  bold,
-  escapeCode,
-  escapeText,
-} from "@/services/telegrambot/utils/markdown";
+
 import type { TelegramLogLevel } from "@/types";
+
+import { telegramBotService } from "@/services/telegrambot";
+import { bold, escapeCode, escapeText } from "@/services/telegrambot/utils/markdown";
+
 import { getDataPath } from "./path";
 import { splitIntoChunks } from "./stringTools";
 
@@ -69,19 +70,12 @@ function createLoggerInstance() {
   logger.add(
     new transports.Console({
       level: getLogLevel(DEFAULT_CONFIG.console.level),
-      format: format.combine(
-        format.colorize(),
-        format.timestamp(),
-        createConsoleFormat(),
-      ),
+      format: format.combine(format.colorize(), format.timestamp(), createConsoleFormat()),
     }),
   );
 
   // Function to add file transport after config is loaded
-  function addFileTransport(
-    configuredLogLevel?: string,
-    logFile?: string,
-  ): void {
+  function addFileTransport(configuredLogLevel?: string, logFile?: string): void {
     const fileConfig = DEFAULT_CONFIG.file;
 
     const finalLogLevel = configuredLogLevel
@@ -103,9 +97,7 @@ function createLoggerInstance() {
   }
 
   function updateConsoleLevel(level: string): void {
-    const consoleTransport = logger.transports.find(
-      (t) => t instanceof transports.Console,
-    );
+    const consoleTransport = logger.transports.find((t) => t instanceof transports.Console);
 
     if (consoleTransport) {
       consoleTransport.level = getLogLevel(level);
@@ -180,10 +172,7 @@ class TelegramTransport extends Transport {
     }
   }
 
-  override async log(
-    info: LogEntry & { timestamp: string; stack?: string },
-    callback: () => void,
-  ) {
+  override async log(info: LogEntry & { timestamp: string; stack?: string }, callback: () => void) {
     setImmediate(() => this.emit("logged", info));
     if (this.botLogChatId) {
       await this.handleLogMessage(info);
@@ -191,9 +180,7 @@ class TelegramTransport extends Transport {
     callback();
   }
 
-  private async handleLogMessage(
-    info: LogEntry & { timestamp: string; stack?: string },
-  ) {
+  private async handleLogMessage(info: LogEntry & { timestamp: string; stack?: string }) {
     const telegramMessage = this.formatTelegramMessage(info);
     try {
       const chunks = splitIntoChunks(telegramMessage, 4000);
@@ -229,16 +216,12 @@ class TelegramTransport extends Transport {
     }
   }
 
-  private formatTelegramMessage(
-    info: LogEntry & { timestamp: string; stack?: string },
-  ): string {
+  private formatTelegramMessage(info: LogEntry & { timestamp: string; stack?: string }): string {
     try {
       const level = info.level.toUpperCase() || "INFO";
       const messageText = (() => {
         try {
-          return typeof info.message === "string"
-            ? info.message
-            : JSON.stringify(info.message);
+          return typeof info.message === "string" ? info.message : JSON.stringify(info.message);
         } catch {
           return "[Unparseable message]";
         }

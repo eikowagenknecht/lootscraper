@@ -1,5 +1,7 @@
 import type { Kysely } from "kysely";
+
 import { sql } from "kysely";
+
 import { logger } from "@/utils/logger";
 
 export const platformMigration = {
@@ -37,9 +39,7 @@ export const platformMigration = {
         await trx.schema
           .createTable("telegram_subscriptions_new")
           .addColumn("id", "integer", (col) => col.primaryKey().notNull())
-          .addColumn("chat_id", "integer", (col) =>
-            col.references("telegram_chats.id").notNull(),
-          )
+          .addColumn("chat_id", "integer", (col) => col.references("telegram_chats.id").notNull())
           .addColumn("source", "text", (col) => col.notNull())
           .addColumn("type", "text", (col) => col.notNull())
           .addColumn("platform", "text", (col) => col.notNull())

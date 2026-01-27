@@ -1,16 +1,10 @@
 import { DateTime } from "luxon";
+
+import type { OfferDuration, OfferPlatform, OfferSource, OfferType } from "@/types/basic";
+import type { DiscordChannel, DiscordChannelUpdate, NewDiscordChannel } from "@/types/database";
+
 import { getDb } from "@/services/database";
-import type {
-  OfferDuration,
-  OfferPlatform,
-  OfferSource,
-  OfferType,
-} from "@/types/basic";
-import type {
-  DiscordChannel,
-  DiscordChannelUpdate,
-  NewDiscordChannel,
-} from "@/types/database";
+
 import { handleError } from "./common";
 
 export async function getAllDiscordChannels(): Promise<DiscordChannel[]> {
@@ -113,11 +107,7 @@ export async function updateDiscordChannel(
   update: DiscordChannelUpdate,
 ): Promise<void> {
   try {
-    await getDb()
-      .updateTable("discord_channels")
-      .set(update)
-      .where("id", "=", id)
-      .execute();
+    await getDb().updateTable("discord_channels").set(update).where("id", "=", id).execute();
   } catch (error) {
     handleError("update discord channel", error);
   }
@@ -153,26 +143,10 @@ export async function getChannelsNeedingOffers(): Promise<DiscordChannel[]> {
             .select((selectQb) => selectQb.fn.max("id").as("max_id"))
             .where((innerQb) =>
               innerQb.and([
-                innerQb(
-                  "offers.source",
-                  "=",
-                  innerQb.ref("discord_channels.source"),
-                ),
-                innerQb(
-                  "offers.type",
-                  "=",
-                  innerQb.ref("discord_channels.type"),
-                ),
-                innerQb(
-                  "offers.duration",
-                  "=",
-                  innerQb.ref("discord_channels.duration"),
-                ),
-                innerQb(
-                  "offers.platform",
-                  "=",
-                  innerQb.ref("discord_channels.platform"),
-                ),
+                innerQb("offers.source", "=", innerQb.ref("discord_channels.source")),
+                innerQb("offers.type", "=", innerQb.ref("discord_channels.type")),
+                innerQb("offers.duration", "=", innerQb.ref("discord_channels.duration")),
+                innerQb("offers.platform", "=", innerQb.ref("discord_channels.platform")),
               ]),
             ),
         ),

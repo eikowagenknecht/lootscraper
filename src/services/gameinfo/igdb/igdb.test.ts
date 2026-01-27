@@ -1,5 +1,7 @@
 import { beforeEach, describe, expect, test, vi } from "vitest";
+
 import { config } from "@/services/config";
+
 import { IgdbClient } from "./igdb";
 
 describe("IgdbClient", () => {
@@ -9,10 +11,7 @@ describe("IgdbClient", () => {
     // Load the configuration
     config.loadConfig();
     const testConfig = config.get();
-    client = new IgdbClient(
-      testConfig.igdb.clientId,
-      testConfig.igdb.clientSecret,
-    );
+    client = new IgdbClient(testConfig.igdb.clientId, testConfig.igdb.clientSecret);
 
     // Reset mocks before each test
     vi.resetAllMocks();
@@ -49,14 +48,10 @@ describe("IgdbClient", () => {
     expect(fetch).toHaveBeenCalledTimes(2);
 
     // Verify the calls happened
-    expect(fetch).toHaveBeenNthCalledWith(
-      1,
-      "https://id.twitch.tv/oauth2/token",
-      {
-        method: "POST",
-        body: expect.any(URLSearchParams) as URLSearchParams,
-      },
-    );
+    expect(fetch).toHaveBeenNthCalledWith(1, "https://id.twitch.tv/oauth2/token", {
+      method: "POST",
+      body: expect.any(URLSearchParams) as URLSearchParams,
+    });
 
     const secondCallOptions = vi.mocked(fetch).mock.calls[1]?.[1];
     expect(secondCallOptions?.method).toBe("POST");
@@ -78,7 +73,7 @@ limit 50;
       name: "Counter-Strike",
       url: "https://www.igdb.com/games/counter-strike",
       summary: "Play the world's number 1 online action game.",
-      first_release_date: 973728000, // 2000-11-09 in Unix timestamp
+      first_release_date: 973_728_000, // 2000-11-09 in Unix timestamp
       rating: 90,
       rating_count: 1000,
       aggregated_rating: 88,
@@ -123,9 +118,7 @@ limit 50;
       ),
     );
 
-    const result = await client.searchGame(
-      "Monkey Island 2 Special Edition: LeChuck's Revenge",
-    );
+    const result = await client.searchGame("Monkey Island 2 Special Edition: LeChuck's Revenge");
     expect(result).toBe(66);
   });
 
@@ -149,7 +142,7 @@ limit 50;
       }),
     );
 
-    const result = await client.getDetails(99999999);
+    const result = await client.getDetails(99_999_999);
     expect(result).toBeNull();
   });
 
@@ -163,9 +156,7 @@ limit 50;
       }),
     );
 
-    await expect(client.searchGame("Counter-Strike")).rejects.toThrow(
-      "IGDB auth failed",
-    );
+    await expect(client.searchGame("Counter-Strike")).rejects.toThrow("IGDB auth failed");
   });
 
   test("handles API errors", async () => {
@@ -176,9 +167,7 @@ limit 50;
       }),
     );
 
-    await expect(client.searchGame("Counter-Strike")).rejects.toThrow(
-      "IGDB API error",
-    );
+    await expect(client.searchGame("Counter-Strike")).rejects.toThrow("IGDB API error");
   });
 
   test("reuses auth token when not expired", async () => {
@@ -221,7 +210,7 @@ limit 50;
   test("renews expired auth token", async () => {
     // Mock Date.now() to control token expiration
     const realDateNow = Date.now;
-    let currentTime = 1000000;
+    let currentTime = 1_000_000;
     global.Date.now = vi.fn(() => currentTime);
 
     // First auth token
@@ -249,7 +238,7 @@ limit 50;
     await client.searchGame("Counter-Strike");
 
     // Advance time past token expiration
-    currentTime += 4000000; // More than expires_in
+    currentTime += 4_000_000; // More than expires_in
 
     // Second auth token
     vi.mocked(fetch).mockResolvedValueOnce(

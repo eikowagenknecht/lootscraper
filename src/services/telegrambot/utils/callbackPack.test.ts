@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { z } from "zod";
+
 import { packData, unpackData } from "./callbackPack";
 
 describe("Callback Pack", () => {
@@ -91,7 +92,7 @@ describe("Callback Pack", () => {
       const data = { value: "hello:world" };
       const packed = packData(data, EscapeSchema);
 
-      expect(packed).toContain("\\:");
+      expect(packed).toContain(String.raw`\:`);
 
       const unpacked = unpackData(packed, EscapeSchema);
       expect(unpacked).toEqual(data);
@@ -101,7 +102,7 @@ describe("Callback Pack", () => {
       const data = { value: "hello\\world" };
       const packed = packData(data, EscapeSchema);
 
-      expect(packed).toContain("\\\\");
+      expect(packed).toContain(String.raw`\\`);
 
       const unpacked = unpackData(packed, EscapeSchema);
       expect(unpacked).toEqual(data);
@@ -111,7 +112,7 @@ describe("Callback Pack", () => {
       const data = { value: "null" };
       const packed = packData(data, EscapeSchema);
 
-      expect(packed).toBe("\\null");
+      expect(packed).toBe(String.raw`\null`);
 
       const unpacked = unpackData(packed, EscapeSchema);
       expect(unpacked).toEqual(data);
@@ -121,7 +122,7 @@ describe("Callback Pack", () => {
       const data = { value: "true" };
       const packed = packData(data, EscapeSchema);
 
-      expect(packed).toBe("\\true");
+      expect(packed).toBe(String.raw`\true`);
 
       const unpacked = unpackData(packed, EscapeSchema);
       expect(unpacked).toEqual(data);
@@ -131,7 +132,7 @@ describe("Callback Pack", () => {
       const data = { value: "false" };
       const packed = packData(data, EscapeSchema);
 
-      expect(packed).toBe("\\false");
+      expect(packed).toBe(String.raw`\false`);
 
       const unpacked = unpackData(packed, EscapeSchema);
       expect(unpacked).toEqual(data);
@@ -141,7 +142,7 @@ describe("Callback Pack", () => {
       const data = { value: "undef" };
       const packed = packData(data, EscapeSchema);
 
-      expect(packed).toBe("\\undef");
+      expect(packed).toBe(String.raw`\undef`);
 
       const unpacked = unpackData(packed, EscapeSchema);
       expect(unpacked).toEqual(data);
@@ -245,9 +246,7 @@ describe("Callback Pack", () => {
 
     test("should throw on invalid boolean values", () => {
       const packed = "invalid:null:undef:test";
-      expect(() => unpackData(packed, BooleanSchema)).toThrow(
-        /Invalid boolean/,
-      );
+      expect(() => unpackData(packed, BooleanSchema)).toThrow(/Invalid boolean/);
     });
   });
 
@@ -267,10 +266,7 @@ describe("Callback Pack", () => {
 
       // Use "as z.infer" to bypass TypeScript type checking
       expect(() =>
-        packData(
-          invalidData as z.infer<typeof ValidationSchema>,
-          ValidationSchema,
-        ),
+        packData(invalidData as z.infer<typeof ValidationSchema>, ValidationSchema),
       ).toThrow();
     });
 
@@ -284,10 +280,7 @@ describe("Callback Pack", () => {
       const packed = packData(validData, ValidationSchema);
 
       // Manually corrupt the packed string
-      const corruptedPacked = packed.replace(
-        "test@example.com",
-        "not-an-email",
-      );
+      const corruptedPacked = packed.replace("test@example.com", "not-an-email");
 
       expect(() => unpackData(corruptedPacked, ValidationSchema)).toThrow();
     });

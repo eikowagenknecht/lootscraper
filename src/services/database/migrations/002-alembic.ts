@@ -1,4 +1,5 @@
 import type { Kysely } from "kysely";
+
 import { logger } from "@/utils/logger";
 
 export const dropAlembicMigration = {

@@ -1,10 +1,9 @@
 import { beforeAll, describe, expect, it } from "vitest";
+
 import { browserService } from "@/services/browser";
 import { config } from "@/services/config";
 
-const runThis =
-  process.env.VSCODE_PID !== undefined ||
-  process.env.VITEST_MODE === "contract";
+const runThis = process.env.VSCODE_PID !== undefined || process.env.VITEST_MODE === "contract";
 
 describe.skipIf(!runThis)("Browser Contract Tests", () => {
   beforeAll(async () => {
@@ -15,7 +14,7 @@ describe.skipIf(!runThis)("Browser Contract Tests", () => {
   it("should load basic page correctly", async () => {
     const context = browserService.getContext();
     const page = await context.newPage();
-    const response = await page.goto("https://google.com/", { timeout: 30000 });
+    const response = await page.goto("https://google.com/", { timeout: 30_000 });
     expect(response?.status()).toBe(200);
     await page.close();
   });

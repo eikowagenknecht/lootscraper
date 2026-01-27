@@ -1,6 +1,8 @@
 import type { Kysely } from "kysely";
+
 import { sql } from "kysely";
 import { DateTime } from "luxon";
+
 import { logger } from "@/utils/logger";
 
 interface Row {
@@ -13,8 +15,12 @@ export const dateFormatMigration = {
     logger.info("Running migration: 006-dateformat");
     await db.transaction().execute(async (trx) => {
       const toISO = (dateStr: unknown): string | null => {
-        if (!dateStr) return null;
-        if (typeof dateStr !== "string") throw new Error("Invalid date type.");
+        if (!dateStr) {
+          return null;
+        }
+        if (typeof dateStr !== "string") {
+          throw new TypeError("Invalid date type.");
+        }
 
         try {
           const dt = DateTime.fromSQL(dateStr, { zone: "utc" });

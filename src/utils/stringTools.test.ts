@@ -1,6 +1,8 @@
 import { beforeAll, describe, expect, test } from "vitest";
+
 import { translationService } from "@/services/translation";
 import { OfferDuration, OfferPlatform, OfferSource, OfferType } from "@/types";
+
 import {
   cleanCombinedTitle,
   cleanGameTitle,
@@ -26,13 +28,13 @@ describe.concurrent("getMatchScore", () => {
     {
       search: "hello world",
       result: "hello world",
-      expectedScore: 1.0,
+      expectedScore: 1,
       description: "exact match",
     },
     {
       search: "Hello World!",
       result: "hello world",
-      expectedScore: 1.0,
+      expectedScore: 1,
       description: "case and punctuation insensitive match",
     },
     {
@@ -78,13 +80,13 @@ describe.concurrent("getMatchScore", () => {
     {
       search: "",
       result: "",
-      expectedScore: 1.0,
+      expectedScore: 1,
       description: "both strings empty",
     },
     {
       search: "hello   world",
       result: "hello world",
-      expectedScore: 1.0,
+      expectedScore: 1,
       description: "multiple spaces are condensed",
     },
     {
@@ -103,13 +105,7 @@ describe.concurrent("getMatchScore", () => {
     },
   ];
 
-  for (const {
-    search,
-    result,
-    expectedScore,
-    description,
-    approximateMatch,
-  } of testCases) {
+  for (const { search, result, expectedScore, description, approximateMatch } of testCases) {
     test(`should handle ${description}`, ({ expect }) => {
       const score = getMatchScore(search, result);
 
@@ -126,7 +122,7 @@ describe.concurrent("getMatchScore", () => {
     const result = "hello#world?";
     const score = getMatchScore(search, result);
 
-    expect(score).toBe(1.0);
+    expect(score).toBe(1);
   });
 
   test("should find Rainbow Six Siege similar to full title", ({ expect }) => {
@@ -166,9 +162,7 @@ describe.concurrent("Title Cleaner", () => {
     const title = "Aces of the Luftwaffe - Squadron Extended Edition";
     const cleanedGame = cleanGameTitle(title);
 
-    expect(cleanedGame).toBe(
-      "Aces of the Luftwaffe: Squadron Extended Edition",
-    );
+    expect(cleanedGame).toBe("Aces of the Luftwaffe: Squadron Extended Edition");
   });
 
   test("should handle colon spaced game title", ({ expect }) => {
@@ -202,9 +196,7 @@ describe.concurrent("Title Cleaner", () => {
     expect(cleanedOffer).toBe("World of Warships - Starter Pack: Dreadnought");
   });
 
-  test("should remove whitespace and newlines from game title", ({
-    expect,
-  }) => {
+  test("should remove whitespace and newlines from game title", ({ expect }) => {
     const title = "\n        Vambrace: Cold Soul\n    ";
     const cleaned = "Vambrace: Cold Soul";
 

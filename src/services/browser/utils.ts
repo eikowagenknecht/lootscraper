@@ -1,6 +1,8 @@
-import { resolve } from "node:path";
-import { DateTime } from "luxon";
 import type { Page } from "playwright";
+
+import { DateTime } from "luxon";
+import { resolve } from "node:path";
+
 import { logger } from "@/utils/logger";
 import { getDataPath } from "@/utils/path";
 
@@ -24,7 +26,9 @@ export async function scrollPageToBottom(page: Page): Promise<void> {
 
     // Calculate new scroll height and compare with last scroll height
     const newHeight = await page.evaluate("document.body.scrollHeight");
-    if (newHeight === height) break;
+    if (newHeight === height) {
+      break;
+    }
     height = newHeight;
     scrollCount++;
   }
@@ -40,11 +44,7 @@ export async function scrollPageToBottom(page: Page): Promise<void> {
   await page.waitForTimeout(1000);
 }
 
-export async function takeScreenshot(
-  page: Page,
-  prefix = "",
-  suffix = "",
-): Promise<void> {
+export async function takeScreenshot(page: Page, prefix = "", suffix = ""): Promise<void> {
   try {
     const filename = resolve(
       getDataPath(),

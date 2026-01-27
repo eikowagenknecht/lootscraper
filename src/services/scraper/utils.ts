@@ -1,12 +1,10 @@
-import { config } from "@/services/config";
-import type {
-  OfferDuration,
-  OfferPlatform,
-  OfferSource,
-  OfferType,
-} from "@/types/basic";
+import type { OfferDuration, OfferPlatform, OfferSource, OfferType } from "@/types/basic";
 import type { Config } from "@/types/config";
+
+import { config } from "@/services/config";
+
 import type { CronConfig } from "./base/scraper";
+
 import {
   AmazonGamesScraper,
   AmazonLootScraper,
@@ -88,15 +86,11 @@ function isScraperEnabled(name: string, cfg: Config): boolean {
 
 export function getEnabledScraperClasses(): ScraperClass[] {
   const cfg = config.get();
-  return allScrapers.filter((Scraper) =>
-    isScraperEnabled(Scraper.prototype.getScraperName(), cfg),
-  );
+  return allScrapers.filter((Scraper) => isScraperEnabled(Scraper.prototype.getScraperName(), cfg));
 }
 
 export function getEnabledScraperNames(): string[] {
-  return getEnabledScraperClasses().map((Scraper) =>
-    Scraper.prototype.getScraperName(),
-  );
+  return getEnabledScraperClasses().map((Scraper) => Scraper.prototype.getScraperName());
 }
 
 export function getScraperClassByName(name: string): ScraperClass | undefined {

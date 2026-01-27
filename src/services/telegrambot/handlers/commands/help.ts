@@ -1,10 +1,11 @@
 import type { CommandContext } from "grammy";
+
 import type { BotContext } from "@/services/telegrambot/types/middleware";
+
 import { bold, escapeText } from "@/services/telegrambot/utils/markdown";
+
 import { logCall, userCanControlBot } from ".";
-export async function handleHelpCommand(
-  ctx: CommandContext<BotContext>,
-): Promise<void> {
+export async function handleHelpCommand(ctx: CommandContext<BotContext>): Promise<void> {
   logCall(ctx);
 
   if (!(await userCanControlBot(ctx))) {

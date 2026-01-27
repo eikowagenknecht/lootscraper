@@ -69,7 +69,7 @@ export function fetchWithBrowserTls(
       res.on("data", (chunk: Buffer) => chunks.push(chunk));
 
       res.on("end", () => {
-        const data = Buffer.concat(chunks).toString("utf-8");
+        const data = Buffer.concat(chunks).toString("utf8");
         const status = res.statusCode ?? 0;
 
         resolve({

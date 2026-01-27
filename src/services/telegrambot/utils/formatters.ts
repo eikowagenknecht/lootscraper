@@ -1,8 +1,13 @@
-import { DateTime, type Duration } from "luxon";
+import type { Duration } from "luxon";
+
+import { DateTime } from "luxon";
+
+import type { Offer } from "@/types/database";
+
 import { getGameWithInfo } from "@/services/database/gameRepository";
 import { translationService } from "@/services/translation";
 import { OfferDuration } from "@/types/basic";
-import type { Offer } from "@/types/database";
+
 import { bold, escapeText, italic, link } from "./markdown";
 
 export const DATE_FORMATS = {
@@ -33,7 +38,7 @@ export async function formatOfferMessage(
   content += bold(
     `${offer.title} - ${translationService.getSourceDisplay(offer.source)} (${additionalInfo})`,
   );
-  content += escapeText(` [${offer.id.toFixed()}`);
+  content += escapeText(` [${offer.id.toFixed(0)}`);
 
   // Image
   if (offer.img_url) {
@@ -56,7 +61,7 @@ export async function formatOfferMessage(
     const validTo = DateTime.fromISO(offer.valid_to);
     const validToFormatted = tzOffset
       ? validTo
-          .setZone(`UTC${tzOffset >= 0 ? "+" : ""}${tzOffset.toFixed()}`)
+          .setZone(`UTC${tzOffset >= 0 ? "+" : ""}${tzOffset.toFixed(0)}`)
           .toFormat(DATE_FORMATS.READABLE_WITH_HOUR_TZ)
       : validTo.toUTC().toFormat(DATE_FORMATS.READABLE_WITH_HOUR_TZ);
 
@@ -73,13 +78,9 @@ export async function formatOfferMessage(
     const diffHuman = diff.normalize().toHuman({ maximumFractionDigits: 0 });
 
     if (now > validTo) {
-      content += escapeText(
-        `Offer expired ${diffHuman} ago (${validToFormatted}).`,
-      );
+      content += escapeText(`Offer expired ${diffHuman} ago (${validToFormatted}).`);
     } else {
-      content += escapeText(
-        `Offer expires in ${diffHuman} (${validToFormatted}).`,
-      );
+      content += escapeText(`Offer expires in ${diffHuman} (${validToFormatted}).`);
     }
   } else if (offer.duration === OfferDuration.ALWAYS) {
     content += escapeText("Offer will stay free, no need to hurry.");
@@ -87,11 +88,7 @@ export async function formatOfferMessage(
     content += escapeText("Offer has no known end date.");
   }
 
-  if (
-    !includeDetails ||
-    game === null ||
-    (game.igdbInfo === null && game.steamInfo === null)
-  ) {
+  if (!includeDetails || game === null || (game.igdbInfo === null && game.steamInfo === null)) {
     return content;
   }
 
@@ -108,7 +105,7 @@ export async function formatOfferMessage(
   const ratings: string[] = [];
 
   if (game.steamInfo?.metacritic_score) {
-    let text = `Metacritic ${game.steamInfo.metacritic_score.toFixed()} %`;
+    let text = `Metacritic ${game.steamInfo.metacritic_score.toFixed(0)} %`;
     if (game.steamInfo.metacritic_url) {
       text = link(game.steamInfo.metacritic_url, text);
     }
@@ -122,31 +119,23 @@ export async function formatOfferMessage(
     game.steamInfo.url
   ) {
     const text =
-      `Steam ${game.steamInfo.percent.toFixed()} % ` +
-      `(${game.steamInfo.score.toFixed()}/10, ` +
-      `${game.steamInfo.recommendations.toFixed()} recommendations)`;
+      `Steam ${game.steamInfo.percent.toFixed(0)} % ` +
+      `(${game.steamInfo.score.toFixed(0)}/10, ` +
+      `${game.steamInfo.recommendations.toFixed(0)} recommendations)`;
     ratings.push(link(game.steamInfo.url, text));
   }
 
-  if (
-    game.igdbInfo?.meta_ratings &&
-    game.igdbInfo.meta_score &&
-    game.igdbInfo.url
-  ) {
+  if (game.igdbInfo?.meta_ratings && game.igdbInfo.meta_score && game.igdbInfo.url) {
     const text =
-      `IGDB Meta ${game.igdbInfo.meta_score.toFixed()} % ` +
-      `(${game.igdbInfo.meta_ratings.toFixed()} sources)`;
+      `IGDB Meta ${game.igdbInfo.meta_score.toFixed(0)} % ` +
+      `(${game.igdbInfo.meta_ratings.toFixed(0)} sources)`;
     ratings.push(link(game.igdbInfo.url, text));
   }
 
-  if (
-    game.igdbInfo?.user_ratings &&
-    game.igdbInfo.user_score &&
-    game.igdbInfo.url
-  ) {
+  if (game.igdbInfo?.user_ratings && game.igdbInfo.user_score && game.igdbInfo.url) {
     const text =
-      `IGDB User ${game.igdbInfo.user_score.toFixed()} % ` +
-      `(${game.igdbInfo.user_ratings.toFixed()} sources)`;
+      `IGDB User ${game.igdbInfo.user_score.toFixed(0)} % ` +
+      `(${game.igdbInfo.user_ratings.toFixed(0)} sources)`;
     ratings.push(link(game.igdbInfo.url, text));
   }
 
@@ -161,9 +150,7 @@ export async function formatOfferMessage(
     )}\n`;
   } else if (game.steamInfo?.release_date) {
     content += `${bold("Release date:")} ${escapeText(
-      DateTime.fromISO(game.steamInfo.release_date).toFormat(
-        DATE_FORMATS.SHORT,
-      ),
+      DateTime.fromISO(game.steamInfo.release_date).toFormat(DATE_FORMATS.SHORT),
     )}\n`;
   }
 

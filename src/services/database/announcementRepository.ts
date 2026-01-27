@@ -1,10 +1,10 @@
-import { getDb } from "@/services/database";
 import type { Announcement, NewAnnouncement } from "@/types/database";
+
+import { getDb } from "@/services/database";
+
 import { handleError, handleInsertResult } from "./common";
 
-export async function getNewAnnouncements(
-  lastAnnouncementId: number,
-): Promise<Announcement[]> {
+export async function getNewAnnouncements(lastAnnouncementId: number): Promise<Announcement[]> {
   try {
     return await getDb()
       .selectFrom("announcements")
@@ -17,9 +17,7 @@ export async function getNewAnnouncements(
   }
 }
 
-export async function createAnnouncement(
-  announcement: NewAnnouncement,
-): Promise<number> {
+export async function createAnnouncement(announcement: NewAnnouncement): Promise<number> {
   try {
     const result = await getDb()
       .insertInto("announcements")

@@ -1,5 +1,7 @@
-import { getDb } from "@/services/database";
 import type { Game, IgdbInfo, NewGame, SteamInfo } from "@/types/database";
+
+import { getDb } from "@/services/database";
+
 import { handleError, handleInsertResult } from "./common";
 import { getIgdbInfoById } from "./igdbInfoRepository";
 import { getSteamInfoById } from "./steamInfoRepository";
@@ -7,11 +9,8 @@ import { getSteamInfoById } from "./steamInfoRepository";
 export async function getGameById(gameId: number): Promise<Game | null> {
   try {
     return (
-      (await getDb()
-        .selectFrom("games")
-        .where("id", "=", gameId)
-        .selectAll()
-        .executeTakeFirst()) ?? null
+      (await getDb().selectFrom("games").where("id", "=", gameId).selectAll().executeTakeFirst()) ??
+      null
     );
   } catch (error) {
     handleError("get game", error);
@@ -30,7 +29,9 @@ export async function getGameWithInfo(gameId: number): Promise<{
       .selectAll()
       .executeTakeFirst();
 
-    if (!game) return null;
+    if (!game) {
+      return null;
+    }
 
     let steamInfo: SteamInfo | null = null;
     let igdbInfo: IgdbInfo | null = null;
@@ -81,20 +82,14 @@ export async function getGameByIgdbName(name: string): Promise<Game | null> {
 
 export async function createGame(game: NewGame): Promise<number> {
   try {
-    const result = await getDb()
-      .insertInto("games")
-      .values(game)
-      .executeTakeFirstOrThrow();
+    const result = await getDb().insertInto("games").values(game).executeTakeFirstOrThrow();
     return handleInsertResult(result);
   } catch (error) {
     handleError("create game", error);
   }
 }
 
-export async function updateGameSteamInfo(
-  gameId: number,
-  steamId: number,
-): Promise<void> {
+export async function updateGameSteamInfo(gameId: number, steamId: number): Promise<void> {
   try {
     await getDb()
       .updateTable("games")
@@ -106,16 +101,9 @@ export async function updateGameSteamInfo(
   }
 }
 
-export async function updateGameIgdbInfo(
-  gameId: number,
-  igdbId: number,
-): Promise<void> {
+export async function updateGameIgdbInfo(gameId: number, igdbId: number): Promise<void> {
   try {
-    await getDb()
-      .updateTable("games")
-      .set({ igdb_id: igdbId })
-      .where("id", "=", gameId)
-      .execute();
+    await getDb().updateTable("games").set({ igdb_id: igdbId }).where("id", "=", gameId).execute();
   } catch (error) {
     handleError("update game IGDB info", error);
   }

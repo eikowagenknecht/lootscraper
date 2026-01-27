@@ -1,22 +1,19 @@
-import { writeFile } from "node:fs/promises";
-import { resolve } from "node:path";
 import Handlebars from "handlebars";
 import { DateTime } from "luxon";
-import { getGameWithInfo } from "@/services/database/gameRepository";
+import { writeFile } from "node:fs/promises";
+import { resolve } from "node:path";
+
 import type { FeedCombination } from "@/services/scraper/utils";
-import { translationService } from "@/services/translation";
 import type { Config } from "@/types/config";
 import type { Offer } from "@/types/database";
+
+import { getGameWithInfo } from "@/services/database/gameRepository";
+import { translationService } from "@/services/translation";
 import { getDataPath } from "@/utils/path";
-import {
-  cleanHtml,
-  generateFeedTitle,
-  generateFilename,
-} from "@/utils/stringTools";
+import { cleanHtml, generateFeedTitle, generateFilename } from "@/utils/stringTools";
 
 // The latest static URL for the Tailwind CSS stylesheet.
-const CSS_URL =
-  "https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css";
+const CSS_URL = "https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css";
 const TEMPLATE = `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -158,20 +155,16 @@ export class HtmlGenerator {
 
   private registerHelpers(): void {
     Handlebars.registerHelper("gt", (a: number, b: number) => a > b);
-    Handlebars.registerHelper("split", (str: string, separator: string) =>
-      str.split(separator),
-    );
+    Handlebars.registerHelper("split", (str: string, separator: string) => str.split(separator));
   }
 
   public async generateHtml(offers: Offer[]): Promise<void> {
     const entries = [];
     for (const offer of offers) {
-      const gameInfo = offer.game_id
-        ? await getGameWithInfo(offer.game_id)
-        : null;
+      const gameInfo = offer.game_id ? await getGameWithInfo(offer.game_id) : null;
 
       entries.push({
-        id: `${this.config.feed.idPrefix}${offer.id.toFixed()}`,
+        id: `${this.config.feed.idPrefix}${offer.id.toFixed(0)}`,
         title: offer.title,
         img_url: offer.img_url ?? gameInfo?.steamInfo?.image_url,
         valid_from: offer.valid_from
@@ -182,9 +175,8 @@ export class HtmlGenerator {
           : undefined,
         source: translationService.getSourceDisplay(offer.source),
         url: offer.url,
-        is_expired:
-          offer.valid_to && DateTime.fromISO(offer.valid_to) < DateTime.now(),
-        has_game: !!gameInfo,
+        is_expired: offer.valid_to && DateTime.fromISO(offer.valid_to) < DateTime.now(),
+        has_game: Boolean(gameInfo),
         game_name: gameInfo?.igdbInfo?.name ?? gameInfo?.steamInfo?.name,
         metacritic_score: gameInfo?.steamInfo?.metacritic_score,
         metacritic_url: gameInfo?.steamInfo?.metacritic_url,
@@ -198,18 +190,13 @@ export class HtmlGenerator {
         igdb_user_score: gameInfo?.igdbInfo?.user_score,
         igdb_user_ratings: gameInfo?.igdbInfo?.user_ratings,
         release_date: gameInfo?.igdbInfo?.release_date
-          ? DateTime.fromISO(gameInfo.igdbInfo.release_date).toFormat(
-              "yyyy-MM-dd",
-            )
+          ? DateTime.fromISO(gameInfo.igdbInfo.release_date).toFormat("yyyy-MM-dd")
           : gameInfo?.steamInfo?.release_date
-            ? DateTime.fromISO(gameInfo.steamInfo.release_date).toFormat(
-                "yyyy-MM-dd",
-              )
+            ? DateTime.fromISO(gameInfo.steamInfo.release_date).toFormat("yyyy-MM-dd")
             : undefined,
         recommended_price: gameInfo?.steamInfo?.recommended_price_eur,
         description:
-          gameInfo?.igdbInfo?.short_description ??
-          gameInfo?.steamInfo?.short_description,
+          gameInfo?.igdbInfo?.short_description ?? gameInfo?.steamInfo?.short_description,
         genres: gameInfo?.steamInfo?.genres,
       });
     }

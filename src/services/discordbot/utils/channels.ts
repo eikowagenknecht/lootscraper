@@ -1,12 +1,11 @@
-import {
-  ChannelType,
-  type Guild,
-  PermissionFlagsBits,
-  type TextChannel,
-} from "discord.js";
+import type { Guild, TextChannel } from "discord.js";
+
+import { ChannelType, PermissionFlagsBits } from "discord.js";
+
 import type { FeedCombination } from "@/services/scraper/utils";
-import { OfferDuration, OfferPlatform, OfferType } from "@/types/basic";
 import type { Config } from "@/types/config";
+
+import { OfferDuration, OfferPlatform, OfferType } from "@/types/basic";
 import { logger } from "@/utils/logger";
 
 /**
@@ -18,10 +17,7 @@ import { logger } from "@/utils/logger";
  * @param prefix - Optional prefix to prepend to the channel name.
  * @returns The generated channel name.
  */
-export function getFeedChannelName(
-  combination: FeedCombination,
-  prefix = "",
-): string {
+export function getFeedChannelName(combination: FeedCombination, prefix = ""): string {
   const parts: string[] = [combination.source.toLowerCase()];
 
   // Only add type if not GAME (the default)
@@ -52,10 +48,7 @@ export function getFeedChannelName(
  * @param categoryName - The name for the category channel.
  * @returns The ID of the category channel.
  */
-export async function ensureCategoryChannel(
-  guild: Guild,
-  categoryName: string,
-): Promise<string> {
+export async function ensureCategoryChannel(guild: Guild, categoryName: string): Promise<string> {
   // Look for existing category
   const existingCategory = guild.channels.cache.find(
     (ch) => ch.type === ChannelType.GuildCategory && ch.name === categoryName,
@@ -88,10 +81,7 @@ export async function ensureFeedChannel(
   combination: FeedCombination,
   config: Config,
 ): Promise<TextChannel> {
-  const channelName = getFeedChannelName(
-    combination,
-    config.discord.channelPrefix,
-  );
+  const channelName = getFeedChannelName(combination, config.discord.channelPrefix);
 
   // Look for existing channel with matching name
   const existingChannel = guild.channels.cache.find(
@@ -103,10 +93,7 @@ export async function ensureFeedChannel(
   }
 
   // Ensure category exists
-  const categoryId = await ensureCategoryChannel(
-    guild,
-    config.discord.categoryName,
-  );
+  const categoryId = await ensureCategoryChannel(guild, config.discord.categoryName);
 
   // Create new channel
   logger.info(`Creating Discord feed channel: ${channelName}`);
@@ -119,10 +106,7 @@ export async function ensureFeedChannel(
       {
         id: guild.roles.everyone.id,
         deny: [PermissionFlagsBits.SendMessages], // Users can't send messages
-        allow: [
-          PermissionFlagsBits.ViewChannel,
-          PermissionFlagsBits.ReadMessageHistory,
-        ],
+        allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.ReadMessageHistory],
       },
       {
         id: guild.client.user.id,
@@ -163,10 +147,7 @@ export function getExistingFeedChannel(
  * @param channelId - The Discord channel ID to find.
  * @returns The text channel if found, undefined otherwise.
  */
-export function getChannelById(
-  guild: Guild,
-  channelId: string,
-): TextChannel | undefined {
+export function getChannelById(guild: Guild, channelId: string): TextChannel | undefined {
   const channel = guild.channels.cache.get(channelId);
   if (channel?.type === ChannelType.GuildText) {
     return channel;

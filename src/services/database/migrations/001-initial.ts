@@ -1,4 +1,5 @@
 import type { Kysely } from "kysely";
+
 import { logger } from "@/utils/logger";
 
 export const initialMigration = {
@@ -48,12 +49,8 @@ export const initialMigration = {
       await trx.schema
         .createTable("games")
         .addColumn("id", "integer", (col) => col.primaryKey().notNull())
-        .addColumn("igdb_id", "integer", (col) =>
-          col.references("igdb_info.id"),
-        )
-        .addColumn("steam_id", "integer", (col) =>
-          col.references("steam_info.id"),
-        )
+        .addColumn("igdb_id", "integer", (col) => col.references("igdb_info.id"))
+        .addColumn("steam_id", "integer", (col) => col.references("steam_info.id"))
         .execute();
 
       // announcements table
@@ -107,9 +104,7 @@ export const initialMigration = {
       await trx.schema
         .createTable("telegram_subscriptions")
         .addColumn("id", "integer", (col) => col.primaryKey().notNull())
-        .addColumn("chat_id", "integer", (col) =>
-          col.references("telegram_chats.id").notNull(),
-        )
+        .addColumn("chat_id", "integer", (col) => col.references("telegram_chats.id").notNull())
         .addColumn("source", "varchar(7)", (col) => col.notNull())
         .addColumn("type", "varchar(4)", (col) => col.notNull())
         .addColumn("last_offer_id", "integer", (col) => col.notNull())

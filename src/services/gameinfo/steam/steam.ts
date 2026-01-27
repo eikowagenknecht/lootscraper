@@ -1,7 +1,9 @@
 import { DateTime } from "luxon";
 import { errors } from "playwright";
-import { browserService } from "@/services/browser";
+
 import type { NewSteamInfo } from "@/types/database";
+
+import { browserService } from "@/services/browser";
 import { getMatchScore } from "@/utils";
 import { logger } from "@/utils/logger";
 
@@ -37,8 +39,7 @@ type SteamApiResponse = Record<
 
 export class SteamClient {
   private static readonly STORE_URL = "https://store.steampowered.com";
-  private static readonly API_URL =
-    "https://store.steampowered.com/api/appdetails";
+  private static readonly API_URL = "https://store.steampowered.com/api/appdetails";
   private static readonly RESULT_MATCH_THRESHOLD = 0.75;
 
   public async findSteamId(searchString: string): Promise<number | null> {
@@ -52,25 +53,24 @@ export class SteamClient {
 
     const page = await context.newPage();
     try {
-      await page.goto(searchUrl.toString(), { timeout: 30000 });
+      await page.goto(searchUrl.toString(), { timeout: 30_000 });
 
       const elements = await page
         .locator("#search_result_container a")
         .filter({ has: page.locator(".title") })
         .all();
 
-      let bestMatch: { appId: number; score: number; title: string } | null =
-        null;
+      let bestMatch: { appId: number; score: number; title: string } | null = null;
 
       for (const element of elements) {
         const title = await element.locator(".title").textContent();
         const appId = await element.getAttribute("data-ds-appid");
 
-        logger.debug(
-          `Found title (Steam Id): ${String(title)} (${String(appId)})`,
-        );
+        logger.debug(`Found title (Steam Id): ${String(title)} (${String(appId)})`);
 
-        if (!title || !appId) continue;
+        if (!title || !appId) {
+          continue;
+        }
 
         const score = getMatchScore(searchString, title);
         if (
@@ -78,9 +78,7 @@ export class SteamClient {
           (!bestMatch || score > bestMatch.score)
         ) {
           bestMatch = { appId: Number.parseInt(appId, 10), score, title };
-          logger.debug(
-            `Found match ${title} with score ${(score * 100).toFixed()}%`,
-          );
+          logger.debug(`Found match ${title} with score ${(score * 100).toFixed(0)}%`);
         }
       }
 
@@ -141,8 +139,8 @@ export class SteamClient {
     const context = browserService.getContext();
     const page = await context.newPage();
     try {
-      await page.goto(`${SteamClient.STORE_URL}/app/${appId.toFixed()}`, {
-        timeout: 30000,
+      await page.goto(`${SteamClient.STORE_URL}/app/${appId.toFixed(0)}`, {
+        timeout: 30_000,
       });
       await page.waitForSelector(".game_page_background");
 
@@ -173,9 +171,7 @@ export class SteamClient {
       // Get rating if we have percentage
       if (data.percent) {
         const rating = await page
-          .locator(
-            "#userReviews [itemprop='aggregateRating'] [itemprop='ratingValue']",
-          )
+          .locator("#userReviews [itemprop='aggregateRating'] [itemprop='ratingValue']")
           .getAttribute("content");
 
         if (rating) {
@@ -184,9 +180,7 @@ export class SteamClient {
 
         // Get recommendations count
         const recommendations = await page
-          .locator(
-            "#userReviews [itemprop='aggregateRating'] [itemprop='reviewCount']",
-          )
+          .locator("#userReviews [itemprop='aggregateRating'] [itemprop='reviewCount']")
           .getAttribute("content");
 
         if (recommendations) {
@@ -226,9 +220,7 @@ export class SteamClient {
           zone: "UTC",
         }).toISO();
       } catch {
-        logger.debug(
-          `Couldn't parse date, trying next format: ${data.release_date.date}`,
-        );
+        logger.debug(`Couldn't parse date, trying next format: ${data.release_date.date}`);
       }
 
       if (!releaseDate) {
@@ -239,16 +231,14 @@ export class SteamClient {
             .startOf("year")
             .toISO();
         } catch {
-          logger.verbose(
-            `Couldn't parse date, ignoring it: ${data.release_date.date}`,
-          );
+          logger.verbose(`Couldn't parse date, ignoring it: ${data.release_date.date}`);
         }
       }
     }
 
     const steamInfo: NewSteamInfo = {
       id: appId,
-      url: `${SteamClient.STORE_URL}/app/${appId.toFixed()}`,
+      url: `${SteamClient.STORE_URL}/app/${appId.toFixed(0)}`,
       name: data.name,
       short_description: data.short_description ?? null,
       release_date: releaseDate,
@@ -256,14 +246,13 @@ export class SteamClient {
       publishers: data.publishers?.join(", ") ?? null,
       image_url:
         data.header_image ??
-        data.screenshots?.[0]?.path_full.replace(/\\\//g, "/") ??
+        data.screenshots?.[0]?.path_full.replaceAll(String.raw`\/`, "/") ??
         null,
-      recommendations:
-        data.recommendations?.total ?? pageData.recommendations ?? null,
+      recommendations: data.recommendations?.total ?? pageData.recommendations ?? null,
       percent: pageData.percent ?? null,
       score: pageData.score ?? null,
       metacritic_score: data.metacritic?.score ?? null,
-      metacritic_url: data.metacritic?.url.replace(/\\\//g, "/") ?? null,
+      metacritic_url: data.metacritic?.url.replaceAll(String.raw`\/`, "/") ?? null,
       recommended_price_eur: data.is_free
         ? 0
         : data.price_overview?.currency === "EUR"

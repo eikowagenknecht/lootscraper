@@ -4,15 +4,16 @@
 commit-msg:
   commands:
     lint-commit-msg:
-      run: npx commitlint --edit
+      run: pnpm exec commitlint --edit
+
 pre-commit:
-  parallel: true
+  parallel: false
   commands:
-    eslint-fix:
-      glob: "*.{js,ts,cjs,mjs,d.cts,d.mts,jsx,tsx}"
-      run: npx eslint "{staged_files}"
-    biome-check-and-fix:
-      glob: "*.{js,ts,cjs,mjs,d.cts,d.mts,jsx,tsx,json,jsonc}"
-      run: npx biome check --write --no-errors-on-unmatched --files-ignore-unknown=true "{staged_files}" && git update-index --again
     typescript-check:
-      run: npx tsc --noEmit
+      run: pnpm exec tsc --noEmit
+    oxlint-check:
+      glob: "*.{js,ts,cjs,mjs,d.cts,d.mts,jsx,tsx}"
+      run: pnpm exec oxlint '{staged_files}'
+    oxfmt-fix:
+      glob: "*.{js,ts,cjs,mjs,d.cts,d.mts,jsx,tsx,json,jsonc}"
+      run: pnpm exec oxfmt '{staged_files}' && git update-index --again

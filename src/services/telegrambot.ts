@@ -1,32 +1,22 @@
+import type { BotError, RawApi } from "grammy";
+import type { Other } from "node_modules/grammy/out/core/api";
+
 import { autoRetry } from "@grammyjs/auto-retry";
 import { CommandGroup, commandNotFound, commands } from "@grammyjs/commands";
 import { AbortController } from "abort-controller";
-import {
-  Bot,
-  type BotError,
-  GrammyError,
-  HttpError,
-  type RawApi,
-} from "grammy";
+import { Bot, GrammyError, HttpError } from "grammy";
 import { DateTime } from "luxon";
-import type { Other } from "node_modules/grammy/out/core/api";
+
 import type { BotContext } from "@/services/telegrambot/types/middleware";
-import {
-  sendNewAnnouncementsToChat,
-  sendNewOffersToChat,
-} from "@/services/telegrambot/utils/send";
 import type { Config, TelegramLogLevel } from "@/types/config";
+
+import { sendNewAnnouncementsToChat, sendNewOffersToChat } from "@/services/telegrambot/utils/send";
 import { handleError } from "@/utils/errorHandler";
 import { logger } from "@/utils/logger";
-import {
-  getChatsNeedingAnnouncements,
-  getChatsNeedingOffers,
-} from "./database/offerRepository";
+
+import { getChatsNeedingAnnouncements, getChatsNeedingOffers } from "./database/offerRepository";
 import { handleCallback } from "./telegrambot/handlers/callbacks/router";
-import {
-  handleHelpCommand,
-  handleStartCommand,
-} from "./telegrambot/handlers/commands";
+import { handleHelpCommand, handleStartCommand } from "./telegrambot/handlers/commands";
 import {
   handleAnnounceCommand,
   handleDebugCommand,
@@ -81,50 +71,18 @@ export class TelegramBotService {
       this.bot.use(commands());
 
       const userCommands = new CommandGroup<BotContext>();
-      userCommands.command(
-        "start",
-        "Register and start the bot",
-        handleStartCommand,
-      );
-      userCommands.command(
-        "help",
-        "Show available commands",
-        handleHelpCommand,
-      );
-      userCommands.command(
-        "manage",
-        "Manage your subscriptions",
-        handleManageCommand,
-      );
+      userCommands.command("start", "Register and start the bot", handleStartCommand);
+      userCommands.command("help", "Show available commands", handleHelpCommand);
+      userCommands.command("manage", "Manage your subscriptions", handleManageCommand);
       userCommands.command("status", "Show your status", handleStatusCommand);
-      userCommands.command(
-        "timezone",
-        "Set your timezone",
-        handleTimezoneCommand,
-      );
-      userCommands.command(
-        "refresh",
-        "Check for new offers",
-        handleRefreshCommand,
-      );
-      userCommands.command(
-        "leave",
-        "Unregister and delete your data",
-        handleLeaveCommand,
-      );
+      userCommands.command("timezone", "Set your timezone", handleTimezoneCommand);
+      userCommands.command("refresh", "Check for new offers", handleRefreshCommand);
+      userCommands.command("leave", "Unregister and delete your data", handleLeaveCommand);
       const adminCommands = new CommandGroup<BotContext>();
-      adminCommands.command(
-        "announce",
-        "Send an announcement",
-        handleAnnounceCommand,
-      );
+      adminCommands.command("announce", "Send an announcement", handleAnnounceCommand);
       adminCommands.command("debug", "Show chat IDs", handleDebugCommand);
       adminCommands.command("scrapenow", "Scrape now", handleScrapeNowCommand);
-      adminCommands.command(
-        "refreshinfo",
-        "Refresh game info",
-        handleRefreshInfoCommand,
-      );
+      adminCommands.command("refreshinfo", "Refresh game info", handleRefreshInfoCommand);
       adminCommands.command("error", "Generate an error", handleErrorCommand);
 
       this.bot.use(userCommands);
@@ -263,7 +221,7 @@ export class TelegramBotService {
 
   private handleError(error: BotError): void {
     logger.debug(
-      `Error while handling update ${error.ctx.update.update_id.toFixed()}:`,
+      `Error while handling update ${error.ctx.update.update_id.toFixed(0)}:`,
       JSON.stringify(error.ctx, null, 2),
     );
 
@@ -298,7 +256,9 @@ export class TelegramBotService {
       ]);
       // Clear timeout so the rejection doesn't silently throw after the message
       // is sent
-      if (timeoutId) clearTimeout(timeoutId);
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
     } catch (error) {
       // Abort sending so the message doesn't get sent later
       abortController.abort();

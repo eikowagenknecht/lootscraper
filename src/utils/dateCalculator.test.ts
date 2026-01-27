@@ -1,11 +1,10 @@
 import { DateTime } from "luxon";
 import { describe, test } from "vitest";
+
 import { calculateRealValidTo } from "./dateCalculator";
 
 describe.concurrent("Date Calculator", () => {
-  test("should use seen_last if valid_to is far in the future", ({
-    expect,
-  }) => {
+  test("should use seen_last if valid_to is far in the future", ({ expect }) => {
     const seenLast = DateTime.fromISO("2020-06-01T00:00:00Z");
     const validTo = DateTime.fromISO("2020-06-15T00:00:00Z");
     const now = DateTime.fromISO("2022-01-01T00:00:00Z");
@@ -31,9 +30,7 @@ describe.concurrent("Date Calculator", () => {
     expect(realValidTo).toBeNull();
   });
 
-  test("should use seen_last if no valid_to and not seen recently", ({
-    expect,
-  }) => {
+  test("should use seen_last if no valid_to and not seen recently", ({ expect }) => {
     const seenLast = DateTime.fromISO("2020-06-01T00:00:00Z");
     const now = DateTime.fromISO("2020-06-03T00:00:00Z");
 
@@ -68,13 +65,9 @@ describe.concurrent("Date Calculator", () => {
   });
 
   test("luxon should parse steam date for next year", ({ expect }) => {
-    const parsedDate = DateTime.fromFormat(
-      "6 Jan, 2025 @ 6:00pm",
-      "d MMM, yyyy @ h:mma",
-      {
-        zone: "UTC",
-      },
-    );
+    const parsedDate = DateTime.fromFormat("6 Jan, 2025 @ 6:00pm", "d MMM, yyyy @ h:mma", {
+      zone: "UTC",
+    });
 
     expect(parsedDate.toISO()).toBe("2025-01-06T18:00:00.000Z");
   });

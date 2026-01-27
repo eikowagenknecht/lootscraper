@@ -1,4 +1,5 @@
 import Handlebars from "handlebars";
+
 import { cleanHtml } from "./stringTools";
 
 // Types for feed construction
@@ -135,10 +136,7 @@ interface AtomFeedOptions {
 
 // Helper functions
 function escapeXml(input: string): string {
-  return input
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
+  return input.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
 }
 
 function formatISODate(date: Date): string {
@@ -146,41 +144,47 @@ function formatISODate(date: Date): string {
 }
 
 // Register Handlebars helpers
-Handlebars.registerHelper("escapeXml", (uri: string) => {
-  return new Handlebars.SafeString(escapeXml(uri));
-});
+Handlebars.registerHelper("escapeXml", (uri: string) => new Handlebars.SafeString(escapeXml(uri)));
 
 Handlebars.registerHelper("isoDate", formatISODate);
 
 Handlebars.registerHelper("renderLinkAttributes", (link: AtomLink) => {
   const attributes: string[] = [];
   attributes.push(`href="${escapeXml(link.href)}"`);
-  if (link.rel) attributes.push(`rel="${link.rel}"`);
-  if (link.type) attributes.push(`type="${link.type}"`);
-  if (link.hreflang) attributes.push(`hreflang="${link.hreflang}"`);
-  if (link.title) attributes.push(`title="${link.title}"`);
-  if (link.length !== undefined)
-    attributes.push(`length="${link.length.toFixed()}"`);
+  if (link.rel) {
+    attributes.push(`rel="${link.rel}"`);
+  }
+  if (link.type) {
+    attributes.push(`type="${link.type}"`);
+  }
+  if (link.hreflang) {
+    attributes.push(`hreflang="${link.hreflang}"`);
+  }
+  if (link.title) {
+    attributes.push(`title="${link.title}"`);
+  }
+  if (link.length !== undefined) {
+    attributes.push(`length="${link.length.toFixed(0)}"`);
+  }
   return new Handlebars.SafeString(attributes.join(" "));
 });
 
-Handlebars.registerHelper(
-  "renderContent",
-  (content: AtomContent, elementName: string) => {
-    if ("src" in content) {
-      const attrs = [`src="${escapeXml(content.src)}"`];
-      if (content.type) attrs.push(`type="${content.type}"`);
-      return new Handlebars.SafeString(`<${elementName} ${attrs.join(" ")}/>`);
+Handlebars.registerHelper("renderContent", (content: AtomContent, elementName: string) => {
+  if ("src" in content) {
+    const attrs = [`src="${escapeXml(content.src)}"`];
+    if (content.type) {
+      attrs.push(`type="${content.type}"`);
     }
+    return new Handlebars.SafeString(`<${elementName} ${attrs.join(" ")}/>`);
+  }
 
-    const pre = '<div xmlns="http://www.w3.org/1999/xhtml">';
-    const post = "</div>";
-    const attrs = content.type ? ` type="${content.type}"` : "";
-    return new Handlebars.SafeString(
-      `<${elementName}${attrs}>${pre}${content.content}${post}</${elementName}>`,
-    );
-  },
-);
+  const pre = '<div xmlns="http://www.w3.org/1999/xhtml">';
+  const post = "</div>";
+  const attrs = content.type ? ` type="${content.type}"` : "";
+  return new Handlebars.SafeString(
+    `<${elementName}${attrs}>${pre}${content.content}${post}</${elementName}>`,
+  );
+});
 
 // Entry template
 const entryTemplate = Handlebars.compile(`

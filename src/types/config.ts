@@ -1,16 +1,9 @@
 import { z } from "zod";
+
 import { InfoSource } from "./basic";
 
 // Enums
-const LogLevel = z.enum([
-  "ERROR",
-  "WARN",
-  "INFO",
-  "HTTP",
-  "VERBOSE",
-  "DEBUG",
-  "SILLY",
-]);
+const LogLevel = z.enum(["ERROR", "WARN", "INFO", "HTTP", "VERBOSE", "DEBUG", "SILLY"]);
 
 export const TelegramLogLevel = LogLevel;
 export type TelegramLogLevel = z.infer<typeof TelegramLogLevel>;

@@ -1,4 +1,5 @@
 import type { Page } from "playwright";
+
 import { BaseScraper } from "@/services/scraper/base/scraper";
 import { OfferSource, OfferType } from "@/types/basic";
 import { logger } from "@/utils/logger";
@@ -21,14 +22,11 @@ export abstract class GogBaseScraper extends BaseScraper {
   }
 
   protected sanitizeImgUrl(imgUrl: string | null): string | null {
-    if (!imgUrl) return null;
+    if (!imgUrl) {
+      return null;
+    }
 
-    let sanitized = imgUrl
-      .trim()
-      .split(",", 1)[0]
-      .trim()
-      .replace(/ 2x$/, "")
-      .replace(/ 1x$/, "");
+    let sanitized = imgUrl.trim().split(",", 1)[0].trim().replace(/ 2x$/, "").replace(/ 1x$/, "");
 
     if (!sanitized.startsWith("https:")) {
       // Sometimes the URL is missing the protocol
@@ -41,7 +39,9 @@ export abstract class GogBaseScraper extends BaseScraper {
   protected async switchToEnglish(page: Page): Promise<void> {
     // Check if we're already on English version
     const currentLanguage = await this.getCurrentLanguage(page);
-    if (currentLanguage === "English") return;
+    if (currentLanguage === "English") {
+      return;
+    }
 
     await page.locator("li.footer-microservice-language__item").first().click();
 
@@ -56,9 +56,7 @@ export abstract class GogBaseScraper extends BaseScraper {
   }
 
   private async getCurrentLanguage(page: Page): Promise<string | null> {
-    return page
-      .locator("li.footer-microservice-language__item.is-selected")
-      .textContent();
+    return page.locator("li.footer-microservice-language__item.is-selected").textContent();
   }
 
   private async waitForLanguageChange(
@@ -78,23 +76,22 @@ export abstract class GogBaseScraper extends BaseScraper {
 
         // Check language
         const currentLanguage = await this.getCurrentLanguage(page);
-        if (currentLanguage === expectedLanguage) return;
+        if (currentLanguage === expectedLanguage) {
+          return;
+        }
 
         logger.warn(
-          `Language still not ${expectedLanguage} after attempt ${(attempts + 1).toFixed()}, current: ${currentLanguage ?? "unknown"}`,
+          `Language still not ${expectedLanguage} after attempt ${(attempts + 1).toFixed(0)}, current: ${currentLanguage ?? "unknown"}`,
         );
         attempts++;
 
         if (attempts <= retries) {
           // Try clicking the language selector again
-          await page
-            .locator("li.footer-microservice-language__item")
-            .first()
-            .click();
+          await page.locator("li.footer-microservice-language__item").first().click();
         }
       } catch (error) {
         logger.warn(
-          `Error waiting for language change, attempt ${(attempts + 1).toFixed()}:`,
+          `Error waiting for language change, attempt ${(attempts + 1).toFixed(0)}:`,
           error,
         );
         attempts++;
@@ -102,7 +99,7 @@ export abstract class GogBaseScraper extends BaseScraper {
     }
 
     throw new Error(
-      `Failed to switch to ${expectedLanguage} after ${(retries + 1).toFixed()} attempts.`,
+      `Failed to switch to ${expectedLanguage} after ${(retries + 1).toFixed(0)} attempts.`,
     );
   }
 }

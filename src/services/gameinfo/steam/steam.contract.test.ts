@@ -1,11 +1,11 @@
 import { beforeAll, beforeEach, describe, expect, test } from "vitest";
+
 import { browserService } from "@/services/browser";
 import { config } from "@/services/config";
+
 import { SteamClient } from "./steam";
 
-const runThis =
-  process.env.VSCODE_PID !== undefined ||
-  process.env.VITEST_MODE === "contract";
+const runThis = process.env.VSCODE_PID !== undefined || process.env.VITEST_MODE === "contract";
 
 describe.skipIf(!runThis)("Steam Game Info Contract Tests", () => {
   beforeAll(async () => {
@@ -21,13 +21,13 @@ describe.skipIf(!runThis)("Steam Game Info Contract Tests", () => {
 
   describe("Steam App ID Resolution", () => {
     test("should find Steam ID for LOVE (issue #310)", async () => {
-      const expectedId = 269270; // LOVE
+      const expectedId = 269_270; // LOVE
       const steamId = await steam.findSteamId("LOVE");
       expect(steamId).toBe(expectedId);
     });
 
     test("should find Steam ID for Rainbow Six Siege", async () => {
-      const expectedId = 359550; // Tom Clancy's Rainbow Six® Siege
+      const expectedId = 359_550; // Tom Clancy's Rainbow Six® Siege
       const steamId = await steam.findSteamId("Rainbow Six Siege");
       expect(steamId).toBe(expectedId);
     });
@@ -38,10 +38,8 @@ describe.skipIf(!runThis)("Steam Game Info Contract Tests", () => {
     });
 
     test("should handle special characters in game titles", async () => {
-      const expectedId = 32460;
-      const steamId = await steam.findSteamId(
-        "Monkey Island 2 Special Edition: LeChuck’s Revenge",
-      );
+      const expectedId = 32_460;
+      const steamId = await steam.findSteamId("Monkey Island 2 Special Edition: LeChuck’s Revenge");
       expect(steamId).toBe(expectedId);
     });
   });
@@ -50,7 +48,9 @@ describe.skipIf(!runThis)("Steam Game Info Contract Tests", () => {
     test("should fetch Counter-Strike details", async () => {
       const appId = await steam.findSteamId("Counter-Strike");
       expect(appId).toBeDefined();
-      if (!appId) return;
+      if (!appId) {
+        return;
+      }
       const info = await steam.getDetails(appId);
       expect(info).toBeDefined();
       expect(info.name).toBe("Counter-Strike");
@@ -58,7 +58,7 @@ describe.skipIf(!runThis)("Steam Game Info Contract Tests", () => {
       expect(info.release_date).toBe("2000-11-01T00:00:00.000Z");
       expect(info.recommended_price_eur).toBe(8.19);
       expect(info.genres).toBe("Action");
-      expect(info.recommendations).toBeGreaterThan(100000);
+      expect(info.recommendations).toBeGreaterThan(100_000);
       expect(info.percent).toBeGreaterThan(90);
       expect(info.score).toBe(10);
       expect(info.metacritic_score).toBe(88);
@@ -70,7 +70,9 @@ describe.skipIf(!runThis)("Steam Game Info Contract Tests", () => {
     test("should fetch Rainbow Six Siege details", async () => {
       const appId = await steam.findSteamId("Rainbow Six Siege");
       expect(appId).toBeDefined();
-      if (!appId) return;
+      if (!appId) {
+        return;
+      }
       const info = await steam.getDetails(appId);
       expect(info).toBeDefined();
       expect(info.name).toBe("Tom Clancy's Rainbow Six® Siege");
@@ -78,7 +80,7 @@ describe.skipIf(!runThis)("Steam Game Info Contract Tests", () => {
       expect(info.release_date).toBe("2015-12-01T00:00:00.000Z");
       expect(info.recommended_price_eur).toBe(19.99);
       expect(info.genres).toBe("Action");
-      expect(info.recommendations).toBeGreaterThan(850000);
+      expect(info.recommendations).toBeGreaterThan(850_000);
       expect(info.percent).toBeGreaterThan(80);
       expect(info.score).toBe(9);
       expect(info.metacritic_score).toBeNull();
@@ -88,7 +90,9 @@ describe.skipIf(!runThis)("Steam Game Info Contract Tests", () => {
     test("should handle release date correctly for Riverbond", async () => {
       const appId = await steam.findSteamId("Riverbond");
       expect(appId).toBeDefined();
-      if (!appId) return;
+      if (!appId) {
+        return;
+      }
       const info = await steam.getDetails(appId);
       expect(info).toBeDefined();
       expect(info.name).toBe("Riverbond");
@@ -98,7 +102,9 @@ describe.skipIf(!runThis)("Steam Game Info Contract Tests", () => {
     test("should handle recommendations", async () => {
       const appId = await steam.findSteamId("Riverbond");
       expect(appId).toBeDefined();
-      if (!appId) return;
+      if (!appId) {
+        return;
+      }
       const info = await steam.getDetails(appId);
       expect(info).toBeDefined();
       expect(info.name).toBe("Riverbond");
@@ -108,7 +114,9 @@ describe.skipIf(!runThis)("Steam Game Info Contract Tests", () => {
     test("should handle games with no rating", async () => {
       const appId = await steam.findSteamId("Project Malice");
       expect(appId).toBeDefined();
-      if (!appId) return;
+      if (!appId) {
+        return;
+      }
       const info = await steam.getDetails(appId);
       expect(info).toBeDefined();
       expect(info.name).toBe("Project Malice");
@@ -121,7 +129,9 @@ describe.skipIf(!runThis)("Steam Game Info Contract Tests", () => {
     test("should handle currency correctly for Cities: Skylines", async () => {
       const appId = await steam.findSteamId("Cities: Skylines");
       expect(appId).toBeDefined();
-      if (!appId) return;
+      if (!appId) {
+        return;
+      }
       const info = await steam.getDetails(appId);
       expect(info).toBeDefined();
       expect(info.name).toBe("Cities: Skylines");
@@ -131,7 +141,9 @@ describe.skipIf(!runThis)("Steam Game Info Contract Tests", () => {
     test("should handle free games correctly", async () => {
       const appId = await steam.findSteamId("World of Tanks");
       expect(appId).toBeDefined();
-      if (!appId) return;
+      if (!appId) {
+        return;
+      }
       const info = await steam.getDetails(appId);
       expect(info).toBeDefined();
       expect(info.name).toBe("World of Tanks");
@@ -141,7 +153,9 @@ describe.skipIf(!runThis)("Steam Game Info Contract Tests", () => {
     test("should handle unavailable prices", async () => {
       const appId = await steam.findSteamId("Grand Theft Auto V");
       expect(appId).toBeDefined();
-      if (!appId) return;
+      if (!appId) {
+        return;
+      }
       const info = await steam.getDetails(appId);
       expect(info).toBeDefined();
       expect(info.name).toBe("Grand Theft Auto V");
@@ -152,11 +166,11 @@ describe.skipIf(!runThis)("Steam Game Info Contract Tests", () => {
     // Obviously this test will not prove anything if the game currently is
     // not free on the weekend.
     test("should handle weekend free games", async () => {
-      const appId = await steam.findSteamId(
-        "Call of Duty®: Modern Warfare® II",
-      );
+      const appId = await steam.findSteamId("Call of Duty®: Modern Warfare® II");
       expect(appId).toBeDefined();
-      if (!appId) return;
+      if (!appId) {
+        return;
+      }
       const info = await steam.getDetails(appId);
       expect(info).toBeDefined();
       expect(info.name).toBe("Call of Duty®: Modern Warfare® II");
@@ -167,7 +181,9 @@ describe.skipIf(!runThis)("Steam Game Info Contract Tests", () => {
     test("should handle games with no reviews", async () => {
       const appId = await steam.findSteamId("Candy Kombat");
       expect(appId).toBeDefined();
-      if (!appId) return;
+      if (!appId) {
+        return;
+      }
       const info = await steam.getDetails(appId);
       expect(info).toBeDefined();
       expect(info.name).toBe("Candy Kombat");
@@ -178,7 +194,9 @@ describe.skipIf(!runThis)("Steam Game Info Contract Tests", () => {
     test("should handle EA Play included games", async () => {
       const appId = await steam.findSteamId("Battlefield™ 2042");
       expect(appId).toBeDefined();
-      if (!appId) return;
+      if (!appId) {
+        return;
+      }
       const info = await steam.getDetails(appId);
       expect(info).toBeDefined();
       expect(info.name).toBe("Battlefield™ 2042");
@@ -188,7 +206,9 @@ describe.skipIf(!runThis)("Steam Game Info Contract Tests", () => {
     test("should return English descriptions", async () => {
       const appId = await steam.findSteamId("Warframe");
       expect(appId).toBeDefined();
-      if (!appId) return;
+      if (!appId) {
+        return;
+      }
       const info = await steam.getDetails(appId);
       expect(info).toBeDefined();
       expect(info.name).toBe("Warframe");
@@ -198,7 +218,9 @@ describe.skipIf(!runThis)("Steam Game Info Contract Tests", () => {
     test("should handle age-restricted games", async () => {
       const appId = await steam.findSteamId("Doom Eternal");
       expect(appId).toBeDefined();
-      if (!appId) return;
+      if (!appId) {
+        return;
+      }
       const info = await steam.getDetails(appId);
       expect(info).toBeDefined();
       expect(info.name).toBe("DOOM Eternal");
@@ -206,7 +228,7 @@ describe.skipIf(!runThis)("Steam Game Info Contract Tests", () => {
     });
 
     test("should handle multiple genres", async () => {
-      const info = await steam.getDetails(1424910);
+      const info = await steam.getDetails(1_424_910);
       expect(info).toBeDefined();
       expect(info.genres).toBe("Action, Indie, Racing, Early Access");
     });

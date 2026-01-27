@@ -1,18 +1,16 @@
 import type { UpdateResult } from "kysely";
+
 import { DateTime } from "luxon";
+
+import type { NewScrapingRun, ScrapingRun, ScrapingRunUpdate } from "@/types/database";
+
 import { getDb } from "@/services/database";
-import type {
-  NewScrapingRun,
-  ScrapingRun,
-  ScrapingRunUpdate,
-} from "@/types/database";
+
 import { handleError, handleInsertResult, handleUpdateResult } from "./common";
 
 async function getScheduledRuns(scraper: string): Promise<ScrapingRun[]> {
   try {
-    let query = getDb()
-      .selectFrom("scraping_runs")
-      .where("started_date", "is", null);
+    let query = getDb().selectFrom("scraping_runs").where("started_date", "is", null);
 
     if (scraper) {
       query = query.where("scraper", "=", scraper);
@@ -83,10 +81,7 @@ export async function scheduleRun(run: NewScrapingRun): Promise<number> {
 
   // Otherwise, create a new run.
   try {
-    const result = await getDb()
-      .insertInto("scraping_runs")
-      .values(run)
-      .executeTakeFirstOrThrow();
+    const result = await getDb().insertInto("scraping_runs").values(run).executeTakeFirstOrThrow();
     return handleInsertResult(result);
   } catch (error) {
     handleError("create scheduled run", error);

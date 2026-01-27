@@ -2,9 +2,13 @@ import { copyFileSync, mkdirSync, readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { parse } from "yaml";
 import * as z from "zod";
-import { allScrapers, type ScraperClass } from "@/services/scraper/utils";
+
+import type { ScraperClass } from "@/services/scraper/utils";
+import type { Config } from "@/types/config";
+
+import { allScrapers } from "@/services/scraper/utils";
 import { ConfigError, InfoSource } from "@/types";
-import { type Config, ConfigSchema } from "@/types/config";
+import { ConfigSchema } from "@/types/config";
 import { logger } from "@/utils/logger";
 import { getDataPath, getTemplatesPath } from "@/utils/path";
 
@@ -46,9 +50,7 @@ class ConfigService {
 
       // Check if config exists, if not copy the default one
       if (!this.fileExists(path)) {
-        logger.info(
-          `Config file not found at ${path}, creating default config.`,
-        );
+        logger.info(`Config file not found at ${path}, creating default config.`);
         this.createDefaultConfig(path);
       }
 
@@ -136,8 +138,7 @@ class ConfigService {
           ctx.issues.push({
             code: "custom",
             path: ["telegram", "accessToken"],
-            message:
-              "Telegram access token is required when telegramBot is enabled",
+            message: "Telegram access token is required when telegramBot is enabled",
             input: config.telegram.accessToken,
           });
         }
@@ -145,8 +146,7 @@ class ConfigService {
           ctx.issues.push({
             code: "custom",
             path: ["telegram", "botOwnerUserId"],
-            message:
-              "Bot owner user ID is required when telegramBot is enabled",
+            message: "Bot owner user ID is required when telegramBot is enabled",
             input: config.telegram.botOwnerUserId,
           });
         }
@@ -183,8 +183,7 @@ class ConfigService {
           ctx.issues.push({
             code: "custom",
             path: ["igdb", "clientId"],
-            message:
-              "IGDB client ID is required when IGDB is used as an info source",
+            message: "IGDB client ID is required when IGDB is used as an info source",
             input: config.igdb.clientId,
           });
         }
@@ -192,8 +191,7 @@ class ConfigService {
           ctx.issues.push({
             code: "custom",
             path: ["igdb", "clientSecret"],
-            message:
-              "IGDB client secret is required when IGDB is used as an info source",
+            message: "IGDB client secret is required when IGDB is used as an info source",
             input: config.igdb.clientSecret,
           });
         }
@@ -205,21 +203,15 @@ class ConfigService {
           ctx.issues.push({
             code: "custom",
             path: ["scraper", "enabledScrapers"],
-            message:
-              "At least one scraper must be defined when scraping is enabled",
+            message: "At least one scraper must be defined when scraping is enabled",
             input: config.scraper.enabledScrapers,
           });
         }
 
         // Validate that only valid scrapers are enabled
-        const scraperList = allScrapers.map((s: ScraperClass) =>
-          s.prototype.getScraperName(),
-        );
+        const scraperList = allScrapers.map((s: ScraperClass) => s.prototype.getScraperName());
 
-        for (const [
-          index,
-          scraper,
-        ] of config.scraper.enabledScrapers.entries()) {
+        for (const [index, scraper] of config.scraper.enabledScrapers.entries()) {
           if (!scraperList.includes(scraper)) {
             ctx.issues.push({
               code: "custom",
@@ -235,20 +227,13 @@ class ConfigService {
     const result = configConsistencySchema.safeParse(config);
 
     if (!result.success) {
-      throw new ConfigValidationError("Config consistency validation failed", [
-        result.error,
-      ]);
+      throw new ConfigValidationError("Config consistency validation failed", [result.error]);
     }
   }
 
   private createDefaultConfig(targetPath: string): void {
-    const defaultConfigPath = resolve(
-      getTemplatesPath(),
-      "config.default.yaml",
-    );
-    logger.info(
-      `Copying default config from ${defaultConfigPath} to ${targetPath}`,
-    );
+    const defaultConfigPath = resolve(getTemplatesPath(), "config.default.yaml");
+    logger.info(`Copying default config from ${defaultConfigPath} to ${targetPath}`);
 
     // Ensure the target directory exists
     mkdirSync(dirname(targetPath), { recursive: true });

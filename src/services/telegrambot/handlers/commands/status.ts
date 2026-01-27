@@ -1,15 +1,17 @@
 import type { CommandContext } from "grammy";
+
 import { DateTime } from "luxon";
-import { getTelegramSubscriptions } from "@/services/database/telegramSubscriptionRepository";
+
 import type { BotContext } from "@/services/telegrambot/types/middleware";
+
+import { getTelegramSubscriptions } from "@/services/database/telegramSubscriptionRepository";
 import { DATE_FORMATS } from "@/services/telegrambot/utils/formatters";
 import { escapeText } from "@/services/telegrambot/utils/markdown";
 import { translationService } from "@/services/translation";
+
 import { getCallerName, getDbChat, logCall, userCanControlBot } from ".";
 
-export async function handleStatusCommand(
-  ctx: CommandContext<BotContext>,
-): Promise<void> {
+export async function handleStatusCommand(ctx: CommandContext<BotContext>): Promise<void> {
   logCall(ctx);
 
   if (!(await userCanControlBot(ctx))) {
@@ -34,7 +36,7 @@ But I'd be happy to see you register any time with the /start command!`);
   let subscriptionsTextMd: string;
   if (subscriptions.length > 0) {
     subscriptionsTextMd =
-      escapeText(`- You have ${subscriptions.length.toFixed()} subscriptions. Here are the categories you are subscribed to:
+      escapeText(`- You have ${subscriptions.length.toFixed(0)} subscriptions. Here are the categories you are subscribed to:
 `);
 
     for (const subscription of subscriptions) {
@@ -43,9 +45,7 @@ But I'd be happy to see you register any time with the /start command!`);
 `,
       );
     }
-    subscriptionsTextMd += escapeText(
-      "You can unsubscribe from them any time with /manage.\n",
-    );
+    subscriptionsTextMd += escapeText("You can unsubscribe from them any time with /manage.\n");
   } else {
     subscriptionsTextMd = escapeText(
       "- You are currently not subscribed to any categories. You can change that with the /manage command if you wish.\n",
@@ -55,7 +55,7 @@ But I'd be happy to see you register any time with the /start command!`);
   // Build timezone text
   const timezoneText = dbChat.timezone_offset
     ? escapeText(
-        `- Your timezone is set to UTC${dbChat.timezone_offset >= 0 ? "+" : ""}${dbChat.timezone_offset.toFixed()}:00. You can change that with the /timezone command if you wish.\n`,
+        `- Your timezone is set to UTC${dbChat.timezone_offset >= 0 ? "+" : ""}${dbChat.timezone_offset.toFixed(0)}:00. You can change that with the /timezone command if you wish.\n`,
       )
     : escapeText(
         "- Your timezone is not set, so UTC is used. You can change that with the /timezone command if you wish.\n",
@@ -71,9 +71,7 @@ But I'd be happy to see you register any time with the /start command!`);
     ) +
     escapeText(`- You registered on ${registrationDate}.\n`) +
     escapeText(`- Your Telegram chat id is ${dbChat.chat_id.toString()}.\n`) +
-    escapeText(
-      `- You received ${dbChat.offers_received_count.toString()} offers so far.\n`,
-    ) +
+    escapeText(`- You received ${dbChat.offers_received_count.toString()} offers so far.\n`) +
     timezoneText +
     subscriptionsTextMd;
   await ctx.reply(message, { parse_mode: "MarkdownV2" });

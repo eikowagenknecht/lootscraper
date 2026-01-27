@@ -1,10 +1,8 @@
 import { init, t } from "i18next";
-import {
-  OfferDuration,
-  type OfferPlatform,
-  type OfferSource,
-  type OfferType,
-} from "@/types/basic";
+
+import type { OfferPlatform, OfferSource, OfferType } from "@/types/basic";
+
+import { OfferDuration } from "@/types/basic";
 
 const resources = {
   en: {
@@ -38,8 +36,7 @@ const resources = {
       feed: {
         title: "Free {{source}} {{type}} ({{platform}})",
         titleAll: "Free Games and Loot",
-        titleWithDuration:
-          "Free {{source}} {{type}} ({{platform}}, {{duration}})",
+        titleWithDuration: "Free {{source}} {{type}} ({{platform}}, {{duration}})",
       },
     },
   },
@@ -88,9 +85,7 @@ class TranslationService {
 
   public checkInitialized(): void {
     if (!this.initialized) {
-      throw new Error(
-        "Translation service not initialized. Call initialize() first.",
-      );
+      throw new Error("Translation service not initialized. Call initialize() first.");
     }
   }
 

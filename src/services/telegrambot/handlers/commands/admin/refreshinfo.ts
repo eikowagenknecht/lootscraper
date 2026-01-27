@@ -1,18 +1,16 @@
 import type { CommandContext } from "grammy";
+
+import type { BotContext } from "@/services/telegrambot/types/middleware";
+
 import { config } from "@/services/config";
-import {
-  clearGames,
-  getOffersWithMissingGameInfo,
-} from "@/services/database/offerRepository";
+import { clearGames, getOffersWithMissingGameInfo } from "@/services/database/offerRepository";
 import { gameInfoService } from "@/services/gameinfo";
 import { scraperService } from "@/services/scraper";
-import type { BotContext } from "@/services/telegrambot/types/middleware";
 import { logger } from "@/utils/logger";
+
 import { logCall } from "..";
 
-export async function handleRefreshInfoCommand(
-  ctx: CommandContext<BotContext>,
-): Promise<void> {
+export async function handleRefreshInfoCommand(ctx: CommandContext<BotContext>): Promise<void> {
   logCall(ctx);
 
   if (!ctx.from || ctx.from.id !== config.get().telegram.botOwnerUserId) {
@@ -33,9 +31,7 @@ export async function handleRefreshInfoCommand(
 
   const force = ctx.message?.text.includes("force") ?? false;
 
-  await ctx.reply(
-    "Refreshing game info. This may take a while. I will notify you when I'm done.",
-  );
+  await ctx.reply("Refreshing game info. This may take a while. I will notify you when I'm done.");
 
   await scraperService.stop();
 
@@ -48,13 +44,11 @@ export async function handleRefreshInfoCommand(
 
   for (const [index, offer] of offers.entries()) {
     logger.verbose(
-      `Enriching offer ${offer.id.toFixed()} (${(index + 1).toFixed()} of ${offers.length.toFixed()})`,
+      `Enriching offer ${offer.id.toFixed(0)} (${(index + 1).toFixed(0)} of ${offers.length.toFixed(0)})`,
     );
 
     if ((index + 1) % 100 === 0) {
-      await ctx.reply(
-        `Enriching offer ${(index + 1).toFixed()} of ${offers.length.toFixed()}.`,
-      );
+      await ctx.reply(`Enriching offer ${(index + 1).toFixed(0)} of ${offers.length.toFixed(0)}.`);
     }
 
     await gameInfoService.enrichOffer(offer.id);

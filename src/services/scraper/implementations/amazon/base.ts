@@ -1,6 +1,10 @@
-import { DateTime } from "luxon";
 import type { Locator, Page } from "playwright";
-import { BaseScraper, type CronConfig } from "@/services/scraper/base/scraper";
+
+import { DateTime } from "luxon";
+
+import type { CronConfig } from "@/services/scraper/base/scraper";
+
+import { BaseScraper } from "@/services/scraper/base/scraper";
 import { OfferDuration, OfferPlatform, OfferSource } from "@/types/basic";
 import { BrowserError, ScraperError } from "@/types/errors";
 import { logger } from "@/utils/logger";
@@ -40,15 +44,15 @@ export abstract class AmazonBaseScraper extends BaseScraper {
   }
 
   protected async readBaseOffer(element: Locator): Promise<AmazonBaseOffer> {
-    const title = await element
-      .locator(".item-card-details__body__primary h3")
-      .textContent();
-    if (!title) throw new Error("Couldn't find title");
+    const title = await element.locator(".item-card-details__body__primary h3").textContent();
+    if (!title) {
+      throw new Error("Couldn't find title");
+    }
 
-    const imgUrl = await element
-      .locator('[data-a-target="card-image"] img')
-      .getAttribute("src");
-    if (!imgUrl) throw new Error(`Couldn't find image for ${title}`);
+    const imgUrl = await element.locator('[data-a-target="card-image"] img').getAttribute("src");
+    if (!imgUrl) {
+      throw new Error(`Couldn't find image for ${title}`);
+    }
 
     let url = BASE_URL;
     try {
@@ -89,13 +93,13 @@ export abstract class AmazonBaseScraper extends BaseScraper {
     let page: Page | null = null;
     try {
       page = await this.context.newPage();
-      await page.goto(url, { timeout: 30000 });
+      await page.goto(url, { timeout: 30_000 });
 
-      const date = await page
-        .locator(".availability-date span:nth-child(2)")
-        .textContent();
+      const date = await page.locator(".availability-date span:nth-child(2)").textContent();
 
-      if (!date) throw new Error("Couldn't find date");
+      if (!date) {
+        throw new Error("Couldn't find date");
+      }
 
       return date;
     } catch (error) {

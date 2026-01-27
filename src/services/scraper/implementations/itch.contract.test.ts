@@ -1,11 +1,11 @@
 import { beforeAll, describe, expect, test } from "vitest";
+
 import { browserService } from "@/services/browser";
 import { config } from "@/services/config";
+
 import { ItchGamesScraper } from "./itch";
 
-const runThis =
-  process.env.VSCODE_PID !== undefined ||
-  process.env.VITEST_MODE === "contract";
+const runThis = process.env.VSCODE_PID !== undefined || process.env.VITEST_MODE === "contract";
 
 describe.skipIf(!runThis)("Itch.io Games Scraper Contract Tests", () => {
   beforeAll(async () => {
@@ -13,7 +13,7 @@ describe.skipIf(!runThis)("Itch.io Games Scraper Contract Tests", () => {
     await browserService.initialize(config.get());
   });
 
-  test("should scrape free games correctly", { timeout: 120000 }, async () => {
+  test("should scrape free games correctly", { timeout: 120_000 }, async () => {
     const scraper = new ItchGamesScraper(config.get());
     const results = await scraper.scrape();
 

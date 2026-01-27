@@ -1,4 +1,5 @@
 import { LootScraperError } from "@/types/errors";
+
 import { logger } from "./logger";
 
 export function handleError(error: unknown): void {
