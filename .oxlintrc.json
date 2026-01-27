@@ -45,7 +45,7 @@
     "sort-keys": "off",
     "func-style": "off",
     "new-cap": "off",
-    "no-template-curly-in-string": "off", // Broken rule, shows no output but fails linting
+    "no-template-curly-in-string": "warn",
     "import/exports-last": "off",
     "import/no-named-export": "off",
     "import/group-exports": "off",
