@@ -1,12 +1,13 @@
 import type { CommandContext } from "grammy";
-import { config } from "@/services/config";
+
 import type { BotContext } from "@/services/telegrambot/types/middleware";
+
+import { config } from "@/services/config";
 import { formatJsonForMarkdown } from "@/services/telegrambot/utils/markdown";
+
 import { logCall } from "..";
 
-export async function handleDebugCommand(
-  ctx: CommandContext<BotContext>,
-): Promise<void> {
+export async function handleDebugCommand(ctx: CommandContext<BotContext>): Promise<void> {
   logCall(ctx);
 
   if (!ctx.from || ctx.from.id !== config.get().telegram.botOwnerUserId) {

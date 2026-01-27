@@ -1,21 +1,14 @@
 import { DateTime } from "luxon";
 import { insertTestData } from "tests/testData";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
+
+import type { NewOffer } from "@/types/database";
+
 import { config } from "@/services/config";
 import { databaseService } from "@/services/database";
-import {
-  OfferDuration,
-  OfferPlatform,
-  OfferSource,
-  OfferType,
-} from "@/types/basic";
-import type { NewOffer } from "@/types/database";
-import {
-  createOffer,
-  getActiveOffers,
-  getOfferByTitle,
-  updateOffer,
-} from "./offerRepository";
+import { OfferDuration, OfferPlatform, OfferSource, OfferType } from "@/types/basic";
+
+import { createOffer, getActiveOffers, getOfferByTitle, updateOffer } from "./offerRepository";
 
 describe("Offer Repository", () => {
   beforeEach(async () => {
@@ -65,9 +58,7 @@ describe("Offer Repository", () => {
       await createOffer(expiredOffer);
 
       const activeOffers = await getActiveOffers(DateTime.now());
-      const expiredOfferInList = activeOffers.find(
-        (o) => o.title === "Expired Game",
-      );
+      const expiredOfferInList = activeOffers.find((o) => o.title === "Expired Game");
       expect(expiredOfferInList).toBeUndefined();
     });
   });
@@ -119,9 +110,7 @@ describe("Offer Repository", () => {
     });
 
     test("should handle non-existent offer updates", async () => {
-      await expect(
-        updateOffer(999, { url: "https://example.com/nonexistent" }),
-      ).rejects.toThrow();
+      await expect(updateOffer(999, { url: "https://example.com/nonexistent" })).rejects.toThrow();
     });
   });
 });

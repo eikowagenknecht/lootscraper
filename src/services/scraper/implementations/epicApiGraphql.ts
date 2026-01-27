@@ -1,14 +1,12 @@
 import { ApolloClient, gql, InMemoryCache } from "@apollo/client/core";
 import { HttpLink } from "@apollo/client/link/http";
 import { DateTime } from "luxon";
-import { BaseScraper, type CronConfig } from "@/services/scraper/base/scraper";
-import {
-  OfferDuration,
-  OfferPlatform,
-  OfferSource,
-  OfferType,
-} from "@/types/basic";
+
+import type { CronConfig } from "@/services/scraper/base/scraper";
 import type { NewOffer } from "@/types/database";
+
+import { BaseScraper } from "@/services/scraper/base/scraper";
+import { OfferDuration, OfferPlatform, OfferSource, OfferType } from "@/types/basic";
 import { cleanGameTitle } from "@/utils";
 
 const BASE_URL = "https://store.epicgames.com/graphql";
@@ -223,15 +221,14 @@ export class EpicGamesApiGraphqlScraper extends BaseScraper {
 
     const httpLink = new HttpLink({
       uri: BASE_URL,
-      fetch: async (uri, options) => {
-        return fetch(uri, {
+      fetch: async (uri, options) =>
+        fetch(uri, {
           ...options,
           headers: {
             ...(options?.headers as Record<string, string>),
             Accept: "application/json",
           },
-        });
-      },
+        }),
     });
 
     const client = new ApolloClient({
@@ -328,12 +325,8 @@ export class EpicGamesApiGraphqlScraper extends BaseScraper {
   }
 
   private getMainImage(offer: RawOffer): string {
-    const wideImage = offer.keyImages.find(
-      (img) => img.type === "OfferImageWide",
-    );
-    const tallImage = offer.keyImages.find(
-      (img) => img.type === "OfferImageTall",
-    );
+    const wideImage = offer.keyImages.find((img) => img.type === "OfferImageWide");
+    const tallImage = offer.keyImages.find((img) => img.type === "OfferImageTall");
     return (wideImage?.url ?? tallImage?.url ?? offer.keyImages[0]?.url) || "";
   }
 }

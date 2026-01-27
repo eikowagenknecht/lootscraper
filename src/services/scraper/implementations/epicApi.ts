@@ -10,14 +10,12 @@
  * for reference.
  */
 import { DateTime } from "luxon";
-import { BaseScraper, type CronConfig } from "@/services/scraper/base/scraper";
-import {
-  OfferDuration,
-  OfferPlatform,
-  OfferSource,
-  OfferType,
-} from "@/types/basic";
+
+import type { CronConfig } from "@/services/scraper/base/scraper";
 import type { NewOffer } from "@/types/database";
+
+import { BaseScraper } from "@/services/scraper/base/scraper";
+import { OfferDuration, OfferPlatform, OfferSource, OfferType } from "@/types/basic";
 import { cleanGameTitle } from "@/utils";
 import { logger } from "@/utils/logger";
 
@@ -140,9 +138,7 @@ export class EpicGamesApiScraper extends BaseScraper {
     );
 
     if (!response.ok) {
-      logger.error(
-        `Epic API returned ${response.status.toString()}: ${response.statusText}`,
-      );
+      logger.error(`Epic API returned ${response.status.toString()}: ${response.statusText}`);
       throw new Error(`Epic API returned ${response.status.toString()}`);
     }
 
@@ -169,9 +165,7 @@ export class EpicGamesApiScraper extends BaseScraper {
     return true;
   }
 
-  private parseOffers(
-    data: FreeGamesResponse["data"],
-  ): Omit<NewOffer, "category">[] {
+  private parseOffers(data: FreeGamesResponse["data"]): Omit<NewOffer, "category">[] {
     const rawOffers: RawOffer[] = data.Catalog.searchStore.elements;
 
     return rawOffers
@@ -257,12 +251,8 @@ export class EpicGamesApiScraper extends BaseScraper {
   }
 
   private getMainImage(offer: RawOffer): string {
-    const wideImage = offer.keyImages.find(
-      (img) => img.type === "OfferImageWide",
-    );
-    const tallImage = offer.keyImages.find(
-      (img) => img.type === "OfferImageTall",
-    );
+    const wideImage = offer.keyImages.find((img) => img.type === "OfferImageWide");
+    const tallImage = offer.keyImages.find((img) => img.type === "OfferImageTall");
     return (wideImage?.url ?? tallImage?.url ?? offer.keyImages[0]?.url) || "";
   }
 }

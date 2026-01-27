@@ -1,8 +1,11 @@
 import type { Filter } from "grammy";
-import { telegramBotService } from "@/services/telegrambot";
+
 import type { BotContext } from "@/services/telegrambot/types/middleware";
+
+import { telegramBotService } from "@/services/telegrambot";
 import { unpackFirstField } from "@/services/telegrambot/utils/callbackPack";
 import { logger } from "@/utils/logger";
+
 import { handleCloseCallback } from "./close";
 import { handleDismissCallback, handleOfferDetailsCallback } from "./offer";
 import { handleTimezoneCallback } from "./timezone";
@@ -31,33 +34,36 @@ export async function handleCallback(
 
   try {
     switch (action) {
-      case "toggle":
+      case "toggle": {
         await handleToggleCallback(ctx, data);
         break;
-      case "settimezone":
+      }
+      case "settimezone": {
         await handleTimezoneCallback(ctx, data);
         break;
-      case "close":
+      }
+      case "close": {
         await handleCloseCallback(ctx, data);
         break;
-      case "details":
+      }
+      case "details": {
         await handleOfferDetailsCallback(ctx, data);
         break;
-      case "dismiss":
+      }
+      case "dismiss": {
         await handleDismissCallback(ctx);
         break;
-      default:
+      }
+      default: {
         logger.error(`Unknown callback action: ${action}`);
         await ctx.answerCallbackQuery({
           text: "Unknown callback action. This might happen when the bot was updated.",
           show_alert: true,
         });
+      }
     }
   } catch (error) {
-    if (
-      error instanceof Error &&
-      error.message.includes("message is not modified")
-    ) {
+    if (error instanceof Error && error.message.includes("message is not modified")) {
       // Ignore this error, it happens when the message doesn't need to be updated
       return;
     }

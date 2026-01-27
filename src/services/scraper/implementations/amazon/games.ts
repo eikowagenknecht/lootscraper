@@ -1,9 +1,13 @@
-import { DateTime } from "luxon";
 import type { Locator, Page } from "playwright";
-import { OfferType } from "@/types/basic";
+
+import { DateTime } from "luxon";
+
 import type { NewOffer } from "@/types/database";
+
+import { OfferType } from "@/types/basic";
 import { cleanGameTitle } from "@/utils";
 import { logger } from "@/utils/logger";
+
 import { AmazonBaseScraper, OFFER_URL } from "./base";
 
 export class AmazonGamesScraper extends AmazonBaseScraper {
@@ -24,17 +28,14 @@ export class AmazonGamesScraper extends AmazonBaseScraper {
       offersUrl: OFFER_URL,
       offerHandlers: [
         {
-          locator:
-            '[data-a-target="offer-list-FGWP_FULL"] .item-card__action > a:first-child',
+          locator: '[data-a-target="offer-list-FGWP_FULL"] .item-card__action > a:first-child',
           readOffer: this.readOffer.bind(this),
         },
       ],
       pageReadySelector: ".offer-list__content",
       pageLoadedHook: async (page: Page) => {
         // Switch to the "Games" tab
-        const gamesTab = page.locator(
-          'button[data-a-target="offer-filter-button-Game"]',
-        );
+        const gamesTab = page.locator('button[data-a-target="offer-filter-button-Game"]');
         await gamesTab.click();
 
         await this.scrollElementToBottom(page, "root");
@@ -42,15 +43,11 @@ export class AmazonGamesScraper extends AmazonBaseScraper {
     });
   }
 
-  private async readOffer(
-    element: Locator,
-  ): Promise<Omit<NewOffer, "category"> | null> {
+  private async readOffer(element: Locator): Promise<Omit<NewOffer, "category"> | null> {
     try {
       const baseOffer = await this.readBaseOffer(element);
 
-      const validTo = baseOffer.validTo
-        ? this.parseDateString(baseOffer.validTo)
-        : null;
+      const validTo = baseOffer.validTo ? this.parseDateString(baseOffer.validTo) : null;
 
       return {
         source: this.getSource(),

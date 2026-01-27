@@ -1,5 +1,7 @@
 import type { Kysely } from "kysely";
+
 import { sql } from "kysely";
+
 import { logger } from "@/utils/logger";
 
 export const strictModeMigration = {
@@ -49,12 +51,8 @@ export const strictModeMigration = {
         await trx.schema
           .createTable("games_new")
           .addColumn("id", "integer", (col) => col.primaryKey().notNull())
-          .addColumn("igdb_id", "integer", (col) =>
-            col.references("igdb_info.id"),
-          )
-          .addColumn("steam_id", "integer", (col) =>
-            col.references("steam_info.id"),
-          )
+          .addColumn("igdb_id", "integer", (col) => col.references("igdb_info.id"))
+          .addColumn("steam_id", "integer", (col) => col.references("steam_info.id"))
           .modifyEnd(sql`strict`)
           .execute();
 
@@ -112,9 +110,7 @@ export const strictModeMigration = {
         await trx.schema
           .createTable("telegram_subscriptions_new")
           .addColumn("id", "integer", (col) => col.primaryKey().notNull())
-          .addColumn("chat_id", "integer", (col) =>
-            col.references("telegram_chats.id").notNull(),
-          )
+          .addColumn("chat_id", "integer", (col) => col.references("telegram_chats.id").notNull())
           .addColumn("source", "text", (col) => col.notNull())
           .addColumn("type", "text", (col) => col.notNull())
           .addColumn("last_offer_id", "integer", (col) => col.notNull())
@@ -194,13 +190,9 @@ FROM telegram_subscriptions
         await sql`ALTER TABLE igdb_info_new RENAME TO igdb_info`.execute(trx);
         await sql`ALTER TABLE steam_info_new RENAME TO steam_info`.execute(trx);
         await sql`ALTER TABLE games_new RENAME TO games`.execute(trx);
-        await sql`ALTER TABLE announcements_new RENAME TO announcements`.execute(
-          trx,
-        );
+        await sql`ALTER TABLE announcements_new RENAME TO announcements`.execute(trx);
         await sql`ALTER TABLE offers_new RENAME TO offers`.execute(trx);
-        await sql`ALTER TABLE telegram_chats_new RENAME TO telegram_chats`.execute(
-          trx,
-        );
+        await sql`ALTER TABLE telegram_chats_new RENAME TO telegram_chats`.execute(trx);
         await sql`ALTER TABLE telegram_subscriptions_new RENAME TO telegram_subscriptions`.execute(
           trx,
         );
@@ -209,9 +201,7 @@ FROM telegram_subscriptions
         await trx.schema
           .createIndex("unique_chat")
           .on("telegram_chats")
-          .expression(
-            sql`chat_id, COALESCE(user_id, -1), COALESCE(thread_id, -1)`,
-          )
+          .expression(sql`chat_id, COALESCE(user_id, -1), COALESCE(thread_id, -1)`)
           .unique()
           .execute();
       });

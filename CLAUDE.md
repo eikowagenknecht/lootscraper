@@ -28,10 +28,10 @@ pnpm test:all         # Run both unit and contract tests
 
 **Linting and Type Checking:**
 ```bash
-pnpm run lint         # Full lint (TypeScript check + ESLint + Prettier + Biome)
+pnpm run lint         # Full lint (TypeScript check + oxlint + oxfmt)
 pnpm run type-check   # TypeScript type checking only
 pnpm run check        # Combined lint + type-check
-pnpm run format       # Format code with Biome
+pnpm run format       # Format code with oxfmt
 ```
 
 **Docker:**

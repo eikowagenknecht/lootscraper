@@ -1,14 +1,12 @@
 import { ApolloClient, gql, InMemoryCache } from "@apollo/client/core";
 import { HttpLink } from "@apollo/client/link/http";
 import { DateTime } from "luxon";
-import { BaseScraper, type CronConfig } from "@/services/scraper/base/scraper";
-import {
-  OfferDuration,
-  OfferPlatform,
-  OfferSource,
-  OfferType,
-} from "@/types/basic";
+
+import type { CronConfig } from "@/services/scraper/base/scraper";
 import type { NewOffer } from "@/types/database";
+
+import { BaseScraper } from "@/services/scraper/base/scraper";
+import { OfferDuration, OfferPlatform, OfferSource, OfferType } from "@/types/basic";
 import { cleanGameTitle } from "@/utils";
 
 const BASE_URL = "https://appraven.net/appraven/graphql";
@@ -56,11 +54,7 @@ const VARIABLES = {
 };
 
 const QUERY = gql`
-  query GetAppsOnSale(
-    $rareOnly: Boolean!
-    $miniFilter: MiniFilterInput!
-    $page: Int!
-  ) {
+  query GetAppsOnSale($rareOnly: Boolean!, $miniFilter: MiniFilterInput!, $page: Int!) {
     appsOnSale(rareOnly: $rareOnly, miniFilter: $miniFilter, page: $page) {
       __typename
       hasNext

@@ -1,13 +1,12 @@
-import { DateTime } from "luxon";
 import type { Locator } from "playwright";
-import { BaseScraper, type CronConfig } from "@/services/scraper/base/scraper";
-import {
-  OfferDuration,
-  OfferPlatform,
-  OfferSource,
-  OfferType,
-} from "@/types/basic";
+
+import { DateTime } from "luxon";
+
+import type { CronConfig } from "@/services/scraper/base/scraper";
 import type { NewOffer } from "@/types/database";
+
+import { BaseScraper } from "@/services/scraper/base/scraper";
+import { OfferDuration, OfferPlatform, OfferSource, OfferType } from "@/types/basic";
 import { cleanGameTitle } from "@/utils";
 import { logger } from "@/utils/logger";
 
@@ -58,31 +57,26 @@ export class UbisoftGamesScraper extends BaseScraper {
     return false;
   }
 
-  private async readOffer(
-    element: Locator,
-  ): Promise<Omit<NewOffer, "category"> | null> {
+  private async readOffer(element: Locator): Promise<Omit<NewOffer, "category"> | null> {
     try {
       // Scroll element into view to load img url
       await element.scrollIntoViewIfNeeded();
 
-      const title = await element
-        .locator(".c-focus-banner__title")
-        .textContent();
-      if (!title) throw new Error("Couldn't find title");
+      const title = await element.locator(".c-focus-banner__title").textContent();
+      if (!title) {
+        throw new Error("Couldn't find title");
+      }
 
       // Promotions look like "Get <Assassin's Creed> for free!"
       const compareTitle = title.toLowerCase();
-      if (
-        !compareTitle.startsWith("get ") ||
-        !compareTitle.endsWith(" for free!")
-      ) {
+      if (!compareTitle.startsWith("get ") || !compareTitle.endsWith(" for free!")) {
         return null;
       }
 
-      let validTo = await element
-        .locator(".c-focus-banner__legal-line")
-        .innerText();
-      if (!validTo) throw new Error(`Couldn't find valid to for ${title}`);
+      let validTo = await element.locator(".c-focus-banner__legal-line").textContent();
+      if (!validTo) {
+        throw new Error(`Couldn't find valid to for ${title}`);
+      }
 
       // Date looks like "Offer ends <January 23, 2023 at 3PM UTC>"
       validTo = validTo
@@ -91,13 +85,17 @@ export class UbisoftGamesScraper extends BaseScraper {
         .replace(/ UTC\.$/, "");
 
       let url = await element.locator("a.button").getAttribute("href");
-      if (!url) throw new Error(`Couldn't find url for ${title}`);
+      if (!url) {
+        throw new Error(`Couldn't find url for ${title}`);
+      }
       if (!url.startsWith("http")) {
         url = BASE_URL + url;
       }
 
       let imgUrl = await element.locator("img").getAttribute("src");
-      if (!imgUrl) throw new Error(`Couldn't find image for ${title}`);
+      if (!imgUrl) {
+        throw new Error(`Couldn't find image for ${title}`);
+      }
       if (!imgUrl.startsWith("http")) {
         imgUrl = BASE_URL + imgUrl;
       }
@@ -116,13 +114,9 @@ export class UbisoftGamesScraper extends BaseScraper {
 
         // Try alternate format: "January 23 at 2023 at 3PM"
         try {
-          validToDate = DateTime.fromFormat(
-            validTo,
-            "MMMM d 'at' yyyy 'at' ha",
-            {
-              zone: "UTC",
-            },
-          );
+          validToDate = DateTime.fromFormat(validTo, "MMMM d 'at' yyyy 'at' ha", {
+            zone: "UTC",
+          });
         } catch (error) {
           logger.error(
             `${this.getScraperName()}: Failed to parse date in alternate format: ${error instanceof Error ? error.message : String(error)}`,

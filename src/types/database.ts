@@ -1,16 +1,6 @@
-import type {
-  ColumnType,
-  Generated,
-  Insertable,
-  Selectable,
-  Updateable,
-} from "kysely";
-import type {
-  OfferDuration,
-  OfferPlatform,
-  OfferSource,
-  OfferType,
-} from "./basic";
+import type { ColumnType, Generated, Insertable, Selectable, Updateable } from "kysely";
+
+import type { OfferDuration, OfferPlatform, OfferSource, OfferType } from "./basic";
 import type { ChatType } from "./telegram";
 
 export interface Database {

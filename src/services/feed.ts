@@ -1,12 +1,13 @@
 import { DateTime } from "luxon";
-import {
-  type FeedCombination,
-  getEnabledFeedCombinations,
-} from "@/services/scraper/utils";
+
+import type { FeedCombination } from "@/services/scraper/utils";
 import type { Config } from "@/types/config";
 import type { Offer } from "@/types/database";
+
+import { getEnabledFeedCombinations } from "@/services/scraper/utils";
 import { calculateRealValidTo } from "@/utils";
 import { logger } from "@/utils/logger";
+
 import { getActiveOffers, getAllOffers } from "./database/offerRepository";
 import { HtmlGenerator } from "./generators/html";
 import { RssGenerator } from "./generators/rss";
@@ -60,10 +61,7 @@ class FeedService {
     await this.generateFeeds(activeOffers, filteredAllOffers);
   }
 
-  public async generateFeeds(
-    activeOffers: Offer[],
-    allOffers: Offer[],
-  ): Promise<void> {
+  public async generateFeeds(activeOffers: Offer[], allOffers: Offer[]): Promise<void> {
     if (!this.config) {
       throw new Error("Feed service not initialized");
     }
@@ -128,10 +126,7 @@ class FeedService {
     await htmlHistoryGen.generateHtml(filteredAllOffers);
   }
 
-  private async generateMainFeed(
-    activeOffers: Offer[],
-    allOffers: Offer[],
-  ): Promise<void> {
+  private async generateMainFeed(activeOffers: Offer[], allOffers: Offer[]): Promise<void> {
     if (!this.config) {
       throw new Error("Feed service not initialized");
     }

@@ -1,0 +1,117 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["jsdoc", "import", "typescript", "oxc", "unicorn"],
+  "categories": {
+    "correctness": "error",
+    "suspicious": "error",
+    "pedantic": "warn",
+    "style": "warn"
+  },
+  "env": {
+    "builtin": true,
+    "browser": true,
+    "es2024": true
+  },
+  "rules": {
+    // Correctness Overwrites
+    "jsdoc/check-tag-names": [
+      "error",
+      {
+        "typed": true
+      }
+    ],
+
+    // Suspicious Overwrites
+    "preserve-caught-error": "off",
+    "unicorn/consistent-function-scoping": "off",
+    "unicorn/no-array-sort": "off",
+
+    // Style Overwrites
+    "unicorn/filename-case": "off", // Project uses camelCase for filenames
+    "no-new": "off", // Used for URL validation
+    "max-statements": "off",
+    "max-params": "off",
+    "capitalized-comments": "off",
+    "no-continue": "off",
+    "no-magic-numbers": "off",
+    "no-duplicate-imports": "off",
+    "no-ternary": "off",
+    "no-nested-ternary": "off",
+    "no-namespace": "off",
+    "id-length": "off",
+    "init-declarations": "off",
+    "prefer-destructuring": "off",
+    "sort-imports": "off",
+    "sort-keys": "off",
+    "func-style": "off",
+    "new-cap": "off",
+    "no-template-curly-in-string": "off", // Broken rule, shows no output but fails linting
+    "import/exports-last": "off",
+    "import/no-named-export": "off",
+    "import/group-exports": "off",
+    "import/prefer-default-export": "off",
+    "import/no-mutable-exports": "off",
+    "unicorn/no-null": "off",
+
+    // Pedantic Overwrites
+    "max-lines-per-function": "off",
+    "no-warning-comments": "off",
+    "no-inline-comments": "off",
+    "max-dependencies": "off",
+    "max-depth": "off",
+    "max-lines": "off",
+    "max-classes-per-file": "off",
+    "no-lonely-if": "off",
+    "jsdoc/require-param-type": "off",
+    "jsdoc/require-returns-type": "off",
+    "jsdoc/require-param": "off",
+    "typescript/restrict-plus-operands": [
+      "warn",
+      {
+        "allowAny": false,
+        "allowBoolean": false,
+        "allowNullish": false,
+        "allowNumberAndString": false,
+        "allowRegExp": false
+      }
+    ],
+    "unicorn/number-literal-case": "off", // Conflicts with oxfmt
+    "unicorn/no-nested-ternary": "off", // Conflicts with oxfmt
+    "unicorn/no-object-as-default-parameter": "off",
+    "unicorn/prefer-at": "off", // Changes semantics (array[n] to array.at(n))
+    "unicorn/prefer-text-content": "off", // Changes semantics (innerText to textContent)
+    "unicorn/prefer-dom-node-text-content": "off", // Changes semantics (innerText to textContent)
+    "unicorn/no-useless-undefined": "off", // Changes semantics (fn(undefined) to fn())
+    "arrow-body-style": "off", // Changes semantics (arrow function returns)
+
+    // Restriction Overwrites
+    "no-empty": "error",
+    "no-regex-spaces": "error",
+    "no-empty-function": "off", // Some empty functions are intentional (e.g., SSL bypass)
+    "no-promise-executor-return": "off", // Common pattern for setTimeout delays
+    "unicorn/no-immediate-mutation": "off", // Building arrays incrementally is fine
+    "unicorn/no-empty-file": "off", // Some files are placeholders
+    "import/no-unassigned-import": "off", // Side-effect imports are intentional
+    "jsdoc/check-access": "warn",
+    "typescript/no-dynamic-delete": "error",
+    "typescript/no-empty-object-type": "error",
+    "typescript/no-namespace": "error",
+    "typescript/no-non-null-asserted-nullish-coalescing": "error",
+    "typescript/no-non-null-assertion": "error",
+    "typescript/no-require-imports": "error",
+    "typescript/use-unknown-in-catch-callback-variable": "error",
+    "typescript/non-nullable-type-assertion-style": "error",
+    "no-restricted-imports": [
+      "error",
+      {
+        "patterns": [
+          {
+            "group": ["../*"],
+            "message": "Use '@/' imports instead of relative parent imports"
+          }
+        ]
+      }
+    ]
+  },
+  "ignorePatterns": ["global.d.ts"]
+}

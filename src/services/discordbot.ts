@@ -1,13 +1,11 @@
-import {
-  Client,
-  Events,
-  GatewayIntentBits,
-  type Guild,
-  REST,
-  Routes,
-  type TextChannel,
-} from "discord.js";
+import type { Guild, TextChannel } from "discord.js";
+
+import { Client, Events, GatewayIntentBits, REST, Routes } from "discord.js";
 import { DateTime } from "luxon";
+
+import type { Config } from "@/types/config";
+import type { DiscordChannel } from "@/types/database";
+
 import {
   getAllDiscordChannels,
   getOrCreateDiscordChannel,
@@ -15,9 +13,8 @@ import {
 } from "@/services/database/discordChannelRepository";
 import { getActiveOffers } from "@/services/database/offerRepository";
 import { getEnabledFeedCombinations } from "@/services/scraper/utils";
-import type { Config } from "@/types/config";
-import type { DiscordChannel } from "@/types/database";
 import { logger } from "@/utils/logger";
+
 import { getCommands, handleInteraction } from "./discordbot/handlers/commands";
 import { ensureFeedChannel, getChannelById } from "./discordbot/utils/channels";
 import { formatOfferEmbed } from "./discordbot/utils/formatters";
@@ -68,7 +65,9 @@ export class DiscordBotService {
     });
 
     this.client.on(Events.InteractionCreate, (interaction) => {
-      if (!this.discordConfig) return;
+      if (!this.discordConfig) {
+        return;
+      }
       void handleInteraction(interaction, this.discordConfig);
     });
 
@@ -96,10 +95,9 @@ export class DiscordBotService {
         id: string;
       };
 
-      await rest.put(
-        Routes.applicationGuildCommands(appInfo.id, this.discordConfig.guildId),
-        { body: commands },
-      );
+      await rest.put(Routes.applicationGuildCommands(appInfo.id, this.discordConfig.guildId), {
+        body: commands,
+      });
 
       logger.info("Discord slash commands registered successfully");
     } catch (error) {
@@ -118,7 +116,9 @@ export class DiscordBotService {
   }
 
   private async onReady(): Promise<void> {
-    if (!this.config || !this.discordConfig) return;
+    if (!this.config || !this.discordConfig) {
+      return;
+    }
 
     // Ensure feed channels exist
     await this.ensureFeedChannels();
@@ -128,7 +128,9 @@ export class DiscordBotService {
   }
 
   private async ensureFeedChannels(): Promise<void> {
-    if (!this.client || !this.config || !this.discordConfig) return;
+    if (!this.client || !this.config || !this.discordConfig) {
+      return;
+    }
 
     const guild = this.client.guilds.cache.get(this.discordConfig.guildId);
     if (!guild) {
@@ -140,11 +142,7 @@ export class DiscordBotService {
 
     for (const combination of combinations) {
       try {
-        const channel = await ensureFeedChannel(
-          guild,
-          combination,
-          this.config,
-        );
+        const channel = await ensureFeedChannel(guild, combination, this.config);
 
         // Register the channel in the database
         await getOrCreateDiscordChannel(
@@ -190,7 +188,9 @@ export class DiscordBotService {
   }
 
   public getGuild(): Guild | undefined {
-    if (!this.client || !this.discordConfig) return undefined;
+    if (!this.client || !this.discordConfig) {
+      return undefined;
+    }
     return this.client.guilds.cache.get(this.discordConfig.guildId);
   }
 
@@ -218,7 +218,7 @@ export class DiscordBotService {
     void checkNewOffers();
 
     logger.verbose("Scheduling Discord offer check to run every 60s.");
-    this.executor = setInterval(() => void checkNewOffers(), 60000);
+    this.executor = setInterval(() => void checkNewOffers(), 60_000);
   }
 
   private async postNewOffers(): Promise<void> {
@@ -238,9 +238,7 @@ export class DiscordBotService {
       for (const channelConfig of channels) {
         const channel = getChannelById(guild, channelConfig.channel_id);
         if (!channel) {
-          logger.warn(
-            `Discord channel ${channelConfig.channel_id} not found, skipping`,
-          );
+          logger.warn(`Discord channel ${channelConfig.channel_id} not found, skipping`);
           continue;
         }
 
@@ -278,12 +276,10 @@ export class DiscordBotService {
 
         latestOfferId = Math.max(latestOfferId, offer.id);
 
-        logger.verbose(
-          `Sent offer ${offer.id.toFixed()} to Discord channel ${channel.name}`,
-        );
+        logger.verbose(`Sent offer ${offer.id.toFixed(0)} to Discord channel ${channel.name}`);
       } catch (error) {
         logger.error(
-          `Failed to send offer ${offer.id.toFixed()} to Discord: ${
+          `Failed to send offer ${offer.id.toFixed(0)} to Discord: ${
             error instanceof Error ? error.message : String(error)
           }`,
         );
@@ -320,9 +316,7 @@ export class DiscordBotService {
     for (const channelConfig of channels) {
       const channel = getChannelById(guild, channelConfig.channel_id);
       if (!channel) {
-        logger.warn(
-          `Discord channel ${channelConfig.channel_id} not found, skipping`,
-        );
+        logger.warn(`Discord channel ${channelConfig.channel_id} not found, skipping`);
         continue;
       }
 
@@ -356,11 +350,11 @@ export class DiscordBotService {
           totalSent++;
 
           logger.verbose(
-            `Populated offer ${offer.id.toFixed()} to Discord channel ${channel.name}`,
+            `Populated offer ${offer.id.toFixed(0)} to Discord channel ${channel.name}`,
           );
         } catch (error) {
           logger.error(
-            `Failed to populate offer ${offer.id.toFixed()} to Discord: ${
+            `Failed to populate offer ${offer.id.toFixed(0)} to Discord: ${
               error instanceof Error ? error.message : String(error)
             }`,
           );
@@ -375,7 +369,7 @@ export class DiscordBotService {
       if (channelSent > 0) {
         channelsPopulated++;
         logger.info(
-          `Populated ${channelSent.toFixed()} offers to Discord channel ${channel.name}`,
+          `Populated ${channelSent.toFixed(0)} offers to Discord channel ${channel.name}`,
         );
       }
     }

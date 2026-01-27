@@ -1,4 +1,5 @@
 import { OfferPlatform } from "@/types";
+
 import { EpicMobileSraper } from "./base";
 
 export class EpicMobileAndroidSraper extends EpicMobileSraper {

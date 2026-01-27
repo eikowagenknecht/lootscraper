@@ -1,14 +1,13 @@
-import { DateTime } from "luxon";
 import type { Locator, Page } from "playwright";
-import { scrollPageToBottom } from "@/services/browser/utils";
-import { BaseScraper, type CronConfig } from "@/services/scraper/base/scraper";
-import {
-  OfferDuration,
-  OfferPlatform,
-  OfferSource,
-  OfferType,
-} from "@/types/basic";
+
+import { DateTime } from "luxon";
+
+import type { CronConfig } from "@/services/scraper/base/scraper";
 import type { NewOffer } from "@/types/database";
+
+import { scrollPageToBottom } from "@/services/browser/utils";
+import { BaseScraper } from "@/services/scraper/base/scraper";
+import { OfferDuration, OfferPlatform, OfferSource, OfferType } from "@/types/basic";
 import { cleanGameTitle } from "@/utils";
 import { logger } from "@/utils/logger";
 
@@ -67,31 +66,37 @@ export class EpicGamesWebScraper extends BaseScraper {
     return true;
   }
 
-  private async readOffer(
-    element: Locator,
-  ): Promise<Omit<NewOffer, "category"> | null> {
+  private async readOffer(element: Locator): Promise<Omit<NewOffer, "category"> | null> {
     try {
       // Scroll element into view to load img url
       await element.scrollIntoViewIfNeeded();
 
       const title = await element.locator("//h6").textContent();
-      if (!title) throw new Error("Couldn't find title");
+      if (!title) {
+        throw new Error("Couldn't find title");
+      }
 
       // For current offers, the date is included twice but both mean the enddate
       // Format: 2022-02-24T16:00:00.000Z
       const validTo = await element
         .locator('//span[text()="Free Now - "]/time[1]')
         .getAttribute("datetime");
-      if (!validTo) throw new Error(`Couldn't find valid to for ${title}`);
+      if (!validTo) {
+        throw new Error(`Couldn't find valid to for ${title}`);
+      }
 
       let url = await element.getAttribute("href");
-      if (!url) throw new Error(`Couldn't find url for ${title}`);
+      if (!url) {
+        throw new Error(`Couldn't find url for ${title}`);
+      }
       if (!url.startsWith("http")) {
         url = BASE_URL + url;
       }
 
       const imgUrl = await element.locator("img").getAttribute("src");
-      if (!imgUrl) throw new Error(`Couldn't find image for ${title}`);
+      if (!imgUrl) {
+        throw new Error(`Couldn't find image for ${title}`);
+      }
 
       let validToAsDate: DateTime | null = null;
       try {

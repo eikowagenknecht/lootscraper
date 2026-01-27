@@ -1,14 +1,13 @@
-import { DateTime } from "luxon";
 import type { Locator } from "playwright";
-import { BaseScraper, type CronConfig } from "@/services/scraper/base/scraper";
-import { OfferCategory, ScraperError } from "@/types";
-import {
-  OfferDuration,
-  OfferPlatform,
-  OfferSource,
-  OfferType,
-} from "@/types/basic";
+
+import { DateTime } from "luxon";
+
+import type { CronConfig } from "@/services/scraper/base/scraper";
 import type { NewOffer } from "@/types/database";
+
+import { BaseScraper } from "@/services/scraper/base/scraper";
+import { OfferCategory, ScraperError } from "@/types";
+import { OfferDuration, OfferPlatform, OfferSource, OfferType } from "@/types/basic";
 import { cleanGameTitle } from "@/utils";
 import { logger } from "@/utils/logger";
 
@@ -62,18 +61,22 @@ export class HumbleGamesScraper extends BaseScraper {
   private async readOffer(element: Locator): Promise<NewOffer | null> {
     try {
       const title = await element.locator("span.entity-title").textContent();
-      if (!title) throw new Error("Couldn't find title");
+      if (!title) {
+        throw new Error("Couldn't find title");
+      }
 
       let url = await element.locator("a").getAttribute("href");
-      if (!url) throw new Error(`Couldn't find url for ${title}`);
+      if (!url) {
+        throw new Error(`Couldn't find url for ${title}`);
+      }
       if (!url.startsWith("http")) {
         url = BASE_URL + url;
       }
 
-      const imgUrl = await element
-        .locator("img.entity-image")
-        .getAttribute("src");
-      if (!imgUrl) throw new Error(`Couldn't find image for ${title}`);
+      const imgUrl = await element.locator("img.entity-image").getAttribute("src");
+      if (!imgUrl) {
+        throw new Error(`Couldn't find image for ${title}`);
+      }
 
       const { validForMinutes, originalPrice } = await this.getDetails(url);
 
@@ -84,7 +87,7 @@ export class HumbleGamesScraper extends BaseScraper {
 
       // Categorize cheap games
       const category =
-        originalPrice !== undefined && originalPrice < 1.0
+        originalPrice !== undefined && originalPrice < 1
           ? OfferCategory.CHEAP
           : OfferCategory.VALID;
 
@@ -124,18 +127,12 @@ export class HumbleGamesScraper extends BaseScraper {
     let page = null;
     try {
       page = await this.context.newPage();
-      await page.goto(url, { timeout: 30000 });
+      await page.goto(url, { timeout: 30_000 });
 
       await page.waitForSelector(".promo-timer-view .js-days");
-      const daysValid = await page
-        .locator(".promo-timer-view .js-days")
-        .textContent();
-      const hoursValid = await page
-        .locator(".promo-timer-view .js-hours")
-        .textContent();
-      const minutesValid = await page
-        .locator(".promo-timer-view .js-minutes")
-        .textContent();
+      const daysValid = await page.locator(".promo-timer-view .js-days").textContent();
+      const hoursValid = await page.locator(".promo-timer-view .js-hours").textContent();
+      const minutesValid = await page.locator(".promo-timer-view .js-minutes").textContent();
 
       if (!daysValid || !hoursValid || !minutesValid) {
         throw new Error(`Couldn't find valid to on ${url}.`);
@@ -151,9 +148,7 @@ export class HumbleGamesScraper extends BaseScraper {
       const originalPrice = await page.locator(".full-price").textContent();
 
       if (originalPrice) {
-        result.originalPrice = Number.parseFloat(
-          originalPrice.replace("€", "").trim(),
-        );
+        result.originalPrice = Number.parseFloat(originalPrice.replace("€", "").trim());
       }
 
       return result;

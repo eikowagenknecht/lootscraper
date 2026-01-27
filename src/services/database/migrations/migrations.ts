@@ -1,7 +1,11 @@
-import { type Kysely, type Migration, Migrator } from "kysely";
+import type { Kysely, Migration } from "kysely";
+
+import { Migrator } from "kysely";
 import { DateTime } from "luxon";
+
 import { DatabaseError } from "@/types/errors";
 import { logger } from "@/utils/logger";
+
 import { initialMigration } from "./001-initial";
 import { dropAlembicMigration } from "./002-alembic";
 import { indicesMigration } from "./003-indices";
@@ -38,9 +42,7 @@ export async function migrateToLatest(db: Kysely<unknown>): Promise<void> {
   // For existing databases from a pre-Kysely version, add the migration tables
   // and first migration manually to get them up to speed.
   if (hasExistingTables && !hasKyselyTables) {
-    logger.info(
-      "You are migrating from the Python database. This can take a while.",
-    );
+    logger.info("You are migrating from the Python database. This can take a while.");
 
     await db.schema
       .createTable("kysely_migration")
@@ -84,13 +86,9 @@ export async function migrateToLatest(db: Kysely<unknown>): Promise<void> {
 
     for (const migration of results) {
       if (migration.status === "Success") {
-        logger.info(
-          `DB Migration "${migration.migrationName}" was executed successfully.`,
-        );
+        logger.info(`DB Migration "${migration.migrationName}" was executed successfully.`);
       } else if (migration.status === "Error") {
-        logger.error(
-          `Failed to execute DB migration "${migration.migrationName}".`,
-        );
+        logger.error(`Failed to execute DB migration "${migration.migrationName}".`);
       }
     }
   } catch (error) {
@@ -111,8 +109,6 @@ async function checkForKyselyTables(db: Kysely<unknown>): Promise<boolean> {
     withInternalKyselyTables: true,
   });
   // Only look at Kysely's own tables
-  const systemTables = tables.filter((table) =>
-    table.name.startsWith("kysely"),
-  );
+  const systemTables = tables.filter((table) => table.name.startsWith("kysely"));
   return systemTables.length > 0;
 }

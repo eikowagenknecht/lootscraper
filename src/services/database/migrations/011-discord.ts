@@ -1,5 +1,7 @@
 import type { Kysely } from "kysely";
+
 import { sql } from "kysely";
+
 import { logger } from "@/utils/logger";
 
 export const discordMigration = {
@@ -14,9 +16,7 @@ export const discordMigration = {
         .addColumn("type", "text", (col) => col.notNull())
         .addColumn("duration", "text", (col) => col.notNull())
         .addColumn("platform", "text", (col) => col.notNull())
-        .addColumn("last_offer_id", "integer", (col) =>
-          col.notNull().defaultTo(0),
-        )
+        .addColumn("last_offer_id", "integer", (col) => col.notNull().defaultTo(0))
         .addColumn("created_at", "text", (col) => col.notNull())
         .addUniqueConstraint("discord_channels_combination_unique", [
           "source",

@@ -1,18 +1,15 @@
 import { DateTime } from "luxon";
-import { BaseScraper, type CronConfig } from "@/services/scraper/base/scraper";
-import {
-  OfferDuration,
-  OfferPlatform,
-  OfferSource,
-  OfferType,
-} from "@/types/basic";
+
+import type { CronConfig } from "@/services/scraper/base/scraper";
 import type { NewOffer } from "@/types/database";
+
+import { BaseScraper } from "@/services/scraper/base/scraper";
+import { OfferDuration, OfferPlatform, OfferSource, OfferType } from "@/types/basic";
 import { cleanGameTitle } from "@/utils";
 import { fetchWithBrowserTls } from "@/utils/fetch";
 import { logger } from "@/utils/logger";
 
-const BASE_URL =
-  "https://egs-platform-service.store.epicgames.com/api/v2/public/discover/home";
+const BASE_URL = "https://egs-platform-service.store.epicgames.com/api/v2/public/discover/home";
 
 interface MobileDiscoverData {
   data: {
@@ -72,8 +69,7 @@ export abstract class EpicMobileSraper extends BaseScraper {
   }
 
   override async readOffers(): Promise<Omit<NewOffer, "category">[]> {
-    const platform =
-      this.getPlatform() === OfferPlatform.ANDROID ? "android" : "ios";
+    const platform = this.getPlatform() === OfferPlatform.ANDROID ? "android" : "ios";
 
     try {
       // Use fetchWithBrowserTls to bypass TLS fingerprinting that blocks Node 24+
@@ -92,7 +88,7 @@ export abstract class EpicMobileSraper extends BaseScraper {
       );
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status.toFixed()}`);
+        throw new Error(`HTTP error! status: ${response.status.toFixed(0)}`);
       }
 
       const data = await response.json<MobileDiscoverData>();
@@ -118,9 +114,7 @@ export abstract class EpicMobileSraper extends BaseScraper {
 
   private parseOffers(data: MobileDiscoverData): Omit<NewOffer, "category">[] {
     // Find the freeGame section
-    const freeGameSection = data.data.find(
-      (section) => section.type === "freeGame",
-    );
+    const freeGameSection = data.data.find((section) => section.type === "freeGame");
 
     if (!freeGameSection) {
       return [];
@@ -132,7 +126,7 @@ export abstract class EpicMobileSraper extends BaseScraper {
         const claimPurchase = offer.content.purchase.find(
           (p) => p.purchaseType === "Claim" && p.discount,
         );
-        return !!claimPurchase;
+        return Boolean(claimPurchase);
       })
       .map((offer) => {
         const claimPurchase = offer.content.purchase.find(
@@ -152,9 +146,7 @@ export abstract class EpicMobileSraper extends BaseScraper {
           probable_game_name: cleanGameTitle(offer.content.title),
           seen_last: DateTime.now().toISO(),
           seen_first: DateTime.now().toISO(),
-          valid_to: DateTime.fromISO(
-            claimPurchase.discount.discountEndDate,
-          ).toISO(),
+          valid_to: DateTime.fromISO(claimPurchase.discount.discountEndDate).toISO(),
           rawtext: JSON.stringify({
             title: offer.content.title,
           }),

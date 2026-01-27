@@ -1,7 +1,6 @@
-import {
-  type FeedCombination,
-  getEnabledFeedCombinations,
-} from "@/services/scraper/utils";
+import type { FeedCombination } from "@/services/scraper/utils";
+
+import { getEnabledFeedCombinations } from "@/services/scraper/utils";
 import { translationService } from "@/services/translation";
 import { OfferDuration, OfferPlatform } from "@/types";
 
@@ -17,7 +16,9 @@ function getSequenceMatchRatio(a: string, b: string): number {
   }
 
   const longerLength = longer.length;
-  if (longerLength === 0) return 1.0;
+  if (longerLength === 0) {
+    return 1;
+  }
 
   const editDistance = levenshteinDistance(longer, shorter);
   return (longerLength - editDistance) / longerLength;
@@ -59,13 +60,13 @@ function levenshteinDistance(s1: string, s2: string): number {
 export function getMatchScore(search: string, result: string): number {
   // Clean strings: keep only alphanumeric and spaces, condense spaces
   const cleanedSearch = search
-    .replace(/[^a-zA-Z0-9 ]/g, "")
-    .replace(/ +/g, " ")
+    .replaceAll(/[^a-zA-Z0-9 ]/g, "")
+    .replaceAll(/ +/g, " ")
     .toLowerCase();
 
   const cleanedResult = result
-    .replace(/[^a-zA-Z0-9 ]/g, "")
-    .replace(/ +/g, " ")
+    .replaceAll(/[^a-zA-Z0-9 ]/g, "")
+    .replaceAll(/ +/g, " ")
     .toLowerCase();
 
   let score = getSequenceMatchRatio(cleanedSearch, cleanedResult);
@@ -112,12 +113,12 @@ export function normalizeString(str: string): string {
   // First normalize to decomposed form (NFD), which separates base characters from diacritics
   // Then replace all combining diacritical marks (unicode category "M")
   // Finally replace double quotes and trim the result
-  return str.normalize("NFD").replace(/\p{M}/gu, "").replace(/"/g, "").trim();
+  return str.normalize("NFD").replaceAll(/\p{M}/gu, "").replaceAll('"', "").trim();
 }
 
 export function cleanHtml(html: string): string {
   return html
-    .replace(/<!--[\s\S]*?-->/g, "") // Remove HTML comments, single and multiline
+    .replaceAll(/<!--[\s\S]*?-->/g, "") // Remove HTML comments, single and multiline
     .split("\n")
     .map((line) => line.trimEnd()) // Remove trailing whitespace
     .filter((line) => line.trim() !== "") // Remove empty lines
@@ -125,28 +126,28 @@ export function cleanHtml(html: string): string {
 }
 export function cleanGameTitle(title: string): string {
   return title
-    .replace(/\n/g, "")
-    .replace(/ - /g, ": ")
-    .replace(/ : /g, ": ")
+    .replaceAll("\n", "")
+    .replaceAll(" - ", ": ")
+    .replaceAll(" : ", ": ")
     .trim()
-    .replace(/^\[ ?VIP ?\]/g, "")
-    .replace(/ on Origin$/g, "")
-    .replace(/ Game of the Year Edition( Deluxe)?$/g, "")
-    .replace(/ (Definitive|Deluxe|Collectors) Edition$/g, "")
-    .replace(/ \(Mobile\)$/g, "")
-    .replace(/ \([1-9]{4}\)$/g, "") // Remove years in brackets
+    .replaceAll(/^\[ ?VIP ?\]/g, "")
+    .replaceAll(/ on Origin$/g, "")
+    .replaceAll(/ Game of the Year Edition( Deluxe)?$/g, "")
+    .replaceAll(/ (Definitive|Deluxe|Collectors) Edition$/g, "")
+    .replaceAll(/ \(Mobile\)$/g, "")
+    .replaceAll(/ \([1-9]{4}\)$/g, "") // Remove years in brackets
     .trim()
-    .replace(/[:|-]$/g, "")
+    .replaceAll(/[:|-]$/g, "")
     .trim();
 }
 
 export function cleanLootTitle(title: string): string {
   let cleaned = title
-    .replace(/\n/g, "")
-    .replace(/ - /g, ": ")
-    .replace(/ : /g, ": ")
+    .replaceAll("\n", "")
+    .replaceAll(" - ", ": ")
+    .replaceAll(" : ", ": ")
     .trim()
-    .replace(/[:|-]$/g, "")
+    .replaceAll(/[:|-]$/g, "")
     .trim();
 
   if (cleaned.length > 0) {
@@ -201,7 +202,7 @@ export function cleanCombinedTitle(title: string): [string, string] {
   let probableLootName = "";
 
   // Clean up input
-  const cleanTitle = title.replace(/\n/g, " ").trim();
+  const cleanTitle = title.replaceAll("\n", " ").trim();
 
   // Special Steam format (TITLE — LOOT: LOOTDETAIL)
   const specialMatch = /^(.*) — (.*: .*)$/.exec(cleanTitle);
@@ -213,9 +214,9 @@ export function cleanCombinedTitle(title: string): [string, string] {
   if (!probableGameName) {
     // Replace some very special characters that Steam uses sometimes
     const normalizedTitle = cleanTitle
-      .replace(/：/g, ": ")
-      .replace(/ — /g, ": ")
-      .replace(/ - /g, ": ");
+      .replaceAll("：", ": ")
+      .replaceAll(" — ", ": ")
+      .replaceAll(" - ", ": ");
 
     const titleParts = normalizedTitle.split(": ");
 
@@ -311,7 +312,7 @@ function getEnabledFeedFilenames({
   enabledCombinations?: FeedCombination[];
   withHistory?: boolean;
 }): string[] {
-  if (!enabledCombinations)
+  if (!enabledCombinations) {
     return [
       generateFilename({
         prefix: prefix,
@@ -319,6 +320,7 @@ function getEnabledFeedFilenames({
         ...(withHistory && { withHistory: true }),
       }),
     ];
+  }
   const res: string[] = [];
   for (const combination of enabledCombinations) {
     res.push(

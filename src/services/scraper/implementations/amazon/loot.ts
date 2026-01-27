@@ -1,10 +1,14 @@
-import { DateTime } from "luxon";
 import type { Locator, Page } from "playwright";
-import { OfferType } from "@/types/basic";
+
+import { DateTime } from "luxon";
+
 import type { NewOffer } from "@/types/database";
+
+import { OfferType } from "@/types/basic";
 import { cleanGameTitle } from "@/utils";
 import { logger } from "@/utils/logger";
 import { cleanLootTitle, combineTitle } from "@/utils/stringTools";
+
 import { AmazonBaseScraper, OFFER_URL } from "./base";
 
 export class AmazonLootScraper extends AmazonBaseScraper {
@@ -21,8 +25,7 @@ export class AmazonLootScraper extends AmazonBaseScraper {
       offersUrl: OFFER_URL,
       offerHandlers: [
         {
-          locator:
-            '[data-a-target="offer-list-IN_GAME_LOOT"] .item-card__action > a:first-child',
+          locator: '[data-a-target="offer-list-IN_GAME_LOOT"] .item-card__action > a:first-child',
           readOffer: this.readOffer.bind(this),
         },
       ],
@@ -33,17 +36,14 @@ export class AmazonLootScraper extends AmazonBaseScraper {
     });
   }
 
-  private async readOffer(
-    element: Locator,
-  ): Promise<Omit<NewOffer, "category"> | null> {
+  private async readOffer(element: Locator): Promise<Omit<NewOffer, "category"> | null> {
     try {
       const baseOffer = await this.readBaseOffer(element);
 
-      const gameTitle = await element
-        .locator(".item-card-details__body p")
-        .nth(0)
-        .textContent();
-      if (!gameTitle) throw new Error("Couldn't find game title");
+      const gameTitle = await element.locator(".item-card-details__body p").nth(0).textContent();
+      if (!gameTitle) {
+        throw new Error("Couldn't find game title");
+      }
 
       const validTo = baseOffer.validTo
         ? this.parseDateString(baseOffer.validTo)?.toISO()

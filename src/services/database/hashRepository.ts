@@ -1,10 +1,10 @@
-import { getDb } from "@/services/database";
 import type { Hash, HashUpdate, NewHash } from "@/types";
+
+import { getDb } from "@/services/database";
+
 import { handleError, handleInsertResult } from "./common";
 
-export async function getHashByResourceName(
-  name: string,
-): Promise<Hash | null> {
+export async function getHashByResourceName(name: string): Promise<Hash | null> {
   try {
     return (
       (await getDb()
@@ -29,10 +29,7 @@ export async function createHash(hash: NewHash): Promise<number> {
   }
 
   try {
-    const result = await getDb()
-      .insertInto("hashes")
-      .values(hash)
-      .executeTakeFirstOrThrow();
+    const result = await getDb().insertInto("hashes").values(hash).executeTakeFirstOrThrow();
     return handleInsertResult(result);
   } catch (error) {
     handleError("create hash", error);

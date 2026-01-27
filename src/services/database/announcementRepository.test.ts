@@ -1,12 +1,11 @@
 import { DateTime } from "luxon";
 import { insertTestData } from "tests/testData";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
+
 import { config } from "@/services/config";
 import { databaseService } from "@/services/database";
-import {
-  createAnnouncement,
-  getNewAnnouncements,
-} from "./announcementRepository";
+
+import { createAnnouncement, getNewAnnouncements } from "./announcementRepository";
 
 describe("Announcement Repository", () => {
   beforeEach(async () => {

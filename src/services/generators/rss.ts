@@ -1,12 +1,14 @@
+import { DateTime } from "luxon";
 import { writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
-import { DateTime } from "luxon";
-import { getGameWithInfo } from "@/services/database/gameRepository";
+
 import type { FeedCombination } from "@/services/scraper/utils";
-import { translationService } from "@/services/translation";
-import { OfferDuration } from "@/types/basic";
 import type { Config } from "@/types/config";
 import type { Game, IgdbInfo, Offer, SteamInfo } from "@/types/database";
+
+import { getGameWithInfo } from "@/services/database/gameRepository";
+import { translationService } from "@/services/translation";
+import { OfferDuration } from "@/types/basic";
 import { FeedError } from "@/types/errors";
 import { AtomFeed } from "@/utils/atom";
 import { getDataPath } from "@/utils/path";
@@ -64,7 +66,7 @@ export class RssGenerator {
       }
 
       this.feedGenerator.addEntry({
-        id: `${this.config.feed.idPrefix}${offer.id.toFixed()}`,
+        id: `${this.config.feed.idPrefix}${offer.id.toFixed(0)}`,
         title: this.getEntryTitle(offer),
         ...(offer.url && { link: [{ href: offer.url }] }),
         updated: updated.toJSDate(),
@@ -119,13 +121,9 @@ export class RssGenerator {
   }
 
   private getEntryTitle(offer: Offer): string {
-    const additionalInfo: string[] = [
-      translationService.getTypeDisplay(offer.type),
-    ];
+    const additionalInfo: string[] = [translationService.getTypeDisplay(offer.type)];
     if (offer.duration !== OfferDuration.CLAIMABLE) {
-      additionalInfo.push(
-        translationService.getDurationDisplay(offer.duration),
-      );
+      additionalInfo.push(translationService.getDurationDisplay(offer.duration));
     }
     return `${translationService.getSourceDisplay(offer.source)} (${additionalInfo.join(", ")}) - ${offer.title}`;
   }
@@ -157,9 +155,7 @@ export class RssGenerator {
     content += `<li><b>Offer valid from:</b> ${validFrom}</li>`;
 
     if (offer.valid_to) {
-      const validTo = DateTime.fromISO(offer.valid_to).toFormat(
-        "yyyy-MM-dd HH:mm",
-      );
+      const validTo = DateTime.fromISO(offer.valid_to).toFormat("yyyy-MM-dd HH:mm");
       content += `<li><b>Offer valid to:</b> ${validTo}</li>`;
     }
 
@@ -202,7 +198,7 @@ export class RssGenerator {
     // Ratings
     const ratings: string[] = [];
     if (gameInfo.steamInfo?.metacritic_score) {
-      let text = `Metacritic ${gameInfo.steamInfo.metacritic_score.toFixed()}%`;
+      let text = `Metacritic ${gameInfo.steamInfo.metacritic_score.toFixed(0)}%`;
       if (gameInfo.steamInfo.metacritic_url) {
         text = `<a href="${this.escapeHtml(gameInfo.steamInfo.metacritic_url)}">${text}</a>`;
       }
@@ -214,7 +210,7 @@ export class RssGenerator {
       gameInfo.steamInfo.score &&
       gameInfo.steamInfo.recommendations
     ) {
-      let text = `Steam ${gameInfo.steamInfo.percent.toFixed()}% (${gameInfo.steamInfo.score.toFixed()}/10, ${gameInfo.steamInfo.recommendations.toFixed(
+      let text = `Steam ${gameInfo.steamInfo.percent.toFixed(0)}% (${gameInfo.steamInfo.score.toFixed(0)}/10, ${gameInfo.steamInfo.recommendations.toFixed(
         0,
       )} recommendations)`;
       text = `<a href="${this.escapeHtml(gameInfo.steamInfo.url)}">${text}</a>`;
@@ -222,7 +218,7 @@ export class RssGenerator {
     }
 
     if (gameInfo.igdbInfo?.meta_ratings && gameInfo.igdbInfo.meta_score) {
-      let text = `IGDB Meta ${gameInfo.igdbInfo.meta_score.toFixed()}% (${gameInfo.igdbInfo.meta_ratings.toFixed(
+      let text = `IGDB Meta ${gameInfo.igdbInfo.meta_score.toFixed(0)}% (${gameInfo.igdbInfo.meta_ratings.toFixed(
         0,
       )} sources)`;
       if (gameInfo.igdbInfo.url) {
@@ -232,7 +228,7 @@ export class RssGenerator {
     }
 
     if (gameInfo.igdbInfo?.user_ratings && gameInfo.igdbInfo.user_score) {
-      let text = `IGDB User ${gameInfo.igdbInfo.user_score.toFixed()}% (${gameInfo.igdbInfo.user_ratings.toFixed(
+      let text = `IGDB User ${gameInfo.igdbInfo.user_score.toFixed(0)}% (${gameInfo.igdbInfo.user_ratings.toFixed(
         0,
       )} sources)`;
       if (gameInfo.igdbInfo.url) {
@@ -246,26 +242,22 @@ export class RssGenerator {
     }
 
     // Release date
-    const releaseDate =
-      gameInfo.igdbInfo?.release_date ?? gameInfo.steamInfo?.release_date;
+    const releaseDate = gameInfo.igdbInfo?.release_date ?? gameInfo.steamInfo?.release_date;
     if (releaseDate) {
-      content += `<li><b>Release date:</b> ${DateTime.fromISO(
-        releaseDate,
-      ).toFormat("yyyy-MM-dd")}</li>`;
+      content += `<li><b>Release date:</b> ${DateTime.fromISO(releaseDate).toFormat(
+        "yyyy-MM-dd",
+      )}</li>`;
     }
 
     // Price
     const price = gameInfo.steamInfo?.recommended_price_eur;
     if (price) {
-      content += `<li><b>Recommended price (Steam):</b> ${price.toFixed(
-        2,
-      )} EUR</li>`;
+      content += `<li><b>Recommended price (Steam):</b> ${price.toFixed(2)} EUR</li>`;
     }
 
     // Description
     const description =
-      gameInfo.igdbInfo?.short_description ??
-      gameInfo.steamInfo?.short_description;
+      gameInfo.igdbInfo?.short_description ?? gameInfo.steamInfo?.short_description;
     if (description) {
       content += `<li><b>Description:</b> ${this.escapeHtml(description)}</li>`;
     }
@@ -284,10 +276,10 @@ export class RssGenerator {
 
   private escapeHtml(unsafe: string): string {
     return unsafe
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;")
-      .replace(/'/g, "&#039;");
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
   }
 }

@@ -1,12 +1,10 @@
-import { InfoSource } from "@/types";
 import type { Config } from "@/types/config";
 import type { Game, NewIgdbInfo, NewSteamInfo } from "@/types/database";
+
+import { InfoSource } from "@/types";
 import { logger } from "@/utils/logger";
-import {
-  createGame,
-  getGameByIgdbName,
-  getGameBySteamName,
-} from "./database/gameRepository";
+
+import { createGame, getGameByIgdbName, getGameBySteamName } from "./database/gameRepository";
 import { createIgdbInfo } from "./database/igdbInfoRepository";
 import { getOfferById, updateOffer } from "./database/offerRepository";
 import { createSteamInfo } from "./database/steamInfoRepository";
@@ -61,9 +59,7 @@ class GameInfoService {
 
     const offer = await getOfferById(offerId);
     if (!offer) {
-      logger.warn(
-        `Offer with ID ${offerId.toFixed()} not found, skipping enrichment.`,
-      );
+      logger.warn(`Offer with ID ${offerId.toFixed(0)} not found, skipping enrichment.`);
       this.running = false;
       return;
     }
@@ -118,12 +114,16 @@ class GameInfoService {
 
     if (this.config.scraper.infoSources.includes(InfoSource.IGDB)) {
       const gameByIgdb = await getGameByIgdbName(gameName);
-      if (gameByIgdb) return gameByIgdb;
+      if (gameByIgdb) {
+        return gameByIgdb;
+      }
     }
 
     if (this.config.scraper.infoSources.includes(InfoSource.STEAM)) {
       const gameBySteam = await getGameBySteamName(gameName);
-      if (gameBySteam) return gameBySteam;
+      if (gameBySteam) {
+        return gameBySteam;
+      }
     }
 
     return null;
@@ -134,17 +134,20 @@ class GameInfoService {
       throw new Error("GameInfo service not initialized");
     }
 
-    if (!this.config.scraper.infoSources.includes(InfoSource.STEAM))
+    if (!this.config.scraper.infoSources.includes(InfoSource.STEAM)) {
       return null;
+    }
     logger.debug(`Fetching Steam info for: ${gameName}`);
 
     try {
       const appId = await this.steamClient.findSteamId(gameName);
-      if (!appId) return null;
+      if (!appId) {
+        return null;
+      }
 
       const details = await this.steamClient.getDetails(appId);
       if (!details.name) {
-        logger.warn(`Steam API returned no name for ${appId.toFixed()}`);
+        logger.warn(`Steam API returned no name for ${appId.toFixed(0)}`);
         return null;
       }
 
@@ -162,18 +165,17 @@ class GameInfoService {
       throw new Error("GameInfo service not initialized");
     }
 
-    if (
-      !this.igdbClient ||
-      !this.config.scraper.infoSources.includes(InfoSource.IGDB)
-    ) {
+    if (!this.igdbClient || !this.config.scraper.infoSources.includes(InfoSource.IGDB)) {
       return null;
     }
     logger.debug(`Fetching IGDB info for: ${gameName}`);
 
     try {
       const gameId = await this.igdbClient.searchGame(gameName);
-      if (!gameId) return null;
-      logger.debug(`Found IDGB game ID ${gameId.toFixed()} for: ${gameName}`);
+      if (!gameId) {
+        return null;
+      }
+      logger.debug(`Found IDGB game ID ${gameId.toFixed(0)} for: ${gameName}`);
 
       return await this.igdbClient.getDetails(gameId);
     } catch (error) {

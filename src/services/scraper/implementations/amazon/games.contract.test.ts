@@ -1,12 +1,12 @@
 import { DateTime } from "luxon";
 import { beforeAll, describe, expect, test } from "vitest";
+
 import { browserService } from "@/services/browser";
 import { config } from "@/services/config";
+
 import { AmazonGamesScraper } from "./games";
 
-const runThis =
-  process.env.VSCODE_PID !== undefined ||
-  process.env.VITEST_MODE === "contract";
+const runThis = process.env.VSCODE_PID !== undefined || process.env.VITEST_MODE === "contract";
 
 describe.skipIf(!runThis)("Amazon Games Scraper Contract Tests", () => {
   beforeAll(async () => {
@@ -14,7 +14,7 @@ describe.skipIf(!runThis)("Amazon Games Scraper Contract Tests", () => {
     await browserService.initialize(config.get());
   });
 
-  test("should scrape games correctly", { timeout: 120000 }, async () => {
+  test("should scrape games correctly", { timeout: 120_000 }, async () => {
     const scraper = new AmazonGamesScraper(config.get());
     const results = await scraper.scrape();
 

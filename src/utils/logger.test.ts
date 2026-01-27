@@ -2,6 +2,7 @@ import { mkdirSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { resolve } from "node:path";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
+
 import { logger } from "@/utils/logger";
 
 describe("logger", () => {

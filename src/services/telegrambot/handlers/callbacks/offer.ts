@@ -1,8 +1,10 @@
 import type { Filter } from "grammy";
+
+import type { BotContext } from "@/services/telegrambot/types/middleware";
+
 import { getOfferById } from "@/services/database/offerRepository";
 import { getTelegramChatByChatId } from "@/services/database/telegramChatRepository";
 import { offerSchema } from "@/services/telegrambot/types/callbacks";
-import type { BotContext } from "@/services/telegrambot/types/middleware";
 import { unpackData } from "@/services/telegrambot/utils/callbackPack";
 import { formatOfferMessage } from "@/services/telegrambot/utils/formatters";
 import { createOfferKeyboard } from "@/services/telegrambot/utils/keyboards";

@@ -1,20 +1,15 @@
-import { getDb } from "@/services/database";
-import type {
-  OfferDuration,
-  OfferPlatform,
-  OfferSource,
-  OfferType,
-} from "@/types/basic";
+import type { OfferDuration, OfferPlatform, OfferSource, OfferType } from "@/types/basic";
 import type {
   NewTelegramSubscription,
   TelegramSubscription,
   TelegramSubscriptionUpdate,
 } from "@/types/database";
+
+import { getDb } from "@/services/database";
+
 import { handleError } from "./common";
 
-export async function getTelegramSubscriptions(
-  chatId: number,
-): Promise<TelegramSubscription[]> {
+export async function getTelegramSubscriptions(chatId: number): Promise<TelegramSubscription[]> {
   try {
     return await getDb()
       .selectFrom("telegram_subscriptions")
@@ -58,10 +53,7 @@ export async function createTelegramSubscription(
   subscription: NewTelegramSubscription,
 ): Promise<void> {
   try {
-    await getDb()
-      .insertInto("telegram_subscriptions")
-      .values(subscription)
-      .execute();
+    await getDb().insertInto("telegram_subscriptions").values(subscription).execute();
   } catch (error) {
     handleError("create telegram subscription", error);
   }

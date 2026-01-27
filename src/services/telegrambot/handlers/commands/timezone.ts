@@ -1,17 +1,15 @@
 import type { CommandContext } from "grammy";
 import type { InlineKeyboardButton } from "grammy/types";
 import type { z } from "zod";
-import {
-  closeSchema,
-  timezoneSchema,
-} from "@/services/telegrambot/types/callbacks";
+
 import type { BotContext } from "@/services/telegrambot/types/middleware";
+
+import { closeSchema, timezoneSchema } from "@/services/telegrambot/types/callbacks";
 import { packData } from "@/services/telegrambot/utils/callbackPack";
+
 import { logCall, userCanControlBot } from ".";
 
-export async function handleTimezoneCommand(
-  ctx: CommandContext<BotContext>,
-): Promise<void> {
+export async function handleTimezoneCommand(ctx: CommandContext<BotContext>): Promise<void> {
   logCall(ctx);
 
   if (!(await userCanControlBot(ctx))) {
@@ -36,7 +34,7 @@ function buildTimezoneKeyboard() {
 
     keyboard.push([
       {
-        text: `UTC${sign}${hour.toFixed()}:00`,
+        text: `UTC${sign}${hour.toFixed(0)}:00`,
         callback_data: packData(data, timezoneSchema),
       },
     ]);
@@ -46,10 +44,7 @@ function buildTimezoneKeyboard() {
   keyboard.push([
     {
       text: "Close",
-      callback_data: packData(
-        { action: "close", menu: "timezone" },
-        closeSchema,
-      ),
+      callback_data: packData({ action: "close", menu: "timezone" }, closeSchema),
     },
   ]);
 

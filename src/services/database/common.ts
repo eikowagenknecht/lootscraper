@@ -1,4 +1,5 @@
 import type { InsertResult, UpdateResult } from "kysely";
+
 import { DatabaseError } from "@/types/errors";
 
 export function handleError(operation: string, error: unknown): never {

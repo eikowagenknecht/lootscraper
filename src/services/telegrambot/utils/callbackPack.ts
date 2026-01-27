@@ -50,11 +50,21 @@ const SPECIAL_UNDEFINED = "undef";
  * @internal
  */
 function isValidFieldValue(value: unknown): value is ValidFieldValue {
-  if (value === null || value === undefined) return true;
-  if (typeof value === "number") return true;
-  if (typeof value === "string") return true;
-  if (typeof value === "boolean") return true;
-  if (typeof value !== "object") return false;
+  if (value === null || value === undefined) {
+    return true;
+  }
+  if (typeof value === "number") {
+    return true;
+  }
+  if (typeof value === "string") {
+    return true;
+  }
+  if (typeof value === "boolean") {
+    return true;
+  }
+  if (typeof value !== "object") {
+    return false;
+  }
   return (
     "valueOf" in value &&
     typeof (value as { valueOf: unknown }).valueOf === "function" &&
@@ -70,9 +80,9 @@ function isValidFieldValue(value: unknown): value is ValidFieldValue {
  */
 const escapeValue = (value: string): string => {
   // Escape the escape character first to avoid double escaping
-  let escaped = value.replace(/\\/g, "\\\\");
+  let escaped = value.replaceAll("\\", String.raw`\\`);
   // Escape colons after backslashes are escaped
-  escaped = escaped.replace(/:/g, "\\:");
+  escaped = escaped.replaceAll(":", String.raw`\:`);
   // Escape special values when they appear as exact matches
   if (
     escaped === SPECIAL_NULL ||
@@ -143,19 +153,27 @@ const unescapeValue = (value: string): string => {
  * @internal
  */
 function serializeValue(value: ValidFieldValue): string {
-  if (value === null) return SPECIAL_NULL;
-  if (value === undefined) return SPECIAL_UNDEFINED;
-  if (typeof value === "boolean") return value ? SPECIAL_TRUE : SPECIAL_FALSE;
+  if (value === null) {
+    return SPECIAL_NULL;
+  }
+  if (value === undefined) {
+    return SPECIAL_UNDEFINED;
+  }
+  if (typeof value === "boolean") {
+    return value ? SPECIAL_TRUE : SPECIAL_FALSE;
+  }
   if (typeof value === "number") {
     if (Number.isNaN(value)) {
-      throw new Error("Number value must not be NaN");
+      throw new TypeError("Number value must not be NaN");
     }
     if (!Number.isFinite(value)) {
-      throw new Error("Number value must be finite");
+      throw new TypeError("Number value must be finite");
     }
     return value.toString();
   }
-  if (typeof value === "string") return escapeValue(value);
+  if (typeof value === "string") {
+    return escapeValue(value);
+  }
   return escapeValue(value.valueOf());
 }
 
@@ -239,34 +257,32 @@ export function unpackData<T extends z.ZodObject<z.ZodRawShape>>(
 
   if (values.length !== keys.length) {
     throw new Error(
-      `Expected ${keys.length.toFixed()} fields but got ${values.length.toFixed()}`,
+      `Expected ${keys.length.toFixed(0)} fields but got ${values.length.toFixed(0)}`,
     );
   }
 
   const data = Object.fromEntries(
     keys.map((field, index) => {
       const value = values[index] ?? "";
-      const fieldSchema = (schema.shape as Record<keyof z.infer<T>, z.ZodType>)[
-        field
-      ];
+      const fieldSchema = (schema.shape as Record<keyof z.infer<T>, z.ZodType>)[field];
 
       // Check if the field schema expects a number (handles nullable/optional)
       // Formerly was isNullable() and isOptional()
-      if (fieldSchema.safeParse(null).success && value === SPECIAL_NULL)
+      if (fieldSchema.safeParse(null).success && value === SPECIAL_NULL) {
         return [field, null];
-      if (
-        fieldSchema.safeParse(undefined).success &&
-        value === SPECIAL_UNDEFINED
-      )
+      }
+      if (fieldSchema.safeParse(undefined).success && value === SPECIAL_UNDEFINED) {
         return [field, undefined];
+      }
 
       // Get the innermost schema type (unwraps nullable/optional)
       function unwrapSchema(schema: z.ZodType): z.ZodType {
         if (schema instanceof z.ZodNullable) {
           return unwrapSchema(schema.unwrap() as z.ZodType);
         }
-        if (schema instanceof z.ZodOptional)
+        if (schema instanceof z.ZodOptional) {
           return unwrapSchema(schema.unwrap() as z.ZodType);
+        }
         return schema;
       }
 
@@ -277,12 +293,10 @@ export function unpackData<T extends z.ZodObject<z.ZodRawShape>>(
       if (innerSchema instanceof z.ZodNumber) {
         const num = Number(unescaped);
         if (Number.isNaN(num)) {
-          throw new Error(
-            `Invalid number value for field ${String(field)}: ${unescaped}`,
-          );
+          throw new TypeError(`Invalid number value for field ${String(field)}: ${unescaped}`);
         }
         if (!Number.isFinite(num)) {
-          throw new Error(
+          throw new TypeError(
             `Number value for field ${String(field)} is not finite: ${unescaped}`,
           );
         }
@@ -291,11 +305,13 @@ export function unpackData<T extends z.ZodObject<z.ZodRawShape>>(
 
       // Check if the field schema expects a boolean
       if (innerSchema instanceof z.ZodBoolean) {
-        if (unescaped === SPECIAL_TRUE) return [field, true];
-        if (unescaped === SPECIAL_FALSE) return [field, false];
-        throw new Error(
-          `Invalid boolean value for field ${String(field)}: ${unescaped}`,
-        );
+        if (unescaped === SPECIAL_TRUE) {
+          return [field, true];
+        }
+        if (unescaped === SPECIAL_FALSE) {
+          return [field, false];
+        }
+        throw new Error(`Invalid boolean value for field ${String(field)}: ${unescaped}`);
       }
 
       return [field, unescaped];

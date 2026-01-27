@@ -1,10 +1,6 @@
 import { z } from "zod";
-import {
-  OfferDuration,
-  OfferPlatform,
-  OfferSource,
-  OfferType,
-} from "@/types/basic";
+
+import { OfferDuration, OfferPlatform, OfferSource, OfferType } from "@/types/basic";
 
 export const toggleSubscriptionSchema = z.object({
   action: z.literal("toggle"),

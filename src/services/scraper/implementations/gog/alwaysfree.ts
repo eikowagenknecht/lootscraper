@@ -1,10 +1,14 @@
-import { DateTime } from "luxon";
 import type { Locator, Page } from "playwright";
+
+import { DateTime } from "luxon";
+
 import type { CronConfig } from "@/services/scraper/base/scraper";
-import { OfferDuration, OfferPlatform } from "@/types/basic";
 import type { NewOffer } from "@/types/database";
+
+import { OfferDuration, OfferPlatform } from "@/types/basic";
 import { cleanGameTitle } from "@/utils";
 import { logger } from "@/utils/logger";
+
 import { GogBaseScraper } from "./base";
 
 const BASE_URL = "https://www.gog.com";
@@ -49,23 +53,25 @@ export class GogGamesAlwaysFreeScraper extends GogBaseScraper {
     return true;
   }
 
-  private async readOffer(
-    element: Locator,
-  ): Promise<Omit<NewOffer, "category"> | null> {
+  private async readOffer(element: Locator): Promise<Omit<NewOffer, "category"> | null> {
     try {
       const title = await element.locator(".product-title__text").textContent();
-      if (!title) throw new Error("Couldn't find title");
+      if (!title) {
+        throw new Error("Couldn't find title");
+      }
 
       let url = await element.getAttribute("href");
-      if (!url) throw new Error(`Couldn't find url for ${title}`);
+      if (!url) {
+        throw new Error(`Couldn't find url for ${title}`);
+      }
       if (!url.startsWith("http")) {
         url = BASE_URL + url;
       }
 
-      const imgUrl = this.sanitizeImgUrl(
-        await element.locator("img").getAttribute("srcset"),
-      );
-      if (!imgUrl) throw new Error(`Couldn't find image for ${title}`);
+      const imgUrl = this.sanitizeImgUrl(await element.locator("img").getAttribute("srcset"));
+      if (!imgUrl) {
+        throw new Error(`Couldn't find image for ${title}`);
+      }
 
       return {
         source: this.getSource(),

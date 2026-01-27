@@ -1,24 +1,21 @@
 import type { CommandContext } from "grammy";
+
 import { DateTime } from "luxon";
+
+import type { BotContext } from "@/services/telegrambot/types/middleware";
+
 import {
   activateTelegramChat,
   createTelegramChat,
 } from "@/services/database/telegramChatRepository";
 import { createTelegramSubscription } from "@/services/database/telegramSubscriptionRepository";
-import type { BotContext } from "@/services/telegrambot/types/middleware";
 import { bold, escapeText, link } from "@/services/telegrambot/utils/markdown";
 import { ChatType } from "@/types";
-import {
-  OfferDuration,
-  OfferPlatform,
-  OfferSource,
-  OfferType,
-} from "@/types/basic";
+import { OfferDuration, OfferPlatform, OfferSource, OfferType } from "@/types/basic";
+
 import { getCallerName, getDbChat, logCall, userCanControlBot } from ".";
 
-export async function handleStartCommand(
-  ctx: CommandContext<BotContext>,
-): Promise<void> {
+export async function handleStartCommand(ctx: CommandContext<BotContext>): Promise<void> {
   logCall(ctx);
 
   if (!(await userCanControlBot(ctx))) {
@@ -87,14 +84,18 @@ ${welcomeTextMd}
     chatType: "private" | "group" | "supergroup" | "channel",
   ): ChatType {
     switch (chatType) {
-      case "group":
+      case "group": {
         return ChatType.GROUP;
-      case "supergroup":
+      }
+      case "supergroup": {
         return ChatType.SUPERGROUP;
-      case "channel":
+      }
+      case "channel": {
         return ChatType.CHANNEL;
-      default:
+      }
+      default: {
         return ChatType.PRIVATE;
+      }
     }
   }
 

@@ -1,12 +1,12 @@
 import { DateTime } from "luxon";
 import { beforeAll, describe, expect, it } from "vitest";
+
 import { browserService } from "@/services/browser";
 import { config } from "@/services/config";
+
 import { SteamLootScraper } from "./loot";
 
-const runThis =
-  process.env.VSCODE_PID !== undefined ||
-  process.env.VITEST_MODE === "contract";
+const runThis = process.env.VSCODE_PID !== undefined || process.env.VITEST_MODE === "contract";
 
 describe.skipIf(!runThis)("Steam Loot Scraper Contract Tests", () => {
   beforeAll(async () => {
@@ -14,7 +14,7 @@ describe.skipIf(!runThis)("Steam Loot Scraper Contract Tests", () => {
     await browserService.initialize(config.get());
   });
 
-  it("should scrape free DLC correctly", { timeout: 120000 }, async () => {
+  it("should scrape free DLC correctly", { timeout: 120_000 }, async () => {
     const scraper = new SteamLootScraper(config.get());
     const results = await scraper.scrape();
 

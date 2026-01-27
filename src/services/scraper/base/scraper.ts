@@ -1,17 +1,15 @@
-import { DateTime } from "luxon";
 import type { BrowserContext, Locator, Page } from "playwright";
+
+import { DateTime } from "luxon";
 import { errors } from "playwright";
-import { browserService } from "@/services/browser";
-import { takeScreenshot } from "@/services/browser/utils";
-import {
-  OfferCategory,
-  OfferDuration,
-  type OfferPlatform,
-  type OfferSource,
-  type OfferType,
-} from "@/types";
+
+import type { OfferPlatform, OfferSource, OfferType } from "@/types";
 import type { Config } from "@/types/config";
 import type { NewOffer } from "@/types/database";
+
+import { browserService } from "@/services/browser";
+import { takeScreenshot } from "@/services/browser/utils";
+import { OfferCategory, OfferDuration } from "@/types";
 import { ScraperError } from "@/types/errors";
 import { logger } from "@/utils/logger";
 
@@ -154,9 +152,7 @@ export abstract class BaseScraper {
           `${this.getScraperName()}: Found no offers, even though there should be at least one.`,
         );
       } else {
-        logger.info(
-          `${this.getScraperName()}: No offers found. Probably there are none.`,
-        );
+        logger.info(`${this.getScraperName()}: No offers found. Probably there are none.`);
       }
 
       return;
@@ -164,7 +160,7 @@ export abstract class BaseScraper {
 
     const titles = offers.map((o) => o.title).join(", ");
     logger.debug(
-      `${this.getScraperName()}: Found ${offers.length.toFixed()} offers (raw titles): ${titles}`,
+      `${this.getScraperName()}: Found ${offers.length.toFixed(0)} offers (raw titles): ${titles}`,
     );
   }
   /**
@@ -216,28 +212,28 @@ export abstract class BaseScraper {
     try {
       page = await this.context.newPage();
 
-      await page.goto(offersUrl, { timeout: 30000 });
+      await page.goto(offersUrl, { timeout: 30_000 });
       await page.waitForSelector(pageReadySelector, {
-        timeout: 10000,
+        timeout: 10_000,
       });
-      if (pageLoadedHook !== undefined) await pageLoadedHook(page);
+      if (pageLoadedHook !== undefined) {
+        await pageLoadedHook(page);
+      }
 
       for (const handler of offerHandlers) {
         const elements = await page
           .locator(handler.locator)
           .all()
           .catch(() => {
-            throw new ScraperError(
-              "Couldn't find any offers",
-              this.getScraperName(),
-              offersUrl,
-            );
+            throw new ScraperError("Couldn't find any offers", this.getScraperName(), offersUrl);
           });
 
         for (const element of elements) {
           try {
             const offer = await handler.readOffer(element);
-            if (!offer) continue;
+            if (!offer) {
+              continue;
+            }
             offers.push(offer);
           } catch (error) {
             // Log and skip offer if processing fails
@@ -273,15 +269,13 @@ export abstract class BaseScraper {
   }
 
   // Utility methods for offer processing
-  protected cleanOffers(
-    offers: Omit<NewOffer, "category">[],
-  ): Omit<NewOffer, "category">[] {
+  protected cleanOffers(offers: Omit<NewOffer, "category">[]): Omit<NewOffer, "category">[] {
     return offers.map((offer) => {
       const cleaned: Omit<NewOffer, "category"> = {
         ...offer,
-        ...(offer.url && { url: offer.url.replace(/\n/g, "").trim() }),
+        ...(offer.url && { url: offer.url.replaceAll("\n", "").trim() }),
         ...(offer.img_url && {
-          img_url: offer.img_url.replace(/\n/g, "").trim(),
+          img_url: offer.img_url.replaceAll("\n", "").trim(),
         }),
       };
 
@@ -360,15 +354,11 @@ export abstract class BaseScraper {
     });
   }
 
-  protected deduplicateOffers(
-    offers: Omit<NewOffer, "category">[],
-  ): Omit<NewOffer, "category">[] {
+  protected deduplicateOffers(offers: Omit<NewOffer, "category">[]): Omit<NewOffer, "category">[] {
     const titles = new Set<string>();
     return offers.filter((offer) => {
       if (titles.has(offer.title)) {
-        logger.debug(
-          `${this.getScraperName()}: Duplicate offer: ${offer.title}`,
-        );
+        logger.debug(`${this.getScraperName()}: Duplicate offer: ${offer.title}`);
         return false;
       }
       titles.add(offer.title);
@@ -389,10 +379,7 @@ export abstract class BaseScraper {
         categorized.category = OfferCategory.DEMO;
       } else if (this.isPrerelease(offer.title)) {
         categorized.category = OfferCategory.PRERELEASE;
-      } else if (
-        offer.valid_to &&
-        this.isFakeAlways(DateTime.fromISO(offer.valid_to))
-      ) {
+      } else if (offer.valid_to && this.isFakeAlways(DateTime.fromISO(offer.valid_to))) {
         categorized.duration = OfferDuration.ALWAYS;
       }
 
@@ -407,8 +394,7 @@ export abstract class BaseScraper {
    */
   protected filterForValidOffers(offers: NewOffer[]): NewOffer[] {
     return offers.filter(
-      (offer) =>
-        !offer.category || offer.category === OfferCategory.VALID.valueOf(),
+      (offer) => !offer.category || offer.category === OfferCategory.VALID.valueOf(),
     );
   }
 
@@ -427,8 +413,7 @@ export abstract class BaseScraper {
    */
   protected isDemo(title: string): boolean {
     const demoRegex = /^[\W]?demo[\W]|\Wdemo\W?((.*version.*)|(\(.*\)))?$/i;
-    const teaserRegex =
-      /^[\W]?teaser[\W]|\Wteaser\W?((.*version.*)|(\(.*\)))?$/i;
+    const teaserRegex = /^[\W]?teaser[\W]|\Wteaser\W?((.*version.*)|(\(.*\)))?$/i;
     return demoRegex.test(title) || teaserRegex.test(title);
   }
 
@@ -452,8 +437,7 @@ export abstract class BaseScraper {
       /^[\W]?early access[\W]|\Wearly access\W?((.*version.*)|(\(.*\)))?$/i,
     ];
     return (
-      patterns.some((pattern) => pattern.test(title)) ||
-      title.includes("Playable Teaser") // Sometimes used by GOG
+      patterns.some((pattern) => pattern.test(title)) || title.includes("Playable Teaser") // Sometimes used by GOG
     );
   }
 
@@ -474,17 +458,12 @@ export abstract class BaseScraper {
    * @param page The Playwright page to scroll
    * @param elementId The ID of the element to scroll
    */
-  protected async scrollElementToBottom(
-    page: Page,
-    elementId: string,
-  ): Promise<void> {
+  protected async scrollElementToBottom(page: Page, elementId: string): Promise<void> {
     const scrollAmount: number = await page.evaluate(
       `document.getElementById("${elementId}").clientHeight * 0.8`,
     );
     // Get scroll height
-    let position: number = await page.evaluate(
-      `document.getElementById("${elementId}").scrollTop`,
-    );
+    let position: number = await page.evaluate(`document.getElementById("${elementId}").scrollTop`);
     let scrollCount = 0;
 
     // Scroll for max. 100 times.
@@ -492,7 +471,7 @@ export abstract class BaseScraper {
     while (scrollCount < 100) {
       // Scroll down to bottom
       await page.evaluate(
-        `document.getElementById("${elementId}").scrollTo(0, ${(position + scrollAmount).toFixed()})`,
+        `document.getElementById("${elementId}").scrollTo(0, ${(position + scrollAmount).toFixed(0)})`,
       );
 
       // Calculate new scroll height and compare with last scroll height
@@ -500,7 +479,9 @@ export abstract class BaseScraper {
         `document.getElementById("${elementId}").scrollTop`,
       );
 
-      if (newPosition === position) break;
+      if (newPosition === position) {
+        break;
+      }
       position = newPosition;
       scrollCount++;
 

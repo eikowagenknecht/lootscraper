@@ -8,7 +8,7 @@
  * @returns The escaped text
  */
 export function escapeText(text: string): string {
-  return text.replace(/[_*[\]()~`>#+-=|{}.!\\]/g, "\\$&");
+  return text.replaceAll(/[_*[\]()~`>#+-=|{}.!\\]/g, String.raw`\$&`);
 }
 
 /**
@@ -21,7 +21,7 @@ export function escapeText(text: string): string {
  * @returns The escaped text
  */
 export function escapeCode(text: string): string {
-  return text.replace(/[`\\]/g, "\\$&");
+  return text.replaceAll(/[`\\]/g, String.raw`\$&`);
 }
 
 /**
@@ -34,7 +34,7 @@ export function escapeCode(text: string): string {
  * @returns The escaped url
  */
 function escapeUrl(url: string): string {
-  return url.replace(/[)\\]/g, "\\$&");
+  return url.replaceAll(/[)\\]/g, String.raw`\$&`);
 }
 
 export function bold(text: string): string {

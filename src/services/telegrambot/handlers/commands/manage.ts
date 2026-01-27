@@ -1,24 +1,22 @@
-import { type CommandContext, InlineKeyboard } from "grammy";
+import type { CommandContext } from "grammy";
 import type { z } from "zod";
-import { hasTelegramSubscription } from "@/services/database/telegramSubscriptionRepository";
-import {
-  type FeedCombination,
-  getEnabledFeedCombinations,
-} from "@/services/scraper/utils";
-import {
-  closeSchema,
-  toggleSubscriptionSchema,
-} from "@/services/telegrambot/types/callbacks";
+
+import { InlineKeyboard } from "grammy";
+
+import type { FeedCombination } from "@/services/scraper/utils";
 import type { BotContext } from "@/services/telegrambot/types/middleware";
+
+import { hasTelegramSubscription } from "@/services/database/telegramSubscriptionRepository";
+import { getEnabledFeedCombinations } from "@/services/scraper/utils";
+import { closeSchema, toggleSubscriptionSchema } from "@/services/telegrambot/types/callbacks";
 import { packData } from "@/services/telegrambot/utils/callbackPack";
 import { translationService } from "@/services/translation";
 import { OfferDuration } from "@/types/basic";
 import { logger } from "@/utils/logger";
+
 import { getDbChat, logCall, userCanControlBot } from ".";
 
-export async function handleManageCommand(
-  ctx: CommandContext<BotContext>,
-): Promise<void> {
+export async function handleManageCommand(ctx: CommandContext<BotContext>): Promise<void> {
   logCall(ctx);
 
   if (!(await userCanControlBot(ctx))) {
@@ -27,9 +25,7 @@ export async function handleManageCommand(
 
   const dbChat = await getDbChat(ctx);
   if (!dbChat) {
-    await ctx.reply(
-      "You are not registered. Please register with /start command.",
-    );
+    await ctx.reply("You are not registered. Please register with /start command.");
     return;
   }
 
@@ -44,20 +40,14 @@ export async function handleManageCommand(
 export async function buildManageKeyboard(chatId: number) {
   const inlineKeyboard = new InlineKeyboard();
 
-  logger.debug(`Building manage keyboard for chat ${chatId.toFixed()}`);
+  logger.debug(`Building manage keyboard for chat ${chatId.toFixed(0)}`);
 
   // Add subscription toggle buttons for each source/type/duration/platform combination
   const combinations = getEnabledFeedCombinations();
 
   for (const combination of combinations) {
     const { source, type, duration, platform } = combination;
-    const isSubscribed = await hasTelegramSubscription(
-      chatId,
-      source,
-      type,
-      duration,
-      platform,
-    );
+    const isSubscribed = await hasTelegramSubscription(chatId, source, type, duration, platform);
     const buttonText = getButtonText(combination, isSubscribed);
 
     const callbackData: z.infer<typeof toggleSubscriptionSchema> = {
@@ -73,17 +63,12 @@ export async function buildManageKeyboard(chatId: number) {
     inlineKeyboard.row().text(buttonText, packedData);
   }
 
-  inlineKeyboard
-    .row()
-    .text("Close", packData({ action: "close", menu: "manage" }, closeSchema));
+  inlineKeyboard.row().text("Close", packData({ action: "close", menu: "manage" }, closeSchema));
 
   return inlineKeyboard;
 }
 
-function getButtonText(
-  combination: FeedCombination,
-  isSubscribed: boolean,
-): string {
+function getButtonText(combination: FeedCombination, isSubscribed: boolean): string {
   const prefix = isSubscribed ? "[x] " : "";
   const suffix =
     combination.duration !== OfferDuration.CLAIMABLE

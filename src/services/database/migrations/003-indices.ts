@@ -1,4 +1,5 @@
 import type { Kysely } from "kysely";
+
 import { logger } from "@/utils/logger";
 
 export const indicesMigration = {
@@ -6,23 +7,11 @@ export const indicesMigration = {
     logger.info("Running migration: 003-indices");
     await db.transaction().execute(async (trx) => {
       // Add indices
-      await trx.schema
-        .createIndex("idx_games_igdb_id")
-        .on("games")
-        .column("igdb_id")
-        .execute();
+      await trx.schema.createIndex("idx_games_igdb_id").on("games").column("igdb_id").execute();
 
-      await trx.schema
-        .createIndex("idx_games_steam_id")
-        .on("games")
-        .column("steam_id")
-        .execute();
+      await trx.schema.createIndex("idx_games_steam_id").on("games").column("steam_id").execute();
 
-      await trx.schema
-        .createIndex("idx_offers_game_id")
-        .on("offers")
-        .column("game_id")
-        .execute();
+      await trx.schema.createIndex("idx_offers_game_id").on("offers").column("game_id").execute();
 
       await trx.schema
         .createIndex("idx_offers_source_type_duration")
@@ -36,11 +25,7 @@ export const indicesMigration = {
         .column("seen_last")
         .execute();
 
-      await trx.schema
-        .createIndex("idx_offers_valid_to")
-        .on("offers")
-        .column("valid_to")
-        .execute();
+      await trx.schema.createIndex("idx_offers_valid_to").on("offers").column("valid_to").execute();
 
       await trx.schema
         .createIndex("idx_telegram_chats_chat_id")

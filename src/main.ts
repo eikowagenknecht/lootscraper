@@ -1,8 +1,10 @@
 import { Settings as LuxonSettings } from "luxon";
+
 import { config } from "@/services/config";
 import { shutdownApp, startApp } from "@/services/orchestrator";
 import { handleError } from "@/utils/errorHandler";
 import { addFileTransport, logger, updateConsoleLevel } from "@/utils/logger";
+
 import { getPackageInfo } from "./utils/version";
 
 async function initializeCore() {
@@ -29,9 +31,7 @@ async function initializeCore() {
   LuxonSettings.defaultLocale = "en-US";
   LuxonSettings.throwOnInvalid = true;
 
-  logger.info(
-    `Core initialized. Logging with level ${configuredLevel} from now on.`,
-  );
+  logger.info(`Core initialized. Logging with level ${configuredLevel} from now on.`);
 }
 
 /**

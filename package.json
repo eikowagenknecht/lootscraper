@@ -2,30 +2,13 @@
   "name": "lootscraper",
   "version": "2.11.0",
   "description": "RSS feeds and Telegram bot for free game and loot offers.",
-  "author": "Eiko Wagenknecht <git@eiko-wagenknecht.de>",
   "license": "CC-BY-NC-SA-4.0",
-  "type": "module",
-  "main": "dist/main.js",
+  "author": "Eiko Wagenknecht <git@eiko-wagenknecht.de>",
   "bin": {
     "lootscraper": "./dist/main.js"
   },
-  "packageManager": "pnpm@10.26.2",
-  "engines": {
-    "node": ">=22.0.0",
-    "pnpm": ">=10.0.0"
-  },
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "@biomejs/biome",
-      "better-sqlite3",
-      "esbuild",
-      "oxc-resolver",
-      "unrs-resolver"
-    ],
-    "ignoredBuiltDependencies": [
-      "lefthook"
-    ]
-  },
+  "type": "module",
+  "main": "dist/main.js",
   "scripts": {
     "dev": "cross-env DEBUG=\"grammy*\" tsx src/main.ts",
     "build": "vite build",
@@ -36,11 +19,10 @@
     "test:contract": "vitest run --mode contract",
     "test:contract:watch": "vitest watch --mode contract",
     "test:all": "pnpm test && pnpm test:contract",
-    "lint": "tsc --noEmit && eslint --fix ./src && prettier --write ./src && biome check --fix --unsafe ./src",
-    "lint:eslint": "eslint --fix ./src",
-    "lint:prettier": "prettier --write ./src",
-    "lint:biome": "biome check --fix --unsafe ./src",
-    "format": "biome format . --write",
+    "lint": "pnpm type-check && pnpm lint:oxlint && pnpm lint:oxfmt",
+    "lint:oxlint": "oxlint",
+    "lint:oxfmt": "oxfmt ./src ./tests --check",
+    "format": "oxfmt ./src ./tests",
     "type-check": "tsc --noEmit",
     "check": "pnpm run lint && pnpm run type-check",
     "prepare": "node -e \"process.env.CI || process.env.DOCKER_CONTAINER || process.exit(1)\" || lefthook install",
@@ -75,31 +57,41 @@
     "zod": "4.3.6"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.3.12",
     "@commitlint/cli": "20.3.1",
     "@commitlint/config-conventional": "20.3.1",
     "@commitlint/types": "20.3.1",
-    "@eslint/js": "9.39.2",
     "@semantic-release/git": "10.0.1",
     "@testing-library/jest-dom": "6.9.1",
     "@types/better-sqlite3": "7.6.13",
     "@types/luxon": "3.7.1",
     "@types/node": "24.10.9",
     "@vitest/coverage-v8": "4.0.18",
-    "eslint": "9.39.2",
-    "eslint-import-resolver-typescript": "4.4.4",
-    "eslint-plugin-import-x": "4.16.1",
-    "eslint-plugin-jsdoc": "62.4.1",
     "globals": "17.1.0",
     "jiti": "2.6.1",
     "knip": "5.82.1",
     "lefthook": "2.0.15",
-    "prettier": "3.8.1",
+    "oxfmt": "0.27.0",
+    "oxlint": "^1.42.0",
     "semantic-release": "25.0.2",
     "tsx": "4.21.0",
     "typescript": "5.9.3",
-    "typescript-eslint": "8.53.1",
     "vite": "7.3.1",
     "vitest": "4.0.18"
+  },
+  "engines": {
+    "node": ">=22.0.0",
+    "pnpm": ">=10.0.0"
+  },
+  "packageManager": "pnpm@10.26.2",
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "better-sqlite3",
+      "esbuild",
+      "oxc-resolver",
+      "unrs-resolver"
+    ],
+    "ignoredBuiltDependencies": [
+      "lefthook"
+    ]
   }
 }

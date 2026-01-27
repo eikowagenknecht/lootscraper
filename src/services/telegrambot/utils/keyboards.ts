@@ -1,9 +1,9 @@
 import type { InlineKeyboardButton, InlineKeyboardMarkup } from "grammy/types";
-import {
-  dismissSchema,
-  offerSchema,
-} from "@/services/telegrambot/types/callbacks";
+
 import type { Offer } from "@/types/database";
+
+import { dismissSchema, offerSchema } from "@/services/telegrambot/types/callbacks";
+
 import { packData } from "./callbackPack";
 
 interface CreateOfferKeyboardOptions {
@@ -16,11 +16,7 @@ export function createOfferKeyboard(
   offer: Offer,
   options: CreateOfferKeyboardOptions = {},
 ): InlineKeyboardMarkup {
-  const {
-    detailsShowButton = false,
-    detailsHideButton = false,
-    dismissButton = false,
-  } = options;
+  const { detailsShowButton = false, detailsHideButton = false, dismissButton = false } = options;
   const buttons: InlineKeyboardButton[] = [];
 
   if (offer.url) {

@@ -1,11 +1,17 @@
-import { DateTime } from "luxon";
 import type { Locator, Page } from "playwright";
+
+import { DateTime } from "luxon";
+
 import type { CronConfig } from "@/services/scraper/base/scraper";
+import type { NewOffer } from "@/types/database";
+
 import { ScraperError } from "@/types";
 import { OfferDuration, OfferPlatform } from "@/types/basic";
-import type { NewOffer } from "@/types/database";
 import { logger } from "@/utils/logger";
-import { GogBaseScraper, type GogRawOffer } from "./base";
+
+import type { GogRawOffer } from "./base";
+
+import { GogBaseScraper } from "./base";
 
 const BASE_URL = "https://www.gog.com";
 const OFFER_URL = `${BASE_URL}/#giveaway`;
@@ -56,42 +62,40 @@ export class GogGamesScraper extends GogBaseScraper {
     });
   }
 
-  private async readOfferV1(
-    element: Locator,
-  ): Promise<Omit<NewOffer, "category"> | null> {
+  private async readOfferV1(element: Locator): Promise<Omit<NewOffer, "category"> | null> {
     try {
-      let title = await element
-        .locator(".giveaway-banner__title")
-        .textContent();
-      if (!title) throw new Error("Could not read title");
+      let title = await element.locator(".giveaway-banner__title").textContent();
+      if (!title) {
+        throw new Error("Could not read title");
+      }
 
       // Clean up title
       title = title
-        .replace(/\n/g, " ")
+        .replaceAll("\n", " ")
         .trim()
         .replace(/^Claim /, "")
         .replace(/ and don't miss the best GOG offers in the future!$/, "");
 
-      const validTo = await element
-        .locator("gog-countdown-timer")
-        .getAttribute("end-date");
+      const validTo = await element.locator("gog-countdown-timer").getAttribute("end-date");
 
       let url = await element.getAttribute("href");
       if (url && !url.startsWith("http")) {
         url = BASE_URL + url;
       }
 
-      if (!url) throw new Error(`Couldn't find url for ${title}`);
+      if (!url) {
+        throw new Error(`Couldn't find url for ${title}`);
+      }
 
       const imgUrl = this.sanitizeImgUrl(
         await element
-          .locator(
-            '.giveaway-banner__image source[type="image/png"]:not([media])',
-          )
+          .locator('.giveaway-banner__image source[type="image/png"]:not([media])')
           .getAttribute("srcset"),
       );
 
-      if (!imgUrl) throw new Error(`Couldn't find image for ${title}`);
+      if (!imgUrl) {
+        throw new Error(`Couldn't find image for ${title}`);
+      }
 
       return this.normalizeOffer({
         title,
@@ -107,9 +111,7 @@ export class GogGamesScraper extends GogBaseScraper {
     }
   }
 
-  private async readOfferV2(
-    element: Locator,
-  ): Promise<Omit<NewOffer, "category"> | null> {
+  private async readOfferV2(element: Locator): Promise<Omit<NewOffer, "category"> | null> {
     try {
       // Verify it's really free
       const priceElement = element.locator('[ng-if="tile.isFreeVisible"]');
@@ -121,7 +123,9 @@ export class GogGamesScraper extends GogBaseScraper {
       }
 
       const href = await element.getAttribute("href");
-      if (!href) return null;
+      if (!href) {
+        return null;
+      }
 
       const url = href.startsWith("http") ? href : BASE_URL + href;
       return this.normalizeOffer(await this.readOfferFromDetailsPage(url));
@@ -133,13 +137,13 @@ export class GogGamesScraper extends GogBaseScraper {
     }
   }
 
-  private async readOfferV3(
-    element: Locator,
-  ): Promise<Omit<NewOffer, "category"> | null> {
+  private async readOfferV3(element: Locator): Promise<Omit<NewOffer, "category"> | null> {
     try {
       const link = element.locator("a.giveaway__overlay-link");
       const href = await link.getAttribute("href");
-      if (!href) return null;
+      if (!href) {
+        return null;
+      }
 
       const url = href.startsWith("http") ? href : BASE_URL + href;
       return this.normalizeOffer(await this.readOfferFromDetailsPage(url));
@@ -162,19 +166,21 @@ export class GogGamesScraper extends GogBaseScraper {
     let page = null;
     try {
       page = await this.context.newPage();
-      await page.goto(url, { timeout: 30000 });
+      await page.goto(url, { timeout: 30_000 });
 
-      let title = await page
-        .locator(".productcard-basics__title")
-        .textContent();
-      if (!title) throw new Error("Couldn't find title");
+      let title = await page.locator(".productcard-basics__title").textContent();
+      if (!title) {
+        throw new Error("Couldn't find title");
+      }
 
-      title = title.replace(/\n/g, " ").trim();
+      title = title.replaceAll("\n", " ").trim();
 
       const imgUrl = this.sanitizeImgUrl(
         await page.locator(".productcard-player__logo").getAttribute("srcset"),
       );
-      if (!imgUrl) throw new Error(`Couldn't find image for ${title}`);
+      if (!imgUrl) {
+        throw new Error(`Couldn't find image for ${title}`);
+      }
 
       return {
         title,

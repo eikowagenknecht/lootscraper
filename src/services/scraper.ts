@@ -1,14 +1,16 @@
 import { Cron } from "croner";
 import { DateTime } from "luxon";
+
+import type { ScraperClass, ScraperInstance } from "@/services/scraper/utils";
+import type { Config, NewOffer } from "@/types";
+
 import {
   getEnabledScraperClasses,
   getScraperClassByName,
   getScraperSchedule,
-  type ScraperClass,
-  type ScraperInstance,
 } from "@/services/scraper/utils";
-import type { Config, NewOffer } from "@/types";
 import { logger } from "@/utils/logger";
+
 import { browserService } from "./browser";
 import {
   addMissingFieldsToOffer,
@@ -95,10 +97,7 @@ class ScraperService {
    * @param forceNow If true, queue to run immediately
    * @returns The scraper name if found and queued, null if not found
    */
-  async queueScraperByName(
-    name: string,
-    forceNow = false,
-  ): Promise<string | null> {
+  async queueScraperByName(name: string, forceNow = false): Promise<string | null> {
     const scraperClass = getScraperClassByName(name);
     if (!scraperClass) {
       return null;
@@ -108,10 +107,7 @@ class ScraperService {
     return scraperClass.prototype.getScraperName();
   }
 
-  async queueScraper(
-    scraperClass: ScraperClass,
-    forceNow = false,
-  ): Promise<DateTime> {
+  async queueScraper(scraperClass: ScraperClass, forceNow = false): Promise<DateTime> {
     const schedule = getScraperSchedule(scraperClass);
 
     let nextRun: DateTime | undefined;
@@ -123,9 +119,7 @@ class ScraperService {
         logger.error(`Failed to calculate next execution for ${schedule.name}`);
         continue;
       }
-      const nextExecutionDate = forceNow
-        ? DateTime.now()
-        : DateTime.fromJSDate(nextExecution);
+      const nextExecutionDate = forceNow ? DateTime.now() : DateTime.fromJSDate(nextExecution);
 
       if (!nextRun || nextExecutionDate < nextRun) {
         nextRun = nextExecutionDate;
@@ -141,9 +135,7 @@ class ScraperService {
       scheduled_date: nextRun.toISO(),
     });
 
-    logger.info(
-      `Run #${dbRun.toFixed()} (${schedule.name}) is due ${nextRun.toISO()}.`,
-    );
+    logger.info(`Run #${dbRun.toFixed(0)} (${schedule.name}) is due ${nextRun.toISO()}.`);
 
     return nextRun;
   }
@@ -197,9 +189,7 @@ class ScraperService {
     // Step 5 - Initialize the scraper and run it
     try {
       const scraper = new scraperClass(this.config);
-      logger.info(
-        `Starting scrape run ${nextRun.id.toFixed()} (${nextRun.scraper}).`,
-      );
+      logger.info(`Starting scrape run ${nextRun.id.toFixed(0)} (${nextRun.scraper}).`);
       const scrapeResults = await this.runSingleScrape(scraper);
 
       // Step 6 - Mark the run as completed
@@ -228,9 +218,7 @@ class ScraperService {
     // browser to save resources
 
     if ((await getNextDueRun()) == null) {
-      logger.info(
-        "No run directly in queue, spinning down browser to save resources.",
-      );
+      logger.info("No run directly in queue, spinning down browser to save resources.");
       await browserService.destroy();
     }
 
@@ -275,14 +263,11 @@ class ScraperService {
 
       if (existingOffer) {
         // Touch the offer's last seen date as we have seen it again
-        const changed = await addMissingFieldsToOffer(
-          existingOffer.id,
-          newOffer,
-        );
+        const changed = await addMissingFieldsToOffer(existingOffer.id, newOffer);
 
         if (changed) {
           modifiedOfferIds.push(existingOffer.id);
-          logger.verbose(`Updated offer ${existingOffer.id.toFixed()}.`);
+          logger.verbose(`Updated offer ${existingOffer.id.toFixed(0)}.`);
         } else {
           await touchOffer(existingOffer.id);
         }
@@ -296,7 +281,7 @@ class ScraperService {
     }
 
     logger.info(
-      `Completed scrape with ${offers.length.toFixed()} offers (${newOfferIds.length.toFixed()} new).`,
+      `Completed scrape with ${offers.length.toFixed(0)} offers (${newOfferIds.length.toFixed(0)} new).`,
     );
 
     if (newOfferIds.length === 0 && modifiedOfferIds.length === 0) {

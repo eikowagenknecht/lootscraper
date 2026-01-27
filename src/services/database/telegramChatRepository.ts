@@ -1,14 +1,10 @@
+import type { NewTelegramChat, TelegramChat, TelegramSubscription } from "@/types/database";
+
 import { getDb } from "@/services/database";
-import type {
-  NewTelegramChat,
-  TelegramChat,
-  TelegramSubscription,
-} from "@/types/database";
+
 import { handleError, handleInsertResult } from "./common";
 
-export async function getTelegramChatById(
-  chatId: number,
-): Promise<TelegramChat | undefined> {
+export async function getTelegramChatById(chatId: number): Promise<TelegramChat | undefined> {
   try {
     return await getDb()
       .selectFrom("telegram_chats")
@@ -25,10 +21,7 @@ export async function getTelegramChatByChatId(
   threadId?: number | null,
 ): Promise<TelegramChat | undefined> {
   try {
-    let query = getDb()
-      .selectFrom("telegram_chats")
-      .selectAll()
-      .where("chat_id", "=", chatId);
+    let query = getDb().selectFrom("telegram_chats").selectAll().where("chat_id", "=", chatId);
 
     if (threadId !== undefined) {
       query = query.where("thread_id", "=", threadId);
@@ -42,19 +35,13 @@ export async function getTelegramChatByChatId(
 
 export async function getAllActiveTelegramChats(): Promise<TelegramChat[]> {
   try {
-    return await getDb()
-      .selectFrom("telegram_chats")
-      .selectAll()
-      .where("active", "=", 1)
-      .execute();
+    return await getDb().selectFrom("telegram_chats").selectAll().where("active", "=", 1).execute();
   } catch (error) {
     handleError("get all active telegram chats", error);
   }
 }
 
-export async function createTelegramChat(
-  chat: NewTelegramChat,
-): Promise<number> {
+export async function createTelegramChat(chat: NewTelegramChat): Promise<number> {
   try {
     const result = await getDb()
       .insertInto("telegram_chats")
@@ -97,9 +84,7 @@ export async function updateTelegramChatLastAnnouncementId(
   }
 }
 
-export async function incrementTelegramChatOffersReceived(
-  id: number,
-): Promise<boolean> {
+export async function incrementTelegramChatOffersReceived(id: number): Promise<boolean> {
   try {
     const result = await getDb()
       .updateTable("telegram_chats")
@@ -114,10 +99,7 @@ export async function incrementTelegramChatOffersReceived(
   }
 }
 
-export async function deactivateTelegramChat(
-  id: number,
-  reason: string,
-): Promise<boolean> {
+export async function deactivateTelegramChat(id: number, reason: string): Promise<boolean> {
   try {
     const result = await getDb()
       .updateTable("telegram_chats")
@@ -146,10 +128,7 @@ export async function activateTelegramChat(id: number): Promise<boolean> {
 export async function deleteTelegramChat(id: number): Promise<boolean> {
   try {
     // Delete related subscriptions first to avoid foreign key constraint
-    await getDb()
-      .deleteFrom("telegram_subscriptions")
-      .where("chat_id", "=", id)
-      .executeTakeFirst();
+    await getDb().deleteFrom("telegram_subscriptions").where("chat_id", "=", id).executeTakeFirst();
     const result = await getDb()
       .deleteFrom("telegram_chats")
       .where("id", "=", id)
@@ -162,9 +141,7 @@ export async function deleteTelegramChat(id: number): Promise<boolean> {
 
 export async function getTelegramChatWithSubscriptions(
   chatId: number,
-): Promise<
-  { chat: TelegramChat; subscriptions: TelegramSubscription[] } | undefined
-> {
+): Promise<{ chat: TelegramChat; subscriptions: TelegramSubscription[] } | undefined> {
   try {
     const chat = await getDb()
       .selectFrom("telegram_chats")

@@ -1,11 +1,10 @@
 import type { Context } from "grammy";
+
 import { getTelegramChatByChatId } from "@/services/database/telegramChatRepository";
 import { logger } from "@/utils/logger";
 
 export function logCall(ctx: Context): void {
-  const commandName = ctx.message?.text
-    ? `command "${ctx.message.text}"`
-    : "unknown command";
+  const commandName = ctx.message?.text ? `command "${ctx.message.text}"` : "unknown command";
 
   logger.verbose(`Received ${commandName} from ${getCallerName(ctx)}.`);
 }
@@ -28,9 +27,7 @@ export async function userCanControlBot(ctx: Context): Promise<boolean> {
 
   if (ctx.chat.type === "group" || ctx.chat.type === "supergroup") {
     if (!ctx.from) {
-      logger.warn(
-        `Cannot control bot: Unknown user in group with id ${ctx.chat.id.toFixed()}`,
-      );
+      logger.warn(`Cannot control bot: Unknown user in group with id ${ctx.chat.id.toFixed(0)}`);
       return false;
     }
 
@@ -51,15 +48,12 @@ export async function userCanControlBot(ctx: Context): Promise<boolean> {
 export async function getDbChat(ctx: Context) {
   // Without a chat, we cannot look up the chat in the database
   if (!ctx.chat) {
-    return undefined;
+    return;
   }
 
   // If the message is a thread, look up the entry for this thread ID
   if (ctx.message !== undefined) {
-    const threadId =
-      "message_thread_id" in ctx.message
-        ? ctx.message.message_thread_id
-        : undefined;
+    const threadId = "message_thread_id" in ctx.message ? ctx.message.message_thread_id : undefined;
     return await getTelegramChatByChatId(ctx.chat.id, threadId);
   }
 
