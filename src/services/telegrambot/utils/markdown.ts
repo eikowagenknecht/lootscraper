@@ -1,7 +1,7 @@
 /**
  * Escapes characters for Telegram's MarkdownV2.
  *
- * Escaped characters: '_', '*', '[', ']', '(', ')', '~', '`', '>', '#', '+', '-', '=', '|', '{', '}', '.', '!', '\'
+ * Escaped characters: '_', '*', '[', ']', '(', ')', '~', '`', '>', '#', '+', '-', '=', '|', '{', '}', '.', '!', '\\'
  *
  * See https://core.telegram.org/bots/api#markdownv2-style
  * @param text The text to escape
@@ -15,7 +15,7 @@ export function escapeText(text: string): string {
 /**
  * Escape pre and code blocks for Telegram's MarkdownV2.
  *
- * Escaped characters: '`', '\'
+ * Escaped characters: '`', '\\'
  *
  * See https://core.telegram.org/bots/api#markdownv2-style
  * @param text The text to escape
@@ -29,7 +29,7 @@ export function escapeCode(text: string): string {
 /**
  * Escape urls for Telegram's MarkdownV2.
  *
- * Escaped characters: ')', '\'
+ * Escaped characters: ')', '\\'
  *
  * See https://core.telegram.org/bots/api#markdownv2-style
  * @param url The url to escape
