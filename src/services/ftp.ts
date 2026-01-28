@@ -89,6 +89,7 @@ class FTPService {
         password: this.config.ftp.password,
         secure: true,
         secureOptions: {
+          // oxlint-disable-next-line unicorn/no-useless-undefined -- Explicit return signals "accept any certificate"
           checkServerIdentity: () => undefined,
         },
       });
