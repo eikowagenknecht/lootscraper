@@ -118,7 +118,7 @@ importers:
         specifier: 0.27.0
         version: 0.27.0
       oxlint:
-        specifier: ^1.42.0
+        specifier: 1.42.0
         version: 1.42.0
       semantic-release:
         specifier: 25.0.2
