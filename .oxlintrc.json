@@ -63,7 +63,6 @@
     "no-lonely-if": "off",
     "jsdoc/require-param-type": "off",
     "jsdoc/require-returns-type": "off",
-    "jsdoc/require-returns": "off", // False positive - tags already present but not recognized
     "jsdoc/require-param": "off",
     "typescript/restrict-plus-operands": [
       "warn",
