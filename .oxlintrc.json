@@ -76,7 +76,6 @@
     ],
     "unicorn/number-literal-case": "off", // Conflicts with oxfmt (formats to lowercase)
     "unicorn/no-nested-ternary": "off", // Conflicts with oxfmt (removes parentheses)
-    "unicorn/no-object-as-default-parameter": "off",
 
     // Restriction Overwrites
     "no-empty": "error",
