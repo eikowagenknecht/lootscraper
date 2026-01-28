@@ -99,6 +99,9 @@ export class EpicGamesApiScraper extends BaseScraper {
     // daily, because in the christmas period they sometimes release games more often.
     return [
       { schedule: "0 5 11 * * *", timezone: "US/Eastern" }, // 17:05 UTC Daily (check soon after release)
+      { schedule: "0 15 11 * * *", timezone: "US/Eastern" }, // 17:15 UTC Daily (backup check)
+      { schedule: "0 35 11 * * *", timezone: "US/Eastern" }, // 17:35 UTC Daily (backup check)
+      { schedule: "0 5 12 * * *", timezone: "US/Eastern" }, // 18:05 UTC Daily (backup check)
       { schedule: "0 5 13 * * *", timezone: "US/Eastern" }, // 19:05 UTC Daily (backup check)
     ];
   }
