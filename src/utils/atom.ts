@@ -149,8 +149,7 @@ Handlebars.registerHelper("escapeXml", (uri: string) => new Handlebars.SafeStrin
 Handlebars.registerHelper("isoDate", formatISODate);
 
 Handlebars.registerHelper("renderLinkAttributes", (link: AtomLink) => {
-  const attributes: string[] = [];
-  attributes.push(`href="${escapeXml(link.href)}"`);
+  const attributes: string[] = [`href="${escapeXml(link.href)}"`];
   if (link.rel) {
     attributes.push(`rel="${link.rel}"`);
   }
