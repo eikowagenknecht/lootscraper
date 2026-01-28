@@ -78,7 +78,6 @@
     "unicorn/number-literal-case": "off", // Conflicts with oxfmt (formats to lowercase)
     "unicorn/no-nested-ternary": "off", // Conflicts with oxfmt (removes parentheses)
     "unicorn/no-object-as-default-parameter": "off",
-    "unicorn/prefer-at": "off", // Changes TypeScript types (.at() returns T | undefined)
     "unicorn/prefer-dom-node-text-content": "off", // innerText intentionally used (see comment in steam/base.ts:99)
     "unicorn/no-useless-undefined": "off", // TypeScript requires explicit undefined returns
 

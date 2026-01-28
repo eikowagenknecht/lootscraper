@@ -223,7 +223,7 @@ export function cleanCombinedTitle(title: string): [string, string] {
     // By the second colon (TITLE: TITLEDETAIL: LOOTDETAIL)
     if (titleParts.length >= 3) {
       probableGameName = titleParts.slice(0, -1).join(": ");
-      probableLootName = titleParts[titleParts.length - 1];
+      probableLootName = titleParts.at(-1) ?? "";
     }
 
     // By the "Get ... in [Game] pattern" (to catch games with a colon in the name)
