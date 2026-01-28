@@ -96,8 +96,8 @@ export abstract class SteamBaseScraper extends BaseScraper {
 
         let text: string;
         try {
-          // Get the resolved text here because the text_content() contains
-          // special characters.
+          // Get the resolved text here because textContent contains special characters.
+          // oxlint-disable-next-line unicorn/prefer-dom-node-text-content
           text = await page.locator(".game_purchase_discount_quantity").innerText();
           if (!text) {
             // Sometimes this does not exist, when a game is not free any more
