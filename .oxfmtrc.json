@@ -1,5 +1,5 @@
 {
   "$schema": "./node_modules/oxfmt/configuration_schema.json",
-  "ignorePatterns": ["global.d.ts"],
+  "ignorePatterns": [],
   "experimentalSortImports": {}
 }
