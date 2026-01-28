@@ -77,7 +77,6 @@
     "unicorn/number-literal-case": "off", // Conflicts with oxfmt (formats to lowercase)
     "unicorn/no-nested-ternary": "off", // Conflicts with oxfmt (removes parentheses)
     "unicorn/no-object-as-default-parameter": "off",
-    "unicorn/no-useless-undefined": "off", // TypeScript requires explicit undefined returns
 
     // Restriction Overwrites
     "no-empty": "error",

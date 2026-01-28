@@ -271,6 +271,7 @@ export function unpackData<T extends z.ZodObject<z.ZodRawShape>>(
       if (fieldSchema.safeParse(null).success && value === SPECIAL_NULL) {
         return [field, null];
       }
+      // oxlint-disable-next-line unicorn/no-useless-undefined -- Explicitly testing if schema accepts undefined
       if (fieldSchema.safeParse(undefined).success && value === SPECIAL_UNDEFINED) {
         return [field, undefined];
       }
