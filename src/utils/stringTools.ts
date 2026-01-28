@@ -336,56 +336,43 @@ function getEnabledFeedFilenames({
 }
 
 export function getAllEnabledFeedFilenames(prefix: string) {
-  const res: string[] = [];
-  // Main xml feed
-  res.push(
+  return [
+    // Main xml feed
     ...getEnabledFeedFilenames({
       prefix: prefix,
       extension: "xml",
     }),
-  );
-  // Main html feed
-  res.push(
+    // Main html feed
     ...getEnabledFeedFilenames({
       prefix: prefix,
       extension: "html",
     }),
-  );
-  // Main html feed - History
-  res.push(
+    // Main html feed - History
     ...getEnabledFeedFilenames({
       prefix: prefix,
       extension: "html",
       withHistory: true,
     }),
-  );
-  // Source xml feeds
-  res.push(
+    // Source xml feeds
     ...getEnabledFeedFilenames({
       prefix: prefix,
       extension: "xml",
       enabledCombinations: getEnabledFeedCombinations(),
     }),
-  );
-  // Source html feeds
-  res.push(
+    // Source html feeds
     ...getEnabledFeedFilenames({
       prefix: prefix,
       extension: "html",
       enabledCombinations: getEnabledFeedCombinations(),
     }),
-  );
-  // Source html feeds - History
-  res.push(
+    // Source html feeds - History
     ...getEnabledFeedFilenames({
       prefix: prefix,
       extension: "html",
       enabledCombinations: getEnabledFeedCombinations(),
       withHistory: true,
     }),
-  );
-
-  return res;
+  ];
 }
 
 /**

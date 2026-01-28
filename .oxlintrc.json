@@ -27,7 +27,7 @@
     "unicorn/no-array-sort": "off",
 
     // Style Overwrites
-    "unicorn/filename-case": "off", // Migrations use numbered prefixes (001-initial.ts)
+    "unicorn/filename-case": "off", // Migrations use numbered prefixes (001-initial.ts) while the rest of the codebase uses camelCase
     "no-new": "warn",
     "max-statements": "off",
     "max-params": "off",
@@ -45,7 +45,6 @@
     "sort-keys": "off",
     "func-style": "off",
     "new-cap": "off",
-    "no-template-curly-in-string": "warn",
     "import/exports-last": "off",
     "import/no-named-export": "off",
     "import/group-exports": "off",
@@ -80,17 +79,14 @@
     "unicorn/no-nested-ternary": "off", // Conflicts with oxfmt (removes parentheses)
     "unicorn/no-object-as-default-parameter": "off",
     "unicorn/prefer-at": "off", // Changes TypeScript types (.at() returns T | undefined)
-    "unicorn/prefer-text-content": "warn",
     "unicorn/prefer-dom-node-text-content": "off", // innerText intentionally used (see comment in steam/base.ts:99)
     "unicorn/no-useless-undefined": "off", // TypeScript requires explicit undefined returns
-    "arrow-body-style": "warn",
 
     // Restriction Overwrites
     "no-empty": "error",
     "no-regex-spaces": "error",
     "no-empty-function": "error",
     "no-promise-executor-return": "error",
-    "unicorn/no-immediate-mutation": "off", // Incremental array building is intentional for clarity
     "unicorn/no-empty-file": "error",
     "import/no-unassigned-import": "error",
     "jsdoc/check-access": "warn",
