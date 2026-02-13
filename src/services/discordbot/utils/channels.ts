@@ -1,6 +1,8 @@
-import type { Guild, TextChannel } from "discord.js";
+import type { Guild, NewsChannel, TextChannel } from "discord.js";
 
 import { ChannelType, PermissionFlagsBits } from "discord.js";
+
+type TextBasedFeedChannel = TextChannel | NewsChannel;
 
 import type { FeedCombination } from "@/services/scraper/utils";
 import type { Config } from "@/types/config";
@@ -80,13 +82,15 @@ export async function ensureFeedChannel(
   guild: Guild,
   combination: FeedCombination,
   config: Config,
-): Promise<TextChannel> {
+): Promise<TextBasedFeedChannel> {
   const channelName = getFeedChannelName(combination, config.discord.channelPrefix);
 
-  // Look for existing channel with matching name
+  // Look for existing channel with matching name (text or announcement channel)
   const existingChannel = guild.channels.cache.find(
-    (ch) => ch.type === ChannelType.GuildText && ch.name === channelName,
-  ) as TextChannel | undefined;
+    (ch) =>
+      (ch.type === ChannelType.GuildText || ch.type === ChannelType.GuildAnnouncement) &&
+      ch.name === channelName,
+  ) as TextBasedFeedChannel | undefined;
 
   if (existingChannel) {
     return existingChannel;
@@ -133,12 +137,14 @@ export function getExistingFeedChannel(
   guild: Guild,
   combination: FeedCombination,
   prefix = "",
-): TextChannel | undefined {
+): TextBasedFeedChannel | undefined {
   const channelName = getFeedChannelName(combination, prefix);
 
   return guild.channels.cache.find(
-    (ch) => ch.type === ChannelType.GuildText && ch.name === channelName,
-  ) as TextChannel | undefined;
+    (ch) =>
+      (ch.type === ChannelType.GuildText || ch.type === ChannelType.GuildAnnouncement) &&
+      ch.name === channelName,
+  ) as TextBasedFeedChannel | undefined;
 }
 
 /**
@@ -147,10 +153,10 @@ export function getExistingFeedChannel(
  * @param channelId - The Discord channel ID to find.
  * @returns The text channel if found, undefined otherwise.
  */
-export function getChannelById(guild: Guild, channelId: string): TextChannel | undefined {
+export function getChannelById(guild: Guild, channelId: string): TextBasedFeedChannel | undefined {
   const channel = guild.channels.cache.get(channelId);
-  if (channel?.type === ChannelType.GuildText) {
-    return channel;
+  if (channel?.type === ChannelType.GuildText || channel?.type === ChannelType.GuildAnnouncement) {
+    return channel as TextBasedFeedChannel;
   }
   return undefined;
 }

@@ -1,4 +1,4 @@
-import type { Guild, TextChannel } from "discord.js";
+import type { Guild, NewsChannel, TextChannel } from "discord.js";
 
 import { Client, Events, GatewayIntentBits, REST, Routes } from "discord.js";
 import { DateTime } from "luxon";
@@ -252,7 +252,7 @@ export class DiscordBotService {
   }
 
   private async sendNewOffersToChannel(
-    channel: TextChannel,
+    channel: TextChannel | NewsChannel,
     channelConfig: DiscordChannel,
   ): Promise<void> {
     const offers = await getActiveOffers(DateTime.now(), {
