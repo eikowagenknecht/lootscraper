@@ -2,13 +2,13 @@ import type { Guild, NewsChannel, TextChannel } from "discord.js";
 
 import { ChannelType, PermissionFlagsBits } from "discord.js";
 
-type TextBasedFeedChannel = TextChannel | NewsChannel;
-
 import type { FeedCombination } from "@/services/scraper/utils";
 import type { Config } from "@/types/config";
 
 import { OfferDuration, OfferPlatform, OfferType } from "@/types/basic";
 import { logger } from "@/utils/logger";
+
+type TextBasedFeedChannel = TextChannel | NewsChannel;
 
 /**
  * Generates a Discord-compatible channel name from a feed combination.
