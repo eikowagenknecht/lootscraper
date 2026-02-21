@@ -113,3 +113,9 @@ discord:
   channelPrefix: ""
   # Category name for organizing the feed channels
   categoryName: "Free Games"
+  # Automatically crosspost (publish) messages sent to announcement channels.
+  # When enabled, offers posted to channels that have been converted to announcement
+  # channels will be published so that servers following those channels via Discord's
+  # Channel Following feature receive them. Note that following server admins can still
+  # choose which published posts to forward.
+  crosspostAnnouncements: false
