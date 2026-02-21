@@ -1,6 +1,6 @@
 import type { Guild, NewsChannel, TextChannel } from "discord.js";
 
-import { Client, Events, GatewayIntentBits, REST, Routes } from "discord.js";
+import { ChannelType, Client, Events, GatewayIntentBits, REST, Routes } from "discord.js";
 import { DateTime } from "luxon";
 
 import type { Config } from "@/types/config";
@@ -269,10 +269,12 @@ export class DiscordBotService {
       try {
         const { embed, components } = await formatOfferEmbed(offer);
 
-        await channel.send({
+        const message = await channel.send({
           embeds: [embed],
           components,
         });
+
+        await this.crosspostIfAnnouncement(channel, message);
 
         latestOfferId = Math.max(latestOfferId, offer.id);
 
@@ -289,6 +291,31 @@ export class DiscordBotService {
     // Update last offer ID
     if (latestOfferId > channelConfig.last_offer_id) {
       await updateDiscordChannelLastOfferId(channelConfig.id, latestOfferId);
+    }
+  }
+
+  /**
+   * Crosspost a message if it was sent to an announcement channel.
+   * This publishes the message to all servers following the announcement
+   * channel via Discord's Channel Following feature.
+   */
+  private async crosspostIfAnnouncement(
+    channel: TextChannel | NewsChannel,
+    message: Awaited<ReturnType<typeof channel.send>>,
+  ): Promise<void> {
+    if (channel.type !== ChannelType.GuildAnnouncement) {
+      return;
+    }
+
+    try {
+      await message.crosspost();
+      logger.verbose(`Crossposted message ${message.id} in announcement channel ${channel.name}`);
+    } catch (error) {
+      logger.warn(
+        `Failed to crosspost message in ${channel.name}: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
     }
   }
 
@@ -340,10 +367,12 @@ export class DiscordBotService {
         try {
           const { embed, components } = await formatOfferEmbed(offer);
 
-          await channel.send({
+          const message = await channel.send({
             embeds: [embed],
             components,
           });
+
+          await this.crosspostIfAnnouncement(channel, message);
 
           latestOfferId = Math.max(latestOfferId, offer.id);
           channelSent++;
