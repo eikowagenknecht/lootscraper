@@ -25,7 +25,6 @@ export interface DiscordConfig {
   adminRoleId: string;
   channelPrefix: string;
   categoryName: string;
-  crosspostAnnouncements: boolean;
 }
 
 export class DiscordBotService {
@@ -53,7 +52,6 @@ export class DiscordBotService {
       adminRoleId: config.discord.adminRoleId,
       channelPrefix: config.discord.channelPrefix,
       categoryName: config.discord.categoryName,
-      crosspostAnnouncements: config.discord.crosspostAnnouncements,
     };
 
     this.client = new Client({
@@ -297,22 +295,14 @@ export class DiscordBotService {
   }
 
   /**
-   * Crosspost a message if it was sent to an announcement channel and
-   * crossposting is enabled. This publishes the message to all servers
-   * following the announcement channel via Discord's Channel Following feature.
-   *
-   * Note: Server admins following the channel can choose which published posts
-   * to forward to their server, so not all followers will necessarily see
-   * every crossposted message.
+   * Crosspost a message if it was sent to an announcement channel.
+   * This publishes the message to all servers following the announcement
+   * channel via Discord's Channel Following feature.
    */
   private async crosspostIfAnnouncement(
     channel: TextChannel | NewsChannel,
     message: Awaited<ReturnType<typeof channel.send>>,
   ): Promise<void> {
-    if (!this.discordConfig?.crosspostAnnouncements) {
-      return;
-    }
-
     if (channel.type !== ChannelType.GuildAnnouncement) {
       return;
     }

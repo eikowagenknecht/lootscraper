@@ -63,7 +63,6 @@ export const ConfigSchema = z.object({
     adminRoleId: z.string().default(""),
     channelPrefix: z.string().default(""),
     categoryName: z.string().default("Free Games"),
-    crosspostAnnouncements: z.boolean().default(false),
   }),
 });
 
