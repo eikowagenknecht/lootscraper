@@ -159,7 +159,7 @@ export abstract class AmazonBaseScraper extends BaseScraper {
         zone: "UTC",
       });
     } catch (error) {
-      logger.error(
+      logger.warn(
         `${this.getScraperName()}: Date parsing failed: ${error instanceof Error ? error.message : String(error)}`,
       );
       return null;

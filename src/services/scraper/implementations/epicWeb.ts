@@ -102,7 +102,7 @@ export class EpicGamesWebScraper extends BaseScraper {
       try {
         validToAsDate = DateTime.fromISO(validTo);
       } catch (error) {
-        logger.error(
+        logger.warn(
           `${this.getScraperName()}: Failed to parse date ${validTo}: ${error instanceof Error ? error.message : String(error)}`,
         );
       }
@@ -125,7 +125,7 @@ export class EpicGamesWebScraper extends BaseScraper {
         img_url: imgUrl,
       };
     } catch (error) {
-      logger.error(
+      logger.warn(
         `${this.getScraperName()}: Failed to read raw offer: ${error instanceof Error ? error.message : String(error)}`,
       );
       return null;

@@ -141,7 +141,7 @@ export class EpicGamesApiScraper extends BaseScraper {
     );
 
     if (!response.ok) {
-      logger.error(`Epic API returned ${response.status.toString()}: ${response.statusText}`);
+      logger.warn(`Epic API returned ${response.status.toString()}: ${response.statusText}`);
       throw new Error(`Epic API returned ${response.status.toString()}`);
     }
 
@@ -153,9 +153,7 @@ export class EpicGamesApiScraper extends BaseScraper {
       !("data" in apiResponse) ||
       !apiResponse.data
     ) {
-      logger.error(
-        `No data returned from Epic Games API. Response: ${JSON.stringify(apiResponse)}`,
-      );
+      logger.warn(`No data returned from Epic Games API. Response: ${JSON.stringify(apiResponse)}`);
       throw new Error("No data returned from Epic Games API");
     }
 

@@ -118,7 +118,7 @@ export class UbisoftGamesScraper extends BaseScraper {
             zone: "UTC",
           });
         } catch (error) {
-          logger.error(
+          logger.warn(
             `${this.getScraperName()}: Failed to parse date in alternate format: ${error instanceof Error ? error.message : String(error)}`,
           );
         }
@@ -142,7 +142,7 @@ export class UbisoftGamesScraper extends BaseScraper {
         img_url: imgUrl,
       };
     } catch (error) {
-      logger.error(
+      logger.warn(
         `${this.getScraperName()}: Failed to read raw offer: ${error instanceof Error ? error.message : String(error)}`,
       );
       return null;
