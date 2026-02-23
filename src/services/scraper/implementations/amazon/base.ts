@@ -1,9 +1,7 @@
+import { DateTime } from "luxon";
 import type { Locator, Page } from "playwright";
 
-import { DateTime } from "luxon";
-
 import type { CronConfig } from "@/services/scraper/base/scraper";
-
 import { BaseScraper } from "@/services/scraper/base/scraper";
 import { OfferDuration, OfferPlatform, OfferSource } from "@/types/basic";
 import { BrowserError, ScraperError } from "@/types/errors";

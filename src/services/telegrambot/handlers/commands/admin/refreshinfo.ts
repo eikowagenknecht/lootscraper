@@ -1,11 +1,10 @@
 import type { CommandContext } from "grammy";
 
-import type { BotContext } from "@/services/telegrambot/types/middleware";
-
 import { config } from "@/services/config";
 import { clearGames, getOffersWithMissingGameInfo } from "@/services/database/offerRepository";
 import { gameInfoService } from "@/services/gameinfo";
 import { scraperService } from "@/services/scraper";
+import type { BotContext } from "@/services/telegrambot/types/middleware";
 import { logger } from "@/utils/logger";
 
 import { logCall } from "..";

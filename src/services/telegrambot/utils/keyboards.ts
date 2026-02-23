@@ -1,8 +1,7 @@
 import type { InlineKeyboardButton, InlineKeyboardMarkup } from "grammy/types";
 
-import type { Offer } from "@/types/database";
-
 import { dismissSchema, offerSchema } from "@/services/telegrambot/types/callbacks";
+import type { Offer } from "@/types/database";
 
 import { packData } from "./callbackPack";
 

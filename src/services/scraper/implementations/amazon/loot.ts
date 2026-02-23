@@ -1,10 +1,8 @@
+import { DateTime } from "luxon";
 import type { Locator, Page } from "playwright";
 
-import { DateTime } from "luxon";
-
-import type { NewOffer } from "@/types/database";
-
 import { OfferType } from "@/types/basic";
+import type { NewOffer } from "@/types/database";
 import { cleanGameTitle } from "@/utils";
 import { logger } from "@/utils/logger";
 import { cleanLootTitle, combineTitle } from "@/utils/stringTools";

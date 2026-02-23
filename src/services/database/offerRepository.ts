@@ -1,9 +1,8 @@
 import { DateTime } from "luxon";
 
+import { getDb } from "@/services/database";
 import type { OfferDuration, OfferPlatform, OfferSource, OfferType } from "@/types/basic";
 import type { NewOffer, Offer, OfferUpdate } from "@/types/database";
-
-import { getDb } from "@/services/database";
 import { logger } from "@/utils/logger";
 
 import { handleError, handleInsertResult, handleUpdateResult } from "./common";

@@ -1,6 +1,5 @@
-import type { NewSteamInfo, SteamInfo, SteamInfoUpdate } from "@/types/database";
-
 import { getDb } from "@/services/database";
+import type { NewSteamInfo, SteamInfo, SteamInfoUpdate } from "@/types/database";
 
 import { handleError, handleInsertResult } from "./common";
 

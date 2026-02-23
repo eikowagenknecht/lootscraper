@@ -1,5 +1,4 @@
 import type { FeedCombination } from "@/services/scraper/utils";
-
 import { getEnabledFeedCombinations } from "@/services/scraper/utils";
 import { translationService } from "@/services/translation";
 import { OfferDuration, OfferPlatform } from "@/types";

@@ -1,10 +1,8 @@
 import type { UpdateResult } from "kysely";
-
 import { DateTime } from "luxon";
 
-import type { NewScrapingRun, ScrapingRun, ScrapingRunUpdate } from "@/types/database";
-
 import { getDb } from "@/services/database";
+import type { NewScrapingRun, ScrapingRun, ScrapingRunUpdate } from "@/types/database";
 
 import { handleError, handleInsertResult, handleUpdateResult } from "./common";
 

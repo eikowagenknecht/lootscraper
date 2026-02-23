@@ -1,7 +1,6 @@
 import type { CommandContext } from "grammy";
 
 import type { BotContext } from "@/services/telegrambot/types/middleware";
-
 import { bold, escapeText } from "@/services/telegrambot/utils/markdown";
 
 import { logCall, userCanControlBot } from ".";

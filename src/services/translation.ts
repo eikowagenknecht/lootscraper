@@ -1,7 +1,6 @@
 import { init, t } from "i18next";
 
 import type { OfferPlatform, OfferSource, OfferType } from "@/types/basic";
-
 import { OfferDuration } from "@/types/basic";
 
 const resources = {

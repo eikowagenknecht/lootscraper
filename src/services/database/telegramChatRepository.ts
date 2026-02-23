@@ -1,6 +1,5 @@
-import type { NewTelegramChat, TelegramChat, TelegramSubscription } from "@/types/database";
-
 import { getDb } from "@/services/database";
+import type { NewTelegramChat, TelegramChat, TelegramSubscription } from "@/types/database";
 
 import { handleError, handleInsertResult } from "./common";
 

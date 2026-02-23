@@ -1,7 +1,6 @@
+import { InfoSource } from "@/types";
 import type { Config } from "@/types/config";
 import type { Game, NewIgdbInfo, NewSteamInfo } from "@/types/database";
-
-import { InfoSource } from "@/types";
 import { logger } from "@/utils/logger";
 
 import { createGame, getGameByIgdbName, getGameBySteamName } from "./database/gameRepository";

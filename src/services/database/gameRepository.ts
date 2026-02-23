@@ -1,6 +1,5 @@
-import type { Game, IgdbInfo, NewGame, SteamInfo } from "@/types/database";
-
 import { getDb } from "@/services/database";
+import type { Game, IgdbInfo, NewGame, SteamInfo } from "@/types/database";
 
 import { handleError, handleInsertResult } from "./common";
 import { getIgdbInfoById } from "./igdbInfoRepository";

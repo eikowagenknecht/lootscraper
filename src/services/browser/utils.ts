@@ -1,7 +1,7 @@
-import type { Page } from "playwright";
+import { resolve } from "node:path";
 
 import { DateTime } from "luxon";
-import { resolve } from "node:path";
+import type { Page } from "playwright";
 
 import { logger } from "@/utils/logger";
 import { getDataPath } from "@/utils/path";

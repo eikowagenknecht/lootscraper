@@ -1,13 +1,11 @@
-import type { Duration } from "luxon";
-
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } from "discord.js";
+import type { Duration } from "luxon";
 import { DateTime } from "luxon";
-
-import type { Offer } from "@/types/database";
 
 import { getGameWithInfo } from "@/services/database/gameRepository";
 import { translationService } from "@/services/translation";
 import { OfferDuration, OfferSource } from "@/types/basic";
+import type { Offer } from "@/types/database";
 
 const SOURCE_COLORS: Record<OfferSource, number> = {
   [OfferSource.STEAM]: 0x1b_28_38, // Steam dark blue

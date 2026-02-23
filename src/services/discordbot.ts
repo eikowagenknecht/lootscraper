@@ -1,10 +1,6 @@
 import type { Guild, NewsChannel, TextChannel } from "discord.js";
-
 import { ChannelType, Client, Events, GatewayIntentBits, REST, Routes } from "discord.js";
 import { DateTime } from "luxon";
-
-import type { Config } from "@/types/config";
-import type { DiscordChannel } from "@/types/database";
 
 import {
   getAllDiscordChannels,
@@ -13,6 +9,8 @@ import {
 } from "@/services/database/discordChannelRepository";
 import { getActiveOffers } from "@/services/database/offerRepository";
 import { getEnabledFeedCombinations } from "@/services/scraper/utils";
+import type { Config } from "@/types/config";
+import type { DiscordChannel } from "@/types/database";
 import { logger } from "@/utils/logger";
 
 import { getCommands, handleInteraction } from "./discordbot/handlers/commands";

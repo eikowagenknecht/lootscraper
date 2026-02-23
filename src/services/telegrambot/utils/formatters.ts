@@ -1,12 +1,10 @@
 import type { Duration } from "luxon";
-
 import { DateTime } from "luxon";
-
-import type { Offer } from "@/types/database";
 
 import { getGameWithInfo } from "@/services/database/gameRepository";
 import { translationService } from "@/services/translation";
 import { OfferDuration } from "@/types/basic";
+import type { Offer } from "@/types/database";
 
 import { bold, escapeText, italic, link } from "./markdown";
 

@@ -2,9 +2,8 @@ import type { CommandContext } from "grammy";
 import type { InlineKeyboardButton } from "grammy/types";
 import type { z } from "zod";
 
-import type { BotContext } from "@/services/telegrambot/types/middleware";
-
 import { closeSchema, timezoneSchema } from "@/services/telegrambot/types/callbacks";
+import type { BotContext } from "@/services/telegrambot/types/middleware";
 import { packData } from "@/services/telegrambot/utils/callbackPack";
 
 import { logCall, userCanControlBot } from ".";

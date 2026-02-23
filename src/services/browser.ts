@@ -1,9 +1,7 @@
 import type { Browser, BrowserContext } from "playwright";
-
 import { firefox } from "playwright";
 
 import type { Config } from "@/types/config";
-
 import { BrowserError } from "@/types/errors";
 
 const CONTEXT_OPTIONS = {

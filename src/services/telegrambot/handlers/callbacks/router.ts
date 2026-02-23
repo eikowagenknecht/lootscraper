@@ -1,8 +1,7 @@
 import type { Filter } from "grammy";
 
-import type { BotContext } from "@/services/telegrambot/types/middleware";
-
 import { telegramBotService } from "@/services/telegrambot";
+import type { BotContext } from "@/services/telegrambot/types/middleware";
 import { unpackFirstField } from "@/services/telegrambot/utils/callbackPack";
 import { logger } from "@/utils/logger";
 
@@ -79,9 +78,9 @@ export async function handleCallback(
         ctx.chatId,
         "Couldn't handle the button press in time. This happens when too many users are using the bot at the same time and thus it gets rate-limited by Telegram. Please try again later.",
       );
-    } catch (error) {
+    } catch (sendError) {
       logger.error(
-        `Failed to notify user of callback error: ${error instanceof Error ? error.message : String(error)}`,
+        `Failed to notify user of callback error: ${sendError instanceof Error ? sendError.message : String(sendError)}`,
       );
     }
   }

@@ -1,15 +1,13 @@
-import type { BrowserContext, Locator, Page } from "playwright";
-
 import { DateTime } from "luxon";
+import type { BrowserContext, Locator, Page } from "playwright";
 import { errors } from "playwright";
-
-import type { OfferPlatform, OfferSource, OfferType } from "@/types";
-import type { Config } from "@/types/config";
-import type { NewOffer } from "@/types/database";
 
 import { browserService } from "@/services/browser";
 import { takeScreenshot } from "@/services/browser/utils";
+import type { OfferPlatform, OfferSource, OfferType } from "@/types";
 import { OfferCategory, OfferDuration } from "@/types";
+import type { Config } from "@/types/config";
+import type { NewOffer } from "@/types/database";
 import { ScraperError } from "@/types/errors";
 import { logger } from "@/utils/logger";
 

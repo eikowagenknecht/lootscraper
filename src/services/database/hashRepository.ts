@@ -1,6 +1,5 @@
-import type { Hash, HashUpdate, NewHash } from "@/types";
-
 import { getDb } from "@/services/database";
+import type { Hash, HashUpdate, NewHash } from "@/types";
 
 import { handleError, handleInsertResult } from "./common";
 

@@ -277,14 +277,14 @@ export function unpackData<T extends z.ZodObject<z.ZodRawShape>>(
       }
 
       // Get the innermost schema type (unwraps nullable/optional)
-      function unwrapSchema(schema: z.ZodType): z.ZodType {
-        if (schema instanceof z.ZodNullable) {
-          return unwrapSchema(schema.unwrap() as z.ZodType);
+      function unwrapSchema(zodType: z.ZodType): z.ZodType {
+        if (zodType instanceof z.ZodNullable) {
+          return unwrapSchema(zodType.unwrap() as z.ZodType);
         }
-        if (schema instanceof z.ZodOptional) {
-          return unwrapSchema(schema.unwrap() as z.ZodType);
+        if (zodType instanceof z.ZodOptional) {
+          return unwrapSchema(zodType.unwrap() as z.ZodType);
         }
-        return schema;
+        return zodType;
       }
 
       const innerSchema = unwrapSchema(fieldSchema);

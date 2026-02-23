@@ -1,8 +1,6 @@
 import type { Filter } from "grammy";
 import type { z } from "zod";
 
-import type { BotContext } from "@/services/telegrambot/types/middleware";
-
 import {
   createTelegramSubscription,
   hasTelegramSubscription,
@@ -11,6 +9,7 @@ import {
 import { getDbChat } from "@/services/telegrambot/handlers/commands";
 import { buildManageKeyboard } from "@/services/telegrambot/handlers/commands/manage";
 import { toggleSubscriptionSchema } from "@/services/telegrambot/types/callbacks";
+import type { BotContext } from "@/services/telegrambot/types/middleware";
 import { unpackData } from "@/services/telegrambot/utils/callbackPack";
 import { logger } from "@/utils/logger";
 
