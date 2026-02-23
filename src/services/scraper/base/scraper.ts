@@ -136,10 +136,10 @@ export abstract class BaseScraper {
 
       return filteredOffers;
     } catch (error) {
-      logger.error(
+      logger.warn(
         `Error in scraper ${this.getScraperName()}: ${error instanceof Error ? error.message : String(error)}`,
       );
-      return [];
+      throw error;
     }
   }
 
@@ -237,7 +237,7 @@ export abstract class BaseScraper {
             offers.push(offer);
           } catch (error) {
             // Log and skip offer if processing fails
-            logger.error(
+            logger.warn(
               `${this.getScraperName()}: Failed to process offer: ${error instanceof Error ? error.message : String(error)}`,
             );
           }
@@ -245,22 +245,23 @@ export abstract class BaseScraper {
       }
     } catch (error) {
       if (page === null) {
-        logger.error(
+        logger.warn(
           `${this.getScraperName()}: Failed to create a new page. Can't take a screenshot.`,
         );
-        return [];
+        throw error;
       }
       if (error instanceof errors.TimeoutError) {
-        logger.error(
+        logger.warn(
           `${this.getScraperName()}: Page didn't become ready for parsing within the timeout period.`,
         );
         await takeScreenshot(page, this.getScraperName(), "browser_error");
       } else {
-        logger.error(
+        logger.warn(
           `${this.getScraperName()}: Error reading offers: ${error instanceof Error ? error.message : String(error)}`,
         );
         await takeScreenshot(page, this.getScraperName(), "other_error");
       }
+      throw error;
     } finally {
       await page?.close();
     }

@@ -90,7 +90,7 @@ export class GogGamesAlwaysFreeScraper extends GogBaseScraper {
         img_url: imgUrl,
       };
     } catch (error) {
-      logger.error(
+      logger.warn(
         `${this.getScraperName()}: Failed to read offer: ${error instanceof Error ? error.message : String(error)}`,
       );
       return null;

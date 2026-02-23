@@ -98,16 +98,16 @@ export abstract class EpicMobileSraper extends BaseScraper {
       return this.parseOffers(data);
     } catch (error) {
       if (error instanceof Error) {
-        logger.error(
+        logger.warn(
           `${this.getScraperName()}: Error fetching free games: ${error.name}: ${error.message}`,
         );
       } else {
-        logger.error(
+        logger.warn(
           `${this.getScraperName()}: Unknown error occurred while fetching free games`,
           error,
         );
       }
-      return [];
+      throw error;
     }
   }
 

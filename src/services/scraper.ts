@@ -37,10 +37,12 @@ interface ScrapeResult {
 }
 
 class ScraperService {
+  private static readonly FAILURE_THRESHOLD = 3;
   private static instance: ScraperService;
   private executor: NodeJS.Timeout | null = null;
   private config: Config | null = null;
   private isScraping = false;
+  private consecutiveFailures = new Map<string, number>();
 
   private constructor() {
     // Private constructor to prevent instantiation
@@ -193,6 +195,9 @@ class ScraperService {
       logger.info(`Starting scrape run ${nextRun.id.toFixed(0)} (${nextRun.scraper}).`);
       const scrapeResults = await this.runSingleScrape(scraper);
 
+      // Reset consecutive failure counter on success
+      this.consecutiveFailures.delete(nextRun.scraper);
+
       // Step 6 - Mark the run as completed
       await updateScrapingRun(nextRun.id, {
         finished_date: DateTime.now().toISO(),
@@ -201,11 +206,20 @@ class ScraperService {
         offers_modified: scrapeResults.modifiedOffers,
       });
     } catch (error) {
-      logger.error(
-        `Failed to run scraper ${nextRun.scraper}: ${
-          error instanceof Error ? error.message : String(error)
-        }`,
-      );
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      const failures = (this.consecutiveFailures.get(nextRun.scraper) ?? 0) + 1;
+      this.consecutiveFailures.set(nextRun.scraper, failures);
+
+      if (failures >= ScraperService.FAILURE_THRESHOLD) {
+        logger.error(
+          `Scraper ${nextRun.scraper} failed ${failures.toFixed(0)} consecutive times: ${errorMessage}`,
+        );
+      } else {
+        logger.warn(
+          `Scraper ${nextRun.scraper} failed (attempt ${failures.toFixed(0)}/${ScraperService.FAILURE_THRESHOLD.toFixed(0)}): ${errorMessage}`,
+        );
+      }
+
       // In case of error mark as finished anyways, so we can continue with the next run
       await updateScrapingRun(nextRun.id, {
         finished_date: DateTime.now().toISO(),

@@ -109,7 +109,7 @@ export class HumbleGamesScraper extends BaseScraper {
         img_url: imgUrl,
       };
     } catch (error) {
-      logger.error(
+      logger.warn(
         `${this.getScraperName()}: Failed to read raw offer: ${error instanceof Error ? error.message : String(error)}`,
       );
       return null;

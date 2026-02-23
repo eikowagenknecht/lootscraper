@@ -108,7 +108,7 @@ export class ItchGamesScraper extends BaseScraper {
         img_url: imgUrl ?? null,
       };
     } catch (error) {
-      logger.error(
+      logger.warn(
         `${this.getScraperName()}: Failed to read raw offer: ${error instanceof Error ? error.message : String(error)}`,
       );
       return null;
