@@ -1,12 +1,10 @@
 import type { AutocompleteInteraction, ChatInputCommandInteraction, Interaction } from "discord.js";
-
 import { PermissionFlagsBits, SlashCommandBuilder } from "discord.js";
 import { DateTime } from "luxon";
 
-import type { DiscordConfig } from "@/services/discordbot";
-
 import { countActiveOffers, countOffers } from "@/services/database/offerRepository";
 import { getLastCompletedRun, getUpcomingRuns } from "@/services/database/scrapingRunRepository";
+import type { DiscordConfig } from "@/services/discordbot";
 import { discordBotService } from "@/services/discordbot";
 import { getFeedChannelName } from "@/services/discordbot/utils/channels";
 import { scraperService } from "@/services/scraper";

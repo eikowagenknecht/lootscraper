@@ -1,14 +1,12 @@
 import type { CommandContext } from "grammy";
-
 import { DateTime } from "luxon";
-
-import type { BotContext } from "@/services/telegrambot/types/middleware";
 
 import {
   activateTelegramChat,
   createTelegramChat,
 } from "@/services/database/telegramChatRepository";
 import { createTelegramSubscription } from "@/services/database/telegramSubscriptionRepository";
+import type { BotContext } from "@/services/telegrambot/types/middleware";
 import { bold, escapeText, link } from "@/services/telegrambot/utils/markdown";
 import { ChatType } from "@/types";
 import { OfferDuration, OfferPlatform, OfferSource, OfferType } from "@/types/basic";

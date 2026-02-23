@@ -1,10 +1,9 @@
 import { DateTime } from "luxon";
 
 import type { FeedCombination } from "@/services/scraper/utils";
+import { getEnabledFeedCombinations } from "@/services/scraper/utils";
 import type { Config } from "@/types/config";
 import type { Offer } from "@/types/database";
-
-import { getEnabledFeedCombinations } from "@/services/scraper/utils";
 import { calculateRealValidTo } from "@/utils";
 import { logger } from "@/utils/logger";
 

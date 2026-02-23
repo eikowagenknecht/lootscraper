@@ -2,13 +2,12 @@ import { Cron } from "croner";
 import { DateTime } from "luxon";
 
 import type { ScraperClass, ScraperInstance } from "@/services/scraper/utils";
-import type { Config, NewOffer } from "@/types";
-
 import {
   getEnabledScraperClasses,
   getScraperClassByName,
   getScraperSchedule,
 } from "@/services/scraper/utils";
+import type { Config, NewOffer } from "@/types";
 import { delay } from "@/utils";
 import { logger } from "@/utils/logger";
 

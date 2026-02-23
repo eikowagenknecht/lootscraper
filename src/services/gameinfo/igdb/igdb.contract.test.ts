@@ -1,9 +1,8 @@
 import { DateTime } from "luxon";
 import { beforeEach, describe, expect, test } from "vitest";
 
-import type { NewIgdbInfo } from "@/types/database";
-
 import { config } from "@/services/config";
+import type { NewIgdbInfo } from "@/types/database";
 
 import { IgdbClient } from "./igdb";
 

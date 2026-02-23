@@ -1,6 +1,5 @@
-import type { Announcement, NewAnnouncement } from "@/types/database";
-
 import { getDb } from "@/services/database";
+import type { Announcement, NewAnnouncement } from "@/types/database";
 
 import { handleError, handleInsertResult } from "./common";
 

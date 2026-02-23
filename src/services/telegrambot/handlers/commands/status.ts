@@ -1,10 +1,8 @@
 import type { CommandContext } from "grammy";
-
 import { DateTime } from "luxon";
 
-import type { BotContext } from "@/services/telegrambot/types/middleware";
-
 import { getTelegramSubscriptions } from "@/services/database/telegramSubscriptionRepository";
+import type { BotContext } from "@/services/telegrambot/types/middleware";
 import { DATE_FORMATS } from "@/services/telegrambot/utils/formatters";
 import { escapeText } from "@/services/telegrambot/utils/markdown";
 import { translationService } from "@/services/translation";

@@ -1,9 +1,8 @@
 import { DateTime } from "luxon";
 import { errors } from "playwright";
 
-import type { NewSteamInfo } from "@/types/database";
-
 import { browserService } from "@/services/browser";
+import type { NewSteamInfo } from "@/types/database";
 import { getMatchScore } from "@/utils";
 import { logger } from "@/utils/logger";
 

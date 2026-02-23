@@ -1,16 +1,13 @@
+import { DateTime } from "luxon";
 import type { Locator, Page } from "playwright";
 
-import { DateTime } from "luxon";
-
 import type { CronConfig } from "@/services/scraper/base/scraper";
-import type { NewOffer } from "@/types/database";
-
 import { ScraperError } from "@/types";
 import { OfferDuration, OfferPlatform } from "@/types/basic";
+import type { NewOffer } from "@/types/database";
 import { logger } from "@/utils/logger";
 
 import type { GogRawOffer } from "./base";
-
 import { GogBaseScraper } from "./base";
 
 const BASE_URL = "https://www.gog.com";

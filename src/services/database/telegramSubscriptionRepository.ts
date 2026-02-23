@@ -1,11 +1,10 @@
+import { getDb } from "@/services/database";
 import type { OfferDuration, OfferPlatform, OfferSource, OfferType } from "@/types/basic";
 import type {
   NewTelegramSubscription,
   TelegramSubscription,
   TelegramSubscriptionUpdate,
 } from "@/types/database";
-
-import { getDb } from "@/services/database";
 
 import { handleError } from "./common";
 

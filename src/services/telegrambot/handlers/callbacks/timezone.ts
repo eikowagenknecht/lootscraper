@@ -1,9 +1,8 @@
 import type { Filter } from "grammy";
 
-import type { BotContext } from "@/services/telegrambot/types/middleware";
-
 import { updateTelegramChatTimezone } from "@/services/database/telegramChatRepository";
 import { timezoneSchema } from "@/services/telegrambot/types/callbacks";
+import type { BotContext } from "@/services/telegrambot/types/middleware";
 import { unpackData } from "@/services/telegrambot/utils/callbackPack";
 import { logger } from "@/utils/logger";
 

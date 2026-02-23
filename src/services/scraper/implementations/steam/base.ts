@@ -1,13 +1,11 @@
+import { DateTime } from "luxon";
 import type { Locator, Page } from "playwright";
 
-import { DateTime } from "luxon";
-
 import type { CronConfig } from "@/services/scraper/base/scraper";
-import type { NewOffer } from "@/types/database";
-
 import { BaseScraper } from "@/services/scraper/base/scraper";
 import { ScraperError } from "@/types";
 import { OfferDuration, OfferPlatform, OfferSource, OfferType } from "@/types/basic";
+import type { NewOffer } from "@/types/database";
 import { logger } from "@/utils/logger";
 import { cleanCombinedTitle, cleanGameTitle } from "@/utils/stringTools";
 

@@ -1,13 +1,13 @@
 import { copyFileSync, mkdirSync, readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
+
 import { parse } from "yaml";
 import * as z from "zod";
 
 import type { ScraperClass } from "@/services/scraper/utils";
-import type { Config } from "@/types/config";
-
 import { allScrapers } from "@/services/scraper/utils";
 import { ConfigError, InfoSource } from "@/types";
+import type { Config } from "@/types/config";
 import { ConfigSchema } from "@/types/config";
 import { logger } from "@/utils/logger";
 import { getDataPath, getTemplatesPath } from "@/utils/path";
@@ -102,8 +102,6 @@ class ConfigService {
 
   private validateConfigConsistency(config: Config): void {
     const configConsistencySchema = ConfigSchema.check((ctx) => {
-      const config = ctx.value;
-
       // Validate FTP configuration when uploadToFtp is enabled
       if (config.actions.uploadToFtp) {
         if (!config.ftp.host) {

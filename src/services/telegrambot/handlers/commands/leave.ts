@@ -1,8 +1,7 @@
 import type { CommandContext } from "grammy";
 
-import type { BotContext } from "@/services/telegrambot/types/middleware";
-
 import { deleteTelegramChat } from "@/services/database/telegramChatRepository";
+import type { BotContext } from "@/services/telegrambot/types/middleware";
 
 import { getCallerName, getDbChat, logCall, userCanControlBot } from ".";
 

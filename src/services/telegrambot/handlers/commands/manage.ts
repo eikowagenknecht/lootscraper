@@ -1,14 +1,12 @@
 import type { CommandContext } from "grammy";
+import { InlineKeyboard } from "grammy";
 import type { z } from "zod";
 
-import { InlineKeyboard } from "grammy";
-
-import type { FeedCombination } from "@/services/scraper/utils";
-import type { BotContext } from "@/services/telegrambot/types/middleware";
-
 import { hasTelegramSubscription } from "@/services/database/telegramSubscriptionRepository";
+import type { FeedCombination } from "@/services/scraper/utils";
 import { getEnabledFeedCombinations } from "@/services/scraper/utils";
 import { closeSchema, toggleSubscriptionSchema } from "@/services/telegrambot/types/callbacks";
+import type { BotContext } from "@/services/telegrambot/types/middleware";
 import { packData } from "@/services/telegrambot/utils/callbackPack";
 import { translationService } from "@/services/translation";
 import { OfferDuration } from "@/types/basic";

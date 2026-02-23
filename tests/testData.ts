@@ -1,10 +1,8 @@
 import type { Kysely } from "kysely";
-
 import { DateTime } from "luxon";
 
-import type { Database } from "@/types/database";
-
 import { OfferDuration, OfferPlatform, OfferSource, OfferType } from "@/types/basic";
+import type { Database } from "@/types/database";
 
 export async function insertTestData(db: Kysely<Database>) {
   const twoDaysAgo = DateTime.now().minus({ days: 2 });

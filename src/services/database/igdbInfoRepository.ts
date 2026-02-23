@@ -1,6 +1,5 @@
-import type { IgdbInfo, IgdbInfoUpdate, NewIgdbInfo } from "@/types/database";
-
 import { getDb } from "@/services/database";
+import type { IgdbInfo, IgdbInfoUpdate, NewIgdbInfo } from "@/types/database";
 
 import { handleError, handleInsertResult } from "./common";
 

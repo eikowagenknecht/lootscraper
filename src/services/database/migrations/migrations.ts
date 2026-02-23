@@ -1,5 +1,4 @@
 import type { Kysely, Migration } from "kysely";
-
 import { Migrator } from "kysely";
 import { DateTime } from "luxon";
 

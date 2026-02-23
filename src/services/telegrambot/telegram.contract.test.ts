@@ -1,5 +1,6 @@
-import { DateTime } from "luxon";
 import { fail } from "node:assert";
+
+import { DateTime } from "luxon";
 import { afterAll, beforeAll, describe, expect, test } from "vitest";
 
 import { config } from "@/services/config";

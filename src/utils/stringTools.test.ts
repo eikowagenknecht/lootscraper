@@ -106,7 +106,7 @@ describe.concurrent("getMatchScore", () => {
   ];
 
   for (const { search, result, expectedScore, description, approximateMatch } of testCases) {
-    test(`should handle ${description}`, ({ expect }) => {
+    test(`should handle ${description}`, () => {
       const score = getMatchScore(search, result);
 
       if (approximateMatch) {
@@ -117,7 +117,7 @@ describe.concurrent("getMatchScore", () => {
     });
   }
 
-  test("should handle special characters", ({ expect }) => {
+  test("should handle special characters", () => {
     const search = "hello@world!";
     const result = "hello#world?";
     const score = getMatchScore(search, result);
@@ -125,7 +125,7 @@ describe.concurrent("getMatchScore", () => {
     expect(score).toBe(1);
   });
 
-  test("should find Rainbow Six Siege similar to full title", ({ expect }) => {
+  test("should find Rainbow Six Siege similar to full title", () => {
     const search = "Rainbow Six Siege";
     const result = "Tom Clancy's Rainbow Six® Siege";
 
@@ -133,7 +133,7 @@ describe.concurrent("getMatchScore", () => {
     expect(score).toBe(0.99);
   });
 
-  test("should find Fall Guys not too similar to Fall Guy", ({ expect }) => {
+  test("should find Fall Guys not too similar to Fall Guy", () => {
     const search = "Fall Guys";
     const result = "Fall Guy";
 
@@ -143,14 +143,14 @@ describe.concurrent("getMatchScore", () => {
 });
 
 describe.concurrent("Title Cleaner", () => {
-  test("should keep registered trademark in title", ({ expect }) => {
+  test("should keep registered trademark in title", () => {
     const title = "Tom Clancy's Rainbow Six® Siege";
     const cleaned = "Tom Clancy's Rainbow Six® Siege";
 
     expect(cleanGameTitle(title)).toBe(cleaned);
   });
 
-  test("should handle simple game and pack title", ({ expect }) => {
+  test("should handle simple game and pack title", () => {
     const title = "Lords Mobile: Warlord Pack";
     const [cleanedGame, cleanedOffer] = cleanCombinedTitle(title);
 
@@ -158,21 +158,21 @@ describe.concurrent("Title Cleaner", () => {
     expect(cleanedOffer).toBe("Lords Mobile - Warlord Pack");
   });
 
-  test("should handle dashed game title", ({ expect }) => {
+  test("should handle dashed game title", () => {
     const title = "Aces of the Luftwaffe - Squadron Extended Edition";
     const cleanedGame = cleanGameTitle(title);
 
     expect(cleanedGame).toBe("Aces of the Luftwaffe: Squadron Extended Edition");
   });
 
-  test("should handle colon spaced game title", ({ expect }) => {
+  test("should handle colon spaced game title", () => {
     const title = "My City : Hospital";
     const cleanedGame = cleanGameTitle(title);
 
     expect(cleanedGame).toBe("My City: Hospital");
   });
 
-  test("should handle title with multiple colons", ({ expect }) => {
+  test("should handle title with multiple colons", () => {
     const title = "Mobile Legends: Bang Bang: Amazon Prime Chest";
     const [cleanedGame, cleanedOffer] = cleanCombinedTitle(title);
 
@@ -180,7 +180,7 @@ describe.concurrent("Title Cleaner", () => {
     expect(cleanedOffer).toBe("Mobile Legends: Bang Bang - Amazon Prime Chest");
   });
 
-  test("should handle special GTA Online format", ({ expect }) => {
+  test("should handle special GTA Online format", () => {
     const title = "Get up to GTA$400,000 this month in GTA Online";
     const [cleanedGame, cleanedOffer] = cleanCombinedTitle(title);
 
@@ -188,7 +188,7 @@ describe.concurrent("Title Cleaner", () => {
     expect(cleanedOffer).toBe("GTA Online - Up to GTA$400,000 this month");
   });
 
-  test("should handle em dash in title", ({ expect }) => {
+  test("should handle em dash in title", () => {
     const title = "World of Warships — Starter Pack: Dreadnought";
     const [cleanedGame, cleanedOffer] = cleanCombinedTitle(title);
 
@@ -196,7 +196,7 @@ describe.concurrent("Title Cleaner", () => {
     expect(cleanedOffer).toBe("World of Warships - Starter Pack: Dreadnought");
   });
 
-  test("should remove whitespace and newlines from game title", ({ expect }) => {
+  test("should remove whitespace and newlines from game title", () => {
     const title = "\n        Vambrace: Cold Soul\n    ";
     const cleaned = "Vambrace: Cold Soul";
 

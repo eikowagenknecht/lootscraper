@@ -1,10 +1,8 @@
+import { config } from "@/services/config";
 import type { OfferDuration, OfferPlatform, OfferSource, OfferType } from "@/types/basic";
 import type { Config } from "@/types/config";
 
-import { config } from "@/services/config";
-
 import type { CronConfig } from "./base/scraper";
-
 import {
   AmazonGamesScraper,
   AmazonLootScraper,
