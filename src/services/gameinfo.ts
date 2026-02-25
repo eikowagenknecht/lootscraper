@@ -152,7 +152,7 @@ class GameInfoService {
 
       return details;
     } catch (error) {
-      logger.error(
+      logger.warn(
         `Steam info fetch failed: ${error instanceof Error ? error.message : String(error)}`,
       );
       return null;
@@ -178,7 +178,7 @@ class GameInfoService {
 
       return await this.igdbClient.getDetails(gameId);
     } catch (error) {
-      logger.error(
+      logger.warn(
         `IGDB info fetch failed: ${error instanceof Error ? error.message : String(error)}`,
       );
       return null;

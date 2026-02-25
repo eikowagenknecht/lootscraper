@@ -84,11 +84,9 @@ export class SteamClient {
       return bestMatch?.appId ?? null;
     } catch (error) {
       if (error instanceof errors.TimeoutError) {
-        logger.error("Steam search timed out");
+        logger.warn("Steam search timed out");
       }
-      logger.error(
-        `Steam search failed: ${error instanceof Error ? error.message : String(error)}`,
-      );
+      logger.warn(`Steam search failed: ${error instanceof Error ? error.message : String(error)}`);
       return null;
     } finally {
       await page.close();
@@ -190,9 +188,9 @@ export class SteamClient {
       return data;
     } catch (error) {
       if (error instanceof errors.TimeoutError) {
-        logger.error("Steam page load timed out");
+        logger.warn("Steam page load timed out");
       }
-      logger.error(
+      logger.warn(
         `Steam page scraping failed: ${error instanceof Error ? error.message : String(error)}`,
       );
       return {};
