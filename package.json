@@ -25,7 +25,7 @@
     "format": "oxfmt ./src ./tests",
     "type-check": "tsc --noEmit",
     "check": "pnpm run lint && pnpm run type-check",
-    "prepare": "node -e \"process.env.CI || process.env.DOCKER_CONTAINER || process.exit(1)\" || lefthook install",
+    "prepare": "test -n \"$CI\" || test -n \"$DOCKER_CONTAINER\" || env | grep -q ^DEPENDABOT || lefthook install",
     "clean:npm": "pnpm dlx rimraf -rf node_modules",
     "sync:npm": "pnpm i --frozen-lockfile",
     "upgrade:npm": "pnpm dlx rimraf pnpm-lock.yaml && pnpm up --latest && pnpm i",
