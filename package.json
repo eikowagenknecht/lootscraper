@@ -46,7 +46,7 @@
     "graphql": "16.13.1",
     "handlebars": "4.7.8",
     "i18next": "25.8.18",
-    "kysely": "0.28.12",
+    "kysely": "0.28.14",
     "logform": "2.7.0",
     "luxon": "3.7.2",
     "playwright": "1.58.2",

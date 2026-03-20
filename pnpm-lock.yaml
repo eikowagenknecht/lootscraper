@@ -48,8 +48,8 @@ importers:
         specifier: 25.8.18
         version: 25.8.18(typescript@5.9.3)
       kysely:
-        specifier: 0.28.12
-        version: 0.28.12
+        specifier: 0.28.14
+        version: 0.28.14
       logform:
         specifier: 2.7.0
         version: 2.7.0
@@ -2169,8 +2169,8 @@ packages:
   kuler@2.0.0:
     resolution: {integrity: sha512-Xq9nH7KlWZmXAtodXDDRE7vs6DU1gTU8zYDHDiWLSip45Egwq3plLHzPn27NgvzL2r1LMPC1vdqh98sQxtqj4A==}
 
-  kysely@0.28.12:
-    resolution: {integrity: sha512-kWiueDWXhbCchgiotwXkwdxZE/6h56IHAeFWg4euUfW0YsmO9sxbAxzx1KLLv2lox15EfuuxHQvgJ1qIfZuHGw==}
+  kysely@0.28.14:
+    resolution: {integrity: sha512-SU3lgh0rPvq7upc6vvdVrCsSMUG1h3ChvHVOY7wJ2fw4C9QEB7X3d5eyYEyULUX7UQtxZJtZXGuT6U2US72UYA==}
     engines: {node: '>=20.0.0'}
 
   lefthook-darwin-arm64@2.1.4:
@@ -5073,7 +5073,7 @@ snapshots:
 
   kuler@2.0.0: {}
 
-  kysely@0.28.12: {}
+  kysely@0.28.14: {}
 
   lefthook-darwin-arm64@2.1.4:
     optional: true
