@@ -45,8 +45,8 @@ importers:
         specifier: 4.7.9
         version: 4.7.9
       i18next:
-        specifier: 25.10.4
-        version: 25.10.4(typescript@5.9.3)
+        specifier: 26.0.1
+        version: 26.0.1(typescript@5.9.3)
       kysely:
         specifier: 0.28.14
         version: 0.28.14
@@ -2151,10 +2151,10 @@ packages:
     resolution: {integrity: sha512-eKCa6bwnJhvxj14kZk5NCPc6Hb6BdsU9DZcOnmQKSnO1VKrfV0zCvtttPZUsBvjmNDn8rpcJfpwSYnHBjc95MQ==}
     engines: {node: '>=18.18.0'}
 
-  i18next@25.10.4:
-    resolution: {integrity: sha512-XsE/6eawy090meuFU0BTY9BtmWr1m9NSwLr0NK7/A04LA58wdAvDsi9WNOJ40Qb1E9NIPbvnVLZEN2fWDd3/3Q==}
+  i18next@26.0.1:
+    resolution: {integrity: sha512-vtz5sXU4+nkCm8yEU+JJ6yYIx0mkg9e68W0G0PXpnOsmzLajNsW5o28DJMqbajxfsfq0gV3XdrBudsDQnwxfsQ==}
     peerDependencies:
-      typescript: ^5
+      typescript: ^5 || ^6
     peerDependenciesMeta:
       typescript:
         optional: true
@@ -5160,7 +5160,7 @@ snapshots:
 
   human-signals@8.0.1: {}
 
-  i18next@25.10.4(typescript@5.9.3):
+  i18next@26.0.1(typescript@5.9.3):
     dependencies:
       '@babel/runtime': 7.29.2
     optionalDependencies:

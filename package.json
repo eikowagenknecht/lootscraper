@@ -45,7 +45,7 @@
     "grammy": "1.41.1",
     "graphql": "16.13.2",
     "handlebars": "4.7.9",
-    "i18next": "25.10.4",
+    "i18next": "26.0.1",
     "kysely": "0.28.14",
     "logform": "2.7.0",
     "luxon": "3.7.2",
