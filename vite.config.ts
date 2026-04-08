@@ -1,4 +1,5 @@
 import { resolve } from "node:path";
+
 import { defineConfig } from "vitest/config";
 
 export default defineConfig({
@@ -8,10 +9,10 @@ export default defineConfig({
     },
   },
   build: {
-    target: "node22",
+    target: "node24",
     outDir: "dist",
     ssr: true,
-    rollupOptions: {
+    rolldownOptions: {
       input: "src/main.ts",
       output: {
         format: "esm",

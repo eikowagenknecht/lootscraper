@@ -1,10 +1,12 @@
 import { autoRetry } from "@grammyjs/auto-retry";
 import { CommandGroup, commandNotFound, commands } from "@grammyjs/commands";
 import { AbortController } from "abort-controller";
-import type { BotError, RawApi } from "grammy";
+import type { Api, BotError } from "grammy";
 import { Bot, GrammyError, HttpError } from "grammy";
 import { DateTime } from "luxon";
-import type { Other } from "node_modules/grammy/out/core/api";
+
+/** Extract the optional `other` parameter type from an Api method. */
+type SendMessageOptions = Parameters<Api["sendMessage"]>[2];
 
 import type { BotContext } from "@/services/telegrambot/types/middleware";
 import { sendNewAnnouncementsToChat, sendNewOffersToChat } from "@/services/telegrambot/utils/send";
@@ -235,7 +237,7 @@ export class TelegramBotService {
   public async sendWithTimeout(
     chatId: number,
     message: string,
-    options?: Other<RawApi, "sendMessage", "chat_id" | "text">,
+    options?: SendMessageOptions,
   ): Promise<void> {
     const abortController = new AbortController();
     let timeoutId: NodeJS.Timeout | undefined;
