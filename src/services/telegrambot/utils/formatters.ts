@@ -1,4 +1,3 @@
-import type { Duration } from "luxon";
 import { DateTime } from "luxon";
 
 import { getGameWithInfo } from "@/services/database/gameRepository";
@@ -64,22 +63,14 @@ export async function formatOfferMessage(
       : validTo.toUTC().toFormat(DATE_FORMATS.READABLE_WITH_HOUR_TZ);
 
     const now = DateTime.now();
-    let diff: Duration;
-
-    if (now < validTo) {
-      // Active offer
-      diff = validTo.diff(now, ["days", "hours"]);
-    } else {
-      // Expired offer needs to show how long ago it expired
-      diff = now.diff(validTo, ["days", "hours"]);
-    }
+    const diff =
+      now < validTo ? validTo.diff(now, ["days", "hours"]) : now.diff(validTo, ["days", "hours"]);
     const diffHuman = diff.normalize().toHuman({ maximumFractionDigits: 0 });
 
-    if (now > validTo) {
-      content += escapeText(`Offer expired ${diffHuman} ago (${validToFormatted}).`);
-    } else {
-      content += escapeText(`Offer expires in ${diffHuman} (${validToFormatted}).`);
-    }
+    content +=
+      now > validTo
+        ? escapeText(`Offer expired ${diffHuman} ago (${validToFormatted}).`)
+        : escapeText(`Offer expires in ${diffHuman} (${validToFormatted}).`);
   } else if (offer.duration === OfferDuration.ALWAYS) {
     content += escapeText("Offer will stay free, no need to hurry.");
   } else {

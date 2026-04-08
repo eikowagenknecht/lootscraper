@@ -169,11 +169,11 @@ export abstract class SteamBaseScraper extends BaseScraper {
           seen_first: DateTime.now().toISO(),
           ...(validTo && { valid_to: validTo.toISO() }),
           rawtext: JSON.stringify({
-            title: title,
-            appid: appid,
-            text: text,
+            title,
+            appid,
+            text,
           }),
-          url: url,
+          url,
           img_url: imgUrl,
         };
       } finally {

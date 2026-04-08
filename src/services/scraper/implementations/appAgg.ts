@@ -102,9 +102,9 @@ export class AppAggGamesScraper extends BaseScraper {
         seen_first: DateTime.now().toISO(), // Added seen_first property
         valid_to: null,
         rawtext: JSON.stringify({
-          title: title,
+          title,
         }),
-        url: url,
+        url,
         img_url: imgUrl ?? null,
       };
     } catch (error) {

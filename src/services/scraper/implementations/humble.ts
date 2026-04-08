@@ -101,9 +101,9 @@ export class HumbleGamesScraper extends BaseScraper {
         seen_first: DateTime.now().toISO(),
         ...(validTo && { valid_to: validTo.toISO() }),
         rawtext: JSON.stringify({
-          title: title,
+          title,
         }),
-        url: url,
+        url,
         img_url: imgUrl,
       };
     } catch (error) {

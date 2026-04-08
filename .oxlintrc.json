@@ -27,6 +27,8 @@
     "unicorn/no-array-sort": "off",
 
     // Style Overwrites
+    "import/no-nodejs-modules": "off", // This is a Node.js application
+    "typescript/parameter-properties": "off", // Parameter properties are idiomatic TypeScript
     "unicorn/filename-case": "off", // Migrations use numbered prefixes (001-initial.ts) while the rest of the codebase uses camelCase
     "no-new": "warn",
     "max-statements": "off",

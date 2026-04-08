@@ -13,6 +13,8 @@ import { logger } from "@/utils/logger";
 import { getDataPath, getTemplatesPath } from "@/utils/path";
 
 class ConfigValidationError extends ConfigError {
+  override name = "ConfigValidationError";
+
   constructor(
     message: string,
     public readonly validationErrors: z.ZodError[],

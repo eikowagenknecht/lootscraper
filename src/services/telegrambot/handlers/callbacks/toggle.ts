@@ -46,10 +46,10 @@ export async function handleToggleCallback(
   } else {
     await createTelegramSubscription({
       chat_id: dbChat.id,
-      source: source,
-      type: type,
-      duration: duration,
-      platform: platform,
+      source,
+      type,
+      duration,
+      platform,
       last_offer_id: 0,
     });
     await ctx.answerCallbackQuery({ text: "You are now subscribed." });

@@ -82,9 +82,9 @@ export class GogGamesAlwaysFreeScraper extends GogBaseScraper {
         seen_first: DateTime.now().toISO(),
         valid_to: null,
         rawtext: JSON.stringify({
-          title: title,
+          title,
         }),
-        url: url,
+        url,
         img_url: imgUrl,
       };
     } catch (error) {

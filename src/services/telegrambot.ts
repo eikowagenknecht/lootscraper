@@ -5,9 +5,6 @@ import type { Api, BotError } from "grammy";
 import { Bot, GrammyError, HttpError } from "grammy";
 import { DateTime } from "luxon";
 
-/** Extract the optional `other` parameter type from an Api method. */
-type SendMessageOptions = Parameters<Api["sendMessage"]>[2];
-
 import type { BotContext } from "@/services/telegrambot/types/middleware";
 import { sendNewAnnouncementsToChat, sendNewOffersToChat } from "@/services/telegrambot/utils/send";
 import type { Config, TelegramLogLevel } from "@/types/config";
@@ -29,6 +26,9 @@ import { handleManageCommand } from "./telegrambot/handlers/commands/manage";
 import { handleRefreshCommand } from "./telegrambot/handlers/commands/refresh";
 import { handleStatusCommand } from "./telegrambot/handlers/commands/status";
 import { handleTimezoneCommand } from "./telegrambot/handlers/commands/timezone";
+
+/** Extract the optional `other` parameter type from an Api method. */
+type SendMessageOptions = Parameters<Api["sendMessage"]>[2];
 
 interface BotConfig {
   accessToken: string;

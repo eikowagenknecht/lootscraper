@@ -265,10 +265,8 @@ export async function handleInteraction(
       ephemeral: true,
     };
 
-    if (interaction.deferred || interaction.replied) {
-      await interaction.editReply(reply);
-    } else {
-      await interaction.reply(reply);
-    }
+    await (interaction.deferred || interaction.replied
+      ? interaction.editReply(reply)
+      : interaction.reply(reply));
   }
 }

@@ -38,37 +38,21 @@ export async function handleOfferDetailsCallback(
     return;
   }
 
-  if (unpackedData.command === "show") {
-    await ctx.editMessageText(
-      await formatOfferMessage(offer, {
-        tzOffset: dbChat.timezone_offset,
-        includeDetails: true,
+  const isShow = unpackedData.command === "show";
+  await ctx.editMessageText(
+    await formatOfferMessage(offer, {
+      tzOffset: dbChat.timezone_offset,
+      includeDetails: isShow,
+    }),
+    {
+      parse_mode: "MarkdownV2",
+      reply_markup: createOfferKeyboard(offer, {
+        detailsShowButton: isShow ? false : offer.game_id !== null,
+        detailsHideButton: isShow,
+        dismissButton: true,
       }),
-      {
-        parse_mode: "MarkdownV2",
-        reply_markup: createOfferKeyboard(offer, {
-          detailsShowButton: false,
-          detailsHideButton: true,
-          dismissButton: true,
-        }),
-      },
-    );
-  } else {
-    await ctx.editMessageText(
-      await formatOfferMessage(offer, {
-        tzOffset: dbChat.timezone_offset,
-        includeDetails: false,
-      }),
-      {
-        parse_mode: "MarkdownV2",
-        reply_markup: createOfferKeyboard(offer, {
-          detailsShowButton: offer.game_id !== null,
-          detailsHideButton: false,
-          dismissButton: true,
-        }),
-      },
-    );
-  }
+    },
+  );
 
   await ctx.answerCallbackQuery();
 }

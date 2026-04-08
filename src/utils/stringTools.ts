@@ -314,8 +314,8 @@ function getEnabledFeedFilenames({
   if (!enabledCombinations) {
     return [
       generateFilename({
-        prefix: prefix,
-        extension: extension,
+        prefix,
+        extension,
         ...(withHistory && { withHistory: true }),
       }),
     ];
@@ -324,9 +324,9 @@ function getEnabledFeedFilenames({
   for (const combination of enabledCombinations) {
     res.push(
       generateFilename({
-        prefix: prefix,
-        extension: extension,
-        combination: combination,
+        prefix,
+        extension,
+        combination,
         ...(withHistory && { withHistory: true }),
       }),
     );
@@ -338,35 +338,35 @@ export function getAllEnabledFeedFilenames(prefix: string) {
   return [
     // Main xml feed
     ...getEnabledFeedFilenames({
-      prefix: prefix,
+      prefix,
       extension: "xml",
     }),
     // Main html feed
     ...getEnabledFeedFilenames({
-      prefix: prefix,
+      prefix,
       extension: "html",
     }),
     // Main html feed - History
     ...getEnabledFeedFilenames({
-      prefix: prefix,
+      prefix,
       extension: "html",
       withHistory: true,
     }),
     // Source xml feeds
     ...getEnabledFeedFilenames({
-      prefix: prefix,
+      prefix,
       extension: "xml",
       enabledCombinations: getEnabledFeedCombinations(),
     }),
     // Source html feeds
     ...getEnabledFeedFilenames({
-      prefix: prefix,
+      prefix,
       extension: "html",
       enabledCombinations: getEnabledFeedCombinations(),
     }),
     // Source html feeds - History
     ...getEnabledFeedFilenames({
-      prefix: prefix,
+      prefix,
       extension: "html",
       enabledCombinations: getEnabledFeedCombinations(),
       withHistory: true,

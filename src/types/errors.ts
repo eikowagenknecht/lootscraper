@@ -1,18 +1,19 @@
 // TODO: Use these more consistently
 export class LootScraperError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = this.constructor.name;
-  }
+  override name = "LootScraperError";
 }
 
 export class ConfigError extends LootScraperError {
+  override name = "ConfigError";
+
   constructor(message: string) {
     super(`Configuration error: ${message}`);
   }
 }
 
 export class ScraperError extends LootScraperError {
+  override name = "ScraperError";
+
   constructor(
     message: string,
     public readonly source: string,
@@ -23,6 +24,8 @@ export class ScraperError extends LootScraperError {
 }
 
 export class DatabaseError extends LootScraperError {
+  override name = "DatabaseError";
+
   constructor(
     message: string,
     public override readonly cause?: Error,
@@ -32,6 +35,8 @@ export class DatabaseError extends LootScraperError {
 }
 
 export class BrowserError extends LootScraperError {
+  override name = "BrowserError";
+
   constructor(
     message: string,
     public readonly url?: string,
@@ -41,6 +46,8 @@ export class BrowserError extends LootScraperError {
 }
 
 export class FeedError extends LootScraperError {
+  override name = "FeedError";
+
   constructor(message: string) {
     super(`Feed generation error: ${message}`);
   }

@@ -133,10 +133,10 @@ export class UbisoftGamesScraper extends BaseScraper {
         seen_first: DateTime.now().toISO(),
         ...(validToDate && { valid_to: validToDate.toISO() }),
         rawtext: JSON.stringify({
-          title: title,
+          title,
           enddate: validTo,
         }),
-        url: url,
+        url,
         img_url: imgUrl,
       };
     } catch (error) {

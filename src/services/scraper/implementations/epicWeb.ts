@@ -116,10 +116,10 @@ export class EpicGamesWebScraper extends BaseScraper {
         seen_first: DateTime.now().toISO(),
         valid_to: validToAsDate?.toISO() ?? null,
         rawtext: JSON.stringify({
-          title: title,
+          title,
           enddate: validTo,
         }),
-        url: url,
+        url,
         img_url: imgUrl,
       };
     } catch (error) {
