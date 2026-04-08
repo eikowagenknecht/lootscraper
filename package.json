@@ -37,7 +37,7 @@
     "@grammyjs/auto-retry": "2.0.2",
     "@grammyjs/commands": "1.3.2",
     "abort-controller": "3.0.0",
-    "basic-ftp": "5.2.0",
+    "basic-ftp": "5.2.1",
     "better-sqlite3": "12.8.0",
     "croner": "10.0.1",
     "cross-env": "10.1.0",
