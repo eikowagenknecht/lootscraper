@@ -43,10 +43,10 @@
     "cross-env": "10.1.0",
     "discord.js": "14.26.4",
     "grammy": "1.42.0",
-    "graphql": "16.13.2",
+    "graphql": "16.14.0",
     "handlebars": "4.7.9",
-    "i18next": "26.0.8",
-    "kysely": "0.28.17",
+    "i18next": "26.0.10",
+    "kysely": "0.29.0",
     "logform": "2.7.0",
     "luxon": "3.7.2",
     "playwright": "1.59.1",
@@ -54,7 +54,7 @@
     "winston-daily-rotate-file": "5.0.0",
     "winston-transport": "4.9.0",
     "yaml": "2.8.4",
-    "zod": "4.4.2"
+    "zod": "4.4.3"
   },
   "devDependencies": {
     "@commitlint/cli": "21.0.0",
@@ -67,15 +67,15 @@
     "@types/node": "~24",
     "@vitest/coverage-v8": "4.1.5",
     "globals": "17.6.0",
-    "jiti": "2.6.1",
-    "knip": "6.11.0",
+    "jiti": "2.7.0",
+    "knip": "6.12.2",
     "lefthook": "2.1.6",
-    "oxfmt": "0.47.0",
-    "oxlint": "1.62.0",
+    "oxfmt": "0.48.0",
+    "oxlint": "1.63.0",
     "semantic-release": "25.0.3",
     "tsx": "4.21.0",
     "typescript": "6.0.3",
-    "vite": "8.0.10",
+    "vite": "8.0.11",
     "vitest": "4.1.5"
   },
   "engines": {
