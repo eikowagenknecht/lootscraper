@@ -57,7 +57,7 @@
     "zod": "4.4.2"
   },
   "devDependencies": {
-    "@commitlint/cli": "20.5.3",
+    "@commitlint/cli": "21.0.0",
     "@commitlint/config-conventional": "20.5.3",
     "@commitlint/types": "20.5.0",
     "@semantic-release/git": "10.0.1",
