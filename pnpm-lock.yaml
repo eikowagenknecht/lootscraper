@@ -82,8 +82,8 @@ importers:
         specifier: 20.5.3
         version: 20.5.3
       '@commitlint/types':
-        specifier: 20.5.0
-        version: 20.5.0
+        specifier: 21.0.0
+        version: 21.0.0
       '@semantic-release/git':
         specifier: 10.0.1
         version: 10.0.1(semantic-release@25.0.3(typescript@6.0.3))

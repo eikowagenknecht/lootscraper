@@ -59,7 +59,7 @@
   "devDependencies": {
     "@commitlint/cli": "21.0.0",
     "@commitlint/config-conventional": "20.5.3",
-    "@commitlint/types": "20.5.0",
+    "@commitlint/types": "21.0.0",
     "@semantic-release/git": "10.0.1",
     "@testing-library/jest-dom": "6.9.1",
     "@types/better-sqlite3": "7.6.13",
