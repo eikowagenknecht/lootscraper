@@ -181,6 +181,10 @@ Looking for different approaches to tracking free games? Check out these other g
 - [free-games-claimer](https://github.com/vogler/free-games-claimer) - Automatically claim free games on Epic, Amazon and GOG
 - [epicgames-freegames-node](https://github.com/claabs/epicgames-freegames-node) - A Node.js script to claim free games on Epic
 
+## 🃏 More from me
+
+- [OpenRift](https://openrift.app) - An open-source collection tracker and deck builder for Riftbound, Riot's trading card game. Source on [GitHub](https://github.com/openriftapp/openrift).
+
 ## License
 
 ![GitHub License](https://img.shields.io/github/license/eikowagenknecht/lootscraper)
