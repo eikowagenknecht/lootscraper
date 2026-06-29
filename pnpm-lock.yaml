@@ -10,7 +10,7 @@ importers:
     dependencies:
       '@apollo/client':
         specifier: 4.1.9
-        version: 4.1.9(graphql@16.13.2)(rxjs@7.8.2)
+        version: 4.1.9(graphql@16.14.2)(rxjs@7.8.2)
       '@grammyjs/auto-retry':
         specifier: 2.0.2
         version: 2.0.2(grammy@1.42.0)
@@ -39,8 +39,8 @@ importers:
         specifier: 1.42.0
         version: 1.42.0
       graphql:
-        specifier: 16.13.2
-        version: 16.13.2
+        specifier: 16.14.2
+        version: 16.14.2
       handlebars:
         specifier: 4.7.9
         version: 4.7.9
@@ -1841,6 +1841,7 @@ packages:
   git-raw-commits@5.0.1:
     resolution: {integrity: sha512-Y+csSm2GD/PCSh6Isd/WiMjNAydu0VBiG9J7EdQsNA5P9uXvLayqjmTsNlK5Gs9IhblFZqOU0yid5Il5JPoLiQ==}
     engines: {node: '>=18'}
+    deprecated: Deprecated and no longer maintained. Use @conventional-changelog/git-client instead.
     hasBin: true
 
   github-from-package@0.0.0:
@@ -1870,8 +1871,8 @@ packages:
     peerDependencies:
       graphql: ^0.9.0 || ^0.10.0 || ^0.11.0 || ^0.12.0 || ^0.13.0 || ^14.0.0 || ^15.0.0 || ^16.0.0
 
-  graphql@16.13.2:
-    resolution: {integrity: sha512-5bJ+nf/UCpAjHM8i06fl7eLyVC9iuNAjm9qzkiu2ZGhM0VscSvS6WDPfAwkdkBuoXGM9FJSbKl6wylMwP9Ktig==}
+  graphql@16.14.2:
+    resolution: {integrity: sha512-Chq1s4CY7jmh8gO2qvLIJyfCDIN+EHLFW/9iShnp1z8FjBQMoodWP1kDC36VAMXXIvAjj4ARa7ntfAV2BrjsbA==}
     engines: {node: ^12.22.0 || ^14.16.0 || ^16.0.0 || >=17.0.0}
 
   handlebars@4.7.9:
@@ -3259,14 +3260,14 @@ snapshots:
 
   '@adobe/css-tools@4.4.4': {}
 
-  '@apollo/client@4.1.9(graphql@16.13.2)(rxjs@7.8.2)':
+  '@apollo/client@4.1.9(graphql@16.14.2)(rxjs@7.8.2)':
     dependencies:
-      '@graphql-typed-document-node/core': 3.2.0(graphql@16.13.2)
+      '@graphql-typed-document-node/core': 3.2.0(graphql@16.14.2)
       '@wry/caches': 1.0.1
       '@wry/equality': 0.5.7
       '@wry/trie': 0.5.0
-      graphql: 16.13.2
-      graphql-tag: 2.12.6(graphql@16.13.2)
+      graphql: 16.14.2
+      graphql-tag: 2.12.6(graphql@16.14.2)
       optimism: 0.18.1
       rxjs: 7.8.2
       tslib: 2.8.1
@@ -3578,9 +3579,9 @@ snapshots:
 
   '@grammyjs/types@3.26.0': {}
 
-  '@graphql-typed-document-node/core@3.2.0(graphql@16.13.2)':
+  '@graphql-typed-document-node/core@3.2.0(graphql@16.14.2)':
     dependencies:
-      graphql: 16.13.2
+      graphql: 16.14.2
 
   '@jridgewell/resolve-uri@3.1.2': {}
 
@@ -4755,12 +4756,12 @@ snapshots:
       - encoding
       - supports-color
 
-  graphql-tag@2.12.6(graphql@16.13.2):
+  graphql-tag@2.12.6(graphql@16.14.2):
     dependencies:
-      graphql: 16.13.2
+      graphql: 16.14.2
       tslib: 2.8.1
 
-  graphql@16.13.2: {}
+  graphql@16.14.2: {}
 
   handlebars@4.7.9:
     dependencies:
