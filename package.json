@@ -43,7 +43,7 @@
     "cross-env": "10.1.0",
     "discord.js": "14.26.4",
     "grammy": "1.42.0",
-    "graphql": "16.13.2",
+    "graphql": "16.14.2",
     "handlebars": "4.7.9",
     "i18next": "26.0.8",
     "kysely": "0.28.17",
