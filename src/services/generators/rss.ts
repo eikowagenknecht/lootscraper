@@ -82,13 +82,30 @@ export class RssGenerator {
             uri: this.config.feed.authorWeb,
           },
         ],
-        category: gameInfo?.steamInfo?.genres
-          ? gameInfo.steamInfo.genres.split(",").map((genre) => ({
-              term: `Genre: ${genre.trim()}`,
-              scheme: "https://store.steampowered.com/category/",
-              label: genre.trim(),
-            }))
-          : [],
+        category: [
+          {
+            term: `source:${offer.source}`,
+            scheme: "https://feed.eikowagenknecht.com/lootscraper/source",
+            label: translationService.getSourceDisplay(offer.source),
+          },
+          {
+            term: `platform:${offer.platform}`,
+            scheme: "https://feed.eikowagenknecht.com/lootscraper/platform",
+            label: translationService.getPlatformDisplay(offer.platform),
+          },
+          {
+            term: `type:${offer.type}`,
+            scheme: "https://feed.eikowagenknecht.com/lootscraper/type",
+            label: translationService.getTypeDisplay(offer.type),
+          },
+          ...(gameInfo?.steamInfo?.genres
+            ? gameInfo.steamInfo.genres.split(",").map((genre) => ({
+                term: `Genre: ${genre.trim()}`,
+                scheme: "https://store.steampowered.com/category/",
+                label: genre.trim(),
+              }))
+            : []),
+        ],
       });
     }
 
@@ -121,7 +138,10 @@ export class RssGenerator {
   }
 
   private getEntryTitle(offer: Offer): string {
-    const additionalInfo: string[] = [translationService.getTypeDisplay(offer.type)];
+    const additionalInfo: string[] = [
+      translationService.getTypeDisplay(offer.type),
+      translationService.getPlatformDisplay(offer.platform),
+    ];
     if (offer.duration !== OfferDuration.CLAIMABLE) {
       additionalInfo.push(translationService.getDurationDisplay(offer.duration));
     }
