@@ -55,6 +55,11 @@ export class GogGamesScraper extends GogBaseScraper {
       pageReadySelector: ".wrapper",
       pageLoadedHook: async (page: Page) => {
         await this.switchToEnglish(page);
+        // Giveaway elements are rendered client-side, so give them some time
+        // to appear. If none show up, there is probably no giveaway right now.
+        await page
+          .waitForSelector("a.giveaway-banner, giveaway", { timeout: 5000 })
+          .catch(() => null);
       },
     });
   }
@@ -172,11 +177,14 @@ export class GogGamesScraper extends GogBaseScraper {
 
       title = title.replaceAll("\n", " ").trim();
 
-      const imgUrl = this.sanitizeImgUrl(
-        await page.locator(".productcard-player__logo").getAttribute("srcset"),
-      );
-      if (!imgUrl) {
-        throw new Error(`Couldn't find image for ${title}`);
+      // Some product pages don't have a logo image, keep the offer anyways
+      let imgUrl: string | null = null;
+      try {
+        imgUrl = this.sanitizeImgUrl(
+          await page.locator(".productcard-player__logo").getAttribute("srcset"),
+        );
+      } catch {
+        logger.verbose(`${this.getScraperName()}: No image found for ${title}, skipping image.`);
       }
 
       return {

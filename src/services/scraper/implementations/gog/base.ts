@@ -8,7 +8,7 @@ import { logger } from "@/utils/logger";
 export interface GogRawOffer {
   title: string;
   url: string;
-  imgUrl: string;
+  imgUrl: string | null;
   validTo?: string;
 }
 
