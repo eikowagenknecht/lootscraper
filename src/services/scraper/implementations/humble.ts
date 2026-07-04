@@ -138,15 +138,15 @@ export class HumbleGamesScraper extends BaseScraper {
 
       const result: { validForMinutes: number; originalPrice?: number } = {
         validForMinutes:
-          Number.parseInt(daysValid, 10) * 24 * 60 +
-          Number.parseInt(hoursValid, 10) * 60 +
-          Number.parseInt(minutesValid, 10),
+          Math.trunc(Number(daysValid)) * 24 * 60 +
+          Math.trunc(Number(hoursValid)) * 60 +
+          Math.trunc(Number(minutesValid)),
       };
 
       const originalPrice = await page.locator(".full-price").textContent();
 
       if (originalPrice) {
-        result.originalPrice = Number.parseFloat(originalPrice.replace("€", "").trim());
+        result.originalPrice = Number(originalPrice.replace("€", "").trim());
       }
 
       return result;

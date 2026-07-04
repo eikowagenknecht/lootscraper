@@ -9,7 +9,7 @@
  */
 // oxlint-disable-next-line jsdoc/require-returns -- https://github.com/oxc-project/oxc/issues/13776
 export function escapeText(text: string): string {
-  return text.replaceAll(/[_*[\]()~`>#+-=|{}.!\\]/g, String.raw`\$&`);
+  return text.replaceAll(/[_*[\]()~`>#+-=|{}.!\\]/gu, String.raw`\$&`);
 }
 
 /**
@@ -23,7 +23,7 @@ export function escapeText(text: string): string {
  */
 // oxlint-disable-next-line jsdoc/require-returns -- https://github.com/oxc-project/oxc/issues/13776
 export function escapeCode(text: string): string {
-  return text.replaceAll(/[`\\]/g, String.raw`\$&`);
+  return text.replaceAll(/[`\\]/gu, String.raw`\$&`);
 }
 
 /**
@@ -37,7 +37,7 @@ export function escapeCode(text: string): string {
  */
 // oxlint-disable-next-line jsdoc/require-returns -- https://github.com/oxc-project/oxc/issues/13776
 function escapeUrl(url: string): string {
-  return url.replaceAll(/[)\\]/g, String.raw`\$&`);
+  return url.replaceAll(/[)\\]/gu, String.raw`\$&`);
 }
 
 export function bold(text: string): string {

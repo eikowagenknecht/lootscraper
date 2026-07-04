@@ -20,9 +20,9 @@ describe("GOG Always Free Games Scraper Contract Tests", () => {
     for (const result of results) {
       expect(result.title).toBeDefined();
       expect(result.url).toBeDefined();
-      expect(result.url).toMatch(/^https:\/\/www\.gog\.com\//);
+      expect(result.url).toMatch(/^https:\/\/www\.gog\.com\//u);
       expect(result.img_url).toBeDefined();
-      expect(result.img_url).toMatch(/^https:\/\//);
+      expect(result.img_url).toMatch(/^https:\/\//u);
       expect(result.valid_to).toBeNull();
     }
   });

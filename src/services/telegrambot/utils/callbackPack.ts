@@ -5,7 +5,7 @@ import { z } from "zod";
  * Typically used for enums or other string-like types
  */
 interface EnumValue {
-  valueOf(): string;
+  valueOf: () => string;
 }
 
 /**
@@ -127,7 +127,7 @@ const unescapeValue = (value: string): string => {
 
   let result = value;
   let match: RegExpExecArray | null;
-  const pattern = /\\(\\|:)/g;
+  const pattern = /\\(?<escaped>\\|:)/gu;
   const replacements: [number, string][] = [];
 
   // Find all escape sequences and store their positions
@@ -252,7 +252,7 @@ export function unpackData<T extends z.ZodObject<z.ZodRawShape>>(
   schema: T,
 ): z.infer<T> {
   const keys = Object.keys(schema.shape) as (keyof z.infer<T>)[];
-  const regex = /(?<!\\):/;
+  const regex = /(?<!\\):/u;
   const values = packed.split(regex);
 
   if (values.length !== keys.length) {
@@ -323,7 +323,7 @@ export function unpackData<T extends z.ZodObject<z.ZodRawShape>>(
 }
 
 export function unpackFirstField(packed: string) {
-  const regex = /(?<!\\):/;
+  const regex = /(?<!\\):/u;
   const values = packed.split(regex);
   return values[0];
 }

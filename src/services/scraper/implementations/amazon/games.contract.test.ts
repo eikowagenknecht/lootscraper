@@ -22,7 +22,7 @@ describe("Amazon Games Scraper Contract Tests", () => {
       expect(result.title).toBeDefined();
       expect(result.valid_to).toBeDefined();
       expect(result.img_url).toBeDefined();
-      expect(result.img_url).toMatch(/^https:\/\//);
+      expect(result.img_url).toMatch(/^https:\/\//u);
 
       if (!result.valid_to) {
         continue;

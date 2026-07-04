@@ -21,10 +21,10 @@ describe("GOG Games Scraper Contract Tests", () => {
     for (const result of results) {
       expect(result.title).toBeDefined();
       expect(result.url).toBeDefined();
-      expect(result.url).toMatch(/^https:\/\/www\.gog\.com\//);
+      expect(result.url).toMatch(/^https:\/\/www\.gog\.com\//u);
       // Some product pages have no logo image, so img_url may be null
       if (result.img_url !== null) {
-        expect(result.img_url).toMatch(/^https:\/\//);
+        expect(result.img_url).toMatch(/^https:\/\//u);
       }
 
       // Some offers have no end date, but if they do, it should be in the future

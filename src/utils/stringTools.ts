@@ -59,13 +59,13 @@ function levenshteinDistance(s1: string, s2: string): number {
 export function getMatchScore(search: string, result: string): number {
   // Clean strings: keep only alphanumeric and spaces, condense spaces
   const cleanedSearch = search
-    .replaceAll(/[^a-zA-Z0-9 ]/g, "")
-    .replaceAll(/ +/g, " ")
+    .replaceAll(/[^a-zA-Z0-9 ]/gu, "")
+    .replaceAll(/ +/gu, " ")
     .toLowerCase();
 
   const cleanedResult = result
-    .replaceAll(/[^a-zA-Z0-9 ]/g, "")
-    .replaceAll(/ +/g, " ")
+    .replaceAll(/[^a-zA-Z0-9 ]/gu, "")
+    .replaceAll(/ +/gu, " ")
     .toLowerCase();
 
   let score = getSequenceMatchRatio(cleanedSearch, cleanedResult);
@@ -117,7 +117,7 @@ export function normalizeString(str: string): string {
 
 export function cleanHtml(html: string): string {
   return html
-    .replaceAll(/<!--[\s\S]*?-->/g, "") // Remove HTML comments, single and multiline
+    .replaceAll(/<!--[\s\S]*?-->/gu, "") // Remove HTML comments, single and multiline
     .split("\n")
     .map((line) => line.trimEnd()) // Remove trailing whitespace
     .filter((line) => line.trim() !== "") // Remove empty lines
@@ -129,14 +129,14 @@ export function cleanGameTitle(title: string): string {
     .replaceAll(" - ", ": ")
     .replaceAll(" : ", ": ")
     .trim()
-    .replaceAll(/^\[ ?VIP ?\]/g, "")
-    .replaceAll(/ on Origin$/g, "")
-    .replaceAll(/ Game of the Year Edition( Deluxe)?$/g, "")
-    .replaceAll(/ (Definitive|Deluxe|Collectors) Edition$/g, "")
-    .replaceAll(/ \(Mobile\)$/g, "")
-    .replaceAll(/ \([1-9]{4}\)$/g, "") // Remove years in brackets
+    .replaceAll(/^\[ ?VIP ?\]/gu, "")
+    .replaceAll(/ on Origin$/gu, "")
+    .replaceAll(/ Game of the Year Edition(?: Deluxe)?$/gu, "")
+    .replaceAll(/ (?:Definitive|Deluxe|Collectors) Edition$/gu, "")
+    .replaceAll(/ \(Mobile\)$/gu, "")
+    .replaceAll(/ \([1-9]{4}\)$/gu, "") // Remove years in brackets
     .trim()
-    .replaceAll(/[:|-]$/g, "")
+    .replaceAll(/[:|-]$/gu, "")
     .trim();
 }
 
@@ -146,7 +146,7 @@ export function cleanLootTitle(title: string): string {
     .replaceAll(" - ", ": ")
     .replaceAll(" : ", ": ")
     .trim()
-    .replaceAll(/[:|-]$/g, "")
+    .replaceAll(/[:|-]$/gu, "")
     .trim();
 
   if (cleaned.length > 0) {
@@ -204,10 +204,10 @@ export function cleanCombinedTitle(title: string): [string, string] {
   const cleanTitle = title.replaceAll("\n", " ").trim();
 
   // Special Steam format (TITLE — LOOT: LOOTDETAIL)
-  const specialMatch = /^(.*) — (.*: .*)$/.exec(cleanTitle);
-  if (specialMatch?.[1]) {
-    probableGameName = specialMatch[1];
-    probableLootName = specialMatch[2];
+  const specialMatch = /^(?<game>.*) — (?<loot>.*: .*)$/u.exec(cleanTitle);
+  if (specialMatch?.groups?.game) {
+    probableGameName = specialMatch.groups.game;
+    probableLootName = specialMatch.groups.loot ?? "";
   }
 
   if (!probableGameName) {
@@ -227,10 +227,10 @@ export function cleanCombinedTitle(title: string): [string, string] {
 
     // By the "Get ... in [Game] pattern" (to catch games with a colon in the name)
     if (!probableGameName) {
-      const getInMatch = /^Get (.*) in (.*)$/.exec(cleanTitle);
-      if (getInMatch?.[1]) {
-        probableGameName = getInMatch[2];
-        probableLootName = getInMatch[1];
+      const getInMatch = /^Get (?<loot>.*) in (?<game>.*)$/u.exec(cleanTitle);
+      if (getInMatch?.groups?.loot) {
+        probableGameName = getInMatch.groups.game ?? "";
+        probableLootName = getInMatch.groups.loot;
       }
     }
 
@@ -271,8 +271,7 @@ export function generateFilename({
 }): string {
   const parts = [prefix];
   if (combination) {
-    parts.push(combination.source.toLowerCase());
-    parts.push(combination.type.toLowerCase());
+    parts.push(combination.source.toLowerCase(), combination.type.toLowerCase());
     if (combination.duration !== OfferDuration.CLAIMABLE) {
       parts.push(combination.duration.toLowerCase());
     }

@@ -75,8 +75,8 @@ export class GogGamesScraper extends GogBaseScraper {
       title = title
         .replaceAll("\n", " ")
         .trim()
-        .replace(/^Claim /, "")
-        .replace(/ and don't miss the best GOG offers in the future!$/, "");
+        .replace(/^Claim /u, "")
+        .replace(/ and don't miss the best GOG offers in the future!$/u, "");
 
       const validTo = await element.locator("gog-countdown-timer").getAttribute("end-date");
 
@@ -213,7 +213,7 @@ export class GogGamesScraper extends GogBaseScraper {
     let validTo: DateTime | null = null;
     if (rawOffer.validTo) {
       try {
-        const validToUnix = Number.parseInt(rawOffer.validTo, 10);
+        const validToUnix = Math.trunc(Number(rawOffer.validTo));
         validTo = DateTime.fromMillis(validToUnix);
       } catch (error) {
         logger.warn(

@@ -21,9 +21,9 @@ describe("Ubisoft Games Scraper Contract Tests", () => {
       expect(result.valid_to).toBeDefined();
       expect(result.title).toBeDefined();
       expect(result.url).toBeDefined();
-      expect(result.url).toMatch(/^https:\/\/store\.ubi\.com\//);
+      expect(result.url).toMatch(/^https:\/\/store\.ubi\.com\//u);
       expect(result.img_url).toBeDefined();
-      expect(result.img_url).toMatch(/^https:\/\//);
+      expect(result.img_url).toMatch(/^https:\/\//u);
     }
   });
 });

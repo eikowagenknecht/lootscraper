@@ -8,6 +8,9 @@ const LogLevel = z.enum(["ERROR", "WARN", "INFO", "HTTP", "VERBOSE", "DEBUG", "S
 export const TelegramLogLevel = LogLevel;
 export type TelegramLogLevel = z.infer<typeof TelegramLogLevel>;
 
+const EnabledScrapersSchema = z.array(z.string());
+const InfoSourcesSchema = z.array(z.enum(InfoSource));
+
 // Config Schema
 export const ConfigSchema = z.object({
   common: z.object({
@@ -22,8 +25,8 @@ export const ConfigSchema = z.object({
     loadImages: z.boolean().default(false),
   }),
   scraper: z.object({
-    enabledScrapers: z.array(z.string()).default([]),
-    infoSources: z.array(z.enum(InfoSource)).default([]),
+    enabledScrapers: EnabledScrapersSchema.default([]),
+    infoSources: InfoSourcesSchema.default([]),
   }),
   actions: z.object({
     scrapeOffers: z.boolean().default(false),

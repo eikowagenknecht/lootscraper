@@ -20,9 +20,9 @@ describe("Itch.io Games Scraper Contract Tests", () => {
     for (const result of results) {
       expect(result.title).toBeDefined();
       expect(result.url).toBeDefined();
-      expect(result.url).toMatch(/^https:\/\//);
+      expect(result.url).toMatch(/^https:\/\//u);
       expect(result.img_url).toBeDefined();
-      expect(result.img_url).toMatch(/^https:\/\//);
+      expect(result.img_url).toMatch(/^https:\/\//u);
     }
   });
 });

@@ -339,7 +339,7 @@ class AtomFeed {
     }
 
     // Fallback to epoch if no updated date is found because it's a required field and not having it trips some RSS readers
-    updated = updated ?? new Date(0);
+    updated ??= new Date(0);
 
     return cleanHtml(
       feedTemplate({

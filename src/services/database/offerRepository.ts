@@ -165,27 +165,35 @@ export async function getActiveOffers(time: DateTime, filters?: OfferFilters): P
     const seenCutoff = time.minus({ hours: 24 });
     const validFromCutOff = time.minus({ months: 3 });
 
+    const timeIso = time.toISO();
+    const seenCutoffIso = seenCutoff.toISO();
+    const validFromCutoffIso = validFromCutOff.toISO();
+
     logger.debug(
       `Getting active offers for ${time.toISO()} with filters: ${JSON.stringify(filters)}`,
     );
 
     let query = getDb()
       .selectFrom("offers")
-      .where((eb) =>
-        eb.not(
-          eb.or([
-            // 1. Skip entries that start in the future
-            eb.and([eb("valid_from", "is not", null), eb("valid_from", ">", time.toISO())]),
-            // 2. Skip entries that have ended
-            eb.and([eb("valid_to", "is not", null), eb("valid_to", "<", time.toISO())]),
-            // 3. Skip entries that have no end date and haven't been seen for more than a day
-            eb.and([eb("valid_to", "is", null), eb("seen_last", "<", seenCutoff.toISO())]),
-            // 4. Skip entries that have been seen for the first time more than 3 months ago.
-            // Those are probably not "real" offers.
-            eb("seen_first", "<", validFromCutOff.toISO()),
-          ]),
-        ),
-      );
+      .where((eb) => {
+        // 1. Skip entries that start in the future
+        const startsInFuture = eb.and([
+          eb("valid_from", "is not", null),
+          eb("valid_from", ">", timeIso),
+        ]);
+        // 2. Skip entries that have ended
+        const hasEnded = eb.and([eb("valid_to", "is not", null), eb("valid_to", "<", timeIso)]);
+        // 3. Skip entries that have no end date and haven't been seen for more than a day
+        const staleWithoutEnd = eb.and([
+          eb("valid_to", "is", null),
+          eb("seen_last", "<", seenCutoffIso),
+        ]);
+        // 4. Skip entries that have been seen for the first time more than 3 months ago.
+        // Those are probably not "real" offers.
+        const seenTooLongAgo = eb("seen_first", "<", validFromCutoffIso);
+
+        return eb.not(eb.or([startsInFuture, hasEnded, staleWithoutEnd, seenTooLongAgo]));
+      });
 
     // Apply additional filters
     if (filters?.type !== undefined) {
@@ -233,12 +241,36 @@ export async function getChatsNeedingOffers(time: DateTime): Promise<number[]> {
     const seenCutoff = time.minus({ hours: 24 });
     const validFromCutOff = time.minus({ months: 3 });
 
+    const timeIso = time.toISO();
+    const seenCutoffIso = seenCutoff.toISO();
+    const validFromCutoffIso = validFromCutOff.toISO();
+
     const query = getDb()
       .selectFrom("telegram_chats as c")
       .leftJoin("telegram_subscriptions as s", "s.chat_id", "c.id")
       .leftJoin("offers as o", (join) =>
-        join.on((eb) =>
-          eb.and([
+        join.on((eb) => {
+          // 1. Skip entries that start in the future
+          const startsInFuture = eb.and([
+            eb("valid_from", "is not", null),
+            eb("valid_from", ">", timeIso),
+          ]);
+          // 2. Skip entries that have ended
+          const hasEnded = eb.and([eb("valid_to", "is not", null), eb("valid_to", "<", timeIso)]);
+          // 3. Skip entries that have no end date and haven't been seen for more than a day
+          const staleWithoutEnd = eb.and([
+            eb("valid_to", "is", null),
+            eb("seen_last", "<", seenCutoffIso),
+          ]);
+          // 4. Skip entries that have been seen for the first time more than 3 months ago.
+          // Those are probably not "real" offers.
+          const seenTooLongAgo = eb("seen_first", "<", validFromCutoffIso);
+
+          const isValid = eb.not(
+            eb.or([startsInFuture, hasEnded, staleWithoutEnd, seenTooLongAgo]),
+          );
+
+          return eb.and([
             // Match subscription criteria
             eb("o.type", "=", eb.ref("s.type")),
             eb("o.source", "=", eb.ref("s.source")),
@@ -247,21 +279,9 @@ export async function getChatsNeedingOffers(time: DateTime): Promise<number[]> {
             // Only newer offers
             eb("o.id", ">", eb.ref("s.last_offer_id")),
             // Validity conditions
-            eb.not(
-              eb.or([
-                // 1. Skip entries that start in the future
-                eb.and([eb("valid_from", "is not", null), eb("valid_from", ">", time.toISO())]),
-                // 2. Skip entries that have ended
-                eb.and([eb("valid_to", "is not", null), eb("valid_to", "<", time.toISO())]),
-                // 3. Skip entries that have no end date and haven't been seen for more than a day
-                eb.and([eb("valid_to", "is", null), eb("seen_last", "<", seenCutoff.toISO())]),
-                // 4. Skip entries that have been seen for the first time more than 3 months ago.
-                // Those are probably not "real" offers.
-                eb("seen_first", "<", validFromCutOff.toISO()),
-              ]),
-            ),
-          ]),
-        ),
+            isValid,
+          ]);
+        }),
       )
       .select("c.id as id")
       .where("c.active", "=", 1)
