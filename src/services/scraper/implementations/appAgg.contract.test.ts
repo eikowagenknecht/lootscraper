@@ -5,9 +5,7 @@ import { config } from "@/services/config";
 
 import { AppAggGamesScraper } from "./appAgg";
 
-const runThis = process.env.VSCODE_PID !== undefined || process.env.VITEST_MODE === "contract";
-
-describe.skipIf(!runThis)("Google Play Games Scraper Contract Tests", () => {
+describe("Google Play Games Scraper Contract Tests", () => {
   beforeAll(async () => {
     config.loadConfig();
     await browserService.initialize(config.get());

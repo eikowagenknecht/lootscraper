@@ -5,9 +5,7 @@ import { config } from "@/services/config";
 
 import { UbisoftGamesScraper } from "./ubisoft";
 
-const runThis = process.env.VSCODE_PID !== undefined || process.env.VITEST_MODE === "contract";
-
-describe.skipIf(!runThis)("Ubisoft Games Scraper Contract Tests", () => {
+describe("Ubisoft Games Scraper Contract Tests", () => {
   beforeAll(async () => {
     config.loadConfig();
     await browserService.initialize(config.get());

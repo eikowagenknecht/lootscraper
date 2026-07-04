@@ -5,9 +5,7 @@ import { config } from "@/services/config";
 
 import { AppRavenGamesScraper } from "./appRaven";
 
-const runThis = process.env.VSCODE_PID !== undefined || process.env.VITEST_MODE === "contract";
-
-describe.skipIf(!runThis)("App Raven Games Scraper Contract Tests", () => {
+describe("App Raven Games Scraper Contract Tests", () => {
   beforeAll(async () => {
     config.loadConfig();
     await browserService.initialize(config.get());

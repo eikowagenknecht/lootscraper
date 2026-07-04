@@ -6,9 +6,7 @@ import { config } from "@/services/config";
 
 import { AmazonLootScraper } from "./loot";
 
-const runThis = process.env.VSCODE_PID !== undefined || process.env.VITEST_MODE === "contract";
-
-describe.skipIf(!runThis)("Amazon Loot Scraper Contract Tests", () => {
+describe("Amazon Loot Scraper Contract Tests", () => {
   beforeAll(async () => {
     config.loadConfig();
     await browserService.initialize(config.get());

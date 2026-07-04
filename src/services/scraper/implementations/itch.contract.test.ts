@@ -5,9 +5,7 @@ import { config } from "@/services/config";
 
 import { ItchGamesScraper } from "./itch";
 
-const runThis = process.env.VSCODE_PID !== undefined || process.env.VITEST_MODE === "contract";
-
-describe.skipIf(!runThis)("Itch.io Games Scraper Contract Tests", () => {
+describe("Itch.io Games Scraper Contract Tests", () => {
   beforeAll(async () => {
     config.loadConfig();
     await browserService.initialize(config.get());

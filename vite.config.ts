@@ -6,6 +6,7 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": resolve(__dirname, "./src"),
+      tests: resolve(__dirname, "./tests"),
     },
   },
   build: {
@@ -23,9 +24,27 @@ export default defineConfig({
     globals: true,
     environment: "node",
     setupFiles: ["./vitest-setup.ts"],
-    include: ["src/**/*.contract.test.{ts,tsx}"],
-    exclude: ["node_modules/**", "dist/**", "**/types/**", "data/**"],
-    testTimeout: 5000,
+    projects: [
+      {
+        extends: true,
+        test: {
+          name: "unit",
+          include: ["src/**/*.{test,spec}.{ts,tsx}", "!src/**/*.contract.test.{ts,tsx}"],
+          exclude: ["node_modules/**", "dist/**", "**/types/**", "data/**"],
+          testTimeout: 5000,
+        },
+      },
+      {
+        extends: true,
+        test: {
+          name: "contract",
+          include: ["src/**/*.contract.test.{ts,tsx}"],
+          exclude: ["node_modules/**", "dist/**", "**/types/**", "data/**"],
+          testTimeout: 120_000,
+          hookTimeout: 60_000,
+        },
+      },
+    ],
     coverage: {
       provider: "v8",
       reporter: ["text", "html"],

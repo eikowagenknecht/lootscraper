@@ -48,6 +48,7 @@ igdb: {}
 ftp: {}
 feed:
   authorName: Test Author
+discord: {}
 `;
     writeFileSync(tempConfigPath, validConfig);
     config.loadConfig(tempConfigPath);

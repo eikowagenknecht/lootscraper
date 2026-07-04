@@ -5,9 +5,7 @@ import { config } from "@/services/config";
 
 import { EpicGamesApiScraper } from "./epicApi";
 
-const runThis = process.env.VSCODE_PID !== undefined || process.env.VITEST_MODE === "contract";
-
-describe.skipIf(!runThis)("Epic Games Scraper Contract Tests", () => {
+describe("Epic Games Scraper Contract Tests", () => {
   beforeAll(async () => {
     config.loadConfig();
     await browserService.initialize(config.get());
