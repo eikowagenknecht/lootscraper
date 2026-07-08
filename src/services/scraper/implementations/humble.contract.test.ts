@@ -5,9 +5,7 @@ import { config } from "@/services/config";
 
 import { HumbleGamesScraper } from "./humble";
 
-const runThis = process.env.VSCODE_PID !== undefined || process.env.VITEST_MODE === "contract";
-
-describe.skipIf(!runThis)("Humble Games Scraper Contract Tests", () => {
+describe("Humble Games Scraper Contract Tests", () => {
   beforeAll(async () => {
     config.loadConfig();
     await browserService.initialize(config.get());
@@ -22,9 +20,9 @@ describe.skipIf(!runThis)("Humble Games Scraper Contract Tests", () => {
     for (const result of results) {
       expect(result.title).toBeDefined();
       expect(result.url).toBeDefined();
-      expect(result.url).toMatch(/^https:\/\/humblebundle\.com\//);
+      expect(result.url).toMatch(/^https:\/\/humblebundle\.com\//u);
       expect(result.img_url).toBeDefined();
-      expect(result.img_url).toMatch(/^https:\/\//);
+      expect(result.img_url).toMatch(/^https:\/\//u);
     }
   });
 });

@@ -76,7 +76,7 @@ export class SteamClient {
           score >= SteamClient.RESULT_MATCH_THRESHOLD &&
           (!bestMatch || score > bestMatch.score)
         ) {
-          bestMatch = { appId: Number.parseInt(appId, 10), score, title };
+          bestMatch = { appId: Math.trunc(Number(appId)), score, title };
           logger.debug(`Found match ${title} with score ${(score * 100).toFixed(0)}%`);
         }
       }
@@ -162,7 +162,7 @@ export class SteamClient {
         .getAttribute("data-tooltip-html");
 
       if (reviewScore && !reviewScore.startsWith("Need more user reviews")) {
-        data.percent = Number.parseInt(reviewScore.split("%")[0].trim(), 10);
+        data.percent = Math.trunc(Number(reviewScore.split("%")[0].trim()));
       }
 
       // Get rating if we have percentage
@@ -172,7 +172,7 @@ export class SteamClient {
           .getAttribute("content");
 
         if (rating) {
-          data.score = Number.parseInt(rating, 10);
+          data.score = Math.trunc(Number(rating));
         }
 
         // Get recommendations count
@@ -181,7 +181,7 @@ export class SteamClient {
           .getAttribute("content");
 
         if (recommendations) {
-          data.recommendations = Number.parseInt(recommendations, 10);
+          data.recommendations = Math.trunc(Number(recommendations));
         }
       }
 

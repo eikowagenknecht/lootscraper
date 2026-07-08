@@ -7,9 +7,7 @@ import { config } from "@/services/config";
 import { telegramBotService } from "@/services/telegrambot";
 import { delay } from "@/utils";
 
-const runThis = process.env.VSCODE_PID !== undefined || process.env.VITEST_MODE === "contract";
-
-describe.skipIf(!runThis)("Telegram Message Length", () => {
+describe("Telegram Message Length", () => {
   beforeAll(async () => {
     // Load config and initialize bot
     config.loadConfig();
@@ -41,7 +39,7 @@ describe.skipIf(!runThis)("Telegram Message Length", () => {
   });
 });
 
-describe.skipIf(!runThis)("Telegram Rate Limits", () => {
+describe("Telegram Rate Limits", () => {
   beforeAll(async () => {
     config.loadConfig();
     await telegramBotService.initialize(config.get());

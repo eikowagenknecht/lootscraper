@@ -214,6 +214,8 @@ limit 50;
   });
 
   test("renews expired auth token", async () => {
+    vi.resetAllMocks(); // Reset to remove default auth mock, this test queues its own
+
     // Mock Date.now() to control token expiration
     const realDateNow = Date.now;
     let currentTime = 1_000_000;

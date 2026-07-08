@@ -411,8 +411,8 @@ export abstract class BaseScraper {
    * @returns true if the title is a demo, false otherwise
    */
   protected isDemo(title: string): boolean {
-    const demoRegex = /^[\W]?demo[\W]|\Wdemo\W?((.*version.*)|(\(.*\)))?$/i;
-    const teaserRegex = /^[\W]?teaser[\W]|\Wteaser\W?((.*version.*)|(\(.*\)))?$/i;
+    const demoRegex = /^[\W]?demo[\W]|\Wdemo\W?(?:(?:.*version.*)|(?:\(.*\)))?$/iu;
+    const teaserRegex = /^[\W]?teaser[\W]|\Wteaser\W?(?:(?:.*version.*)|(?:\(.*\)))?$/iu;
     return demoRegex.test(title) || teaserRegex.test(title);
   }
 
@@ -431,9 +431,9 @@ export abstract class BaseScraper {
    */
   protected isPrerelease(title: string): boolean {
     const patterns = [
-      /^[\W]?alpha[\W]|\Walpha\W?((.*version.*)|(\(.*\)))?$/i,
-      /^[\W]?beta[\W]|\Wbeta\W?((.*version.*)|(\(.*\)))?$/i,
-      /^[\W]?early access[\W]|\Wearly access\W?((.*version.*)|(\(.*\)))?$/i,
+      /^[\W]?alpha[\W]|\Walpha\W?(?:(?:.*version.*)|(?:\(.*\)))?$/iu,
+      /^[\W]?beta[\W]|\Wbeta\W?(?:(?:.*version.*)|(?:\(.*\)))?$/iu,
+      /^[\W]?early access[\W]|\Wearly access\W?(?:(?:.*version.*)|(?:\(.*\)))?$/iu,
     ];
     return (
       patterns.some((pattern) => pattern.test(title)) || title.includes("Playable Teaser") // Sometimes used by GOG

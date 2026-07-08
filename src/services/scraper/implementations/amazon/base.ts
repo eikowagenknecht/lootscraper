@@ -142,7 +142,7 @@ export abstract class AmazonBaseScraper extends BaseScraper {
    */
   protected parseDateString(dateStr: string): DateTime | null {
     try {
-      const raw = dateStr.replace(/^Ends\s+/, "");
+      const raw = dateStr.replace(/^Ends\s+/u, "");
       const now = DateTime.now().setZone("UTC").startOf("day");
 
       if (raw.toLowerCase() === "today") {

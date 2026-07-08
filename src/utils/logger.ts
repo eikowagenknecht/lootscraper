@@ -66,10 +66,15 @@ function createLoggerInstance() {
   const logger = createLogger({});
 
   // Always add console transport with environment-aware configuration
+  const consoleFormat = format.combine(
+    format.colorize(),
+    format.timestamp(),
+    createConsoleFormat(),
+  );
   logger.add(
     new transports.Console({
       level: getLogLevel(DEFAULT_CONFIG.console.level),
-      format: format.combine(format.colorize(), format.timestamp(), createConsoleFormat()),
+      format: consoleFormat,
     }),
   );
 
@@ -81,9 +86,10 @@ function createLoggerInstance() {
       ? getLogLevel(configuredLogLevel)
       : getLogLevel(fileConfig.level);
 
+    const logFilename = resolve(getDataPath(), "log", logFile ?? fileConfig.filename);
     logger.add(
       new DailyRotateFile({
-        filename: resolve(getDataPath(), "log", logFile ?? fileConfig.filename),
+        filename: logFilename,
         datePattern: "YYYY-MM-DD",
         extension: ".log",
         zippedArchive: true,

@@ -75,7 +75,7 @@ class BrowserService {
       // Skip images
       await newContext.route("**/*", (route) => {
         const url = route.request().url();
-        const isImageExtension = /\.(png|jpg|jpeg|gif|webp|svg|ico)$/i.test(url);
+        const isImageExtension = /\.(?:png|jpg|jpeg|gif|webp|svg|ico)$/iu.test(url);
         const isImageResource = route.request().resourceType() === "image";
 
         // Block if either condition is true

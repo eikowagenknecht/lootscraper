@@ -246,7 +246,7 @@ describe("Callback Pack", () => {
 
     test("should throw on invalid boolean values", () => {
       const packed = "invalid:null:undef:test";
-      expect(() => unpackData(packed, BooleanSchema)).toThrow(/Invalid boolean/);
+      expect(() => unpackData(packed, BooleanSchema)).toThrow(/Invalid boolean/u);
     });
   });
 
@@ -477,7 +477,7 @@ describe("Callback Pack", () => {
 
       test("should throw descriptive error for invalid number fields", () => {
         const packed = "not-a-number:test";
-        expect(() => unpackData(packed, ErrorSchema)).toThrow(/Invalid number/);
+        expect(() => unpackData(packed, ErrorSchema)).toThrow(/Invalid number/u);
       });
 
       test("should preserve original error messages from Zod", () => {
@@ -492,7 +492,7 @@ describe("Callback Pack", () => {
         };
 
         expect(() => packData(data, ValidationSchema)).toThrow(
-          /Invalid email|Number must be greater than/,
+          /Invalid email|Number must be greater than/u,
         );
       });
     });

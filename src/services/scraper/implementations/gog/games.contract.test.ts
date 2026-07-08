@@ -6,9 +6,7 @@ import { config } from "@/services/config";
 
 import { GogGamesScraper } from "./games";
 
-const runThis = process.env.VSCODE_PID !== undefined || process.env.VITEST_MODE === "contract";
-
-describe.skipIf(!runThis)("GOG Games Scraper Contract Tests", () => {
+describe("GOG Games Scraper Contract Tests", () => {
   beforeAll(async () => {
     config.loadConfig();
     await browserService.initialize(config.get());
@@ -23,9 +21,11 @@ describe.skipIf(!runThis)("GOG Games Scraper Contract Tests", () => {
     for (const result of results) {
       expect(result.title).toBeDefined();
       expect(result.url).toBeDefined();
-      expect(result.url).toMatch(/^https:\/\/www\.gog\.com\//);
-      expect(result.img_url).toBeDefined();
-      expect(result.img_url).toMatch(/^https:\/\//);
+      expect(result.url).toMatch(/^https:\/\/www\.gog\.com\//u);
+      // Some product pages have no logo image, so img_url may be null
+      if (result.img_url !== null) {
+        expect(result.img_url).toMatch(/^https:\/\//u);
+      }
 
       // Some offers have no end date, but if they do, it should be in the future
       if (result.valid_to) {

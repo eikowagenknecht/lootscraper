@@ -5,9 +5,7 @@ import { config } from "@/services/config";
 
 import { SteamClient } from "./steam";
 
-const runThis = process.env.VSCODE_PID !== undefined || process.env.VITEST_MODE === "contract";
-
-describe.skipIf(!runThis)("Steam Game Info Contract Tests", () => {
+describe("Steam Game Info Contract Tests", () => {
   beforeAll(async () => {
     config.loadConfig();
     await browserService.initialize(config.get());

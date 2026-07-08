@@ -6,9 +6,7 @@ import type { NewIgdbInfo } from "@/types/database";
 
 import { IgdbClient } from "./igdb";
 
-const runThis = process.env.VSCODE_PID !== undefined || process.env.VITEST_MODE === "contract";
-
-describe.skipIf(!runThis)("IgdbClient", () => {
+describe("IgdbClient", () => {
   let client: IgdbClient;
 
   beforeEach(() => {

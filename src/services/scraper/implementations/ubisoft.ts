@@ -78,9 +78,9 @@ export class UbisoftGamesScraper extends BaseScraper {
 
       // Date looks like "Offer ends <January 23, 2023 at 3PM UTC>"
       validTo = validTo
-        .replace(/^Offer valid until /, "")
-        .replace(/^Offer ends /, "")
-        .replace(/ UTC\.$/, "");
+        .replace(/^Offer valid until /u, "")
+        .replace(/^Offer ends /u, "")
+        .replace(/ UTC\.$/u, "");
 
       let url = await element.locator("a.button").getAttribute("href");
       if (!url) {

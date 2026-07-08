@@ -1,5 +1,6 @@
-import type { Kysely, Migration } from "kysely";
-import { Migrator } from "kysely";
+import type { Kysely } from "kysely";
+import type { Migration } from "kysely/migration";
+import { Migrator } from "kysely/migration";
 import { DateTime } from "luxon";
 
 import { DatabaseError } from "@/types/errors";

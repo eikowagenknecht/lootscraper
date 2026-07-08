@@ -6,9 +6,7 @@ import { config } from "@/services/config";
 
 import { AmazonGamesScraper } from "./games";
 
-const runThis = process.env.VSCODE_PID !== undefined || process.env.VITEST_MODE === "contract";
-
-describe.skipIf(!runThis)("Amazon Games Scraper Contract Tests", () => {
+describe("Amazon Games Scraper Contract Tests", () => {
   beforeAll(async () => {
     config.loadConfig();
     await browserService.initialize(config.get());
@@ -24,7 +22,7 @@ describe.skipIf(!runThis)("Amazon Games Scraper Contract Tests", () => {
       expect(result.title).toBeDefined();
       expect(result.valid_to).toBeDefined();
       expect(result.img_url).toBeDefined();
-      expect(result.img_url).toMatch(/^https:\/\//);
+      expect(result.img_url).toMatch(/^https:\/\//u);
 
       if (!result.valid_to) {
         continue;

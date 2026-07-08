@@ -8,7 +8,7 @@ import { logger } from "@/utils/logger";
 export interface GogRawOffer {
   title: string;
   url: string;
-  imgUrl: string;
+  imgUrl: string | null;
   validTo?: string;
 }
 
@@ -26,7 +26,7 @@ export abstract class GogBaseScraper extends BaseScraper {
       return null;
     }
 
-    let sanitized = imgUrl.trim().split(",", 1)[0].trim().replace(/ 2x$/, "").replace(/ 1x$/, "");
+    let sanitized = imgUrl.trim().split(",", 1)[0].trim().replace(/ 2x$/u, "").replace(/ 1x$/u, "");
 
     if (!sanitized.startsWith("https:")) {
       // Sometimes the URL is missing the protocol
