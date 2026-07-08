@@ -26,7 +26,7 @@ export class RssGenerator {
       title: generateFeedTitle(this.combination),
       generator: {
         content: "LootScraper",
-        uri: "https://eikowagenknecht.com/lootscraper/",
+        uri: config.feed.idPrefix,
       },
       language: "en",
       link: [
@@ -85,17 +85,17 @@ export class RssGenerator {
         category: [
           {
             term: `source:${offer.source}`,
-            scheme: "https://feed.eikowagenknecht.com/lootscraper/source",
+            scheme: `${this.config.feed.idPrefix}source`,
             label: translationService.getSourceDisplay(offer.source),
           },
           {
             term: `platform:${offer.platform}`,
-            scheme: "https://feed.eikowagenknecht.com/lootscraper/platform",
+            scheme: `${this.config.feed.idPrefix}platform`,
             label: translationService.getPlatformDisplay(offer.platform),
           },
           {
             term: `type:${offer.type}`,
-            scheme: "https://feed.eikowagenknecht.com/lootscraper/type",
+            scheme: `${this.config.feed.idPrefix}type`,
             label: translationService.getTypeDisplay(offer.type),
           },
           ...(gameInfo?.steamInfo?.genres
