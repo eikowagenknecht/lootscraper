@@ -18,6 +18,7 @@ import {
   ItchGamesScraper,
   SteamGamesScraper,
   SteamLootScraper,
+  SteamPointsShopScraper,
   UbisoftGamesScraper,
 } from "./implementations";
 
@@ -48,6 +49,7 @@ export const allScrapers = [
   ItchGamesScraper,
   SteamGamesScraper,
   SteamLootScraper,
+  SteamPointsShopScraper,
   UbisoftGamesScraper,
 ];
 
@@ -66,6 +68,7 @@ export type ScraperClass =
   | typeof ItchGamesScraper
   | typeof SteamGamesScraper
   | typeof SteamLootScraper
+  | typeof SteamPointsShopScraper
   | typeof UbisoftGamesScraper;
 
 export type ScraperInstance = InstanceType<ScraperClass>;

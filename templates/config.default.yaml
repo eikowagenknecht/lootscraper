@@ -61,6 +61,8 @@ scraper:
     - SteamGames
     # Steam - Loot
     - SteamLoot
+    # Steam - Points Shop items (free stickers etc. during sale events)
+    - SteamPointsShop
   # The sources to scrape additional information from. Comment out to disable.
   infoSources:
     # Steam

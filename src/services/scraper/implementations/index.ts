@@ -12,4 +12,5 @@ export { HumbleGamesScraper } from "./humble";
 export { ItchGamesScraper } from "./itch";
 export { SteamGamesScraper } from "./steam/games";
 export { SteamLootScraper } from "./steam/loot";
+export { SteamPointsShopScraper } from "./steam/points";
 export { UbisoftGamesScraper } from "./ubisoft";

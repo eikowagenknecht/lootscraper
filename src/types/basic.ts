@@ -51,10 +51,12 @@ export enum InfoSource {
  * Represents the type of offer available in the system.
  * GAME - Indicates the offer is a game.
  * LOOT - Indicates the offer is a loot item, like DLC, Ingame currency, etc.
+ * POINTS - Indicates the offer is a Steam Points Shop item (sticker, animated avatar, etc.).
  */
 export enum OfferType {
   GAME = "GAME",
   LOOT = "LOOT",
+  POINTS = "POINTS",
 }
 
 /**

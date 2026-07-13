@@ -21,6 +21,8 @@ const resources = {
         GAME_one: "Game",
         GAME_other: "Games",
         LOOT: "Loot",
+        POINTS_one: "Points Shop Item",
+        POINTS_other: "Points Shop Items",
       },
       platforms: {
         PC: "PC",
