@@ -24,7 +24,7 @@ Choose your preferred way to get notifications:
 - Amazon Prime (Games & In-game Loot)
 - Epic Games (PC & Mobile)
 - GOG
-- Steam (Games & In-game Loot)
+- Steam (Games, In-game Loot & free Points Shop items)
 - Humble Bundle
 - itch.io (:warning: currently disabled due to anti-bot measures)
 - Apple App Store
@@ -100,8 +100,7 @@ If you prefer good old newsreaders, you can subscribe to the individual platform
 - [Epic Mobile Games (iOS)](https://feed.eikowagenknecht.com/lootscraper_epic_game_ios.xml)
 - [Gog games](https://feed.eikowagenknecht.com/lootscraper_gog_game.xml)
 - [Humble games](https://feed.eikowagenknecht.com/lootscraper_humble_game.xml)
-- [itch.io games](https://feed.eikowagenknecht.com/lootscraper_itch_game.xml)
-- Steam ([games](https://feed.eikowagenknecht.com/lootscraper_steam_game.xml) and [ingame loot](https://feed.eikowagenknecht.com/lootscraper_steam_loot.xml))
+- Steam ([games](https://feed.eikowagenknecht.com/lootscraper_steam_game.xml), [ingame loot](https://feed.eikowagenknecht.com/lootscraper_steam_loot.xml) and [Points Shop items](https://feed.eikowagenknecht.com/lootscraper_steam_points.xml))
 - [Apple iPhone games](https://feed.eikowagenknecht.com/lootscraper_apple_game.xml)
 - [Google Android games](https://feed.eikowagenknecht.com/lootscraper_google_game.xml)
 
@@ -116,8 +115,7 @@ Here are the latest offers in a nice and clean HTML page:
 - [Epic Mobile Games (iOS)](https://feed.eikowagenknecht.com/lootscraper_epic_game_ios.html)
 - [Gog games](https://feed.eikowagenknecht.com/lootscraper_gog_game.html)
 - [Humble games](https://feed.eikowagenknecht.com/lootscraper_humble_game.html)
-- [itch.io games](https://feed.eikowagenknecht.com/lootscraper_itch_game.html)
-- Steam ([games](https://feed.eikowagenknecht.com/lootscraper_steam_game.html) and [ingame loot](https://feed.eikowagenknecht.com/lootscraper_steam_loot.html))
+- Steam ([games](https://feed.eikowagenknecht.com/lootscraper_steam_game.html), [ingame loot](https://feed.eikowagenknecht.com/lootscraper_steam_loot.html) and [Points Shop items](https://feed.eikowagenknecht.com/lootscraper_steam_points.html))
 - [Apple iPhone games](https://feed.eikowagenknecht.com/lootscraper_apple_game.html)
 - [Google Android games](https://feed.eikowagenknecht.com/lootscraper_google_game.html)
 
@@ -135,8 +133,7 @@ Warning: These pages are quite large and may take a while to load.
 - [Epic Mobile Games (iOS)](https://feed.eikowagenknecht.com/lootscraper_epic_game_ios_all.html)
 - [Gog games](https://feed.eikowagenknecht.com/lootscraper_gog_game_all.html)
 - [Humble games](https://feed.eikowagenknecht.com/lootscraper_humble_game_all.html)
-- [itch.io games](https://feed.eikowagenknecht.com/lootscraper_itch_game_all.html)
-- Steam ([games](https://feed.eikowagenknecht.com/lootscraper_steam_game_all.html) and [ingame loot](https://feed.eikowagenknecht.com/lootscraper_steam_loot_all.html))
+- Steam ([games](https://feed.eikowagenknecht.com/lootscraper_steam_game_all.html), [ingame loot](https://feed.eikowagenknecht.com/lootscraper_steam_loot_all.html) and [Points Shop items](https://feed.eikowagenknecht.com/lootscraper_steam_points_all.html))
 - [Apple iPhone games](https://feed.eikowagenknecht.com/lootscraper_apple_game_all.html)
 - [Google Android games](https://feed.eikowagenknecht.com/lootscraper_google_game_all.html)
 
