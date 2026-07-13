@@ -47,6 +47,8 @@ scraper:
     # Epic Mobile Game Stores
     - EpicMobileAndroid
     - EpicMobileIos
+    # Fab - Limited-time free assets (Unreal Engine etc.)
+    - FabAssets
     # GOG - Games
     - GogGames
     # GOG - Always Free

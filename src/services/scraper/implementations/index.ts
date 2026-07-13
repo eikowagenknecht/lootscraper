@@ -6,6 +6,7 @@ export { EpicGamesApiScraper } from "./epicApi";
 export { EpicMobileAndroidSraper } from "./epicmobile/android";
 export { EpicMobileIosSraper } from "./epicmobile/ios";
 export { EpicGamesWebScraper } from "./epicWeb";
+export { FabAssetsScraper } from "./fab";
 export { GogGamesAlwaysFreeScraper } from "./gog/alwaysfree";
 export { GogGamesScraper } from "./gog/games";
 export { HumbleGamesScraper } from "./humble";

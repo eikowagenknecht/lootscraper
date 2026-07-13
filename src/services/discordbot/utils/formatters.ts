@@ -17,6 +17,7 @@ const SOURCE_COLORS: Record<OfferSource, number> = {
   [OfferSource.UBISOFT]: 0x00_70_ff, // Ubisoft blue
   [OfferSource.APPLE]: 0x55_55_55, // Apple gray
   [OfferSource.GOOGLE]: 0x42_85_f4, // Google blue
+  [OfferSource.FAB]: 0xd6_f9_4c, // Fab lime green
 };
 
 export function getSourceColor(source: OfferSource): number {

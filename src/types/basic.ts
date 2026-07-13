@@ -23,6 +23,8 @@ export enum OfferCategory {
  * ITCH - itch.io indie game platform
  * UBISOFT - Ubisoft Connect/Store
  * APPLE - Apple App Store
+ * GOOGLE - Google Play Store
+ * FAB - Epic's Fab marketplace for digital assets (Unreal Engine etc.)
  */
 export enum OfferSource {
   STEAM = "STEAM",
@@ -34,6 +36,7 @@ export enum OfferSource {
   UBISOFT = "UBISOFT",
   APPLE = "APPLE",
   GOOGLE = "GOOGLE",
+  FAB = "FAB",
 }
 
 /**
@@ -52,11 +55,13 @@ export enum InfoSource {
  * GAME - Indicates the offer is a game.
  * LOOT - Indicates the offer is a loot item, like DLC, Ingame currency, etc.
  * POINTS - Indicates the offer is a Steam Points Shop item (sticker, animated avatar, etc.).
+ * ASSET - Indicates the offer is a digital asset for content creation (3D model, plugin, etc.).
  */
 export enum OfferType {
   GAME = "GAME",
   LOOT = "LOOT",
   POINTS = "POINTS",
+  ASSET = "ASSET",
 }
 
 /**

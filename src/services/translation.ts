@@ -10,6 +10,7 @@ const resources = {
         APPLE: "Apple App Store",
         AMAZON: "Amazon Prime",
         EPIC: "Epic Games",
+        FAB: "Fab",
         GOG: "GOG",
         GOOGLE: "Google Play",
         HUMBLE: "Humble Bundle",
@@ -23,6 +24,8 @@ const resources = {
         LOOT: "Loot",
         POINTS_one: "Points Shop Item",
         POINTS_other: "Points Shop Items",
+        ASSET_one: "Asset",
+        ASSET_other: "Assets",
       },
       platforms: {
         PC: "PC",

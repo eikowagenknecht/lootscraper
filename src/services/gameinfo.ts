@@ -64,7 +64,9 @@ class GameInfoService {
     }
 
     if (!offer.probable_game_name) {
-      logger.warn("Offer has no game name, skipping enrichment.");
+      // Expected for offers that are not games (e.g. Steam Points Shop items
+      // or Fab assets), those intentionally leave the game name empty.
+      logger.verbose(`Offer "${offer.title}" has no game name, skipping enrichment.`);
       this.running = false;
       return;
     }

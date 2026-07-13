@@ -12,6 +12,7 @@ import {
   EpicGamesWebScraper,
   EpicMobileAndroidSraper,
   EpicMobileIosSraper,
+  FabAssetsScraper,
   GogGamesAlwaysFreeScraper,
   GogGamesScraper,
   HumbleGamesScraper,
@@ -42,6 +43,7 @@ export const allScrapers = [
   EpicGamesApiScraper,
   EpicMobileAndroidSraper,
   EpicMobileIosSraper,
+  FabAssetsScraper,
   GogGamesScraper,
   GogGamesAlwaysFreeScraper,
   AppAggGamesScraper,
@@ -61,6 +63,7 @@ export type ScraperClass =
   | typeof EpicGamesApiScraper
   | typeof EpicMobileAndroidSraper
   | typeof EpicMobileIosSraper
+  | typeof FabAssetsScraper
   | typeof GogGamesScraper
   | typeof GogGamesAlwaysFreeScraper
   | typeof AppAggGamesScraper
