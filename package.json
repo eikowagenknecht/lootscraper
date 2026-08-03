@@ -38,7 +38,7 @@
     "@grammyjs/commands": "1.4.0",
     "abort-controller": "3.0.0",
     "basic-ftp": "6.0.2",
-    "better-sqlite3": "12.11.1",
+    "better-sqlite3": "13.0.2",
     "croner": "10.0.1",
     "cross-env": "10.1.0",
     "discord.js": "14.27.0",
