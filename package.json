@@ -60,7 +60,7 @@
     "@commitlint/cli": "21.2.1",
     "@commitlint/config-conventional": "21.2.0",
     "@commitlint/types": "21.2.0",
-    "@semantic-release/git": "10.0.1",
+    "@semantic-release/git": "11.0.1",
     "@testing-library/jest-dom": "7.0.1",
     "@types/better-sqlite3": "7.6.13",
     "@types/luxon": "3.7.4",
