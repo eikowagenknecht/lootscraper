@@ -165,7 +165,7 @@ If you want to do this or even contribute, please see the [README for developers
 - ~2M monthly RSS feed hits
 - Most popular platform: Epic
 
-[![Star History Chart](https://api.star-history.com/svg?repos=eikowagenknecht/lootscraper&type=Date)](https://star-history.com/#eikowagenknecht/lootscraper&Date)
+[![Star History Chart](https://star-history.dera.page/svg?repos=eikowagenknecht/lootscraper&type=Date)](https://star-history.dera.page/#eikowagenknecht/lootscraper&Date)
 
 🎉 This must be the hockey stick curve the VCs are always talking about!
 
