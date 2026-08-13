@@ -1,4 +1,4 @@
-import { copyFileSync, mkdirSync, readFileSync } from "node:fs";
+import { copyFileSync, mkdirSync, readFileSync, renameSync, rmSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 
 import { parse } from "yaml";
@@ -234,9 +234,16 @@ class ConfigService {
     // Ensure the target directory exists
     mkdirSync(dirname(targetPath), { recursive: true });
 
+    // Copy to a temporary file first and then rename it into place. The rename is
+    // atomic, so concurrent readers (e.g. parallel test workers) never see a
+    // partially written config file.
+    const tempPath = `${targetPath}.${process.pid.toString()}.tmp`;
+
     try {
-      copyFileSync(defaultConfigPath, targetPath);
+      copyFileSync(defaultConfigPath, tempPath);
+      renameSync(tempPath, targetPath);
     } catch (error) {
+      rmSync(tempPath, { force: true });
       throw new ConfigError(
         `Failed to create default config: ${error instanceof Error ? error.message : String(error)}`,
       );
