@@ -62,7 +62,7 @@
     "@commitlint/types": "21.2.0",
     "@semantic-release/git": "11.0.1",
     "@testing-library/jest-dom": "7.0.1",
-    "@types/better-sqlite3": "7.6.13",
+    "@types/better-sqlite3": "9.6.0",
     "@types/luxon": "3.7.4",
     "@types/node": "~26.2.0",
     "@vitest/coverage-v8": "4.1.10",
