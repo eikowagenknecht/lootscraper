@@ -49,12 +49,12 @@
     "kysely": "0.29.5",
     "logform": "2.7.0",
     "luxon": "3.7.2",
-    "playwright": "1.62.1",
+    "playwright": "1.63.0",
     "winston": "3.19.0",
     "winston-daily-rotate-file": "5.0.0",
     "winston-transport": "4.9.0",
     "yaml": "2.9.0",
-    "zod": "4.5.4"
+    "zod": "4.6.2"
   },
   "devDependencies": {
     "@commitlint/cli": "21.2.2",
@@ -64,18 +64,18 @@
     "@testing-library/jest-dom": "7.0.1",
     "@types/better-sqlite3": "9.6.0",
     "@types/luxon": "3.7.5",
-    "@types/node": "~26.4.1",
+    "@types/node": "~26.5.1",
     "@vitest/coverage-v8": "4.1.10",
     "globals": "17.12.0",
     "jiti": "2.7.0",
-    "knip": "6.34.0",
+    "knip": "6.35.1",
     "lefthook": "2.1.12",
-    "oxfmt": "0.66.0",
-    "oxlint": "1.81.0",
+    "oxfmt": "0.67.0",
+    "oxlint": "1.82.0",
     "semantic-release": "25.0.9",
     "tsx": "4.23.13",
     "typescript": "6.0.3",
-    "vite": "8.2.2",
+    "vite": "8.3.0",
     "vitest": "4.1.10"
   },
   "engines": {
