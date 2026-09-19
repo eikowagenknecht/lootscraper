@@ -13,7 +13,11 @@ import { logger } from "@/utils/logger";
 
 import { getChatsNeedingAnnouncements, getChatsNeedingOffers } from "./database/offerRepository";
 import { handleCallback } from "./telegrambot/handlers/callbacks/router";
-import { handleHelpCommand, handleStartCommand } from "./telegrambot/handlers/commands";
+import {
+  handleHelpCommand,
+  handleStartCommand,
+  isCommandForThisBot,
+} from "./telegrambot/handlers/commands";
 import {
   handleAnnounceCommand,
   handleDebugCommand,
@@ -94,6 +98,11 @@ export class TelegramBotService {
         .filter(commandNotFound(userCommands))
         // If so, that means it wasn't handled by any of our commands.
         .use(async (ctx) => {
+          if (!isCommandForThisBot(ctx)) {
+            // Most likely a command for another bot in the same group.
+            logger.debug("Ignoring command not addressed to this bot:", ctx.update);
+            return;
+          }
           if (ctx.message?.text) {
             logger.debug("Command not found:", ctx.message.text);
           } else {

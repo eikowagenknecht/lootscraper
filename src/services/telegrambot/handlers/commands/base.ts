@@ -60,3 +60,31 @@ export async function getDbChat(ctx: Context) {
   // Otherwise, look up the chat by its ID
   return await getTelegramChatByChatId(ctx.chat.id);
 }
+
+/**
+ * Telegram delivers every message starting with a slash to all bots in a group,
+ * even when it is addressed to another bot. This checks whether an unhandled
+ * command was meant for us, so we do not answer for other bots.
+ *
+ * @returns True if the command is addressed to this bot.
+ */
+export function isCommandForThisBot(ctx: Context): boolean {
+  const text = ctx.message?.text ?? ctx.channelPost?.text;
+  if (text === undefined) {
+    return false;
+  }
+
+  const match = /^\/(?<name>[^\s@]+)(?:@(?<mention>\S+))?(?:\s|$)/u.exec(text);
+  if (!match) {
+    return false;
+  }
+
+  const mention = match.groups?.mention;
+  if (mention !== undefined) {
+    return mention.toLowerCase() === ctx.me.username.toLowerCase();
+  }
+
+  // The command is not addressed to anyone in particular. Only in private chats
+  // can we be sure that it was meant for us.
+  return ctx.chat?.type === "private";
+}
