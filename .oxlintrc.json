@@ -38,6 +38,7 @@
     "no-magic-numbers": "off",
     "no-duplicate-imports": "off",
     "no-ternary": "off",
+    "one-var": "off",
     "no-nested-ternary": "off",
     "no-namespace": "off",
     "id-length": "off",
