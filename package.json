@@ -76,7 +76,7 @@
     "tsx": "4.23.13",
     "typescript": "6.0.3",
     "vite": "8.3.0",
-    "vitest": "4.1.10"
+    "vitest": "5.0.1"
   },
   "engines": {
     "node": ">=24.0.0",
