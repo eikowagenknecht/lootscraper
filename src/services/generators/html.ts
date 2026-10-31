@@ -28,15 +28,15 @@ const TEMPLATE = `<!DOCTYPE html>
         {{#each entries}}
         <!-- Header & Validity -->
         <h2 class="flex justify-between items-center text-2xl mb-2 {{#if is_expired}}line-through{{/if}}">
-            <span class="font-bold">{{{title}}}</span>
-            <span class="text-sm">Valid from {{{valid_from}}}{{#if valid_to}} to {{{valid_to}}}{{/if}}</span>
+            <span class="font-bold">{{title}}</span>
+            <span class="text-sm">Valid from {{valid_from}}{{#if valid_to}} to {{valid_to}}{{/if}}</span>
         </h2>
 
         <div class="flex bg-white rounded-lg shadow-md p-6 mb-8">
             {{#if img_url}}
             <!-- Image -->
             <div>
-                <img src="{{{img_url}}}" alt="{{{title}}}" class="w-96">
+                <img src="{{img_url}}" alt="{{title}}" class="w-96">
             </div>
             {{/if}}
 
@@ -46,9 +46,9 @@ const TEMPLATE = `<!DOCTYPE html>
                 <!-- Game Info -->
                 <div class="bg-gray-200 p-4 rounded-lg text-sm">
                     <div class="flex justify-between mb-2">
-                        <h3 class="font-bold underline">{{{game_name}}}</h3>
+                        <h3 class="font-bold underline">{{game_name}}</h3>
                         {{#if release_date}}
-                        <span><strong>Release Date:</strong> {{{release_date}}}</span>
+                        <span><strong>Release Date:</strong> {{release_date}}</span>
                         {{/if}}
                     </div>
 
@@ -60,7 +60,7 @@ const TEMPLATE = `<!DOCTYPE html>
                             {{else if (gt steam_percent 80)}}bg-green-500
                             {{else if (gt steam_percent 60)}}bg-yellow-500
                             {{else}}bg-red-600{{/if}}">
-                            <a href="{{{steam_url}}}">Steam: {{steam_percent}}% / {{steam_score}} ({{steam_recommendations}} recommendations)</a>
+                            <a href="{{steam_url}}">Steam: {{steam_percent}}% / {{steam_score}} ({{steam_recommendations}} recommendations)</a>
                         </span>
                         {{/if}}
 
@@ -70,7 +70,7 @@ const TEMPLATE = `<!DOCTYPE html>
                             {{else if (gt igdb_meta_score 80)}}bg-green-500
                             {{else if (gt igdb_meta_score 60)}}bg-yellow-500
                             {{else}}bg-red-600{{/if}}">
-                            <a href="{{{igdb_url}}}">IGDB Meta: {{igdb_meta_score}}% ({{igdb_meta_ratings}} sources)</a>
+                            <a href="{{igdb_url}}">IGDB Meta: {{igdb_meta_score}}% ({{igdb_meta_ratings}} sources)</a>
                         </span>
                         {{/if}}
 
@@ -80,7 +80,7 @@ const TEMPLATE = `<!DOCTYPE html>
                             {{else if (gt metacritic_score 80)}}bg-green-500
                             {{else if (gt metacritic_score 60)}}bg-yellow-500
                             {{else}}bg-red-600{{/if}}">
-                            {{#if metacritic_url}}<a href="{{{metacritic_url}}}">{{/if}}
+                            {{#if metacritic_url}}<a href="{{metacritic_url}}">{{/if}}
                             Metacritic: {{metacritic_score}}%
                             {{#if metacritic_url}}</a>{{/if}}
                         </span>
@@ -92,7 +92,7 @@ const TEMPLATE = `<!DOCTYPE html>
                             {{else if (gt igdb_user_score 80)}}bg-green-500
                             {{else if (gt igdb_user_score 60)}}bg-yellow-500
                             {{else}}bg-red-600{{/if}}">
-                            <a href="{{{igdb_url}}}">IGDB User: {{igdb_user_score}}% ({{igdb_user_ratings}} sources)</a>
+                            <a href="{{igdb_url}}">IGDB User: {{igdb_user_score}}% ({{igdb_user_ratings}} sources)</a>
                         </span>
                         {{/if}}
                     </div>
@@ -102,7 +102,7 @@ const TEMPLATE = `<!DOCTYPE html>
                     <div class="flex flex-wrap mb-2">
                         <div class="flex flex-wrap">
                             {{#each (split genres ", ")}}
-                            <span class="text-white bg-gray-500 rounded-full px-3 py-1 text-sm font-semibold m-1">#{{{this}}}</span>
+                            <span class="text-white bg-gray-500 rounded-full px-3 py-1 text-sm font-semibold m-1">#{{this}}</span>
                             {{/each}}
                         </div>
                     </div>
@@ -118,8 +118,8 @@ const TEMPLATE = `<!DOCTYPE html>
                 <div class="flex justify-between items-center mt-4">
                     {{#if url}}
                     <!-- Claim Button -->
-                    <a href="{{{url}}}" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-                        Claim on {{{source}}}
+                    <a href="{{url}}" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                        Claim on {{source}}
                     </a>
                     {{/if}}
 
@@ -136,6 +136,19 @@ const TEMPLATE = `<!DOCTYPE html>
     </div>
 </body>
 </html>`;
+
+// Only http(s) URLs may reach an href/src attribute.
+function safeUrl(url: string | null | undefined): string | undefined {
+  if (!url) {
+    return undefined;
+  }
+  try {
+    const { protocol } = new URL(url);
+    return protocol === "http:" || protocol === "https:" ? url : undefined;
+  } catch {
+    return undefined;
+  }
+}
 
 interface HtmlGeneratorOptions {
   combination?: FeedCombination;
@@ -166,7 +179,7 @@ export class HtmlGenerator {
       entries.push({
         id: `${this.config.feed.idPrefix}${offer.id.toFixed(0)}`,
         title: offer.title,
-        img_url: offer.img_url ?? gameInfo?.steamInfo?.image_url,
+        img_url: safeUrl(offer.img_url ?? gameInfo?.steamInfo?.image_url),
         valid_from: offer.valid_from
           ? DateTime.fromISO(offer.valid_from).toFormat("yyyy-MM-dd")
           : DateTime.fromISO(offer.seen_first).toFormat("yyyy-MM-dd"),
@@ -174,19 +187,19 @@ export class HtmlGenerator {
           ? DateTime.fromISO(offer.valid_to).toFormat("yyyy-MM-dd")
           : undefined,
         source: translationService.getSourceDisplay(offer.source),
-        url: offer.url,
+        url: safeUrl(offer.url),
         is_expired: offer.valid_to && DateTime.fromISO(offer.valid_to) < DateTime.now(),
         has_game: Boolean(gameInfo),
         game_name: gameInfo?.igdbInfo?.name ?? gameInfo?.steamInfo?.name,
         metacritic_score: gameInfo?.steamInfo?.metacritic_score,
-        metacritic_url: gameInfo?.steamInfo?.metacritic_url,
+        metacritic_url: safeUrl(gameInfo?.steamInfo?.metacritic_url),
         steam_percent: gameInfo?.steamInfo?.percent,
         steam_score: gameInfo?.steamInfo?.score,
         steam_recommendations: gameInfo?.steamInfo?.recommendations,
-        steam_url: gameInfo?.steamInfo?.url,
+        steam_url: safeUrl(gameInfo?.steamInfo?.url),
         igdb_meta_score: gameInfo?.igdbInfo?.meta_score,
         igdb_meta_ratings: gameInfo?.igdbInfo?.meta_ratings,
-        igdb_url: gameInfo?.igdbInfo?.url,
+        igdb_url: safeUrl(gameInfo?.igdbInfo?.url),
         igdb_user_score: gameInfo?.igdbInfo?.user_score,
         igdb_user_ratings: gameInfo?.igdbInfo?.user_ratings,
         release_date: gameInfo?.igdbInfo?.release_date
